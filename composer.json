@@ -1,6 +1,6 @@
 {
   "name": "t3g/analytics",
-  "description": "TYPO3 v13 Backend Extension mit PHPStan, Rector, CGL und Tests",
+  "description": "TYPO3 Analytics Extension",
   "type": "typo3-cms-extension",
   "license": "proprietary",
   "require": {
@@ -28,11 +28,14 @@
   "extra": {
     "typo3/cms": {
       "extension-key": "analytics"
+    },
+    "branch-alias": {
+      "dev-develop": "dev-main"
     }
   },
   "scripts": {
     "dummy-typo3": "bash .ddev/commands/web/setup-dummy-typo3.sh",
-    "t3g:rector": "rector process --dry-run --config rector.php",
+    "t3g:rector:dry-run": "rector process --dry-run --config rector.php",
     "t3g:rector:fix": "rector process --config rector.php",
     "t3g:cgl": [
       "php-cs-fixer fix --config php-cs-fixer.php -v --dry-run --diff"
@@ -48,7 +51,7 @@
     ],
     "t3g:test": "phpunit -c phpunit.xml",
     "t3g:test:unit": "phpunit -c phpunit.xml --testsuite unit",
-    "t3g:test:functional": "phpunit -c phpunit.xml --testsuite functional"
+    "t3g:test:functional": "phpunit -c phpunit.functional.xml"
   },
   "config": {
     "allow-plugins": {

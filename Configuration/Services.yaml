@@ -9,3 +9,12 @@ services:
 
   T3G\Analytics\Controller\BackendModuleController:
     public: true
+
+  cache.tx_analytics_status:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_status']
+
+  T3G\Analytics\Service\AnalyticsStatusService:
+    arguments:
+      $cache: '@cache.tx_analytics_status'

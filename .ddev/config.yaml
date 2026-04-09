@@ -14,12 +14,24 @@ web_environment:
   - TYPO3_PATH_APP_ROOT=/var/www/html/.Build/dummy-typo3
   - PHP_MEMORY_LIMIT=1024M
 
+additional_fqdns:
+  - site1.analytics.ddev.site
+  - site2.analytics.ddev.site
+  - site3.analytics.ddev.site
+  - site4.analytics.ddev.site
+  - site5.analytics.ddev.site
+
 hooks:
   post-start:
     - exec: |
-        if [ ! -d ".Build/dummy-typo3/public" ]; then
-          echo "Dummy TYPO3 not found, installing it via Composer..."
+        # Run setup when not yet installed (no be_users table) or FIRST_INSTALL still present
+        INSTALLED=$(mysql --host=db --user=db --password=db db \
+          --skip-column-names --silent \
+          -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='db' AND table_name='be_users';" \
+          2>/dev/null || echo "0")
+        if [ "$INSTALLED" != "1" ] || [ -f ".Build/dummy-typo3/public/FIRST_INSTALL" ]; then
+          echo "Running dummy TYPO3 setup..."
           composer dummy-typo3
         else
-          echo "Dummy TYPO3 already exists, skipping installation."
+          echo "Dummy TYPO3 already set up, skipping."
         fi

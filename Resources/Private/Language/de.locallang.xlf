@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="de" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="flash.error.title" resname="flash.error.title">
+                <source>Error</source>
+                <target>Fehler</target>
+            </trans-unit>
+            <trans-unit id="flash.invalidInput" resname="flash.invalidInput">
+                <source>Invalid input.</source>
+                <target>Ungültige Eingabe.</target>
+            </trans-unit>
+            <trans-unit id="flash.siteNotFound" resname="flash.siteNotFound">
+                <source>Site not found.</source>
+                <target>Site nicht gefunden.</target>
+            </trans-unit>
+            <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
+                <source>Registration failed: %s</source>
+                <target>Registrierung fehlgeschlagen: %s</target>
+            </trans-unit>
+            <trans-unit id="flash.apiResponseIncomplete" resname="flash.apiResponseIncomplete">
+                <source>API response incomplete.</source>
+                <target>API-Antwort unvollständig.</target>
+            </trans-unit>
+            <trans-unit id="flash.statusFetchFailed" resname="flash.statusFetchFailed">
+                <source>Status query failed. Please check the registration.</source>
+                <target>Statusabfrage fehlgeschlagen. Bitte prüfe die Registrierung.</target>
+            </trans-unit>
+            <trans-unit id="flash.dashboardUrlUnavailable" resname="flash.dashboardUrlUnavailable">
+                <source>Dashboard URL could not be retrieved.</source>
+                <target>Dashboard-URL konnte nicht abgerufen werden.</target>
+            </trans-unit>
+            <trans-unit id="flash.success.title" resname="flash.success.title">
+                <source>Registration successful</source>
+                <target>Registrierung erfolgreich</target>
+            </trans-unit>
+            <trans-unit id="flash.success.registered" resname="flash.success.registered">
+                <source>Site "%s" successfully registered.</source>
+                <target>Site „%s" erfolgreich registriert.</target>
+            </trans-unit>
+<trans-unit id="button.refresh" resname="button.refresh">
+                <source>Refresh</source>
+                <target>Aktualisieren</target>
+            </trans-unit>
+            <trans-unit id="button.backToOverview" resname="button.backToOverview">
+                <source>Back to overview</source>
+                <target>Zurück zur Übersicht</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

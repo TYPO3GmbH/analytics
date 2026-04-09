@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
 
@@ -40,9 +40,12 @@ jobs:
       - name: phpstan
         run: |
           composer t3g:phpstan
-      - name: test
+      - name: unit test
         run: |
-          composer t3g:test
+          composer t3g:test:unit
+      - name: functional test
+        run: |
+          composer t3g:test:functional
       - name: rector
         run: |
-          composer t3:rector
+          composer t3g:rector:dry-run

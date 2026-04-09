@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="flash.error.title" resname="flash.error.title">
+                <source>Error</source>
+            </trans-unit>
+            <trans-unit id="flash.invalidInput" resname="flash.invalidInput">
+                <source>Invalid input.</source>
+            </trans-unit>
+            <trans-unit id="flash.siteNotFound" resname="flash.siteNotFound">
+                <source>Site not found.</source>
+            </trans-unit>
+            <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
+                <source>Registration failed: %s</source>
+            </trans-unit>
+            <trans-unit id="flash.apiResponseIncomplete" resname="flash.apiResponseIncomplete">
+                <source>API response incomplete.</source>
+            </trans-unit>
+            <trans-unit id="flash.statusFetchFailed" resname="flash.statusFetchFailed">
+                <source>Status query failed. Please check the registration.</source>
+            </trans-unit>
+            <trans-unit id="flash.dashboardUrlUnavailable" resname="flash.dashboardUrlUnavailable">
+                <source>Dashboard URL could not be retrieved.</source>
+            </trans-unit>
+            <trans-unit id="flash.success.title" resname="flash.success.title">
+                <source>Registration successful</source>
+            </trans-unit>
+            <trans-unit id="flash.success.registered" resname="flash.success.registered">
+                <source>Site "%s" successfully registered.</source>
+            </trans-unit>
+<trans-unit id="button.refresh" resname="button.refresh">
+                <source>Refresh</source>
+            </trans-unit>
+            <trans-unit id="button.backToOverview" resname="button.backToOverview">
+                <source>Back to overview</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

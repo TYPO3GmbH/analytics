@@ -1,0 +1,28 @@
+# EXT:analytics/Configuration/Sets/Analytics/settings.definitions.yaml
+
+categories:
+  typo3_analytics:
+    label: 'TYPO3 Analytics'
+
+settings:
+  websiteId:
+    label: 'Website ID'
+    description: 'Eindeutige Website-ID für die Analytics-Registrierung. Wird beim ersten Start automatisch über die API gesetzt.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  instanceId:
+    label: 'Instance ID'
+    description: 'Eindeutige Instanz-ID dieser TYPO3-Installation.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  instanceSecret:
+    label: 'Instance Secret'
+    description: 'Verschlüsseltes Secret für die HMAC-Authentifizierung. Wird automatisch gesetzt.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true

@@ -1,29 +1,106 @@
+{namespace core=TYPO3\CMS\Core\ViewHelpers}
 <f:layout name="Default" />
 
 <f:section name="Content">
-    <div class="module">
-        <div class="module-body">
-            <h1>{headline}</h1>
+    <div class="container">
+        <f:flashMessages queueIdentifier="core.template.flashMessages"/>
 
-            <div class="alert alert-info" role="alert">
-                {message}
-            </div>
+        <div class="card-container">
+            <f:for each="{sites}" as="site">
+                <div class="card card-size-medium">
+                    <div class="card-header">
+                        {site.title}
+                        <div class="text-muted small">
+                            <core:icon identifier="apps-pagetree-root" size="small" />
+                            {site.pageName}
+                        </div>
+                        <f:if condition="{site.registered}">
+                            <f:then>
+                                <span class="badge badge-success float-end">Registriert</span>
+                            </f:then>
+                            <f:else>
+                                <span class="badge badge-warning float-end">Nicht registriert</span>
+                            </f:else>
+                        </f:if>
+                    </div>
+                    <div class="card-body">
+                        <div><strong>Domain:</strong> {site.domain}</div>
+                        <f:if condition="{site.registered}">
+                            <div><strong>Website ID:</strong> <code>{site.websiteId}</code></div>
+                            <f:if condition="{site.status}">
+                                <hr />
+                                <div>
+                                    <strong>Status:</strong>
+                                    <f:variable name="analyticsStatus" value="{site.status.status}" />
+                                    <f:if condition="{analyticsStatus} == 'active'">
+                                        <f:then><span class="badge badge-success">{analyticsStatus}</span></f:then>
+                                        <f:else>
+                                            <f:if condition="{analyticsStatus} == 'pending'">
+                                                <f:then><span class="badge badge-warning">{analyticsStatus}</span></f:then>
+                                                <f:else><span class="badge badge-danger">{analyticsStatus}</span></f:else>
+                                            </f:if>
+                                        </f:else>
+                                    </f:if>
+                                </div>
+                                <f:if condition="{site.status.packageName}">
+                                    <div><strong>Paket:</strong> {site.status.packageName}</div>
+                                </f:if>
+                                <f:if condition="{site.status.consumption}">
+                                    <div>
+                                        <strong>Touchpoints:</strong>
+                                        {site.status.consumption.stpConsumed} / {site.status.consumption.stpLimit}
+                                        <f:if condition="{site.status.consumption.exhausted}">
+                                            <span class="badge badge-danger">erschöpft</span>
+                                        </f:if>
+                                    </div>
+                                </f:if>
+                                <f:if condition="{site.status._fetchedAt}">
+                                    <div class="text-muted small">
+                                        <f:format.date format="d.m.Y H:i" date="{site.status._fetchedAt}" />
+                                    </div>
+                                </f:if>
+                            </f:if>
+                        </f:if>
+                    </div>
+                    <div class="card-footer">
+                        <f:if condition="{site.registered}">
+                            <f:then>
+                                <div class="btn-group">
+                                    <a href="{site.dashboardUri}" class="btn btn-primary">
+                                        <core:icon identifier="actions-view" size="small" />
+                                        Dashboard
+                                    </a>
+                                    <form method="post" action="{statusUri}" style="display:inline">
+                                        <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                                        <button type="submit" class="btn btn-default">
+                                            <core:icon identifier="actions-refresh" size="small" />
+                                            Status aktualisieren
+                                        </button>
+                                    </form>
+                                </div>
+                            </f:then>
 
-            <div class="card card-default">
-                <div class="card-body">
-                    <h2>Systeminformationen</h2>
-                    <table class="table table-striped">
-                        <tr>
-                            <th>PHP-Version</th>
-                            <td>{phpVersion}</td>
-                        </tr>
-                        <tr>
-                            <th>Umgebung</th>
-                            <td>{environment}</td>
-                        </tr>
-                    </table>
+                            <f:else>
+                                <form method="post" action="{registerUri}">
+                                    <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                                    <div class="input-group">
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            class="form-control"
+                                            placeholder="E-Mail-Adresse für Registrierung"
+                                            required
+                                        />
+                                        <button type="submit" class="btn btn-primary">
+                                            Registrieren
+                                        </button>
+                                    </div>
+                                </form>
+                            </f:else>
+                        </f:if>
+                    </div>
                 </div>
-            </div>
+            </f:for>
         </div>
     </div>
 </f:section>

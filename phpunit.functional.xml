@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    bootstrap="Build/FunctionalTestsBootstrap.php"
+    colors="true"
+    cacheDirectory=".build/phpunit-functional"
+>
+    <testsuites>
+        <testsuite name="functional">
+            <directory>Tests/Functional</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <ini name="display_errors" value="1"/>
+        <env name="TYPO3_CONTEXT" value="Testing"/>
+    </php>
+</phpunit>
