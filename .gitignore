@@ -1,0 +1,19 @@
+# Composer
+/vendor/
+/.Build/
+composer.lock
+
+# TYPO3
+/public/
+.php-cs-fixer.cache
+
+# IDE
+/.idea/
+
+# DDEV
+/.ddev/.gitignore
+/.ddev/.*.yaml
+
+# OS
+.DS_Store
+Thumbs.db

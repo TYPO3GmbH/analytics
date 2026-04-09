@@ -1,0 +1,59 @@
+{
+  "name": "t3g/analytics",
+  "description": "TYPO3 v13 Backend Extension mit PHPStan, Rector, CGL und Tests",
+  "type": "typo3-cms-extension",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.4"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "rector/rector": "^2.4",
+    "friendsofphp/php-cs-fixer": "^3.64",
+    "typo3/testing-framework": "^8.0",
+    "phpunit/phpunit": "^11.0",
+    "ssch/typo3-rector": "^3.13",
+    "saschaegerer/phpstan-typo3": "^3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "T3G\\Analytics\\": "Classes/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "T3G\\Analytics\\Tests\\": "Tests/"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "analytics"
+    }
+  },
+  "scripts": {
+    "dummy-typo3": "bash .ddev/commands/web/setup-dummy-typo3.sh",
+    "t3g:rector": "rector process --dry-run --config rector.php",
+    "t3g:rector:fix": "rector process --config rector.php",
+    "t3g:cgl": [
+      "php-cs-fixer fix --config php-cs-fixer.php -v --dry-run --diff"
+    ],
+    "t3g:cgl:fix": [
+      "php-cs-fixer fix --config php-cs-fixer.php"
+    ],
+    "t3g:phpstan": [
+      "phpstan analyze --configuration phpstan.neon"
+    ],
+    "t3g:phpstan:create-baseline": [
+      "phpstan analyze --configuration phpstan.neon --generate-baseline phpstan-baseline.neon"
+    ],
+    "t3g:test": "phpunit -c phpunit.xml",
+    "t3g:test:unit": "phpunit -c phpunit.xml --testsuite unit",
+    "t3g:test:functional": "phpunit -c phpunit.xml --testsuite functional"
+  },
+  "config": {
+    "allow-plugins": {
+      "typo3/class-alias-loader": true,
+      "typo3/cms-composer-installers": true
+    }
+  }
+}

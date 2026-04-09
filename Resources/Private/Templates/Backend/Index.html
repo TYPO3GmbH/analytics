@@ -1,0 +1,29 @@
+<f:layout name="Default" />
+
+<f:section name="Content">
+    <div class="module">
+        <div class="module-body">
+            <h1>{headline}</h1>
+
+            <div class="alert alert-info" role="alert">
+                {message}
+            </div>
+
+            <div class="card card-default">
+                <div class="card-body">
+                    <h2>Systeminformationen</h2>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>PHP-Version</th>
+                            <td>{phpVersion}</td>
+                        </tr>
+                        <tr>
+                            <th>Umgebung</th>
+                            <td>{environment}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</f:section>

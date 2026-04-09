@@ -1,0 +1,25 @@
+name: analytics
+type: php
+docroot: .Build/dummy-typo3/public
+php_version: "8.4"
+webserver_type: nginx-fpm
+database:
+  type: mariadb
+  version: "10.11"
+composer_version: "2"
+xdebug_enabled: false
+
+web_environment:
+  - TYPO3_CONTEXT=Development/DDEV
+  - TYPO3_PATH_APP_ROOT=/var/www/html/.Build/dummy-typo3
+  - PHP_MEMORY_LIMIT=1024M
+
+hooks:
+  post-start:
+    - exec: |
+        if [ ! -d ".Build/dummy-typo3/public" ]; then
+          echo "Dummy TYPO3 not found, installing it via Composer..."
+          composer dummy-typo3
+        else
+          echo "Dummy TYPO3 already exists, skipping installation."
+        fi

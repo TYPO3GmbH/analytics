@@ -1,0 +1,11 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  T3G\Analytics\:
+    resource: '../Classes/*'
+
+  T3G\Analytics\Controller\BackendModuleController:
+    public: true
