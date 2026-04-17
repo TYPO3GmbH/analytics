@@ -12,7 +12,7 @@ $EM_CONF['analytics'] = [
     'version' => '1.0.0',
     'constraints' => [
         'depends' => [
-            'typo3' => '13.4.0-13.4.99',
+            'typo3' => '13.4.0-14.99.99',
         ],
     ],
 ];

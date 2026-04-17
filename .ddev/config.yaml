@@ -29,7 +29,7 @@ hooks:
           --skip-column-names --silent \
           -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='db' AND table_name='be_users';" \
           2>/dev/null || echo "0")
-        if [ "$INSTALLED" != "1" ] || [ -f ".Build/dummy-typo3/public/FIRST_INSTALL" ]; then
+        if [ "$INSTALLED" != "1" ] || [ -f ".Build/dummy-typo3/public/FIRST_INSTALL" ] || [ ! -d ".Build/dummy-typo3" ]; then
           echo "Running dummy TYPO3 setup..."
           composer dummy-typo3
         else

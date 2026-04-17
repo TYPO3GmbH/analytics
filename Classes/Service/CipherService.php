@@ -78,9 +78,9 @@ class CipherService
         // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\KeyFactory does not exist in v13)
         $key = $keyFactory->deriveSharedKeyFromEncryptionKey(self::KEY_SEED);
 
-        // CipherValue::fromString() reconstructs the value object from the serialised form
+        // CipherValue::fromSerialized() reconstructs the value object from the serialised form
         $cipherValueClass = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherValue';
-        $cipherValue = $cipherValueClass::fromString($encrypted);
+        $cipherValue = $cipherValueClass::fromSerialized($encrypted);
 
         // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\CipherService does not exist in v13)
         return $coreService->decrypt($cipherValue, $key);

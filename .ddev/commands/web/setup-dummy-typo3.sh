@@ -29,7 +29,21 @@ if [ ! -f "$DUMMY_DIR/composer.json" ]; then
     exit 1
   fi
 
-  composer create-project typo3/cms-base-distribution:^13.4 "$DUMMY_DIR" --no-interaction --no-install
+  # Ask which TYPO3 major version to install
+  read -rp "TYPO3 version to install (13/14) [13]: " TYPO3_VERSION_INPUT
+  TYPO3_VERSION="${TYPO3_VERSION_INPUT:-13}"
+  if [[ "$TYPO3_VERSION" != "13" && "$TYPO3_VERSION" != "14" ]]; then
+    echo "Invalid version '$TYPO3_VERSION'. Must be 13 or 14. Defaulting to 13."
+    TYPO3_VERSION="13"
+  fi
+  echo "Installing TYPO3 v${TYPO3_VERSION}…"
+
+  # Wipe the database so TYPO3 setup starts on a clean slate
+  echo "--- Clearing database ---"
+  mysql --host=db --user=db --password=db -e "DROP DATABASE IF EXISTS db; CREATE DATABASE db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+  echo "Database cleared."
+
+  composer create-project "typo3/cms-base-distribution:^${TYPO3_VERSION}.0" "$DUMMY_DIR" --no-interaction --no-install
 else
   echo "TYPO3 base distribution already exists, skipping creation."
 fi

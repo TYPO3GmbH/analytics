@@ -8,7 +8,7 @@ return [
     'site_analytics' => [
         'parent' => 'site',
         'position' => ['after' => 'site_settings'],
-        'access' => 'user,group',
+        'access' => 'user',
         'workspaces' => 'live',
         'path' => '/module/site/analytics',
         'labels' => 'LLL:EXT:analytics/Resources/Private/Language/locallang_mod.xlf',
