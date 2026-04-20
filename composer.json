@@ -28,9 +28,13 @@
       "T3G\\Analytics\\Tests\\": "Tests/"
     }
   },
+  "version": "1.0.0-alpha",
   "extra": {
     "typo3/cms": {
-      "extension-key": "analytics"
+      "extension-key": "analytics",
+      "Package": {
+        "providesPackages": {}
+      }
     },
     "branch-alias": {
       "dev-develop": "dev-main"
