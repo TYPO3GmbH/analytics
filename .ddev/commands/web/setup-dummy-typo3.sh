@@ -57,9 +57,12 @@ echo "--- Configuring Composer ---"
 composer config platform.php 8.4.0
 composer config --json repositories.analytics '{"type":"path","url":"/var/www/html","options":{"symlink":true}}'
 
-BRANCH=$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
-echo "Requiring extension from branch: $BRANCH"
-composer require "t3g/analytics:dev-${BRANCH}@dev" --no-interaction --no-update
+# Use '*@dev' so the constraint matches regardless of whether the extension's
+# composer.json carries an explicit "version" field (e.g. "1.0.0-alpha") or
+# only exposes a branch name (e.g. "dev-develop"). Path repositories always
+# carry dev stability, so '*@dev' resolves correctly in both cases.
+echo "Requiring extension from path repository..."
+composer require "t3g/analytics:*@dev" --no-interaction --no-update
 
 echo "--- Installing Composer dependencies ---"
 composer install --no-interaction
