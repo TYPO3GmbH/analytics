@@ -52,9 +52,7 @@ class CipherService
         return $this->decryptWithSodium($encrypted);
     }
 
-    // -------------------------------------------------------------------------
-    // TYPO3 v14+ path
-    // -------------------------------------------------------------------------
+    /** TYPO3 v14+ path */
 
     private function encryptWithCoreService(string $plaintext): string
     {
@@ -86,9 +84,7 @@ class CipherService
         return $coreService->decrypt($cipherValue, $key);
     }
 
-    // -------------------------------------------------------------------------
-    // TYPO3 v13 fallback path
-    // -------------------------------------------------------------------------
+    /** TYPO3 v13 fallback path */
 
     private function encryptWithSodium(string $plaintext): string
     {
@@ -143,9 +139,7 @@ class CipherService
         return $plaintext;
     }
 
-    // -------------------------------------------------------------------------
-    // Shared helpers
-    // -------------------------------------------------------------------------
+    /** Shared helpers */
 
     private function isCoreServiceAvailable(): bool
     {

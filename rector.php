@@ -55,8 +55,10 @@ return RectorConfig::configure()
         NameImportingPostRector::class => [
             'ClassAliasMap.php',
         ],
-        // Icons.php intentionally checks the TYPO3 major version at runtime
-        // to register different icon files for v13 and v14+.
+        /**
+         * Icons.php intentionally checks the TYPO3 major version at runtime
+         * to register different icon files for v13 and v14+.
+         */
         RemoveTypo3VersionChecksRector::class => [
             __DIR__ . '/Configuration/Icons.php',
         ],

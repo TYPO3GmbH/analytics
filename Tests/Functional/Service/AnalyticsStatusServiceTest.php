@@ -74,8 +74,9 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     {
         $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
 
+        // Only one API call despite two getStatus() invocations
         $this->requestFactory
-            ->expects(self::once()) // only one call despite two getStatus() invocations
+            ->expects(self::once())
             ->method('request')
             ->willReturn($this->buildApiResponse('{"status":"active"}'));
 
@@ -90,8 +91,9 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     {
         $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
 
+        // Once for initial fetch, once for force refresh
         $this->requestFactory
-            ->expects(self::exactly(2)) // once for initial fetch, once for force refresh
+            ->expects(self::exactly(2))
             ->method('request')
             ->willReturn($this->buildApiResponse('{"status":"active"}'));
 
@@ -104,14 +106,18 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     {
         $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
 
+        // Fetch, then re-fetch after clear
         $this->requestFactory
-            ->expects(self::exactly(2)) // fetch, then re-fetch after clear
+            ->expects(self::exactly(2))
             ->method('request')
             ->willReturn($this->buildApiResponse('{"status":"active"}'));
 
-        $this->subject->getStatus($site);       // fills cache
-        $this->subject->clearCache($site);      // removes from cache
-        $this->subject->getStatus($site);       // must hit API again
+        // Fills cache
+        $this->subject->getStatus($site);
+        // Removes from cache
+        $this->subject->clearCache($site);
+        // Must hit API again
+        $this->subject->getStatus($site);
     }
 
     #[Test]
@@ -158,9 +164,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
         self::assertNull($this->subject->getDashboardUrl($site));
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
+    /** Helpers */
 
     private function buildRegisteredSite(string $identifier, string $websiteId, string $instanceId): Site
     {

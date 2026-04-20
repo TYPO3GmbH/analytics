@@ -1,8 +1,10 @@
 <?php
 
-// Required for TYPO3 v13 only.
-// TYPO3 v14+ reads extension metadata from composer.json (extra.typo3/cms).
-// See: https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/14.2/Deprecation-108345-Deprecation-of-ext-emconf-php.html
+/**
+ * Required for TYPO3 v13 only.
+ * TYPO3 v14+ reads extension metadata from composer.json (extra.typo3/cms).
+ * @see https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/14.2/Deprecation-108345-Deprecation-of-ext-emconf-php.html
+ */
 
 $EM_CONF['analytics'] = [
     'title' => 'Analytics',

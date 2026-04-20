@@ -29,7 +29,9 @@ use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\CMS\Core\Localization\Locales;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -77,9 +79,11 @@ final class BackendModuleControllerTest extends UnitTestCase
     {
         parent::setUp();
 
-        // Pre-populate the LocalizationUtility runtime cache with a stub LanguageService.
-        // This avoids needing LanguageServiceFactory (and its DI dependencies) at all:
-        // buildLanguageService() hits the cache immediately and never calls makeInstance().
+        /**
+         * Pre-populate the LocalizationUtility runtime cache with a stub LanguageService.
+         * This avoids needing LanguageServiceFactory (and its DI dependencies) at all:
+         * buildLanguageService() hits the cache immediately and never calls makeInstance().
+         */
         $languageService = $this->createMock(LanguageService::class);
         $languageService->method('sL')->willReturnArgument(0);
 
@@ -114,8 +118,10 @@ final class BackendModuleControllerTest extends UnitTestCase
             ->method('getMessageQueueByIdentifier')
             ->willReturn($this->flashMessageQueue);
 
-        // ModuleTemplateFactory is final – instantiate without constructor for
-        // actions that accept it but never call it in the tested code paths.
+        /**
+         * ModuleTemplateFactory is final – instantiate without constructor for
+         * actions that accept it but never call it in the tested code paths.
+         */
         $moduleTemplateFactory = (new \ReflectionClass(ModuleTemplateFactory::class))
             ->newInstanceWithoutConstructor();
 
@@ -135,9 +141,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         );
     }
 
-    // -------------------------------------------------------------------------
-    // registerAction
-    // -------------------------------------------------------------------------
+    /** registerAction */
 
     #[Test]
     public function registerActionRedirectsWithErrorWhenBodyIsMissingSiteIdentifier(): void
@@ -329,9 +333,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         );
     }
 
-    // -------------------------------------------------------------------------
-    // statusAction
-    // -------------------------------------------------------------------------
+    /** statusAction */
 
     #[Test]
     public function statusActionRedirectsWithErrorWhenSiteIdentifierMissing(): void
@@ -381,9 +383,66 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(RedirectResponse::class, $response);
     }
 
-    // -------------------------------------------------------------------------
-    // dashboardAction – error paths
-    // -------------------------------------------------------------------------
+    #[Test]
+    public function statusActionPersistsTrackingCodeAndStatusWhenResponseContainsThem(): void
+    {
+        $site = $this->buildSiteMock('main', 'https://example.com');
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+        $this->analyticsStatusService->method('getStatus')->willReturn([
+            'status' => 'active',
+            'trackingId' => '<script>tracking-code</script>',
+        ]);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
+
+        $this->siteSettingsService
+            ->expects(self::once())
+            ->method('writeSettings')
+            ->with(
+                $site,
+                self::callback(static function (array $settings): bool {
+                    return $settings['trackingCode'] === '<script>tracking-code</script>'
+                        && $settings['status'] === 'active'
+                        && $settings['websiteId'] === 'w-123';
+                })
+            );
+
+        $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
+    }
+
+    #[Test]
+    public function statusActionSkipsWriteSettingsWhenValuesUnchanged(): void
+    {
+        $site = $this->buildSiteMock('main', 'https://example.com', [
+            'trackingCode' => '<script>tracking-code</script>',
+            'status' => 'active',
+        ]);
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+        $this->analyticsStatusService->method('getStatus')->willReturn([
+            'status' => 'active',
+            'trackingId' => '<script>tracking-code</script>',
+        ]);
+
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
+    }
+
+    #[Test]
+    public function statusActionSkipsWriteSettingsWhenResponseHasNoTrackingCodeOrStatus(): void
+    {
+        $site = $this->buildSiteMock('main', 'https://example.com');
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+        $this->analyticsStatusService->method('getStatus')->willReturn(['someOtherKey' => 'value']);
+
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
+    }
+
+    /** dashboardAction – error paths */
 
     #[Test]
     public function dashboardActionRedirectsWithErrorWhenSiteIdentifierMissing(): void
@@ -435,9 +494,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(RedirectResponse::class, $response);
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
+    /** Helpers */
 
     private function buildRequest(array $body): ServerRequestInterface
     {
@@ -446,13 +503,14 @@ final class BackendModuleControllerTest extends UnitTestCase
         return $request;
     }
 
-    private function buildSiteMock(string $identifier, string $baseUrl): Site&MockObject
+    private function buildSiteMock(string $identifier, string $baseUrl, array $siteSettings = []): Site&MockObject
     {
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);
         $site->method('getBase')->willReturn(new Uri($baseUrl));
         $site->method('getConfiguration')->willReturn(['websiteTitle' => ucfirst($identifier)]);
         $site->method('getRootPageId')->willReturn(1);
+        $site->method('getSettings')->willReturn(new SiteSettings(new Settings($siteSettings), [], []));
         return $site;
     }
 

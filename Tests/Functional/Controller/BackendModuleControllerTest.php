@@ -41,8 +41,10 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Both LANG and BE_USER are normally initialised by the backend bootstrap
-        // when a backend user logs in. Provide minimal stubs here.
+        /**
+         * Both LANG and BE_USER are normally initialised by the backend bootstrap
+         * when a backend user logs in. Provide minimal stubs here.
+         */
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
 
         $backendUser = $this->getMockBuilder(BackendUserAuthentication::class)
@@ -58,9 +60,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         ],
     ];
 
-    // -------------------------------------------------------------------------
-    // indexAction
-    // -------------------------------------------------------------------------
+    /** indexAction */
 
     #[Test]
     public function indexActionRendersHtmlResponseWithNoSites(): void
@@ -74,9 +74,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('text/html', $response->getHeaderLine('Content-Type'));
     }
 
-    // -------------------------------------------------------------------------
-    // dashboardAction – happy path
-    // -------------------------------------------------------------------------
+    /** dashboardAction – happy path */
 
     #[Test]
     public function dashboardActionRendersResponseContainingDashboardUrl(): void
@@ -111,9 +109,85 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString(htmlspecialchars($dashboardUrl, ENT_QUOTES), $body);
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
+    /** checkoutAction */
+
+    #[Test]
+    public function checkoutActionRendersResponseContainingCheckoutUrl(): void
+    {
+        $checkoutUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
+
+        $controller = $this->buildController();
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/checkout')
+            ->withQueryParams(['checkoutUrl' => $checkoutUrl]);
+
+        $response = $controller->checkoutAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        $body = (string)$response->getBody();
+        self::assertStringContainsString(htmlspecialchars($checkoutUrl, ENT_QUOTES), $body);
+    }
+
+    #[Test]
+    public function checkoutActionRedirectsWhenCheckoutUrlIsEmpty(): void
+    {
+        $controller = $this->buildController();
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/checkout')
+            ->withQueryParams(['checkoutUrl' => '']);
+
+        $response = $controller->checkoutAction($request);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function checkoutActionRedirectsWhenCheckoutUrlIsNotHttps(): void
+    {
+        $controller = $this->buildController();
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/checkout')
+            ->withQueryParams(['checkoutUrl' => 'http://insecure.example.com/checkout']);
+
+        $response = $controller->checkoutAction($request);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    /** statusAction */
+
+    #[Test]
+    public function statusActionRedirectsToIndexAfterSuccessfulRefresh(): void
+    {
+        $indexUri = '/module/site/analytics';
+
+        /** @var AnalyticsStatusService&MockObject $analyticsStatusService */
+        $analyticsStatusService = $this->createMock(AnalyticsStatusService::class);
+        $analyticsStatusService
+            ->expects(self::once())
+            ->method('getStatus')
+            ->with(self::anything(), true)
+            ->willReturn(['status' => 'active', 'trackingId' => '']);
+
+        /** @var SiteFinder&MockObject $siteFinder */
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main'));
+
+        /** @var SiteSettingsService&MockObject $siteSettingsService */
+        $siteSettingsService = $this->createMock(SiteSettingsService::class);
+
+        $controller = $this->buildController(
+            analyticsStatusService: $analyticsStatusService,
+            siteFinder: $siteFinder,
+            siteSettingsService: $siteSettingsService,
+        );
+
+        $request = (new ServerRequest(new Uri('https://example.com' . $indexUri), 'POST'))
+            ->withParsedBody(['siteIdentifier' => 'main']);
+
+        $response = $controller->statusAction($request);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    /** Helpers */
 
     /**
      * Builds the controller with real TYPO3 services from the DI container,
@@ -122,6 +196,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     private function buildController(
         ?AnalyticsStatusService $analyticsStatusService = null,
         ?SiteFinder $siteFinder = null,
+        ?SiteSettingsService $siteSettingsService = null,
     ): BackendModuleController {
         return new BackendModuleController(
             $this->get(ModuleTemplateFactory::class),
@@ -129,9 +204,10 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->get(IconFactory::class),
             $this->get(FlashMessageService::class),
             $siteFinder ?? $this->get(SiteFinder::class),
-            $this->get(SiteSettingsService::class),
+            $siteSettingsService ?? $this->get(SiteSettingsService::class),
             $this->get(SiteSettingsFactory::class),
-            $this->createMock(RequestFactory::class), // never calls real HTTP in these tests
+            // Never calls real HTTP in these tests
+            $this->createMock(RequestFactory::class),
             $this->get(CipherService::class),
             $analyticsStatusService ?? $this->createMock(AnalyticsStatusService::class),
             $this->get(ConnectionPool::class),
