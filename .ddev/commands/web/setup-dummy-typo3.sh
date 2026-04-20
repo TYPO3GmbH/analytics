@@ -124,6 +124,16 @@ VALUES
 ON DUPLICATE KEY UPDATE title = VALUES(title);
 
 ALTER TABLE pages AUTO_INCREMENT = 6;
+
+INSERT INTO sys_template
+  (pid, title, root, clear, config, hidden, deleted, tstamp, crdate)
+VALUES
+  (1, 'Site 1 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 1', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (2, 'Site 2 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 2', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (3, 'Site 3 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 3', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (4, 'Site 4 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 4', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (5, 'Site 5 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 5', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())
+ON DUPLICATE KEY UPDATE title = VALUES(title);
 SQL
 fi
 

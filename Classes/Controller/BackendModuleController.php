@@ -299,6 +299,30 @@ final readonly class BackendModuleController
                 $this->translate('flash.error.title'),
                 ContextualFeedbackSeverity::ERROR
             );
+            return new RedirectResponse($indexUri);
+        }
+
+        $trackingCode = (string)($status['trackingId'] ?? '');
+        $newStatus = (string)($status['status'] ?? '');
+        $settings = $site->getSettings();
+
+        if (
+            ($trackingCode !== '' && $trackingCode !== $settings->get('trackingCode', ''))
+            || ($newStatus !== '' && $newStatus !== $settings->get('status', ''))
+        ) {
+            $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
+            $update = [];
+            if ($trackingCode !== '') {
+                $update['trackingCode'] = $trackingCode;
+            }
+            if ($newStatus !== '') {
+                $update['status'] = $newStatus;
+            }
+            $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
+            $this->logger->info(
+                'Site settings updated from status response.',
+                ['siteIdentifier' => $siteIdentifier, 'status' => $newStatus, 'trackingCode' => $trackingCode]
+            );
         }
 
         return new RedirectResponse($indexUri);

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
 use Rector\PostRector\Rector\NameImportingPostRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
@@ -53,6 +54,14 @@ return RectorConfig::configure()
         __DIR__ . '/**/Configuration/ExtensionBuilder/*',
         NameImportingPostRector::class => [
             'ClassAliasMap.php',
-        ]
+        ],
+        // Icons.php intentionally checks the TYPO3 major version at runtime
+        // to register different icon files for v13 and v14+.
+        RemoveTypo3VersionChecksRector::class => [
+            __DIR__ . '/Configuration/Icons.php',
+        ],
+        NewMethodCallWithoutParenthesesRector::class => [
+            __DIR__ . '/Configuration/Icons.php',
+        ],
     ])
 ;

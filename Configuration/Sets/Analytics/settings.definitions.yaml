@@ -7,21 +7,35 @@ categories:
 settings:
   websiteId:
     label: 'Website ID'
-    description: 'Eindeutige Website-ID für die Analytics-Registrierung. Wird beim ersten Start automatisch über die API gesetzt.'
+    description: 'Unique website identifier set automatically via the API on registration.'
     type: string
     default: ''
     category: typo3_analytics
     readonly: true
   instanceId:
     label: 'Instance ID'
-    description: 'Eindeutige Instanz-ID dieser TYPO3-Installation.'
+    description: 'Unique identifier for this TYPO3 instance.'
     type: string
     default: ''
     category: typo3_analytics
     readonly: true
   instanceSecret:
     label: 'Instance Secret'
-    description: 'Verschlüsseltes Secret für die HMAC-Authentifizierung. Wird automatisch gesetzt.'
+    description: 'Encrypted secret used for HMAC authentication. Set automatically.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  trackingCode:
+    label: 'Tracking Code'
+    description: 'Tracking ID injected into the frontend as the TYPO3 Analytics tracking script. Updated automatically on status refresh.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  status:
+    label: 'Status'
+    description: 'Current registration status. Possible values: pending | active | inactive | cancelled. Tracking code is only injected when active.'
     type: string
     default: ''
     category: typo3_analytics

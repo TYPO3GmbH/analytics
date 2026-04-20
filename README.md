@@ -17,6 +17,7 @@ The extension adds a **Sites → Analytics** module to the TYPO3 backend. For ea
 - **Registration** — enter an e-mail address and register the site with the TYPO3 Analytics API.
 - **Status display** — shows the current analytics status fetched via HMAC-authenticated API calls (cached for 24 h, manually refreshable).
 - **Dashboard** — opens the TYPO3 Analytics dashboard as an embedded iframe inside the TYPO3 backend.
+- **Tracking code injection** — once a site is registered, the TYPO3 Analytics tracking script is automatically injected into every frontend HTML response for that site.
 
 ### Encryption
 
