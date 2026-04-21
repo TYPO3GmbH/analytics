@@ -175,7 +175,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->siteSettingsService
             ->expects(self::once())
             ->method('writeSettings')
-            ->with($this->buildSite(), self::callback(static fn(array $s): bool => $s['instanceSecret'] === ''));
+            ->with($this->buildSite(), self::callback(static fn (array $s): bool => $s['instanceSecret'] === ''));
 
         $this->subject->register($this->buildSite(), 'user@example.com');
     }

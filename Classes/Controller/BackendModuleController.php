@@ -75,7 +75,7 @@ final readonly class BackendModuleController
         }
 
         $site = $this->resolveSite($siteIdentifier);
-        if ($site === null) {
+        if (!$site instanceof Site) {
             return new RedirectResponse($indexUri);
         }
 
@@ -116,7 +116,7 @@ final readonly class BackendModuleController
         }
 
         $site = $this->resolveSite($siteIdentifier);
-        if ($site === null) {
+        if (!$site instanceof Site) {
             return new RedirectResponse($indexUri);
         }
 
@@ -174,7 +174,7 @@ final readonly class BackendModuleController
         }
 
         $site = $this->resolveSite($siteIdentifier);
-        if ($site === null) {
+        if (!$site instanceof Site) {
             return new RedirectResponse($indexUri);
         }
 

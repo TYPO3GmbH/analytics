@@ -63,7 +63,7 @@ readonly class InstanceRegistrationService
 
         if ($websiteId === '' || $instanceId === '') {
             $this->logger->error('Registration: API response incomplete.', ['siteIdentifier' => $siteIdentifier, 'data' => $data]);
-            throw new \RuntimeException('API response is missing websiteId or instanceId.');
+            throw new \RuntimeException('API response is missing websiteId or instanceId.', 2375629894);
         }
 
         $encryptedSecret = $instanceSecret !== '' ? $this->cipherService->encrypt($instanceSecret) : '';
