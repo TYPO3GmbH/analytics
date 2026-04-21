@@ -9,9 +9,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Controller\BackendModuleController;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
-use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -176,7 +176,6 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $controller = $this->buildController(
             analyticsStatusService: $analyticsStatusService,
             siteFinder: $siteFinder,
-            siteSettingsService: $siteSettingsService,
         );
 
         $request = (new ServerRequest(new Uri('https://example.com' . $indexUri), 'POST'))
@@ -196,7 +195,6 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     private function buildController(
         ?AnalyticsStatusService $analyticsStatusService = null,
         ?SiteFinder $siteFinder = null,
-        ?SiteSettingsService $siteSettingsService = null,
     ): BackendModuleController {
         return new BackendModuleController(
             $this->get(ModuleTemplateFactory::class),
@@ -204,11 +202,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->get(IconFactory::class),
             $this->get(FlashMessageService::class),
             $siteFinder ?? $this->get(SiteFinder::class),
-            $siteSettingsService ?? $this->get(SiteSettingsService::class),
-            $this->get(SiteSettingsFactory::class),
-            // Never calls real HTTP in these tests
-            $this->createMock(RequestFactory::class),
-            $this->get(CipherService::class),
+            $this->createMock(InstanceRegistrationService::class),
             $analyticsStatusService ?? $this->createMock(AnalyticsStatusService::class),
             $this->get(ConnectionPool::class),
             $this->createMock(LoggerInterface::class),

@@ -7,23 +7,19 @@ namespace T3G\Analytics\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use T3G\Analytics\Analytics;
-use T3G\Analytics\Service\CipherService;
-use T3G\Analytics\Utility\ApiExceptionHelper;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
-use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
-use TYPO3\CMS\Core\Site\SiteSettingsFactory;
-use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -36,10 +32,7 @@ final readonly class BackendModuleController
         private IconFactory $iconFactory,
         private FlashMessageService $flashMessageService,
         private SiteFinder $siteFinder,
-        private SiteSettingsService $siteSettingsService,
-        private SiteSettingsFactory $siteSettingsFactory,
-        private RequestFactory $requestFactory,
-        private CipherService $cipherService,
+        private InstanceRegistrationService $registrationService,
         private AnalyticsStatusService $analyticsStatusService,
         private ConnectionPool $connectionPool,
         private LoggerInterface $logger,
@@ -49,12 +42,13 @@ final readonly class BackendModuleController
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $indexUri = $this->indexUri();
 
         $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
         $buttonBar->addButton(
             $buttonBar->makeLinkButton()
                 ->setTitle($this->translate('button.refresh'))
-                ->setHref((string)$this->uriBuilder->buildUriFromRoute('site_analytics'))
+                ->setHref($indexUri)
                 ->setIcon($this->iconFactory->getIcon('actions-refresh', IconSize::SMALL))
         );
 
@@ -72,90 +66,25 @@ final readonly class BackendModuleController
         $body = $request->getParsedBody();
         $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
         $email = is_array($body) ? (string)($body['email'] ?? '') : '';
-        $indexUri = (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
+        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '' || $email === '') {
             $this->logger->warning('Register action called with missing siteIdentifier or email.');
-            $this->addFlashMessage(
-                $this->translate('flash.invalidInput'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+            $this->addErrorFlashMessage('flash.invalidInput');
+            return new RedirectResponse($indexUri);
+        }
+
+        $site = $this->resolveSite($siteIdentifier);
+        if ($site === null) {
             return new RedirectResponse($indexUri);
         }
 
         try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Register action: site not found.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage(
-                $this->translate('flash.siteNotFound'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+            $checkoutUrl = $this->registrationService->register($site, $email);
+        } catch (\RuntimeException $e) {
+            $this->addErrorFlashMessage('flash.registrationFailed', [$e->getMessage()]);
             return new RedirectResponse($indexUri);
         }
-
-        try {
-            $response = $this->requestFactory->request(
-                Analytics::getApiBaseUrl() . '/auth/register/instance',
-                'POST',
-                [
-                    'json' => [
-                        'intpId' => Analytics::INTP_ID,
-                        'domain' => rtrim($site->getBase()->__toString(), '/'),
-                        'email' => $email,
-                    ],
-                    'verify' => false,
-                ]
-            );
-
-            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        } catch (\Throwable $e) {
-            $errorReason = ApiExceptionHelper::extractReason($e);
-            $this->logger->error(
-                'Register action: API request failed.',
-                ['siteIdentifier' => $siteIdentifier, 'exception' => $errorReason]
-            );
-            $this->addFlashMessage(
-                $this->translate('flash.registrationFailed', [$errorReason]),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
-            return new RedirectResponse($indexUri);
-        }
-
-        $instanceId = (string)($data['instanceId'] ?? '');
-        $websiteId = (string)($data['websiteId'] ?? '');
-        $instanceSecret = (string)($data['instanceSecret'] ?? '');
-        $checkoutUrl = (string)($data['checkoutUrl'] ?? '');
-
-        if ($websiteId === '' || $instanceId === '') {
-            $this->logger->error(
-                'Register action: API response incomplete.',
-                ['siteIdentifier' => $siteIdentifier, 'data' => $data]
-            );
-            $this->addFlashMessage(
-                $this->translate('flash.apiResponseIncomplete'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
-            return new RedirectResponse($indexUri);
-        }
-
-        $encryptedSecret = $instanceSecret !== '' ? $this->cipherService->encrypt($instanceSecret) : '';
-
-        $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
-        $this->siteSettingsService->writeSettings($site, array_merge($existing, [
-            'websiteId' => $websiteId,
-            'instanceId' => $instanceId,
-            'instanceSecret' => $encryptedSecret,
-        ]));
-
-        $this->logger->info(
-            'Site successfully registered.',
-            ['siteIdentifier' => $siteIdentifier, 'websiteId' => $websiteId]
-        );
 
         $this->addFlashMessage(
             $this->translate('flash.success.registered', [$site->getIdentifier()]),
@@ -167,7 +96,7 @@ final readonly class BackendModuleController
             return new RedirectResponse(
                 (string)$this->uriBuilder->buildUriFromRoute(
                     'site_analytics.checkout',
-                    ['checkoutUrl' => $checkoutUrl]
+                    ['checkoutUrl' => rtrim($checkoutUrl, '/')]
                 )
             );
         }
@@ -178,51 +107,27 @@ final readonly class BackendModuleController
     public function dashboardAction(ServerRequestInterface $request): ResponseInterface
     {
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
-        $indexUri = (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
+        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '') {
             $this->logger->warning('Dashboard action called without siteIdentifier.');
-            $this->addFlashMessage(
-                $this->translate('flash.invalidInput'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+            $this->addErrorFlashMessage('flash.invalidInput');
             return new RedirectResponse($indexUri);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Dashboard action: site not found.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage(
-                $this->translate('flash.siteNotFound'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+        $site = $this->resolveSite($siteIdentifier);
+        if ($site === null) {
             return new RedirectResponse($indexUri);
         }
 
         $dashboardUrl = $this->analyticsStatusService->getDashboardUrl($site);
-
         if ($dashboardUrl === null) {
             $this->logger->error('Dashboard action: dashboard URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage(
-                $this->translate('flash.dashboardUrlUnavailable'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+            $this->addErrorFlashMessage('flash.dashboardUrlUnavailable');
             return new RedirectResponse($indexUri);
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
-
-        $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        $buttonBar->addButton(
-            $buttonBar->makeLinkButton()
-                ->setTitle($this->translate('button.backToOverview'))
-                ->setHref($indexUri)
-                ->setIcon($this->iconFactory->getIcon('actions-arrow-left', IconSize::SMALL))
-        );
 
         $moduleTemplate->assignMultiple([
             'site' => [
@@ -239,7 +144,7 @@ final readonly class BackendModuleController
     public function checkoutAction(ServerRequestInterface $request): ResponseInterface
     {
         $checkoutUrl = (string)($request->getQueryParams()['checkoutUrl'] ?? '');
-        $indexUri = (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
+        $indexUri = $this->indexUri();
 
         if ($checkoutUrl === '' || !str_starts_with($checkoutUrl, 'https://')) {
             $this->logger->warning('Checkout action called with missing or invalid checkoutUrl.');
@@ -247,14 +152,6 @@ final readonly class BackendModuleController
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
-
-        $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        $buttonBar->addButton(
-            $buttonBar->makeLinkButton()
-                ->setTitle($this->translate('button.backToOverview'))
-                ->setHref($indexUri)
-                ->setIcon($this->iconFactory->getIcon('actions-arrow-left', IconSize::SMALL))
-        );
 
         $moduleTemplate->assignMultiple([
             'checkoutUrl' => $checkoutUrl,
@@ -268,41 +165,42 @@ final readonly class BackendModuleController
     {
         $body = $request->getParsedBody();
         $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
-        $indexUri = (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
+        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '') {
             $this->logger->warning('Status action called without siteIdentifier.');
-            $this->addFlashMessage(
-                $this->translate('flash.invalidInput'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+            $this->addErrorFlashMessage('flash.invalidInput');
             return new RedirectResponse($indexUri);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Status action: site not found.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage(
-                $this->translate('flash.siteNotFound'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+        $site = $this->resolveSite($siteIdentifier);
+        if ($site === null) {
             return new RedirectResponse($indexUri);
         }
 
         if ($this->analyticsStatusService->getStatus($site, forceRefresh: true) === null) {
             $this->logger->error('Status action: status fetch failed.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage(
-                $this->translate('flash.statusFetchFailed'),
-                $this->translate('flash.error.title'),
-                ContextualFeedbackSeverity::ERROR
-            );
+            $this->addErrorFlashMessage('flash.statusFetchFailed');
             return new RedirectResponse($indexUri);
         }
 
         return new RedirectResponse($indexUri);
+    }
+
+    private function resolveSite(string $siteIdentifier): ?Site
+    {
+        try {
+            return $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+        } catch (SiteNotFoundException) {
+            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+            $this->addErrorFlashMessage('flash.siteNotFound');
+            return null;
+        }
+    }
+
+    private function indexUri(): string
+    {
+        return (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
     }
 
     /**
@@ -351,6 +249,16 @@ final readonly class BackendModuleController
     private function translate(string $key, ?array $arguments = null): string
     {
         return LocalizationUtility::translate($key, 'analytics', $arguments) ?? $key;
+    }
+
+    /** @param list<mixed> $arguments */
+    private function addErrorFlashMessage(string $key, array $arguments = []): void
+    {
+        $this->addFlashMessage(
+            $this->translate($key, $arguments ?: null),
+            $this->translate('flash.error.title'),
+            ContextualFeedbackSeverity::ERROR
+        );
     }
 
     private function addFlashMessage(
