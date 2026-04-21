@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Analytics;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Utility\ApiExceptionHelper;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -111,12 +112,13 @@ final readonly class BackendModuleController
 
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $e) {
+            $errorReason = ApiExceptionHelper::extractReason($e);
             $this->logger->error(
                 'Register action: API request failed.',
-                ['siteIdentifier' => $siteIdentifier, 'exception' => $e->getMessage()]
+                ['siteIdentifier' => $siteIdentifier, 'exception' => $errorReason]
             );
             $this->addFlashMessage(
-                $this->translate('flash.registrationFailed', [$e->getMessage()]),
+                $this->translate('flash.registrationFailed', [$errorReason]),
                 $this->translate('flash.error.title'),
                 ContextualFeedbackSeverity::ERROR
             );

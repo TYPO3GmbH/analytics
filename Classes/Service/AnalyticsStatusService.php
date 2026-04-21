@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
+use Psr\Log\LoggerInterface;
 use T3G\Analytics\Analytics;
+use T3G\Analytics\Utility\ApiExceptionHelper;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -15,6 +17,7 @@ readonly class AnalyticsStatusService
         private FrontendInterface $cache,
         private RequestFactory $requestFactory,
         private CipherService $cipherService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -76,7 +79,8 @@ readonly class AnalyticsStatusService
 
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             return isset($data['dashboardUrl']) ? (string)$data['dashboardUrl'] : null;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->logger->error('getDashboardUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
             return null;
         }
     }
@@ -109,7 +113,8 @@ readonly class AnalyticsStatusService
             $data['_fetchedAt'] = time();
 
             return $data;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->logger->error('fetchFromApi: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
             return null;
         }
     }
