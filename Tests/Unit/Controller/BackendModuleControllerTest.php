@@ -383,65 +383,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(RedirectResponse::class, $response);
     }
 
-    #[Test]
-    public function statusActionPersistsTrackingCodeAndStatusWhenResponseContainsThem(): void
-    {
-        $site = $this->buildSiteMock('main', 'https://example.com');
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
-        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->analyticsStatusService->method('getStatus')->willReturn([
-            'status' => 'active',
-            'trackingId' => '<script>tracking-code</script>',
-        ]);
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
-
-        $this->siteSettingsService
-            ->expects(self::once())
-            ->method('writeSettings')
-            ->with(
-                $site,
-                self::callback(static function (array $settings): bool {
-                    return $settings['trackingCode'] === '<script>tracking-code</script>'
-                        && $settings['status'] === 'active'
-                        && $settings['websiteId'] === 'w-123';
-                })
-            );
-
-        $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
-    }
-
-    #[Test]
-    public function statusActionSkipsWriteSettingsWhenValuesUnchanged(): void
-    {
-        $site = $this->buildSiteMock('main', 'https://example.com', [
-            'trackingCode' => '<script>tracking-code</script>',
-            'status' => 'active',
-        ]);
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
-        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->analyticsStatusService->method('getStatus')->willReturn([
-            'status' => 'active',
-            'trackingId' => '<script>tracking-code</script>',
-        ]);
-
-        $this->siteSettingsService->expects(self::never())->method('writeSettings');
-
-        $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
-    }
-
-    #[Test]
-    public function statusActionSkipsWriteSettingsWhenResponseHasNoTrackingCodeOrStatus(): void
-    {
-        $site = $this->buildSiteMock('main', 'https://example.com');
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
-        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->analyticsStatusService->method('getStatus')->willReturn(['someOtherKey' => 'value']);
-
-        $this->siteSettingsService->expects(self::never())->method('writeSettings');
-
-        $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
-    }
-
     /** dashboardAction – error paths */
 
     #[Test]

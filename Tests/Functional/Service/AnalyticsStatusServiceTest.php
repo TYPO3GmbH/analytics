@@ -17,6 +17,8 @@ use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
+use TYPO3\CMS\Core\Site\SiteSettingsFactory;
+use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 /**
  * Tests caching behaviour of AnalyticsStatusService using the real
@@ -49,6 +51,8 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             $this->requestFactory,
             $this->cipherService,
             new \Psr\Log\NullLogger(),
+            $this->createMock(SiteSettingsService::class),
+            $this->createMock(SiteSettingsFactory::class),
         );
     }
 

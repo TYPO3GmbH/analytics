@@ -10,6 +10,8 @@ use T3G\Analytics\Utility\ApiExceptionHelper;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\SiteSettingsFactory;
+use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 readonly class AnalyticsStatusService
 {
@@ -18,6 +20,8 @@ readonly class AnalyticsStatusService
         private RequestFactory $requestFactory,
         private CipherService $cipherService,
         private LoggerInterface $logger,
+        private SiteSettingsService $siteSettingsService,
+        private SiteSettingsFactory $siteSettingsFactory,
     ) {
     }
 
@@ -112,6 +116,8 @@ readonly class AnalyticsStatusService
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             $data['_fetchedAt'] = time();
 
+            $this->persistStatusSettings($site, $data);
+
             return $data;
         } catch (\Throwable $e) {
             $this->logger->error('fetchFromApi: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
@@ -160,6 +166,35 @@ readonly class AnalyticsStatusService
             'X-Timestamp' => $timestamp,
             'X-Content-Hash' => $contentHash,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function persistStatusSettings(Site $site, array $data): void
+    {
+        $trackingCode = (string)($data['trackingId'] ?? '');
+        $newStatus = (string)($data['status'] ?? '');
+        $settings = $site->getSettings();
+
+        $update = [];
+        if ($trackingCode !== '' && $trackingCode !== $settings->get('trackingCode', '')) {
+            $update['trackingCode'] = $trackingCode;
+        }
+        if ($newStatus !== '' && $newStatus !== $settings->get('status', '')) {
+            $update['status'] = $newStatus;
+        }
+
+        if ($update === []) {
+            return;
+        }
+
+        $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
+        $this->logger->info(
+            'Site settings updated from status response.',
+            ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]
+        );
     }
 
     private function cacheKey(Site $site): string
