@@ -103,7 +103,7 @@ final readonly class BackendModuleController
                 [
                     'json' => [
                         'intpId' => Analytics::INTP_ID,
-                        'domain' => rtrim((string)$site->getBase(), '/'),
+                        'domain' => rtrim($site->getBase()->__toString(), '/'),
                         'email' => $email,
                     ],
                     'verify' => false,
@@ -345,7 +345,7 @@ final readonly class BackendModuleController
                 'identifier' => $site->getIdentifier(),
                 'title' => $site->getConfiguration()['websiteTitle'] ?? $site->getIdentifier(),
                 'pageName' => $this->getRootPageTitle($site->getRootPageId()),
-                'domain' => rtrim((string)$site->getBase(), '/'),
+                'domain' => rtrim($site->getBase()->__toString(), '/'),
                 'websiteId' => $websiteId,
                 'registered' => $registered,
                 'status' => $registered ? $this->analyticsStatusService->getStatus($site) : null,
