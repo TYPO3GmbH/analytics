@@ -48,6 +48,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             $this->cache,
             $this->requestFactory,
             $this->cipherService,
+            new \Psr\Log\NullLogger(),
         );
     }
 
