@@ -1,19 +1,21 @@
-{namespace core=TYPO3\CMS\Core\ViewHelpers}
 <f:layout name="Default" />
 
 <f:section name="Content">
-    <div style="display:flex; flex-direction:column; height:calc(100vh - 80px);">
-        <div class="module-docheader-bar" style="padding: 8px 16px; flex-shrink:0;">
-            <strong>
-                <core:icon identifier="apps-pagetree-root" size="small" />
-                {site.pageName}
-            </strong>
-            <span class="text-muted"> – {site.title}</span>
-        </div>
-        <iframe
-            src="{dashboardUrl}"
-            style="flex:1; width:100%; border:none;"
-            allowfullscreen="true"
-        ></iframe>
-    </div>
+    <style>.module-body { padding: 0; overflow: hidden; }</style>
+    <iframe
+        src="{dashboardUrl}"
+        style="display:block; width:100%; height:calc(100vh - 58px); border:none;"
+        allowfullscreen="true"
+    ></iframe>
+    <script>
+    (function() {
+        var invalidateCacheUri = {invalidateStatusCacheUri -> f:format.json()};
+        var dashboardOrigin = {dashboardOrigin -> f:format.json()};
+        window.addEventListener('message', function(event) {
+            if (event.origin !== dashboardOrigin) return;
+            if (!event.data || event.data.type !== 'SUBSCRIPTION_UPGRADED') return;
+            fetch(invalidateCacheUri, { method: 'POST' });
+        });
+    })();
+    </script>
 </f:section>

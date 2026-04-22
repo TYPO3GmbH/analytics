@@ -136,7 +136,8 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
                     return $settings['websiteId'] === 'w-123'
                         && $settings['instanceId'] === 'i-456'
                         && $settings['instanceSecret'] === 'enc-secret'
-                        && $settings['existingKey'] === 'val';
+                        && $settings['existingKey'] === 'val'
+                        && !array_key_exists('checkoutUrl', $settings);
                 })
             );
 

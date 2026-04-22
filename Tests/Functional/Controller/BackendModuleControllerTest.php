@@ -105,48 +105,108 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $body = (string)$response->getBody();
         // Fluid HTML-encodes & in attribute values, so check for the HTML-encoded form
         self::assertStringContainsString(htmlspecialchars($dashboardUrl, ENT_QUOTES), $body);
+        self::assertStringContainsString('SUBSCRIPTION_UPGRADED', $body);
     }
 
-    /** checkoutAction */
+    /** managePlanAction */
 
     #[Test]
-    public function checkoutActionRendersResponseContainingCheckoutUrl(): void
+    public function managePlanActionRendersResponseContainingManagePlanUrl(): void
     {
-        $checkoutUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
+        $managePlanUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
 
-        $controller = $this->buildController();
-        $request = $this->buildModuleRequest('GET', '/module/site/analytics/checkout')
-            ->withQueryParams(['checkoutUrl' => $checkoutUrl]);
+        /** @var AnalyticsStatusService&MockObject $analyticsStatusService */
+        $analyticsStatusService = $this->createMock(AnalyticsStatusService::class);
+        $analyticsStatusService
+            ->method('getManagePlanUrl')
+            ->willReturn($managePlanUrl);
 
-        $response = $controller->checkoutAction($request);
+        /** @var SiteFinder&MockObject $siteFinder */
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main'));
+
+        $controller = $this->buildController(
+            analyticsStatusService: $analyticsStatusService,
+            siteFinder: $siteFinder,
+        );
+
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/manage-plan')
+            ->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->managePlanAction($request);
 
         self::assertSame(200, $response->getStatusCode());
         $body = (string)$response->getBody();
-        self::assertStringContainsString(htmlspecialchars($checkoutUrl, ENT_QUOTES), $body);
+        self::assertStringContainsString(htmlspecialchars($managePlanUrl, ENT_QUOTES), $body);
     }
 
     #[Test]
-    public function checkoutActionRedirectsWhenCheckoutUrlIsEmpty(): void
+    public function managePlanActionRedirectsWhenSiteIdentifierMissing(): void
     {
         $controller = $this->buildController();
-        $request = $this->buildModuleRequest('GET', '/module/site/analytics/checkout')
-            ->withQueryParams(['checkoutUrl' => '']);
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/manage-plan')
+            ->withQueryParams([]);
 
-        $response = $controller->checkoutAction($request);
+        $response = $controller->managePlanAction($request);
 
         self::assertSame(302, $response->getStatusCode());
     }
 
     #[Test]
-    public function checkoutActionRedirectsWhenCheckoutUrlIsNotHttps(): void
+    public function managePlanActionRedirectsWhenManagePlanUrlUnavailable(): void
     {
-        $controller = $this->buildController();
-        $request = $this->buildModuleRequest('GET', '/module/site/analytics/checkout')
-            ->withQueryParams(['checkoutUrl' => 'http://insecure.example.com/checkout']);
+        /** @var AnalyticsStatusService&MockObject $analyticsStatusService */
+        $analyticsStatusService = $this->createMock(AnalyticsStatusService::class);
+        $analyticsStatusService->method('getManagePlanUrl')->willReturn(null);
 
-        $response = $controller->checkoutAction($request);
+        /** @var SiteFinder&MockObject $siteFinder */
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main'));
+
+        $controller = $this->buildController(
+            analyticsStatusService: $analyticsStatusService,
+            siteFinder: $siteFinder,
+        );
+
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/manage-plan')
+            ->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->managePlanAction($request);
 
         self::assertSame(302, $response->getStatusCode());
+    }
+
+    /** invalidateStatusCacheAction */
+
+    #[Test]
+    public function invalidateStatusCacheActionClearsStatusCacheAndReturnsJsonSuccess(): void
+    {
+        /** @var AnalyticsStatusService&MockObject $analyticsStatusService */
+        $analyticsStatusService = $this->createMock(AnalyticsStatusService::class);
+        $analyticsStatusService
+            ->expects(self::once())
+            ->method('clearCache');
+
+        /** @var SiteFinder&MockObject $siteFinder */
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main'));
+
+        $controller = $this->buildController(
+            analyticsStatusService: $analyticsStatusService,
+            siteFinder: $siteFinder,
+        );
+
+        $request = (new ServerRequest(
+            new Uri('https://example.com/module/site/analytics/invalidate-status-cache'),
+            'POST',
+        ))->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->invalidateStatusCacheAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('application/json', $response->getHeaderLine('Content-Type'));
+        $data = json_decode((string)$response->getBody(), true);
+        self::assertTrue($data['success']);
     }
 
     /** statusAction */

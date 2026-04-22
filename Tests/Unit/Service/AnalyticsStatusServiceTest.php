@@ -60,6 +60,47 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         );
     }
 
+    /** getManagePlanUrl */
+
+    #[Test]
+    public function getManagePlanUrlReturnsUrlFromApiResponse(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->requestFactory->method('request')->willReturn(
+            $this->buildApiResponse('{"checkoutUrl":"https://checkout.visitor-analytics.io/plan?token=jwt"}')
+        );
+
+        self::assertSame('https://checkout.visitor-analytics.io/plan?token=jwt', $this->subject->getManagePlanUrl($site));
+    }
+
+    #[Test]
+    public function getManagePlanUrlReturnsNullWhenApiResponseHasNoUrl(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->requestFactory->method('request')->willReturn($this->buildApiResponse('{}'));
+
+        self::assertNull($this->subject->getManagePlanUrl($site));
+    }
+
+    #[Test]
+    public function getManagePlanUrlReturnsNullWhenApiCallFails(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->requestFactory->method('request')->willThrowException(new \RuntimeException('connection refused'));
+
+        self::assertNull($this->subject->getManagePlanUrl($site));
+    }
+
+    #[Test]
+    public function getManagePlanUrlReturnsNullWhenSiteHasNoCredentials(): void
+    {
+        $this->requestFactory->expects(self::never())->method('request');
+
+        self::assertNull($this->subject->getManagePlanUrl($this->buildSite('main', '', '')));
+    }
+
+    /** getStatus */
+
     #[Test]
     public function persistsTrackingCodeAndStatusWhenApiResponseContainsThem(): void
     {

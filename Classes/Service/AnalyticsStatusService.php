@@ -58,6 +58,38 @@ readonly class AnalyticsStatusService
     }
 
     /**
+     * Fetches a fresh manage plan iframe URL from the API.
+     * The returned JWT is short-lived, so this is never cached.
+     */
+    public function getManagePlanUrl(Site $site): ?string
+    {
+        $credentials = $this->resolveCredentials($site);
+        if ($credentials === null) {
+            return null;
+        }
+
+        [$websiteId, $instanceId, $instanceSecret] = $credentials;
+        $path = '/api/checkout-url/' . $websiteId;
+
+        try {
+            $response = $this->requestFactory->request(
+                Analytics::getApiBaseUrl() . '/checkout-url/' . $websiteId,
+                'GET',
+                [
+                    'headers' => $this->buildHmacHeaders('GET', $path, $instanceId, $instanceSecret),
+                    'verify' => false,
+                ]
+            );
+
+            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            return isset($data['checkoutUrl']) ? (string)$data['checkoutUrl'] : null;
+        } catch (\Throwable $e) {
+            $this->logger->error('getManagePlanUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
+            return null;
+        }
+    }
+
+    /**
      * Fetches a fresh dashboard iframe URL from the API.
      * The returned JWT is short-lived (~300 s), so this is never cached.
      */

@@ -70,6 +70,20 @@
                                         <core:icon identifier="actions-view" size="small" />
                                         Dashboard
                                     </a>
+                                    <f:if condition="{site.status.status} == 'active'">
+                                        <f:then>
+                                            <a href="{site.managePlanUri}" class="btn btn-default">
+                                                <core:icon identifier="actions-credit-card" size="small" />
+                                                Manage Plan
+                                            </a>
+                                        </f:then>
+                                        <f:else>
+                                            <a href="{site.managePlanUri}" class="btn btn-primary">
+                                                <core:icon identifier="actions-credit-card" size="small" />
+                                                Plan abschließen
+                                            </a>
+                                        </f:else>
+                                    </f:if>
                                     <form method="post" action="{statusUri}" style="display:inline">
                                         <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
                                         <button type="submit" class="btn btn-default">

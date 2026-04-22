@@ -184,13 +184,12 @@ final class BackendModuleControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function registerActionRedirectsToIndexWhenNoCheckoutUrl(): void
+    public function registerActionRedirectsToIndexAfterSuccessfulRegistration(): void
     {
         $indexUri = '/module/site/analytics';
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri($indexUri));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->registrationService->method('register')->willReturn('');
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
         $response = $this->subject->registerAction(
@@ -199,29 +198,6 @@ final class BackendModuleControllerTest extends UnitTestCase
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertStringContainsString($indexUri, $response->getHeaderLine('location'));
-    }
-
-    #[Test]
-    public function registerActionRedirectsToCheckoutRouteWhenCheckoutUrlPresent(): void
-    {
-        $checkoutUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
-        $checkoutRouteUri = '/module/site/analytics/checkout?checkoutUrl=' . urlencode($checkoutUrl);
-
-        $site = $this->buildSiteMock('main', 'https://example.com');
-        $this->uriBuilder->method('buildUriFromRoute')
-            ->willReturnCallback(static function (string $route) use ($checkoutRouteUri): Uri {
-                return $route === 'site_analytics.checkout' ? new Uri($checkoutRouteUri) : new Uri('/module/site/analytics');
-            });
-        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->registrationService->method('register')->willReturn($checkoutUrl);
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
-
-        $response = $this->subject->registerAction(
-            $this->buildRequest(['siteIdentifier' => 'main', 'email' => 'user@example.com'])
-        );
-
-        self::assertInstanceOf(RedirectResponse::class, $response);
-        self::assertSame($checkoutRouteUri, $response->getHeaderLine('location'));
     }
 
     /** statusAction */
@@ -270,6 +246,109 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
         $response = $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+    }
+
+    /** invalidateStatusCacheAction */
+
+    #[Test]
+    public function invalidateStatusCacheActionReturnsBadRequestWhenSiteIdentifierMissing(): void
+    {
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn([]);
+
+        $this->analyticsStatusService->expects(self::never())->method('clearCache');
+
+        $response = $this->subject->invalidateStatusCacheAction($request);
+
+        self::assertSame(400, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function invalidateStatusCacheActionReturnsNotFoundWhenSiteNotFound(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')
+            ->willThrowException(new SiteNotFoundException('not found', 1));
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'unknown']);
+
+        $this->analyticsStatusService->expects(self::never())->method('clearCache');
+
+        $response = $this->subject->invalidateStatusCacheAction($request);
+
+        self::assertSame(404, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function invalidateStatusCacheActionClearsCacheAndReturnsSuccess(): void
+    {
+        $site = $this->buildSiteMock('main', 'https://example.com');
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+
+        $this->analyticsStatusService
+            ->expects(self::once())
+            ->method('clearCache')
+            ->with($site);
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'main']);
+
+        $response = $this->subject->invalidateStatusCacheAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    /** managePlanAction – error paths */
+
+    #[Test]
+    public function managePlanActionRedirectsWithErrorWhenSiteIdentifierMissing(): void
+    {
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+        $this->analyticsStatusService->expects(self::never())->method('getManagePlanUrl');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn([]);
+
+        $response = $this->subject->managePlanAction($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+    }
+
+    #[Test]
+    public function managePlanActionRedirectsWithErrorWhenSiteNotFound(): void
+    {
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willThrowException(new SiteNotFoundException('not found', 1));
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+        $this->analyticsStatusService->expects(self::never())->method('getManagePlanUrl');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'unknown']);
+
+        $response = $this->subject->managePlanAction($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+    }
+
+    #[Test]
+    public function managePlanActionRedirectsWithErrorWhenManagePlanUrlIsNull(): void
+    {
+        $site = $this->buildSiteMock('main', 'https://example.com');
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+        $this->analyticsStatusService->method('getManagePlanUrl')->willReturn(null);
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'main']);
+
+        $response = $this->subject->managePlanAction($request);
 
         self::assertInstanceOf(RedirectResponse::class, $response);
     }

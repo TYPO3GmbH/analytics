@@ -29,9 +29,13 @@ return [
                 'target' => BackendModuleController::class . '::dashboardAction',
                 'methods' => ['GET'],
             ],
-            'checkout' => [
-                'target' => BackendModuleController::class . '::checkoutAction',
+            'manage_plan' => [
+                'target' => BackendModuleController::class . '::managePlanAction',
                 'methods' => ['GET'],
+            ],
+            'invalidate_status_cache' => [
+                'target' => BackendModuleController::class . '::invalidateStatusCacheAction',
+                'methods' => ['POST'],
             ],
         ],
     ],

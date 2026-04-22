@@ -23,6 +23,9 @@
             <trans-unit id="flash.dashboardUrlUnavailable" resname="flash.dashboardUrlUnavailable">
                 <source>Dashboard URL could not be retrieved.</source>
             </trans-unit>
+            <trans-unit id="flash.managePlanUrlUnavailable" resname="flash.managePlanUrlUnavailable">
+                <source>Manage plan URL could not be retrieved.</source>
+            </trans-unit>
             <trans-unit id="flash.success.title" resname="flash.success.title">
                 <source>Registration successful</source>
             </trans-unit>

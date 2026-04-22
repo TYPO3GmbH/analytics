@@ -13,6 +13,7 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
@@ -80,7 +81,7 @@ final readonly class BackendModuleController
         }
 
         try {
-            $checkoutUrl = $this->registrationService->register($site, $email);
+            $this->registrationService->register($site, $email);
         } catch (\RuntimeException $e) {
             $this->addErrorFlashMessage('flash.registrationFailed', [$e->getMessage()]);
             return new RedirectResponse($indexUri);
@@ -90,16 +91,6 @@ final readonly class BackendModuleController
             $this->translate('flash.success.registered', [$site->getIdentifier()]),
             $this->translate('flash.success.title')
         );
-
-        if ($checkoutUrl !== '') {
-            $this->logger->info('Redirecting to checkout page.', ['siteIdentifier' => $siteIdentifier]);
-            return new RedirectResponse(
-                (string)$this->uriBuilder->buildUriFromRoute(
-                    'site_analytics.checkout',
-                    ['checkoutUrl' => rtrim($checkoutUrl, '/')]
-                )
-            );
-        }
 
         return new RedirectResponse($indexUri);
     }
@@ -129,6 +120,12 @@ final readonly class BackendModuleController
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
 
+        $parsedUrl = parse_url($dashboardUrl);
+        $dashboardOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
+        if (isset($parsedUrl['port'])) {
+            $dashboardOrigin .= ':' . $parsedUrl['port'];
+        }
+
         $moduleTemplate->assignMultiple([
             'site' => [
                 'identifier' => $site->getIdentifier(),
@@ -136,29 +133,45 @@ final readonly class BackendModuleController
                 'pageName' => $this->getRootPageTitle($site->getRootPageId()),
             ],
             'dashboardUrl' => $dashboardUrl,
+            'dashboardOrigin' => $dashboardOrigin,
+            'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
+                'site_analytics.invalidate_status_cache',
+                ['siteIdentifier' => $siteIdentifier]
+            ),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Dashboard');
     }
 
-    public function checkoutAction(ServerRequestInterface $request): ResponseInterface
+    public function managePlanAction(ServerRequestInterface $request): ResponseInterface
     {
-        $checkoutUrl = (string)($request->getQueryParams()['checkoutUrl'] ?? '');
+        $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
         $indexUri = $this->indexUri();
 
-        if ($checkoutUrl === '' || !str_starts_with($checkoutUrl, 'https://')) {
-            $this->logger->warning('Checkout action called with missing or invalid checkoutUrl.');
+        if ($siteIdentifier === '') {
+            $this->logger->warning('Manage plan action called without siteIdentifier.');
+            $this->addErrorFlashMessage('flash.invalidInput');
+            return new RedirectResponse($indexUri);
+        }
+
+        $site = $this->resolveSite($siteIdentifier);
+        if (!$site instanceof Site) {
+            return new RedirectResponse($indexUri);
+        }
+
+        $managePlanUrl = $this->analyticsStatusService->getManagePlanUrl($site);
+        if ($managePlanUrl === null) {
+            $this->logger->error('Manage plan action: URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
+            $this->addErrorFlashMessage('flash.managePlanUrlUnavailable');
             return new RedirectResponse($indexUri);
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
-
         $moduleTemplate->assignMultiple([
-            'checkoutUrl' => $checkoutUrl,
-            'indexUri' => $indexUri,
+            'managePlanUrl' => $managePlanUrl,
         ]);
 
-        return $moduleTemplate->renderResponse('Backend/Checkout');
+        return $moduleTemplate->renderResponse('Backend/ManagePlan');
     }
 
     public function statusAction(ServerRequestInterface $request): ResponseInterface
@@ -185,6 +198,24 @@ final readonly class BackendModuleController
         }
 
         return new RedirectResponse($indexUri);
+    }
+
+    public function invalidateStatusCacheAction(ServerRequestInterface $request): ResponseInterface
+    {
+        $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
+
+        if ($siteIdentifier === '') {
+            return new JsonResponse(['success' => false], 400);
+        }
+
+        try {
+            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+        } catch (SiteNotFoundException) {
+            return new JsonResponse(['success' => false], 404);
+        }
+
+        $this->analyticsStatusService->clearCache($site);
+        return new JsonResponse(['success' => true]);
     }
 
     private function resolveSite(string $siteIdentifier): ?Site
@@ -224,6 +255,10 @@ final readonly class BackendModuleController
                 'status' => $registered ? $this->analyticsStatusService->getStatus($site) : null,
                 'dashboardUri' => $registered ? (string)$this->uriBuilder->buildUriFromRoute(
                     'site_analytics.dashboard',
+                    ['siteIdentifier' => $site->getIdentifier()]
+                ) : '',
+                'managePlanUri' => $registered ? (string)$this->uriBuilder->buildUriFromRoute(
+                    'site_analytics.manage_plan',
                     ['siteIdentifier' => $site->getIdentifier()]
                 ) : '',
             ];

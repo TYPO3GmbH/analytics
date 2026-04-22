@@ -30,6 +30,10 @@
                 <source>Dashboard URL could not be retrieved.</source>
                 <target>Dashboard-URL konnte nicht abgerufen werden.</target>
             </trans-unit>
+            <trans-unit id="flash.managePlanUrlUnavailable" resname="flash.managePlanUrlUnavailable">
+                <source>Manage plan URL could not be retrieved.</source>
+                <target>Manage-Plan-URL konnte nicht abgerufen werden.</target>
+            </trans-unit>
             <trans-unit id="flash.success.title" resname="flash.success.title">
                 <source>Registration successful</source>
                 <target>Registrierung erfolgreich</target>
