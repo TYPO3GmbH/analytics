@@ -250,6 +250,11 @@ final readonly class BackendModuleController
         }
 
         $docHeader = $moduleTemplate->getDocHeaderComponent();
+        if (!method_exists($docHeader, 'addBreadcrumbSuffixNode')) {
+            $docHeader->disable();
+            return;
+        }
+
         if (method_exists($docHeader, 'disableAutomaticReloadButton')) {
             \Closure::fromCallable([$docHeader, 'disableAutomaticReloadButton'])();
         }
