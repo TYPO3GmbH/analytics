@@ -40,9 +40,81 @@
             </trans-unit>
             <trans-unit id="flash.success.registered" resname="flash.success.registered">
                 <source>Site "%s" successfully registered.</source>
-                <target>Site „%s" erfolgreich registriert.</target>
+                <target>Site „%s“ erfolgreich registriert.</target>
             </trans-unit>
-<trans-unit id="button.refresh" resname="button.refresh">
+            <trans-unit id="backend.headline" resname="backend.headline">
+                <source>TYPO3 Analytics</source>
+                <target>TYPO3 Analytics</target>
+            </trans-unit>
+            <trans-unit id="backend.intro" resname="backend.intro">
+                <source>This module shows all configured TYPO3 sites and their Analytics status. Sites that are not yet registered can be registered directly. Dashboard, plan management and status updates are available for registered sites.</source>
+                <target>Dieses Modul zeigt alle konfigurierten TYPO3-Sites und deren Analytics-Status. Noch nicht registrierte Sites können direkt angemeldet werden. Für registrierte Sites stehen Dashboard, Planverwaltung und Statusaktualisierung bereit.</target>
+            </trans-unit>
+            <trans-unit id="badge.registered" resname="badge.registered">
+                <source>Registered</source>
+                <target>Registriert</target>
+            </trans-unit>
+            <trans-unit id="badge.notRegistered" resname="badge.notRegistered">
+                <source>Not registered</source>
+                <target>Nicht registriert</target>
+            </trans-unit>
+            <trans-unit id="label.domain" resname="label.domain">
+                <source>Domain</source>
+                <target>Domain</target>
+            </trans-unit>
+            <trans-unit id="label.siteTitle" resname="label.siteTitle">
+                <source>Site title</source>
+                <target>Site-Titel</target>
+            </trans-unit>
+            <trans-unit id="label.websiteId" resname="label.websiteId">
+                <source>Website ID</source>
+                <target>Website ID</target>
+            </trans-unit>
+            <trans-unit id="label.status" resname="label.status">
+                <source>Status</source>
+                <target>Status</target>
+            </trans-unit>
+            <trans-unit id="label.package" resname="label.package">
+                <source>Package</source>
+                <target>Paket</target>
+            </trans-unit>
+            <trans-unit id="label.touchpoints" resname="label.touchpoints">
+                <source>Touchpoints</source>
+                <target>Touchpoints</target>
+            </trans-unit>
+            <trans-unit id="label.updatedAt" resname="label.updatedAt">
+                <source>Updated at</source>
+                <target>Aktualisiert am</target>
+            </trans-unit>
+            <trans-unit id="badge.exhausted" resname="badge.exhausted">
+                <source>exhausted</source>
+                <target>erschöpft</target>
+            </trans-unit>
+            <trans-unit id="button.dashboard" resname="button.dashboard">
+                <source>Dashboard</source>
+                <target>Dashboard</target>
+            </trans-unit>
+            <trans-unit id="button.managePlan" resname="button.managePlan">
+                <source>Manage Plan</source>
+                <target>Plan verwalten</target>
+            </trans-unit>
+            <trans-unit id="button.subscribePlan" resname="button.subscribePlan">
+                <source>Subscribe plan</source>
+                <target>Plan abschließen</target>
+            </trans-unit>
+            <trans-unit id="button.refreshStatus" resname="button.refreshStatus">
+                <source>Refresh status</source>
+                <target>Status aktualisieren</target>
+            </trans-unit>
+            <trans-unit id="button.register" resname="button.register">
+                <source>Register</source>
+                <target>Registrieren</target>
+            </trans-unit>
+            <trans-unit id="placeholder.registrationEmail" resname="placeholder.registrationEmail">
+                <source>Email address for registration</source>
+                <target>E-Mail-Adresse für Registrierung</target>
+            </trans-unit>
+            <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
                 <target>Aktualisieren</target>
             </trans-unit>
