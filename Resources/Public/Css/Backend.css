@@ -1,0 +1,14 @@
+.tx-analytics-registration-form {
+    min-width: min(32rem, 100%);
+}
+
+.tx-analytics-registration-form .form-control {
+    min-width: 18rem;
+}
+
+@media (max-width: 500px) {
+    .tx-analytics-registration-form,
+    .tx-analytics-registration-form .form-control {
+        min-width: 0;
+    }
+}

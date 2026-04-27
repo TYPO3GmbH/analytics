@@ -2,6 +2,8 @@
 <f:layout name="Default" />
 
 <f:section name="Content">
+    <f:asset.css identifier="analytics-backend" href="EXT:analytics/Resources/Public/Css/Backend.css" />
+
     <f:flashMessages queueIdentifier="core.template.flashMessages"/>
 
     <h1>
@@ -89,7 +91,7 @@
                                         </a>
                                     </f:else>
                                 </f:if>
-                                <form method="post" action="{statusUri}" style="display:inline">
+                                <form method="post" action="{statusUri}">
                                     <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
                                     <button type="submit" class="btn btn-default">
                                         <core:icon identifier="actions-refresh" size="small" />
@@ -100,7 +102,7 @@
                         </f:then>
                         <f:else>
                             <div class="panel-actions flex-shrink-1">
-                                <form method="post" action="{registerUri}" class="w-100">
+                                <form method="post" action="{registerUri}" class="tx-analytics-registration-form w-100">
                                     <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
                                     <div class="input-group">
                                         <input
