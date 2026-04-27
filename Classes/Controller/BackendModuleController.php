@@ -10,13 +10,12 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
-use TYPO3\CMS\Core\Imaging\IconFactory;
-use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -30,7 +29,6 @@ final readonly class BackendModuleController
     public function __construct(
         private ModuleTemplateFactory $moduleTemplateFactory,
         private UriBuilder $uriBuilder,
-        private IconFactory $iconFactory,
         private FlashMessageService $flashMessageService,
         private SiteFinder $siteFinder,
         private InstanceRegistrationService $registrationService,
@@ -43,15 +41,7 @@ final readonly class BackendModuleController
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $indexUri = $this->indexUri();
-
-        $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        $buttonBar->addButton(
-            $buttonBar->makeLinkButton()
-                ->setTitle($this->translate('button.refresh'))
-                ->setHref($indexUri)
-                ->setIcon($this->iconFactory->getIcon('actions-refresh', IconSize::SMALL))
-        );
+        $this->configureModuleTemplate($moduleTemplate, $this->translate('backend.headline'));
 
         $moduleTemplate->assignMultiple([
             'sites' => $this->fetchSites(),
@@ -119,6 +109,13 @@ final readonly class BackendModuleController
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $this->configureModuleTemplate(
+            $moduleTemplate,
+            $this->translate('backend.headline'),
+            $this->translate('button.dashboard'),
+            'tx-analytics-iframe-module'
+        );
+        $this->addBreadcrumbSuffix($moduleTemplate, 'dashboard', $this->translate('button.dashboard'), 'actions-view');
 
         $parsedUrl = parse_url($dashboardUrl);
         $dashboardOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
@@ -167,6 +164,13 @@ final readonly class BackendModuleController
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $this->configureModuleTemplate(
+            $moduleTemplate,
+            $this->translate('backend.headline'),
+            $this->translate('button.managePlan'),
+            'tx-analytics-iframe-module'
+        );
+        $this->addBreadcrumbSuffix($moduleTemplate, 'manage-plan', $this->translate('button.managePlan'), 'actions-credit-card');
         $moduleTemplate->assignMultiple([
             'managePlanUrl' => $managePlanUrl,
         ]);
@@ -232,6 +236,47 @@ final readonly class BackendModuleController
     private function indexUri(): string
     {
         return (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
+    }
+
+    private function configureModuleTemplate(
+        ModuleTemplate $moduleTemplate,
+        string $title,
+        string $context = '',
+        string $moduleClass = ''
+    ): void {
+        $moduleTemplate->setTitle($title, $context);
+        if ($moduleClass !== '') {
+            $moduleTemplate->setModuleClass($moduleClass);
+        }
+
+        $docHeader = $moduleTemplate->getDocHeaderComponent();
+        if (method_exists($docHeader, 'disableAutomaticReloadButton')) {
+            \Closure::fromCallable([$docHeader, 'disableAutomaticReloadButton'])();
+        }
+    }
+
+    private function addBreadcrumbSuffix(
+        ModuleTemplate $moduleTemplate,
+        string $identifier,
+        string $label,
+        string $iconIdentifier
+    ): void {
+        $docHeader = $moduleTemplate->getDocHeaderComponent();
+        $breadcrumbNodeClass = 'TYPO3\\CMS\\Backend\\Dto\\Breadcrumb\\BreadcrumbNode';
+
+        if (!method_exists($docHeader, 'addBreadcrumbSuffixNode') || !class_exists($breadcrumbNodeClass)) {
+            return;
+        }
+
+        \Closure::fromCallable([$docHeader, 'addBreadcrumbSuffixNode'])(
+            new $breadcrumbNodeClass(
+                identifier: $identifier,
+                label: $label,
+                icon: $iconIdentifier,
+                iconOverlay: null,
+                url: null,
+            )
+        );
     }
 
     /**

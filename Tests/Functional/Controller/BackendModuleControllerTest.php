@@ -19,7 +19,6 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
-use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -257,7 +256,6 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         return new BackendModuleController(
             $this->get(ModuleTemplateFactory::class),
             $this->get(UriBuilder::class),
-            $this->get(IconFactory::class),
             $this->get(FlashMessageService::class),
             $siteFinder ?? $this->get(SiteFinder::class),
             $this->createMock(InstanceRegistrationService::class),

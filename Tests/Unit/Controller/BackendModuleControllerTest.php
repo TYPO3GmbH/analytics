@@ -19,7 +19,6 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\Uri;
-use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\CMS\Core\Localization\Locales;
@@ -110,7 +109,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->subject = new BackendModuleController(
             $moduleTemplateFactory,
             $this->uriBuilder,
-            $this->createMock(IconFactory::class),
             $this->flashMessageService,
             $this->siteFinder,
             $this->registrationService,
