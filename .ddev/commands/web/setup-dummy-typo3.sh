@@ -46,6 +46,12 @@ if [ ! -f "$DUMMY_DIR/composer.json" ]; then
   composer create-project "typo3/cms-base-distribution:^${TYPO3_VERSION}.0" "$DUMMY_DIR" --no-interaction --no-install
 else
   echo "TYPO3 base distribution already exists, skipping creation."
+  TYPO3_VERSION="$(php -r '
+    $composer = json_decode(file_get_contents($argv[1]), true);
+    $constraint = $composer["require"]["typo3/cms-core"] ?? "";
+    echo preg_match("/\\b(13|14)\\b/", $constraint, $matches) ? $matches[1] : "13";
+  ' "$DUMMY_DIR/composer.json" 2>/dev/null)"
+  echo "Detected TYPO3 v${TYPO3_VERSION}."
 fi
 
 cd "$DUMMY_DIR"
@@ -61,11 +67,19 @@ composer config --json repositories.analytics '{"type":"path","url":"/var/www/ht
 # composer.json carries an explicit "version" field (e.g. "1.0.0-alpha") or
 # only exposes a branch name (e.g. "dev-develop"). Path repositories always
 # carry dev stability, so '*@dev' resolves correctly in both cases.
-echo "Requiring extension from path repository..."
-composer require "t3g/analytics:*@dev" --no-interaction --no-update
+echo "Requiring extensions..."
+composer require \
+  "t3g/analytics:*@dev" \
+  "typo3/cms-styleguide:^${TYPO3_VERSION}.0" \
+  --no-interaction \
+  --no-update
 
 echo "--- Installing Composer dependencies ---"
-composer install --no-interaction
+if [ -f composer.lock ] && ! grep -q '"name": "typo3/cms-styleguide"' composer.lock; then
+  composer update "t3g/analytics" "typo3/cms-styleguide" --with-all-dependencies --no-interaction
+else
+  composer install --no-interaction
+fi
 
 # ---------------------------------------------------------------------------
 # 3. Write .env
@@ -197,7 +211,13 @@ defined('TYPO3') or die();
 PHP
 
 # ---------------------------------------------------------------------------
-# 8. Remove FIRST_INSTALL so TYPO3 does not redirect to the installer
+# 8. Set up extensions
+# ---------------------------------------------------------------------------
+echo "--- Setting up extensions ---"
+php "$DUMMY_DIR/vendor/bin/typo3" extension:setup
+
+# ---------------------------------------------------------------------------
+# 9. Remove FIRST_INSTALL so TYPO3 does not redirect to the installer
 # ---------------------------------------------------------------------------
 rm -f "$DUMMY_DIR/public/FIRST_INSTALL"
 
