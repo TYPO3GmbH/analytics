@@ -46,8 +46,7 @@ final readonly class BackendModuleController
         $this->configureModuleTemplate(
             $moduleTemplate,
             $this->translate('backend.headline'),
-            moduleClass: 'module-layout-normal',
-            siteSelectRouteIdentifier: 'site_analytics.dashboard'
+            moduleClass: 'module-layout-normal'
         );
 
         $moduleTemplate->assignMultiple([
