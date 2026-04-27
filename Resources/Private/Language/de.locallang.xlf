@@ -90,13 +90,25 @@
                 <source>Valid until</source>
                 <target>Gültig bis</target>
             </trans-unit>
+            <trans-unit id="label.resetsAt" resname="label.resetsAt">
+                <source>resets at</source>
+                <target>Reset am</target>
+            </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
                 <source>exhausted</source>
                 <target>erschöpft</target>
             </trans-unit>
+            <trans-unit id="badge.lowCredits" resname="badge.lowCredits">
+                <source>low credits</source>
+                <target>wenig Credits</target>
+            </trans-unit>
             <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
                 <source>Your credits have been used up. Add more credits via</source>
                 <target>Deine Credits sind aufgebraucht. Weitere Credits erhältst du über</target>
+            </trans-unit>
+            <trans-unit id="message.touchpointsLow" resname="message.touchpointsLow">
+                <source>Your credits are running low. Add more credits via</source>
+                <target>Deine Credits werden knapp. Weitere Credits erhältst du über</target>
             </trans-unit>
             <trans-unit id="button.dashboard" resname="button.dashboard">
                 <source>Dashboard</source>

@@ -13,7 +13,7 @@
     </p>
 
     <f:for each="{sites}" as="site">
-        <div class="panel {f:if(condition: site.status.consumption.exhausted, then: 'panel-danger', else: 'panel-default')}">
+        <div class="panel {site.panelClass}">
             <h3 class="panel-heading">
                 <div class="panel-heading-row flex-wrap">
                     <f:if condition="{site.status.status}">
@@ -133,21 +133,44 @@
                                 {site.status.packageName}
                             </div>
                         </f:if>
-                        <strong><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.validUntil" />:</strong>
-                        <f:format.date format="d.m.Y" date="{site.status.expiresAt}" />
-                        <f:if condition="{site.status.consumption}">
+                        <f:if condition="{site.status.expiresAt}">
+                            <div>
+                                <strong><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.validUntil" />:</strong>
+                                <f:format.date format="d.m.Y" date="{site.status.expiresAt}" />
+                            </div>
+                        </f:if>
+                        <f:if condition="{site.status.consumption.limited}">
                             <div>
                                 <strong><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.touchpoints" />:</strong>
                                 {site.status.consumption.stpConsumed} / {site.status.consumption.stpLimit}
+                                <f:if condition="{site.status.stpResetAt}">
+                                    <span class="text-muted">
+                                        (<f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.resetsAt" />:
+                                        <f:format.date format="d.m.Y" date="{site.status.stpResetAt}" />)
+                                    </span>
+                                </f:if>
                                 <f:if condition="{site.status.consumption.exhausted}">
                                     <span class="badge badge-danger">
                                         <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.exhausted" />
+                                    </span>
+                                </f:if>
+                                <f:if condition="{site.status.consumption.warning}">
+                                    <span class="badge badge-warning">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.lowCredits" />
                                     </span>
                                 </f:if>
                             </div>
                             <f:if condition="{site.status.consumption.exhausted}">
                                 <div class="alert alert-danger mt-2">
                                     <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:message.touchpointsExhausted" />
+                                    <a href="{site.managePlanUri}" class="alert-link">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
+                                    </a>.
+                                </div>
+                            </f:if>
+                            <f:if condition="{site.status.consumption.warning}">
+                                <div class="alert alert-warning mt-2">
+                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:message.touchpointsLow" />
                                     <a href="{site.managePlanUri}" class="alert-link">
                                         <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
                                     </a>.

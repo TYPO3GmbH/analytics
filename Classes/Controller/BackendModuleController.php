@@ -26,6 +26,8 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 final readonly class BackendModuleController
 {
+    private const float CREDIT_WARNING_REMAINING_RATIO = 0.25;
+
     public function __construct(
         private ModuleTemplateFactory $moduleTemplateFactory,
         private UriBuilder $uriBuilder,
@@ -285,7 +287,7 @@ final readonly class BackendModuleController
     }
 
     /**
-     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, status: array<string, mixed>|null, dashboardUri: string}>
+     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
      */
     private function fetchSites(): array
     {
@@ -295,6 +297,8 @@ final readonly class BackendModuleController
             $websiteId = $site->getSettings()->get('websiteId', '') ?: null;
             $registered = $websiteId !== null;
 
+            $status = $this->prepareStatus($registered ? $this->analyticsStatusService->getStatus($site) : null);
+
             $sites[] = [
                 'identifier' => $site->getIdentifier(),
                 'title' => $site->getConfiguration()['websiteTitle'] ?? $site->getIdentifier(),
@@ -302,7 +306,8 @@ final readonly class BackendModuleController
                 'domain' => rtrim($site->getBase()->__toString(), '/'),
                 'websiteId' => $websiteId,
                 'registered' => $registered,
-                'status' => $registered ? $this->analyticsStatusService->getStatus($site) : null,
+                'status' => $status,
+                'panelClass' => $this->resolvePanelClass($status),
                 'dashboardUri' => $registered ? (string)$this->uriBuilder->buildUriFromRoute(
                     'site_analytics.dashboard',
                     ['siteIdentifier' => $site->getIdentifier()]
@@ -315,6 +320,52 @@ final readonly class BackendModuleController
         }
 
         return $sites;
+    }
+
+    /**
+     * @param array<string, mixed>|null $status
+     * @return array<string, mixed>|null
+     */
+    private function prepareStatus(?array $status): ?array
+    {
+        if (!is_array($status['consumption'] ?? null)) {
+            return $status;
+        }
+
+        $consumption = $status['consumption'];
+        $hasLimit = array_key_exists('stpLimit', $consumption);
+        $limit = (int)($consumption['stpLimit'] ?? 0);
+        $remaining = array_key_exists('stpRemaining', $consumption)
+            ? (int)$consumption['stpRemaining']
+            : max(0, $limit - (int)($consumption['stpConsumed'] ?? 0));
+        $exhausted = (bool)($consumption['exhausted'] ?? false);
+
+        $consumption['limited'] = $hasLimit && $limit !== -1;
+        $consumption['warning'] = $limit > 0
+            && !$exhausted
+            && ($remaining / $limit) <= self::CREDIT_WARNING_REMAINING_RATIO;
+
+        $status['consumption'] = $consumption;
+        return $status;
+    }
+
+    /** @param array<string, mixed>|null $status */
+    private function resolvePanelClass(?array $status): string
+    {
+        if (!is_array($status['consumption'] ?? null)) {
+            return 'panel-default';
+        }
+
+        $consumption = $status['consumption'];
+        if (($consumption['limited'] ?? false) && ($consumption['exhausted'] ?? false)) {
+            return 'panel-danger';
+        }
+
+        if ($consumption['warning'] ?? false) {
+            return 'panel-warning';
+        }
+
+        return 'panel-default';
     }
 
     private function getRootPageTitle(int $pageUid): string
