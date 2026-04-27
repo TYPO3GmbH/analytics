@@ -15,7 +15,7 @@
     </p>
 
     <f:for each="{sites}" as="site">
-        <div class="panel panel-default">
+        <div class="panel {f:if(condition: site.status.consumption.exhausted, then: 'panel-danger', else: 'panel-default')}">
             <h3 class="panel-heading">
                 <div class="panel-heading-row flex-wrap">
                     <f:if condition="{site.status.status}">
@@ -145,6 +145,14 @@
                                     </span>
                                 </f:if>
                             </div>
+                            <f:if condition="{site.status.consumption.exhausted}">
+                                <div class="alert alert-danger mt-2">
+                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:message.touchpointsExhausted" />
+                                    <a href="{site.managePlanUri}" class="alert-link">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
+                                    </a>.
+                                </div>
+                            </f:if>
                         </f:if>
                         <f:if condition="{site.status._fetchedAt}">
                             <div class="text-muted small">

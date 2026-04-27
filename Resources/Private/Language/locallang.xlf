@@ -60,13 +60,16 @@
                 <source>Package</source>
             </trans-unit>
             <trans-unit id="label.touchpoints" resname="label.touchpoints">
-                <source>Touchpoints</source>
+                <source>Credits</source>
             </trans-unit>
             <trans-unit id="label.updatedAt" resname="label.updatedAt">
                 <source>Updated at</source>
             </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
                 <source>exhausted</source>
+            </trans-unit>
+            <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
+                <source>Your credits have been used up. Add more credits via</source>
             </trans-unit>
             <trans-unit id="button.dashboard" resname="button.dashboard">
                 <source>Dashboard</source>
