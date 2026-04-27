@@ -15,6 +15,8 @@ use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 readonly class AnalyticsStatusService
 {
+    private const float CREDIT_WARNING_REMAINING_RATIO = 0.25;
+
     public function __construct(
         private FrontendInterface $cache,
         private RequestFactory $requestFactory,
@@ -44,12 +46,13 @@ readonly class AnalyticsStatusService
         }
 
         $status = $this->fetchFromApi($site);
+        $prepared = $this->prepareStatus($status);
 
-        if ($status !== null) {
-            $this->cache->set($cacheKey, $status, [], 86400);
+        if ($prepared !== null) {
+            $this->cache->set($cacheKey, $prepared, [], 86400);
         }
 
-        return $status;
+        return $prepared;
     }
 
     public function clearCache(Site $site): void
@@ -227,6 +230,42 @@ readonly class AnalyticsStatusService
             'Site settings updated from status response.',
             ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]
         );
+    }
+
+    /**
+     * @param array<string, mixed>|null $status
+     * @return array<string, mixed>|null
+     */
+    private function prepareStatus(?array $status): ?array
+    {
+        if (!is_array($status['consumption'] ?? null)) {
+            return $status;
+        }
+
+        $consumption = $status['consumption'];
+        $hasLimit = array_key_exists('stpLimit', $consumption);
+        $limit = $hasLimit ? (int)$consumption['stpLimit'] : 0;
+
+        if ($limit === -1) {
+            $consumption['limited'] = false;
+            $consumption['exhausted'] = false;
+            $consumption['stpRemaining'] = PHP_INT_MAX;
+            $consumption['warning'] = false;
+        } else {
+            $remaining = array_key_exists('stpRemaining', $consumption)
+                ? (int)$consumption['stpRemaining']
+                : max(0, $limit - (int)($consumption['stpConsumed'] ?? 0));
+            $exhausted = (bool)($consumption['exhausted'] ?? false);
+
+            $consumption['limited'] = $hasLimit;
+            $consumption['stpRemaining'] = $remaining;
+            $consumption['exhausted'] = $exhausted;
+            $consumption['warning'] = $hasLimit && !$exhausted && $limit > 0
+                && ($remaining / $limit) <= self::CREDIT_WARNING_REMAINING_RATIO;
+        }
+
+        $status['consumption'] = $consumption;
+        return $status;
     }
 
     private function cacheKey(Site $site): string
