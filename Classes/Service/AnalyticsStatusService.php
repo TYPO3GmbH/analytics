@@ -205,7 +205,7 @@ readonly class AnalyticsStatusService
      */
     private function persistStatusSettings(Site $site, array $data): void
     {
-        $trackingCode = (string)($data['trackingId'] ?? '');
+        $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
         $newStatus = (string)($data['status'] ?? '');
         $settings = $site->getSettings();
 

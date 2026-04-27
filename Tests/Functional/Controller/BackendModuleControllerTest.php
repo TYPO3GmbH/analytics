@@ -19,6 +19,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -274,7 +275,8 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $route = new Route($path, ['packageName' => 't3g/analytics']);
 
         return (new ServerRequest(new Uri('https://example.com' . $path), $method))
-            ->withAttribute('route', $route);
+            ->withAttribute('route', $route)
+            ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
     }
 
     private function buildSiteMock(string $identifier): Site

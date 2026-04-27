@@ -65,6 +65,9 @@
             <trans-unit id="label.updatedAt" resname="label.updatedAt">
                 <source>Updated at</source>
             </trans-unit>
+            <trans-unit id="label.validUntil" resname="label.validUntil">
+                <source>Valid until</source>
+            </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
                 <source>exhausted</source>
             </trans-unit>

@@ -106,7 +106,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
         $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"status":"active","trackingId":"tc-abc"}')
+            $this->buildApiResponse('{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}')
         );
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
 
@@ -130,7 +130,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         $site = $this->buildSite('main', 'w-123', 'i-456', ['trackingCode' => 'tc-abc', 'status' => 'active']);
         $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"status":"active","trackingId":"tc-abc"}')
+            $this->buildApiResponse('{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}')
         );
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');

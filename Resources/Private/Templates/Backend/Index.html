@@ -133,6 +133,8 @@
                                 {site.status.packageName}
                             </div>
                         </f:if>
+                        <strong><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.validUntil" />:</strong>
+                        <f:format.date format="d.m.Y" date="{site.status.expiresAt}" />
                         <f:if condition="{site.status.consumption}">
                             <div>
                                 <strong><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.touchpoints" />:</strong>

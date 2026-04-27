@@ -256,7 +256,7 @@ final readonly class BackendModuleController
         }
 
         if (method_exists($docHeader, 'disableAutomaticReloadButton')) {
-            \Closure::fromCallable([$docHeader, 'disableAutomaticReloadButton'])();
+            $docHeader->disableAutomaticReloadButton(...)();
         }
     }
 
@@ -273,7 +273,7 @@ final readonly class BackendModuleController
             return;
         }
 
-        \Closure::fromCallable([$docHeader, 'addBreadcrumbSuffixNode'])(
+        $docHeader->addBreadcrumbSuffixNode(...)(
             new $breadcrumbNodeClass(
                 identifier: $identifier,
                 label: $label,

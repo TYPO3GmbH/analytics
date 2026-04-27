@@ -86,6 +86,10 @@
                 <source>Updated at</source>
                 <target>Aktualisiert am</target>
             </trans-unit>
+            <trans-unit id="label.validUntil" resname="label.validUntil">
+                <source>Valid until</source>
+                <target>Gültig bis</target>
+            </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
                 <source>exhausted</source>
                 <target>erschöpft</target>
