@@ -11,6 +11,7 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
+use TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -47,7 +48,8 @@ final readonly class BackendModuleController
         $this->configureModuleTemplate(
             $moduleTemplate,
             $this->translate('backend.headline'),
-            moduleClass: 'module-layout-normal'
+            moduleClass: 'module-layout-normal',
+            siteSelectRouteIdentifier: 'site_analytics.dashboard'
         );
 
         $moduleTemplate->assignMultiple([
@@ -125,7 +127,9 @@ final readonly class BackendModuleController
             'tx-analytics-iframe-module',
             'site_analytics.dashboard',
             ['siteIdentifier' => $siteIdentifier],
-            $this->shortcutLabel($this->translate('button.dashboard'), $siteLabel)
+            $this->shortcutLabel($this->translate('button.dashboard'), $siteLabel),
+            $siteIdentifier,
+            'site_analytics.dashboard'
         );
         $this->addBreadcrumbSuffix($moduleTemplate, 'dashboard', $this->translate('button.dashboard') . ': ' . $siteLabel, 'actions-view');
 
@@ -185,7 +189,9 @@ final readonly class BackendModuleController
             'tx-analytics-iframe-module',
             'site_analytics.manage_plan',
             ['siteIdentifier' => $siteIdentifier],
-            $this->shortcutLabel($this->translate('button.managePlan'), $siteLabel)
+            $this->shortcutLabel($this->translate('button.managePlan'), $siteLabel),
+            $siteIdentifier,
+            'site_analytics.manage_plan'
         );
         $this->addBreadcrumbSuffix($moduleTemplate, 'manage-plan', $this->translate('button.managePlan') . ': ' . $siteLabel, 'actions-credit-card');
         $moduleTemplate->assignMultiple([
@@ -255,6 +261,9 @@ final readonly class BackendModuleController
         return (string)$this->uriBuilder->buildUriFromRoute('site_analytics');
     }
 
+    /**
+     * @param array<string, mixed> $shortcutArguments
+     */
     private function configureModuleTemplate(
         ModuleTemplate $moduleTemplate,
         string $title,
@@ -262,7 +271,9 @@ final readonly class BackendModuleController
         string $moduleClass = '',
         string $shortcutRouteIdentifier = 'site_analytics',
         array $shortcutArguments = [],
-        string $shortcutDisplayName = ''
+        string $shortcutDisplayName = '',
+        string $selectedSiteIdentifier = '',
+        string $siteSelectRouteIdentifier = ''
     ): void {
         $moduleTemplate->setTitle($title, $context);
         if ($moduleClass !== '') {
@@ -276,6 +287,7 @@ final readonly class BackendModuleController
             $shortcutArguments,
             $shortcutDisplayName !== '' ? $shortcutDisplayName : $title
         );
+        $this->addRegisteredSitesDropdown($moduleTemplate, $selectedSiteIdentifier, $siteSelectRouteIdentifier);
     }
 
     /**
@@ -286,8 +298,7 @@ final readonly class BackendModuleController
         string $routeIdentifier,
         array $arguments,
         string $displayName
-    ): void
-    {
+    ): void {
         $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
 
         $shortcutButton = $buttonBar->makeShortcutButton()
@@ -295,6 +306,53 @@ final readonly class BackendModuleController
             ->setArguments($arguments)
             ->setDisplayName($displayName);
         $buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
+    }
+
+    private function addRegisteredSitesDropdown(
+        ModuleTemplate $moduleTemplate,
+        string $selectedSiteIdentifier,
+        string $routeIdentifier
+    ): void {
+        if ($routeIdentifier === '') {
+            return;
+        }
+
+        $sites = $this->registeredSiteOptions();
+        if (count($sites) <= 1) {
+            return;
+        }
+
+        $selectedLabel = $this->translate('label.registeredSites');
+        foreach ($sites as $site) {
+            if ($site['identifier'] === $selectedSiteIdentifier) {
+                $selectedLabel = $site['label'];
+                break;
+            }
+        }
+
+        $dropdown = $moduleTemplate->getDocHeaderComponent()
+            ->getButtonBar()
+            ->makeDropDownButton()
+            ->setLabel($selectedLabel)
+            ->setTitle($this->translate('label.registeredSites'))
+            ->setShowLabelText(true);
+
+        foreach ($sites as $site) {
+            $dropdownItem = GeneralUtility::makeInstance(DropDownItem::class);
+            $dropdownItem->setLabel($site['label']);
+            $dropdownItem->setTitle($site['label']);
+            $dropdownItem->setHref((string)$this->uriBuilder->buildUriFromRoute(
+                $routeIdentifier,
+                ['siteIdentifier' => $site['identifier']]
+            ));
+            $dropdownItem->setActive($site['identifier'] === $selectedSiteIdentifier);
+
+            $dropdown->addItem($dropdownItem);
+        }
+
+        $moduleTemplate->getDocHeaderComponent()
+            ->getButtonBar()
+            ->addButton($dropdown, ButtonBar::BUTTON_POSITION_LEFT);
     }
 
     private function addBreadcrumbSuffix(
@@ -402,6 +460,31 @@ final readonly class BackendModuleController
         }
 
         return 'panel-default';
+    }
+
+    /**
+     * @return list<array{identifier: string, label: string}>
+     */
+    private function registeredSiteOptions(): array
+    {
+        $sites = [];
+
+        foreach ($this->siteFinder->getAllSites() as $site) {
+            $websiteId = $site->getSettings()->get('websiteId', '') ?: null;
+            if ($websiteId === null) {
+                continue;
+            }
+
+            $sites[] = [
+                'identifier' => $site->getIdentifier(),
+                'label' => $this->siteLabel(
+                    $this->getRootPageTitle($site->getRootPageId()),
+                    $site->getIdentifier()
+                ),
+            ];
+        }
+
+        return $sites;
     }
 
     private function getRootPageTitle(int $pageUid): string

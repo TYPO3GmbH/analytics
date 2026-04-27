@@ -66,6 +66,10 @@
                 <source>Site title</source>
                 <target>Site-Titel</target>
             </trans-unit>
+            <trans-unit id="label.registeredSites" resname="label.registeredSites">
+                <source>Registered sites</source>
+                <target>Registrierte Sites</target>
+            </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
                 <target>Website ID</target>

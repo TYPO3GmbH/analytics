@@ -50,6 +50,9 @@
             <trans-unit id="label.siteTitle" resname="label.siteTitle">
                 <source>Site title</source>
             </trans-unit>
+            <trans-unit id="label.registeredSites" resname="label.registeredSites">
+                <source>Registered sites</source>
+            </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
             </trans-unit>
