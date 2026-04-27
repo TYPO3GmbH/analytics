@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -43,7 +44,11 @@ final readonly class BackendModuleController
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $this->configureModuleTemplate($moduleTemplate, $this->translate('backend.headline'));
+        $this->configureModuleTemplate(
+            $moduleTemplate,
+            $this->translate('backend.headline'),
+            moduleClass: 'module-layout-normal'
+        );
 
         $moduleTemplate->assignMultiple([
             'sites' => $this->fetchSites(),
@@ -102,6 +107,8 @@ final readonly class BackendModuleController
         if (!$site instanceof Site) {
             return new RedirectResponse($indexUri);
         }
+        $pageName = $this->getRootPageTitle($site->getRootPageId());
+        $siteLabel = $this->siteLabel($pageName, $site->getIdentifier());
 
         $dashboardUrl = $this->analyticsStatusService->getDashboardUrl($site);
         if ($dashboardUrl === null) {
@@ -114,10 +121,13 @@ final readonly class BackendModuleController
         $this->configureModuleTemplate(
             $moduleTemplate,
             $this->translate('backend.headline'),
-            $this->translate('button.dashboard'),
-            'tx-analytics-iframe-module'
+            $this->translate('button.dashboard') . ': ' . $siteLabel,
+            'tx-analytics-iframe-module',
+            'site_analytics.dashboard',
+            ['siteIdentifier' => $siteIdentifier],
+            $this->shortcutLabel($this->translate('button.dashboard'), $siteLabel)
         );
-        $this->addBreadcrumbSuffix($moduleTemplate, 'dashboard', $this->translate('button.dashboard'), 'actions-view');
+        $this->addBreadcrumbSuffix($moduleTemplate, 'dashboard', $this->translate('button.dashboard') . ': ' . $siteLabel, 'actions-view');
 
         $parsedUrl = parse_url($dashboardUrl);
         $dashboardOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
@@ -129,7 +139,7 @@ final readonly class BackendModuleController
             'site' => [
                 'identifier' => $site->getIdentifier(),
                 'title' => $site->getConfiguration()['websiteTitle'] ?? $site->getIdentifier(),
-                'pageName' => $this->getRootPageTitle($site->getRootPageId()),
+                'pageName' => $pageName,
             ],
             'dashboardUrl' => $dashboardUrl,
             'dashboardOrigin' => $dashboardOrigin,
@@ -157,6 +167,8 @@ final readonly class BackendModuleController
         if (!$site instanceof Site) {
             return new RedirectResponse($indexUri);
         }
+        $pageName = $this->getRootPageTitle($site->getRootPageId());
+        $siteLabel = $this->siteLabel($pageName, $site->getIdentifier());
 
         $managePlanUrl = $this->analyticsStatusService->getManagePlanUrl($site);
         if ($managePlanUrl === null) {
@@ -169,10 +181,13 @@ final readonly class BackendModuleController
         $this->configureModuleTemplate(
             $moduleTemplate,
             $this->translate('backend.headline'),
-            $this->translate('button.managePlan'),
-            'tx-analytics-iframe-module'
+            $this->translate('button.managePlan') . ': ' . $siteLabel,
+            'tx-analytics-iframe-module',
+            'site_analytics.manage_plan',
+            ['siteIdentifier' => $siteIdentifier],
+            $this->shortcutLabel($this->translate('button.managePlan'), $siteLabel)
         );
-        $this->addBreadcrumbSuffix($moduleTemplate, 'manage-plan', $this->translate('button.managePlan'), 'actions-credit-card');
+        $this->addBreadcrumbSuffix($moduleTemplate, 'manage-plan', $this->translate('button.managePlan') . ': ' . $siteLabel, 'actions-credit-card');
         $moduleTemplate->assignMultiple([
             'managePlanUrl' => $managePlanUrl,
         ]);
@@ -244,22 +259,42 @@ final readonly class BackendModuleController
         ModuleTemplate $moduleTemplate,
         string $title,
         string $context = '',
-        string $moduleClass = ''
+        string $moduleClass = '',
+        string $shortcutRouteIdentifier = 'site_analytics',
+        array $shortcutArguments = [],
+        string $shortcutDisplayName = ''
     ): void {
         $moduleTemplate->setTitle($title, $context);
         if ($moduleClass !== '') {
             $moduleTemplate->setModuleClass($moduleClass);
         }
 
-        $docHeader = $moduleTemplate->getDocHeaderComponent();
-        if (!method_exists($docHeader, 'addBreadcrumbSuffixNode')) {
-            $docHeader->disable();
-            return;
-        }
+        $moduleTemplate->getDocHeaderComponent()->enable();
+        $this->addShortcutButton(
+            $moduleTemplate,
+            $shortcutRouteIdentifier,
+            $shortcutArguments,
+            $shortcutDisplayName !== '' ? $shortcutDisplayName : $title
+        );
+    }
 
-        if (method_exists($docHeader, 'disableAutomaticReloadButton')) {
-            $docHeader->disableAutomaticReloadButton(...)();
-        }
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function addShortcutButton(
+        ModuleTemplate $moduleTemplate,
+        string $routeIdentifier,
+        array $arguments,
+        string $displayName
+    ): void
+    {
+        $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
+
+        $shortcutButton = $buttonBar->makeShortcutButton()
+            ->setRouteIdentifier($routeIdentifier)
+            ->setArguments($arguments)
+            ->setDisplayName($displayName);
+        $buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
     private function addBreadcrumbSuffix(
@@ -269,13 +304,14 @@ final readonly class BackendModuleController
         string $iconIdentifier
     ): void {
         $docHeader = $moduleTemplate->getDocHeaderComponent();
+        $methodName = 'addBreadcrumbSuffixNode';
         $breadcrumbNodeClass = 'TYPO3\\CMS\\Backend\\Dto\\Breadcrumb\\BreadcrumbNode';
 
-        if (!method_exists($docHeader, 'addBreadcrumbSuffixNode') || !class_exists($breadcrumbNodeClass)) {
+        if (!method_exists($docHeader, $methodName) || !class_exists($breadcrumbNodeClass)) {
             return;
         }
 
-        $docHeader->addBreadcrumbSuffixNode(...)(
+        $docHeader->{$methodName}(...)(
             new $breadcrumbNodeClass(
                 identifier: $identifier,
                 label: $label,
@@ -379,6 +415,21 @@ final readonly class BackendModuleController
             ->fetchAssociative();
 
         return is_array($row) ? (string)$row['title'] : '';
+    }
+
+    private function siteLabel(string $pageName, string $siteIdentifier): string
+    {
+        $pageName = trim($pageName);
+        if ($pageName === '') {
+            return $siteIdentifier;
+        }
+
+        return $pageName . ' (' . $siteIdentifier . ')';
+    }
+
+    private function shortcutLabel(string $actionLabel, string $siteLabel): string
+    {
+        return $this->translate('backend.headline') . ' - ' . $actionLabel . ': ' . $siteLabel;
     }
 
     /** @param list<mixed>|null $arguments */
