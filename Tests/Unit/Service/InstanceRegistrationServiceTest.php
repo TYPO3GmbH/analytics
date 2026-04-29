@@ -89,35 +89,6 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     }
 
     #[Test]
-    public function registerReturnsEmptyStringWhenNoCheckoutUrl(): void
-    {
-        $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t"}')
-        );
-        $this->cipherService->method('encrypt')->willReturn('enc-secret');
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
-
-        $result = $this->subject->register($this->buildSite(), 'user@example.com');
-
-        self::assertSame('', $result);
-    }
-
-    #[Test]
-    public function registerReturnsCheckoutUrlFromApiResponse(): void
-    {
-        $checkoutUrl = 'https://checkout.example.com/plan?token=abc';
-        $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t","checkoutUrl":"' . $checkoutUrl . '"}')
-        );
-        $this->cipherService->method('encrypt')->willReturn('enc-secret');
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
-
-        $result = $this->subject->register($this->buildSite(), 'user@example.com');
-
-        self::assertSame($checkoutUrl, $result);
-    }
-
-    #[Test]
     public function registerWritesCredentialsAndMergesExistingSettings(): void
     {
         $site = $this->buildSite();

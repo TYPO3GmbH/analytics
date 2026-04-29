@@ -6,7 +6,8 @@ namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Analytics;
-use T3G\Analytics\Utility\ApiExceptionHelper;
+use T3G\Analytics\Utility\ApiExceptionUtility;
+use T3G\Analytics\Utility\HmacUtility;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -79,7 +80,7 @@ readonly class AnalyticsStatusService
                 Analytics::getApiBaseUrl() . '/checkout-url/' . $websiteId,
                 'GET',
                 [
-                    'headers' => $this->buildHmacHeaders('GET', $path, $instanceId, $instanceSecret),
+                    'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
                     'verify' => false,
                 ]
             );
@@ -87,7 +88,7 @@ readonly class AnalyticsStatusService
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             return isset($data['checkoutUrl']) ? (string)$data['checkoutUrl'] : null;
         } catch (\Throwable $e) {
-            $this->logger->error('getManagePlanUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
+            $this->logger->error('getManagePlanUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionUtility::extractReason($e)]);
             return null;
         }
     }
@@ -111,7 +112,7 @@ readonly class AnalyticsStatusService
                 Analytics::getApiBaseUrl() . '/dashboard-url/' . $websiteId,
                 'GET',
                 [
-                    'headers' => $this->buildHmacHeaders('GET', $path, $instanceId, $instanceSecret),
+                    'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
                     'verify' => false,
                 ]
             );
@@ -119,7 +120,7 @@ readonly class AnalyticsStatusService
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             return isset($data['dashboardUrl']) ? (string)$data['dashboardUrl'] : null;
         } catch (\Throwable $e) {
-            $this->logger->error('getDashboardUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
+            $this->logger->error('getDashboardUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionUtility::extractReason($e)]);
             return null;
         }
     }
@@ -142,7 +143,7 @@ readonly class AnalyticsStatusService
                 Analytics::getApiBaseUrl() . '/status/' . $websiteId,
                 'GET',
                 [
-                    'headers' => $this->buildHmacHeaders('GET', $path, $instanceId, $instanceSecret),
+                    'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
                     'verify' => false,
                 ]
             );
@@ -155,7 +156,7 @@ readonly class AnalyticsStatusService
 
             return $data;
         } catch (\Throwable $e) {
-            $this->logger->error('fetchFromApi: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionHelper::extractReason($e)]);
+            $this->logger->error('fetchFromApi: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionUtility::extractReason($e)]);
             return null;
         }
     }
@@ -168,8 +169,11 @@ readonly class AnalyticsStatusService
     private function resolveCredentials(Site $site): ?array
     {
         $settings = $site->getSettings();
+        /** @var string $websiteId */
         $websiteId = $settings->get('websiteId', '');
+        /** @var string $instanceId */
         $instanceId = $settings->get('instanceId', '');
+        /** @var string $encryptedSecret */
         $encryptedSecret = $settings->get('instanceSecret', '');
 
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '') {
@@ -186,24 +190,6 @@ readonly class AnalyticsStatusService
     }
 
     /**
-     * @return array<string, string>
-     */
-    private function buildHmacHeaders(string $method, string $path, string $instanceId, string $instanceSecret): array
-    {
-        $timestamp = new \DateTimeImmutable('now', new \DateTimeZone('UTC'))->format(\DateTimeInterface::ATOM);
-        $contentHash = hash('sha256', '');
-
-        $canonical = implode("\n", [strtoupper($method), $path, $timestamp, $contentHash]);
-        $signature = base64_encode(hash_hmac('sha256', $canonical, $instanceSecret, true));
-
-        return [
-            'Authorization' => 'HMAC ' . $instanceId . ':' . $signature,
-            'X-Timestamp' => $timestamp,
-            'X-Content-Hash' => $contentHash,
-        ];
-    }
-
-    /**
      * @param array<string, mixed> $data
      */
     private function persistStatusSettings(Site $site, array $data): void
@@ -211,12 +197,16 @@ readonly class AnalyticsStatusService
         $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
         $newStatus = (string)($data['status'] ?? '');
         $settings = $site->getSettings();
+        /** @var string $existingTrackingCode */
+        $existingTrackingCode = $settings->get('trackingCode', '');
+        /** @var string $existingStatus */
+        $existingStatus = $settings->get('status', '');
 
         $update = [];
-        if ($trackingCode !== '' && $trackingCode !== $settings->get('trackingCode', '')) {
+        if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
             $update['trackingCode'] = $trackingCode;
         }
-        if ($newStatus !== '' && $newStatus !== $settings->get('status', '')) {
+        if ($newStatus !== '' && $newStatus !== $existingStatus) {
             $update['status'] = $newStatus;
         }
 

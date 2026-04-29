@@ -6,7 +6,7 @@ namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Analytics;
-use T3G\Analytics\Utility\ApiExceptionHelper;
+use T3G\Analytics\Utility\ApiExceptionUtility;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
@@ -27,11 +27,9 @@ readonly class InstanceRegistrationService
      * Registers a site instance with the Analytics API and persists the
      * returned credentials to site settings.
      *
-     * Returns the checkout URL when the API provides one, or an empty string.
-     *
      * @throws \RuntimeException when the API call fails or the response is incomplete
      */
-    public function register(Site $site, string $email): string
+    public function register(Site $site, string $email): void
     {
         $siteIdentifier = $site->getIdentifier();
 
@@ -51,7 +49,7 @@ readonly class InstanceRegistrationService
 
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $e) {
-            $reason = ApiExceptionHelper::extractReason($e);
+            $reason = ApiExceptionUtility::extractReason($e);
             $this->logger->error('Registration: API request failed.', ['siteIdentifier' => $siteIdentifier, 'reason' => $reason]);
             throw new \RuntimeException($reason, 0, $e);
         }
@@ -59,7 +57,6 @@ readonly class InstanceRegistrationService
         $instanceId = (string)($data['instanceId'] ?? '');
         $websiteId = (string)($data['websiteId'] ?? '');
         $instanceSecret = (string)($data['instanceSecret'] ?? '');
-        $checkoutUrl = (string)($data['checkoutUrl'] ?? '');
 
         if ($websiteId === '' || $instanceId === '') {
             $this->logger->error('Registration: API response incomplete.', ['siteIdentifier' => $siteIdentifier, 'data' => $data]);
@@ -76,7 +73,5 @@ readonly class InstanceRegistrationService
         ]));
 
         $this->logger->info('Site successfully registered.', ['siteIdentifier' => $siteIdentifier, 'websiteId' => $websiteId]);
-
-        return $checkoutUrl;
     }
 }

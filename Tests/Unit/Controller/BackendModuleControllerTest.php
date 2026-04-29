@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Controller\BackendModuleController;
+use T3G\Analytics\Helper\BackendModuleHelper;
+use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -15,7 +17,6 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\Uri;
@@ -55,6 +56,10 @@ final class BackendModuleControllerTest extends UnitTestCase
     private InstanceRegistrationService $registrationService;
     /** @var AnalyticsStatusService&MockObject */
     private AnalyticsStatusService $analyticsStatusService;
+    /** @var BackendModuleHelper&MockObject */
+    private BackendModuleHelper $moduleHelper;
+    /** @var SiteDataProvider&MockObject */
+    private SiteDataProvider $siteDataProvider;
     /** @var LoggerInterface&MockObject */
     private LoggerInterface $logger;
 
@@ -93,6 +98,8 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->siteFinder = $this->createMock(SiteFinder::class);
         $this->registrationService = $this->createMock(InstanceRegistrationService::class);
         $this->analyticsStatusService = $this->createMock(AnalyticsStatusService::class);
+        $this->moduleHelper = $this->createMock(BackendModuleHelper::class);
+        $this->siteDataProvider = $this->createMock(SiteDataProvider::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->flashMessageService
@@ -113,7 +120,8 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteFinder,
             $this->registrationService,
             $this->analyticsStatusService,
-            $this->createMock(ConnectionPool::class),
+            $this->moduleHelper,
+            $this->siteDataProvider,
             $this->logger,
         );
     }

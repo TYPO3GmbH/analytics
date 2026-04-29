@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Controller\BackendModuleController;
+use T3G\Analytics\Helper\BackendModuleHelper;
+use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -254,14 +256,30 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         ?AnalyticsStatusService $analyticsStatusService = null,
         ?SiteFinder $siteFinder = null,
     ): BackendModuleController {
+        $resolvedSiteFinder = $siteFinder ?? $this->get(SiteFinder::class);
+        $resolvedStatusService = $analyticsStatusService ?? $this->createMock(AnalyticsStatusService::class);
+
+        $siteDataProvider = new SiteDataProvider(
+            $resolvedSiteFinder,
+            $resolvedStatusService,
+            $this->get(ConnectionPool::class),
+            $this->get(UriBuilder::class),
+        );
+
+        $moduleHelper = new BackendModuleHelper(
+            $this->get(UriBuilder::class),
+            $siteDataProvider,
+        );
+
         return new BackendModuleController(
             $this->get(ModuleTemplateFactory::class),
             $this->get(UriBuilder::class),
             $this->get(FlashMessageService::class),
-            $siteFinder ?? $this->get(SiteFinder::class),
+            $resolvedSiteFinder,
             $this->createMock(InstanceRegistrationService::class),
-            $analyticsStatusService ?? $this->createMock(AnalyticsStatusService::class),
-            $this->get(ConnectionPool::class),
+            $resolvedStatusService,
+            $moduleHelper,
+            $siteDataProvider,
             $this->createMock(LoggerInterface::class),
         );
     }

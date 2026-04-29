@@ -169,6 +169,50 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
         self::assertNull($this->subject->getDashboardUrl($site));
     }
 
+    #[Test]
+    public function getManagePlanUrlReturnsUrlFromApiResponse(): void
+    {
+        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $expectedUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
+
+        $this->requestFactory
+            ->expects(self::once())
+            ->method('request')
+            ->with(
+                self::stringContains('/checkout-url/w-123'),
+                'GET',
+                self::callback(static function (array $opts): bool {
+                    return isset($opts['headers']['Authorization'])
+                        && str_starts_with($opts['headers']['Authorization'], 'HMAC i-456:');
+                })
+            )
+            ->willReturn($this->buildApiResponse(json_encode(['checkoutUrl' => $expectedUrl])));
+
+        self::assertSame($expectedUrl, $this->subject->getManagePlanUrl($site));
+    }
+
+    #[Test]
+    public function getManagePlanUrlReturnsNullOnApiFailure(): void
+    {
+        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+
+        $this->requestFactory
+            ->method('request')
+            ->willThrowException(new \RuntimeException('network error'));
+
+        self::assertNull($this->subject->getManagePlanUrl($site));
+    }
+
+    #[Test]
+    public function getManagePlanUrlReturnsNullWhenMissingCredentials(): void
+    {
+        $site = $this->buildUnregisteredSite('empty');
+
+        $this->requestFactory->expects(self::never())->method('request');
+
+        self::assertNull($this->subject->getManagePlanUrl($site));
+    }
+
     /** Helpers */
 
     private function buildRegisteredSite(string $identifier, string $websiteId, string $instanceId): Site
