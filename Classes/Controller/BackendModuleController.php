@@ -129,9 +129,9 @@ final readonly class BackendModuleController
         $this->moduleHelper->addBreadcrumbSuffix($moduleTemplate, 'dashboard', $dashboardLabel . ': ' . $siteLabel, 'actions-view');
 
         $parsedUrl = parse_url($dashboardUrl);
-        $dashboardOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
+        $iframeOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
         if (isset($parsedUrl['port'])) {
-            $dashboardOrigin .= ':' . $parsedUrl['port'];
+            $iframeOrigin .= ':' . $parsedUrl['port'];
         }
 
         $moduleTemplate->assignMultiple([
@@ -141,7 +141,7 @@ final readonly class BackendModuleController
                 'pageName' => $pageName,
             ],
             'dashboardUrl' => $dashboardUrl,
-            'dashboardOrigin' => $dashboardOrigin,
+            'iframeOrigin' => $iframeOrigin,
             'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
                 'site_analytics.invalidate_status_cache',
                 ['siteIdentifier' => $siteIdentifier]
@@ -191,8 +191,19 @@ final readonly class BackendModuleController
             'site_analytics.manage_plan'
         );
         $this->moduleHelper->addBreadcrumbSuffix($moduleTemplate, 'manage-plan', $managePlanLabel . ': ' . $siteLabel, 'actions-credit-card');
+        $parsedUrl = parse_url($managePlanUrl);
+        $iframeOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
+        if (isset($parsedUrl['port'])) {
+            $iframeOrigin .= ':' . $parsedUrl['port'];
+        }
+
         $moduleTemplate->assignMultiple([
             'managePlanUrl' => $managePlanUrl,
+            'iframeOrigin' => $iframeOrigin,
+            'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
+                'site_analytics.invalidate_status_cache',
+                ['siteIdentifier' => $siteIdentifier]
+            ),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/ManagePlan');

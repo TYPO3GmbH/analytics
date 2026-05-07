@@ -8,15 +8,5 @@
         class="tx-analytics-iframe"
         allowfullscreen="true"
     ></iframe>
-    <script>
-    (function() {
-        var invalidateCacheUri = {invalidateStatusCacheUri -> f:format.json()};
-        var dashboardOrigin = {dashboardOrigin -> f:format.json()};
-        window.addEventListener('message', function(event) {
-            if (event.origin !== dashboardOrigin) return;
-            if (!event.data || event.data.type !== 'SUBSCRIPTION_UPGRADED') return;
-            fetch(invalidateCacheUri, { method: 'POST' });
-        });
-    })();
-    </script>
+    <f:render partial="Backend/SubscriptionUpgradeListener" arguments="{invalidateStatusCacheUri: invalidateStatusCacheUri, iframeOrigin: iframeOrigin}" />
 </f:section>
