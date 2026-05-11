@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Controller;
 
+use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use T3G\Analytics\Helper\BackendModuleHelper;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
@@ -39,6 +42,10 @@ final readonly class BackendModuleController
     ) {
     }
 
+    /**
+     * @throws RouteNotFoundException
+     * @throws Exception
+     */
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
@@ -57,6 +64,9 @@ final readonly class BackendModuleController
         return $moduleTemplate->renderResponse('Backend/Index');
     }
 
+    /**
+     * @throws RouteNotFoundException
+     */
     public function registerAction(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
@@ -77,7 +87,7 @@ final readonly class BackendModuleController
 
         try {
             $this->registrationService->register($site, $email);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $this->addFlashMessage('flash.registrationFailed', 'flash.error.title', ContextualFeedbackSeverity::ERROR, [$e->getMessage()]);
             return new RedirectResponse($indexUri);
         }
@@ -87,6 +97,10 @@ final readonly class BackendModuleController
         return new RedirectResponse($indexUri);
     }
 
+    /**
+     * @throws RouteNotFoundException
+     * @throws Exception
+     */
     public function dashboardAction(ServerRequestInterface $request): ResponseInterface
     {
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
@@ -151,6 +165,10 @@ final readonly class BackendModuleController
         return $moduleTemplate->renderResponse('Backend/Dashboard');
     }
 
+    /**
+     * @throws RouteNotFoundException
+     * @throws Exception
+     */
     public function managePlanAction(ServerRequestInterface $request): ResponseInterface
     {
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
@@ -209,6 +227,9 @@ final readonly class BackendModuleController
         return $moduleTemplate->renderResponse('Backend/ManagePlan');
     }
 
+    /**
+     * @throws RouteNotFoundException
+     */
     public function statusAction(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
@@ -264,6 +285,9 @@ final readonly class BackendModuleController
         }
     }
 
+    /**
+     * @throws RouteNotFoundException
+     */
     private function indexUri(): string
     {
         return (string)$this->uriBuilder->buildUriFromRoute('site_analytics');

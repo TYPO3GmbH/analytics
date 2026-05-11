@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Unit\Service;
 
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use Psr\Log\NullLogger;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\CipherService;
-use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
+use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -25,16 +29,13 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
 {
     protected bool $resetSingletonInstances = true;
 
-    /** @var FrontendInterface&MockObject */
-    private FrontendInterface $cache;
-    /** @var RequestFactory&MockObject */
-    private RequestFactory $requestFactory;
-    /** @var CipherService&MockObject */
-    private CipherService $cipherService;
-    /** @var SiteSettingsService&MockObject */
-    private SiteSettingsService $siteSettingsService;
-    /** @var SiteSettingsFactory&MockObject */
-    private SiteSettingsFactory $siteSettingsFactory;
+    private MockHandler $mockHandler;
+    private array $httpHistory = [];
+    private SiteSettingsService&MockObject $siteSettingsService;
+    private SiteSettingsFactory&MockObject $siteSettingsFactory;
+
+    private VariableFrontend $cache;
+    private string $encryptedTestSecret;
 
     private AnalyticsStatusService $subject;
 
@@ -42,22 +43,36 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         parent::setUp();
 
-        $this->cache = $this->createMock(FrontendInterface::class);
-        $this->requestFactory = $this->createMock(RequestFactory::class);
-        $this->cipherService = $this->createMock(CipherService::class);
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = str_repeat('a', 96);
+
+        $this->mockHandler = new MockHandler();
+        $this->httpHistory = [];
+        $stack = HandlerStack::create($this->mockHandler);
+        $stack->push(Middleware::history($this->httpHistory));
+        $GLOBALS['TYPO3_CONF_VARS']['HTTP'] = ['verify' => false, 'handler' => $stack];
+
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
+        $this->cache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
 
-        $this->cipherService->method('decrypt')->willReturn('plain-secret');
+        $cipherService = new CipherService();
+        $this->encryptedTestSecret = $cipherService->encrypt('plain-secret');
 
         $this->subject = new AnalyticsStatusService(
             $this->cache,
-            $this->requestFactory,
-            $this->cipherService,
+            new RequestFactory(new GuzzleClientFactory()),
+            $cipherService,
             new NullLogger(),
             $this->siteSettingsService,
             $this->siteSettingsFactory,
         );
+    }
+
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        parent::tearDown();
     }
 
     /** getManagePlanUrl */
@@ -66,9 +81,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     public function getManagePlanUrlReturnsUrlFromApiResponse(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
-        $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"checkoutUrl":"https://checkout.visitor-analytics.io/plan?token=jwt"}')
-        );
+        $this->mockHandler->append(new Response(200, [], '{"checkoutUrl":"https://checkout.visitor-analytics.io/plan?token=jwt"}'));
 
         self::assertSame('https://checkout.visitor-analytics.io/plan?token=jwt', $this->subject->getManagePlanUrl($site));
     }
@@ -77,7 +90,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     public function getManagePlanUrlReturnsNullWhenApiResponseHasNoUrl(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
-        $this->requestFactory->method('request')->willReturn($this->buildApiResponse('{}'));
+        $this->mockHandler->append(new Response(200, [], '{}'));
 
         self::assertNull($this->subject->getManagePlanUrl($site));
     }
@@ -86,7 +99,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     public function getManagePlanUrlReturnsNullWhenApiCallFails(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
-        $this->requestFactory->method('request')->willThrowException(new \RuntimeException('connection refused'));
+        $this->mockHandler->append(new \RuntimeException('connection refused'));
 
         self::assertNull($this->subject->getManagePlanUrl($site));
     }
@@ -94,9 +107,8 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getManagePlanUrlReturnsNullWhenSiteHasNoCredentials(): void
     {
-        $this->requestFactory->expects(self::never())->method('request');
-
         self::assertNull($this->subject->getManagePlanUrl($this->buildSite('main', '', '')));
+        self::assertEmpty($this->httpHistory);
     }
 
     /** getStatus */
@@ -105,9 +117,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     public function persistsTrackingCodeAndStatusWhenApiResponseContainsThem(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
-        $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}')
-        );
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
 
         $this->siteSettingsService
@@ -129,9 +139,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     public function skipsWriteSettingsWhenValuesUnchanged(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456', ['trackingCode' => 'tc-abc', 'status' => 'active']);
-        $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}')
-        );
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
@@ -142,9 +150,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     public function skipsWriteSettingsWhenApiResponseHasNoTrackingIdOrStatus(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
-        $this->requestFactory->method('request')->willReturn(
-            $this->buildApiResponse('{"packageName":"Pro"}')
-        );
+        $this->mockHandler->append(new Response(200, [], '{"packageName":"Pro"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
@@ -152,40 +158,31 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     }
 
     #[Test]
-    public function skipsWriteSettingsOnCacheHit(): void
+    public function skipsApiCallOnCacheHit(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
-        $this->cache->method('has')->willReturn(true);
-        $this->cache->method('get')->willReturn(['status' => 'active', '_fetchedAt' => time()]);
+        $this->cache->set('status_' . sha1('main'), ['status' => 'active', '_fetchedAt' => time()], [], 86400);
 
-        $this->requestFactory->expects(self::never())->method('request');
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
         $this->subject->getStatus($site);
+
+        self::assertEmpty($this->httpHistory);
     }
 
     /** Helpers */
 
-    private function buildSite(string $identifier, string $websiteId, string $instanceId, array $extraSettings = []): Site&MockObject
+    private function buildSite(string $identifier, string $websiteId, string $instanceId, array $extraSettings = []): Site
     {
+        $instanceSecret = ($websiteId !== '' && $instanceId !== '') ? $this->encryptedTestSecret : '';
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);
         $site->method('getBase')->willReturn(new Uri('https://example.com'));
         $site->method('getSettings')->willReturn(new SiteSettings(
-            new Settings(array_merge(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => 'enc-secret'], $extraSettings)),
+            new Settings(array_merge(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $instanceSecret], $extraSettings)),
             [],
             []
         ));
         return $site;
-    }
-
-    private function buildApiResponse(string $body): ResponseInterface
-    {
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->method('__toString')->willReturn($body);
-
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getBody')->willReturn($stream);
-        return $response;
     }
 }

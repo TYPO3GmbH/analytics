@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Helper;
 
+use Doctrine\DBAL\Exception;
 use T3G\Analytics\Service\SiteDataProvider;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem;
@@ -12,7 +14,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
-readonly class BackendModuleHelper
+final readonly class BackendModuleHelper
 {
     public function __construct(
         private UriBuilder $uriBuilder,
@@ -22,6 +24,7 @@ readonly class BackendModuleHelper
 
     /**
      * @param array<string, mixed> $shortcutArguments
+     * @throws Exception|RouteNotFoundException
      */
     public function configureModuleTemplate(
         ModuleTemplate $moduleTemplate,
@@ -39,13 +42,21 @@ readonly class BackendModuleHelper
             $moduleTemplate->setModuleClass($moduleClass);
         }
 
-        $moduleTemplate->getDocHeaderComponent()->enable();
-        $this->addShortcutButton(
-            $moduleTemplate,
-            $shortcutRouteIdentifier,
-            $shortcutArguments,
-            $shortcutDisplayName !== '' ? $shortcutDisplayName : $title
-        );
+        $docHeader = $moduleTemplate->getDocHeaderComponent();
+        $docHeader->enable();
+        $displayName = $shortcutDisplayName !== '' ? $shortcutDisplayName : $title;
+
+        if (method_exists($docHeader, 'setShortcutContext')) {
+            $docHeader->setShortcutContext($shortcutRouteIdentifier, $displayName, $shortcutArguments);
+        } else {
+            $buttonBar = $docHeader->getButtonBar();
+            $shortcutButton = $buttonBar->makeShortcutButton()
+                ->setRouteIdentifier($shortcutRouteIdentifier)
+                ->setArguments($shortcutArguments)
+                ->setDisplayName($displayName);
+            $buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
+        }
+
         $this->addRegisteredSitesDropdown($moduleTemplate, $selectedSiteIdentifier, $siteSelectRouteIdentifier);
     }
 
@@ -75,23 +86,9 @@ readonly class BackendModuleHelper
     }
 
     /**
-     * @param array<string, mixed> $arguments
+     * @throws Exception
+     * @throws RouteNotFoundException
      */
-    private function addShortcutButton(
-        ModuleTemplate $moduleTemplate,
-        string $routeIdentifier,
-        array $arguments,
-        string $displayName
-    ): void {
-        $buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
-
-        $shortcutButton = $buttonBar->makeShortcutButton()
-            ->setRouteIdentifier($routeIdentifier)
-            ->setArguments($arguments)
-            ->setDisplayName($displayName);
-        $buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
-    }
-
     private function addRegisteredSitesDropdown(
         ModuleTemplate $moduleTemplate,
         string $selectedSiteIdentifier,

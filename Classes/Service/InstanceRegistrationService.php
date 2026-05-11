@@ -12,7 +12,7 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 
-readonly class InstanceRegistrationService
+final readonly class InstanceRegistrationService
 {
     public function __construct(
         private RequestFactory $requestFactory,
@@ -37,14 +37,13 @@ readonly class InstanceRegistrationService
             $response = $this->requestFactory->request(
                 Analytics::getApiBaseUrl() . '/auth/register/instance',
                 'POST',
-                [
+                array_merge(Analytics::getApiRequestOptions(), Analytics::getApiAuthOptions(), [
                     'json' => [
                         'intpId' => Analytics::INTP_ID,
                         'domain' => rtrim($site->getBase()->__toString(), '/'),
                         'email' => $email,
                     ],
-                    'verify' => false,
-                ]
+                ])
             );
 
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);

@@ -14,7 +14,7 @@ final class ApiExceptionUtility
             if (is_array($body)) {
                 return (string)($body['detail'] ?? $body['description'] ?? $e->getMessage());
             }
-            // Non-JSON response (e.g. HTML error page): return HTTP status info only
+            // Non-JSON response (e.g., HTML error page): return HTTP status info only
             return sprintf('HTTP %d %s', $response->getStatusCode(), $response->getReasonPhrase());
         }
 

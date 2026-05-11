@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
+use Random\RandomException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -11,25 +12,25 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *
  * On TYPO3 v14+ the built-in TYPO3\CMS\Core\Crypto\Cipher\CipherService is used
  * automatically (Feature-108002). On v13 an equivalent implementation based on
- * the same algorithm and serialisation format is used as fallback, so encrypted
+ * the same algorithm and serialization format is used as fallback, so encrypted
  * values written under v13 remain decryptable after upgrading to v14.
  *
  * Key derivation mirrors KeyFactory::deriveSharedKeyFromEncryptionKey():
  * BLAKE2b keyed hash over a domain-specific seed derived from
  * $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'].
  */
-class CipherService
+final class CipherService
 {
     /** @internal class name of the v14 core service – kept as string to avoid autoload errors on v13 */
-    private const string CORE_CIPHER_SERVICE = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherService';
-    private const string CORE_KEY_FACTORY = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\KeyFactory';
+    private const CORE_CIPHER_SERVICE = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherService';
+    private const CORE_KEY_FACTORY = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\KeyFactory';
 
     /**
      * Domain seed used for key derivation – must match between encrypt/decrypt
      * and correspond to the seed passed to KeyFactory::deriveSharedKeyFromEncryptionKey()
      * on v14.
      */
-    private const string KEY_SEED = 'tx_analytics.instanceSecret';
+    private const KEY_SEED = 'tx_analytics.instanceSecret';
 
     public function encrypt(string $plaintext): string
     {
@@ -41,7 +42,8 @@ class CipherService
     }
 
     /**
-     * @throws \RuntimeException when decryption or authentication fails
+     * @throws \RuntimeException|\JsonException when decryption or authentication fails
+     * @throws \SodiumException
      */
     public function decrypt(string $encrypted): string
     {
@@ -76,7 +78,7 @@ class CipherService
         // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\KeyFactory does not exist in v13)
         $key = $keyFactory->deriveSharedKeyFromEncryptionKey(self::KEY_SEED);
 
-        // CipherValue::fromSerialized() reconstructs the value object from the serialised form
+        // CipherValue::fromSerialized() reconstructs the value object from the serialized form
         $cipherValueClass = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherValue';
         $cipherValue = $cipherValueClass::fromSerialized($encrypted);
 
@@ -84,7 +86,11 @@ class CipherService
         return $coreService->decrypt($cipherValue, $key);
     }
 
-    /** TYPO3 v13 fallback path */
+    /** TYPO3 v13 fallback path
+     *
+     * @throws RandomException
+     * @throws \SodiumException
+     */
 
     private function encryptWithSodium(string $plaintext): string
     {
@@ -109,6 +115,10 @@ class CipherService
         );
     }
 
+    /**
+     * @throws \SodiumException
+     * @throws \JsonException
+     */
     private function decryptWithSodium(string $encrypted): string
     {
         $key = $this->deriveKey();
@@ -149,6 +159,8 @@ class CipherService
     /**
      * Derives a 32-byte key from TYPO3's encryptionKey using BLAKE2b,
      * mirroring TYPO3 v14 KeyFactory::deriveSharedKeyFromEncryptionKey().
+     *
+     * @throws \SodiumException
      */
     private function deriveKey(): string
     {

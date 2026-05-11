@@ -4,21 +4,31 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Unit\Controller;
 
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use T3G\Analytics\Controller\BackendModuleController;
 use T3G\Analytics\Helper\BackendModuleHelper;
-use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteDataProvider;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\Locale;
@@ -29,39 +39,38 @@ use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
+use TYPO3\CMS\Core\Site\SiteSettingsFactory;
+use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
  * Unit tests for BackendModuleController.
  *
- * ModuleTemplateFactory and ModuleTemplate are declared final in TYPO3 and
- * cannot be mocked with PHPUnit. Actions that successfully render a template
- * (indexAction / dashboardAction happy path) are therefore covered by
- * functional tests instead.
+ * HTTP calls are intercepted via the Guzzle MockHandler injected through
+ * TYPO3_CONF_VARS['HTTP']['handler']. All other internal services run as real
+ * instances. SiteSettingsService and SiteSettingsFactory are mocked because
+ * they perform file I/O.
+ *
+ * ModuleTemplateFactory is final in TYPO3 and cannot be mocked with PHPUnit.
+ * Actions that successfully render a template (indexAction / dashboardAction
+ * happy path) are therefore covered by functional tests instead.
  */
 final class BackendModuleControllerTest extends UnitTestCase
 {
     protected bool $resetSingletonInstances = true;
 
-    /** @var UriBuilder&MockObject */
-    private UriBuilder $uriBuilder;
-    /** @var FlashMessageService&MockObject */
-    private FlashMessageService $flashMessageService;
-    /** @var FlashMessageQueue&MockObject */
-    private FlashMessageQueue $flashMessageQueue;
-    /** @var SiteFinder&MockObject */
-    private SiteFinder $siteFinder;
-    /** @var InstanceRegistrationService&MockObject */
-    private InstanceRegistrationService $registrationService;
-    /** @var AnalyticsStatusService&MockObject */
-    private AnalyticsStatusService $analyticsStatusService;
-    /** @var BackendModuleHelper&MockObject */
-    private BackendModuleHelper $moduleHelper;
-    /** @var SiteDataProvider&MockObject */
-    private SiteDataProvider $siteDataProvider;
-    /** @var LoggerInterface&MockObject */
-    private LoggerInterface $logger;
+    private MockHandler $mockHandler;
+    private array $httpHistory = [];
+    private SiteSettingsService&MockObject $siteSettingsService;
+    private SiteSettingsFactory&MockObject $siteSettingsFactory;
+    private UriBuilder&MockObject $uriBuilder;
+    private FlashMessageService&MockObject $flashMessageService;
+    private FlashMessageQueue&MockObject $flashMessageQueue;
+    private SiteFinder&MockObject $siteFinder;
+    private LoggerInterface&MockObject $logger;
+
+    private string $encryptedTestSecret;
 
     private BackendModuleController $subject;
 
@@ -69,10 +78,16 @@ final class BackendModuleControllerTest extends UnitTestCase
     {
         parent::setUp();
 
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = str_repeat('a', 96);
+
+        $this->mockHandler = new MockHandler();
+        $this->httpHistory = [];
+        $stack = HandlerStack::create($this->mockHandler);
+        $stack->push(Middleware::history($this->httpHistory));
+        $GLOBALS['TYPO3_CONF_VARS']['HTTP'] = ['verify' => false, 'handler' => $stack];
+
         /**
          * Pre-populate the LocalizationUtility runtime cache with a stub LanguageService.
-         * This avoids needing LanguageServiceFactory (and its DI dependencies) at all:
-         * buildLanguageService() hits the cache immediately and never calls makeInstance().
          */
         $languageService = $this->createMock(LanguageService::class);
         $languageService->method('sL')->willReturnArgument(0);
@@ -92,24 +107,66 @@ final class BackendModuleControllerTest extends UnitTestCase
         $cacheManager->method('getCache')->willReturn($runtimeCache);
         GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManager);
 
+        $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
+        $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
         $this->uriBuilder = $this->createMock(UriBuilder::class);
         $this->flashMessageService = $this->createMock(FlashMessageService::class);
         $this->flashMessageQueue = $this->createMock(FlashMessageQueue::class);
         $this->siteFinder = $this->createMock(SiteFinder::class);
-        $this->registrationService = $this->createMock(InstanceRegistrationService::class);
-        $this->analyticsStatusService = $this->createMock(AnalyticsStatusService::class);
-        $this->moduleHelper = $this->createMock(BackendModuleHelper::class);
-        $this->siteDataProvider = $this->createMock(SiteDataProvider::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->flashMessageService
             ->method('getMessageQueueByIdentifier')
             ->willReturn($this->flashMessageQueue);
 
-        /**
-         * ModuleTemplateFactory is final – instantiate without constructor for
-         * actions that accept it but never call it in the tested code paths.
-         */
+        $cipherService = new CipherService();
+        $this->encryptedTestSecret = $cipherService->encrypt('test-instance-secret');
+
+        $requestFactory = new RequestFactory(new GuzzleClientFactory());
+        $statusCache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
+
+        $analyticsStatusService = new AnalyticsStatusService(
+            $statusCache,
+            $requestFactory,
+            $cipherService,
+            new NullLogger(),
+            $this->siteSettingsService,
+            $this->siteSettingsFactory,
+        );
+
+        $registrationService = new InstanceRegistrationService(
+            $requestFactory,
+            $cipherService,
+            $this->siteSettingsService,
+            $this->siteSettingsFactory,
+            new NullLogger(),
+        );
+
+        $result = $this->createMock(\Doctrine\DBAL\Result::class);
+        $result->method('fetchAssociative')->willReturn(false);
+
+        $queryBuilder = $this->createMock(QueryBuilder::class);
+        $queryBuilder->method('select')->willReturnSelf();
+        $queryBuilder->method('from')->willReturnSelf();
+        $queryBuilder->method('where')->willReturnSelf();
+        $queryBuilder->method('executeQuery')->willReturn($result);
+
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+
+        $siteDataProvider = new SiteDataProvider(
+            $this->siteFinder,
+            $analyticsStatusService,
+            $connectionPool,
+            $this->uriBuilder,
+            new NullLogger(),
+        );
+
+        $moduleHelper = new BackendModuleHelper(
+            $this->uriBuilder,
+            $siteDataProvider,
+        );
+
         $moduleTemplateFactory = (new \ReflectionClass(ModuleTemplateFactory::class))
             ->newInstanceWithoutConstructor();
 
@@ -118,12 +175,19 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->uriBuilder,
             $this->flashMessageService,
             $this->siteFinder,
-            $this->registrationService,
-            $this->analyticsStatusService,
-            $this->moduleHelper,
-            $this->siteDataProvider,
+            $registrationService,
+            $analyticsStatusService,
+            $moduleHelper,
+            $siteDataProvider,
             $this->logger,
         );
+    }
+
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        parent::tearDown();
     }
 
     /** registerAction */
@@ -163,7 +227,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->siteFinder->method('getSiteByIdentifier')->willThrowException(new SiteNotFoundException('not found', 1));
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
-        $this->registrationService->expects(self::never())->method('register');
 
         $response = $this->subject->registerAction(
             $this->buildRequest(['siteIdentifier' => 'unknown', 'email' => 'user@example.com'])
@@ -173,12 +236,12 @@ final class BackendModuleControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function registerActionRedirectsWithErrorWhenRegistrationServiceThrows(): void
+    public function registerActionRedirectsWithErrorWhenApiCallFails(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->registrationService->method('register')->willThrowException(new \RuntimeException('connection refused'));
+        $this->mockHandler->append(new \RuntimeException('connection refused'));
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
@@ -196,6 +259,8 @@ final class BackendModuleControllerTest extends UnitTestCase
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri($indexUri));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+        $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","websiteId":"w-123","instanceSecret":"s3cr3t"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
         $response = $this->subject->registerAction(
@@ -214,7 +279,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
-        $this->analyticsStatusService->expects(self::never())->method('getStatus');
 
         $response = $this->subject->statusAction($this->buildRequest(['siteIdentifier' => '']));
 
@@ -222,17 +286,17 @@ final class BackendModuleControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function statusActionCallsGetStatusWithForceRefresh(): void
+    public function statusActionRedirectsWithoutErrorWhenStatusFetchSucceeds(): void
     {
-        $site = $this->buildSiteMock('main', 'https://example.com');
+        $site = $this->buildSiteMock('main', 'https://example.com', [
+            'websiteId' => 'w-123',
+            'instanceId' => 'i-456',
+            'instanceSecret' => $this->encryptedTestSecret,
+        ]);
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-
-        $this->analyticsStatusService
-            ->expects(self::once())
-            ->method('getStatus')
-            ->with($site, true)
-            ->willReturn(['status' => 'active']);
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","consumption":{}}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
         $this->flashMessageQueue->expects(self::never())->method('addMessage');
 
@@ -242,12 +306,11 @@ final class BackendModuleControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function statusActionAddsErrorFlashMessageWhenStatusIsNull(): void
+    public function statusActionAddsErrorFlashMessageWhenSiteHasNoCredentials(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->analyticsStatusService->method('getStatus')->willReturn(null);
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
@@ -264,8 +327,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getQueryParams')->willReturn([]);
 
-        $this->analyticsStatusService->expects(self::never())->method('clearCache');
-
         $response = $this->subject->invalidateStatusCacheAction($request);
 
         self::assertSame(400, $response->getStatusCode());
@@ -280,23 +341,16 @@ final class BackendModuleControllerTest extends UnitTestCase
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'unknown']);
 
-        $this->analyticsStatusService->expects(self::never())->method('clearCache');
-
         $response = $this->subject->invalidateStatusCacheAction($request);
 
         self::assertSame(404, $response->getStatusCode());
     }
 
     #[Test]
-    public function invalidateStatusCacheActionClearsCacheAndReturnsSuccess(): void
+    public function invalidateStatusCacheActionReturnsSuccessResponse(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-
-        $this->analyticsStatusService
-            ->expects(self::once())
-            ->method('clearCache')
-            ->with($site);
 
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'main']);
@@ -314,7 +368,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
-        $this->analyticsStatusService->expects(self::never())->method('getManagePlanUrl');
 
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getQueryParams')->willReturn([]);
@@ -331,7 +384,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->siteFinder->method('getSiteByIdentifier')->willThrowException(new SiteNotFoundException('not found', 1));
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
-        $this->analyticsStatusService->expects(self::never())->method('getManagePlanUrl');
 
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'unknown']);
@@ -342,12 +394,11 @@ final class BackendModuleControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function managePlanActionRedirectsWithErrorWhenManagePlanUrlIsNull(): void
+    public function managePlanActionRedirectsWithErrorWhenSiteHasNoCredentials(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->analyticsStatusService->method('getManagePlanUrl')->willReturn(null);
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
@@ -367,7 +418,6 @@ final class BackendModuleControllerTest extends UnitTestCase
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
-        $this->analyticsStatusService->expects(self::never())->method('getDashboardUrl');
 
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getQueryParams')->willReturn([]);
@@ -394,12 +444,11 @@ final class BackendModuleControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function dashboardActionRedirectsWithErrorWhenDashboardUrlIsNull(): void
+    public function dashboardActionRedirectsWithErrorWhenSiteHasNoCredentials(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->analyticsStatusService->method('getDashboardUrl')->willReturn(null);
 
         $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
@@ -420,7 +469,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         return $request;
     }
 
-    private function buildSiteMock(string $identifier, string $baseUrl, array $siteSettings = []): Site&MockObject
+    private function buildSiteMock(string $identifier, string $baseUrl, array $siteSettings = []): Site
     {
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);

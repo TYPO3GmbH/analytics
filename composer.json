@@ -4,7 +4,7 @@
   "type": "typo3-cms-extension",
   "license": "proprietary",
   "require": {
-    "php": "^8.4",
+    "php": "^8.2",
     "typo3/cms-core": "^13.4 || ^14.0",
     "typo3/cms-backend": "^13.4 || ^14.0",
     "typo3/cms-extbase": "^13.4 || ^14.0"

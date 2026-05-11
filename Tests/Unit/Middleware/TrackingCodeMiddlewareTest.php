@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace T3G\Analytics\Tests\Unit\Middleware;
 
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -107,7 +106,6 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('__toString')->willReturn($html);
 
-        /** @var ResponseInterface&MockObject $response */
         $response = $this->createMock(ResponseInterface::class);
         $response->method('getBody')->willReturn($stream);
         $response->method('getHeaderLine')->with('Content-Type')->willReturn('text/html; charset=utf-8');
@@ -140,7 +138,6 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('__toString')->willReturn($html);
 
-        /** @var ResponseInterface&MockObject $response */
         $response = $this->createMock(ResponseInterface::class);
         $response->method('getBody')->willReturn($stream);
         $response->method('getHeaderLine')->with('Content-Type')->willReturn('');
@@ -190,7 +187,6 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('__toString')->willReturn($body);
 
-        /** @var ResponseInterface&MockObject $response */
         $response = $this->createMock(ResponseInterface::class);
         $response->method('getBody')->willReturn($stream);
         $response->method('getHeaderLine')->with('Content-Type')->willReturn($contentType);

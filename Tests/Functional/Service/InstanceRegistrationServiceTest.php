@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Functional\Service;
 
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -33,12 +36,10 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         ],
     ];
 
-    /** @var RequestFactory&MockObject */
-    private RequestFactory $requestFactory;
-    /** @var SiteSettingsService&MockObject */
-    private SiteSettingsService $siteSettingsService;
-    /** @var SiteSettingsFactory&MockObject */
-    private SiteSettingsFactory $siteSettingsFactory;
+    private MockHandler $mockHandler;
+    private array $httpHistory = [];
+    private SiteSettingsService&MockObject $siteSettingsService;
+    private SiteSettingsFactory&MockObject $siteSettingsFactory;
     private CipherService $cipherService;
     private InstanceRegistrationService $subject;
 
@@ -46,13 +47,18 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     {
         parent::setUp();
 
-        $this->requestFactory = $this->createMock(RequestFactory::class);
+        $this->mockHandler = new MockHandler();
+        $this->httpHistory = [];
+        $stack = HandlerStack::create($this->mockHandler);
+        $stack->push(Middleware::history($this->httpHistory));
+        $GLOBALS['TYPO3_CONF_VARS']['HTTP']['handler'] = $stack;
+
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
         $this->cipherService = new CipherService();
 
         $this->subject = new InstanceRegistrationService(
-            $this->requestFactory,
+            new RequestFactory(new GuzzleClientFactory()),
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
@@ -60,14 +66,16 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         );
     }
 
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']['handler']);
+        parent::tearDown();
+    }
+
     #[Test]
     public function registerWritesEncryptedCredentialsToSiteSettings(): void
     {
-        $this->requestFactory
-            ->method('request')
-            ->willReturn($this->buildApiResponse(
-                '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"plain-secret"}'
-            ));
+        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"plain-secret"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
         $writtenSettings = [];
@@ -91,11 +99,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerMergesWithExistingSettings(): void
     {
-        $this->requestFactory
-            ->method('request')
-            ->willReturn($this->buildApiResponse(
-                '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"secret"}'
-            ));
+        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"secret"}'));
         $this->siteSettingsFactory
             ->method('loadLocalSettings')
             ->willReturn(['existingKey' => 'existingValue']);
@@ -116,9 +120,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerThrowsWhenApiCallFails(): void
     {
-        $this->requestFactory
-            ->method('request')
-            ->willThrowException(new \RuntimeException('connection refused'));
+        $this->mockHandler->append(new \RuntimeException('connection refused'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
@@ -129,9 +131,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerThrowsWhenApiResponseIsMissingWebsiteId(): void
     {
-        $this->requestFactory
-            ->method('request')
-            ->willReturn($this->buildApiResponse('{"instanceId":"i-456","instanceSecret":"secret"}'));
+        $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","instanceSecret":"secret"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
@@ -142,25 +142,19 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerCallsApiWithCorrectPayload(): void
     {
-        $this->requestFactory
-            ->expects(self::once())
-            ->method('request')
-            ->with(
-                self::stringContains('/auth/register/instance'),
-                'POST',
-                self::callback(static function (array $opts): bool {
-                    return ($opts['json']['intpId'] ?? '') !== ''
-                        && ($opts['json']['domain'] ?? '') === 'https://example.com'
-                        && ($opts['json']['email'] ?? '') === 'user@example.com';
-                })
-            )
-            ->willReturn($this->buildApiResponse(
-                '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"secret"}'
-            ));
+        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"secret"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService->method('writeSettings');
 
         $this->subject->register($this->buildSite(), 'user@example.com');
+
+        self::assertCount(1, $this->httpHistory);
+        self::assertStringContainsString('/auth/register/instance', (string)$this->httpHistory[0]['request']->getUri());
+        self::assertSame('POST', $this->httpHistory[0]['request']->getMethod());
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertNotEmpty($body['intpId'] ?? '');
+        self::assertSame('https://example.com', $body['domain']);
+        self::assertSame('user@example.com', $body['email']);
     }
 
     /** Helpers */
@@ -172,15 +166,5 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $site->method('getBase')->willReturn(new Uri('https://example.com'));
         $site->method('getSettings')->willReturn(new SiteSettings(new Settings([]), [], []));
         return $site;
-    }
-
-    private function buildApiResponse(string $body): ResponseInterface
-    {
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->method('__toString')->willReturn($body);
-
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getBody')->willReturn($stream);
-        return $response;
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Analytics;
 use T3G\Analytics\Utility\ApiExceptionUtility;
@@ -14,9 +16,9 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 
-readonly class AnalyticsStatusService
+final readonly class AnalyticsStatusService
 {
-    private const float CREDIT_WARNING_REMAINING_RATIO = 0.25;
+    private const CREDIT_WARNING_REMAINING_RATIO = 0.25;
 
     public function __construct(
         private FrontendInterface $cache,
@@ -79,10 +81,9 @@ readonly class AnalyticsStatusService
             $response = $this->requestFactory->request(
                 Analytics::getApiBaseUrl() . '/checkout-url/' . $websiteId,
                 'GET',
-                [
+                array_merge(Analytics::getApiRequestOptions(), [
                     'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
-                    'verify' => false,
-                ]
+                ])
             );
 
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
@@ -111,10 +112,9 @@ readonly class AnalyticsStatusService
             $response = $this->requestFactory->request(
                 Analytics::getApiBaseUrl() . '/dashboard-url/' . $websiteId,
                 'GET',
-                [
+                array_merge(Analytics::getApiRequestOptions(), [
                     'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
-                    'verify' => false,
-                ]
+                ])
             );
 
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
@@ -142,10 +142,9 @@ readonly class AnalyticsStatusService
             $response = $this->requestFactory->request(
                 Analytics::getApiBaseUrl() . '/status/' . $websiteId,
                 'GET',
-                [
+                array_merge(Analytics::getApiRequestOptions(), [
                     'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
-                    'verify' => false,
-                ]
+                ])
             );
 
             /** @var array<string, mixed> $data */
@@ -168,13 +167,26 @@ readonly class AnalyticsStatusService
      */
     private function resolveCredentials(Site $site): ?array
     {
+        $siteIdentifier = $site->getIdentifier();
         $settings = $site->getSettings();
-        /** @var string $websiteId */
-        $websiteId = $settings->get('websiteId', '');
-        /** @var string $instanceId */
-        $instanceId = $settings->get('instanceId', '');
-        /** @var string $encryptedSecret */
-        $encryptedSecret = $settings->get('instanceSecret', '');
+        try {
+            $websiteId = $settings->get('websiteId', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('resolveCredentials: failed to read websiteId.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $websiteId = '';
+        }
+        try {
+            $instanceId = $settings->get('instanceId', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('resolveCredentials: failed to read instanceId.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $instanceId = '';
+        }
+        try {
+            $encryptedSecret = $settings->get('instanceSecret', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('resolveCredentials: failed to read instanceSecret.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $encryptedSecret = '';
+        }
 
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '') {
             return null;
@@ -182,7 +194,8 @@ readonly class AnalyticsStatusService
 
         try {
             $instanceSecret = $this->cipherService->decrypt($encryptedSecret);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->logger->error('resolveCredentials: failed to decrypt instanceSecret.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
             return null;
         }
 
@@ -196,11 +209,20 @@ readonly class AnalyticsStatusService
     {
         $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
         $newStatus = (string)($data['status'] ?? '');
+        $siteIdentifier = $site->getIdentifier();
         $settings = $site->getSettings();
-        /** @var string $existingTrackingCode */
-        $existingTrackingCode = $settings->get('trackingCode', '');
-        /** @var string $existingStatus */
-        $existingStatus = $settings->get('status', '');
+        try {
+            $existingTrackingCode = $settings->get('trackingCode', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('persistStatusSettings: failed to read trackingCode.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $existingTrackingCode = '';
+        }
+        try {
+            $existingStatus = $settings->get('status', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('persistStatusSettings: failed to read status.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $existingStatus = '';
+        }
 
         $update = [];
         if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {

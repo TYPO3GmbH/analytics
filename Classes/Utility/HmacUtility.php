@@ -10,10 +10,11 @@ final class HmacUtility
      * Builds HMAC authentication headers for a signed API request.
      *
      * @return array<string, string>
+     * @throws \Exception
      */
     public static function buildHeaders(string $method, string $path, string $instanceId, string $instanceSecret): array
     {
-        $timestamp = new \DateTimeImmutable('now', new \DateTimeZone('UTC'))->format(\DateTimeInterface::ATOM);
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM);
         $contentHash = hash('sha256', '');
 
         $canonical = implode("\n", [strtoupper($method), $path, $timestamp, $contentHash]);

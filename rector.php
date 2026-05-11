@@ -22,7 +22,7 @@ return RectorConfig::configure()
     ])
     // uncomment to reach your current PHP version
     // ->withPhpSets()
-    ->withPhpVersion(PhpVersion::PHP_84)
+    ->withPhpVersion(PhpVersion::PHP_82)
     ->withSets([
         // Rector rules
         SetList::CODE_QUALITY,
