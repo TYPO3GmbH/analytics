@@ -64,6 +64,9 @@ final readonly class BackendModuleController
         return $moduleTemplate->renderResponse('Backend/Index');
     }
 
+    /**
+     * @throws RouteNotFoundException
+     */
     public function registerAction(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
@@ -92,6 +95,7 @@ final readonly class BackendModuleController
             'success' => true,
             'title' => LocalizationUtility::translate('flash.success.title', 'analytics') ?? '',
             'message' => LocalizationUtility::translate('flash.success.registered', 'analytics', [$site->getIdentifier()]) ?? '',
+            'dashboardUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier]),
         ]);
     }
 

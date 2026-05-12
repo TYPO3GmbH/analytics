@@ -1,6 +1,24 @@
 import Notification from '@typo3/backend/notification.js';
+import ImmediateAction from '@typo3/backend/action-button/immediate-action.js';
 
-async function handleFormAjax(e, onSuccess) {
+const STORAGE_KEY = 'tx-analytics-notification';
+
+function showPendingNotification() {
+    const pending = sessionStorage.getItem(STORAGE_KEY);
+    if (!pending) return;
+    sessionStorage.removeItem(STORAGE_KEY);
+    try {
+        const { title, message, dashboardUri } = JSON.parse(pending);
+        const actions = dashboardUri
+            ? [{ label: 'Dashboard', action: new ImmediateAction(() => { window.location.href = dashboardUri; }) }]
+            : [];
+        Notification.success(title, message, 5, actions);
+    } catch {
+        // ignore malformed storage entry
+    }
+}
+
+async function handleFormAjax(e, getNotificationData) {
     const form = e.target;
     e.preventDefault();
 
@@ -11,7 +29,8 @@ async function handleFormAjax(e, onSuccess) {
         const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
         const data = await response.json();
         if (data.success) {
-            onSuccess(data);
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(getNotificationData(data)));
+            location.reload();
         } else {
             Notification.error(data.title ?? 'Error', data.message ?? '', 0);
             btn.disabled = false;
@@ -25,14 +44,10 @@ async function handleFormAjax(e, onSuccess) {
 document.addEventListener('submit', function (e) {
     const form = e.target;
     if (form.classList.contains('tx-analytics-registration-form')) {
-        handleFormAjax(e, function (data) {
-            Notification.success(data.title ?? '', data.message ?? '', 3);
-            setTimeout(function () { location.reload(); }, 1500);
-        });
+        handleFormAjax(e, (data) => ({ title: data.title ?? '', message: data.message ?? '', dashboardUri: data.dashboardUri ?? null }));
     } else if (form.classList.contains('tx-analytics-status-form')) {
-        handleFormAjax(e, function (data) {
-            Notification.success(data.title ?? '', '', 3);
-            setTimeout(function () { location.reload(); }, 1500);
-        });
+        handleFormAjax(e, (data) => ({ title: data.title ?? '', message: '' }));
     }
 });
+
+showPendingNotification();
