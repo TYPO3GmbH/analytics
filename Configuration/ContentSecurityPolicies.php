@@ -16,9 +16,8 @@ return Map::fromEntries([
         new Mutation(
             MutationMode::Extend,
             Directive::FrameSrc,
-            new UriValue('https://*.visitor-analytics.io'),
-            new UriValue('https://stage.dashboard.analytics.typo3.com'),
-            new UriValue('https://*.va-endpoint.com')
+            new UriValue('https://dashboard.analytics.typo3.com'),
+            new UriValue('https://stage.dashboard.analytics.typo3.com')
         )
     ),
 ]);

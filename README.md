@@ -6,7 +6,7 @@ A TYPO3 backend extension that integrates **TYPO3 Analytics** into the TYPO3 sit
 
 | Component | Version |
 |-----------|---------|
-| PHP | ^8.4 |
+| PHP | ^8.2 |
 | TYPO3 | ^13.4 or ^14.0 |
 | libsodium | PHP extension (bundled since PHP 7.2) |
 
@@ -25,7 +25,12 @@ Credentials are encrypted using XChaCha20-Poly1305 via libsodium. On TYPO3 v14+ 
 
 ### Content Security Policy
 
-The extension automatically extends the backend CSP to allow iframes from `*.visitor-analytics.io` and `*.va-endpoint.com` (configured in `Configuration/ContentSecurityPolicies.php`).
+The extension automatically extends the backend CSP (`frame-src`) to allow the analytics dashboard to be embedded as an iframe inside the TYPO3 backend. The following origins are whitelisted (configured in `Configuration/ContentSecurityPolicies.php`):
+
+| Origin | Purpose |
+|--------|---------|
+| `https://dashboard.analytics.typo3.com` | Production dashboard |
+| `https://stage.dashboard.analytics.typo3.com` | Staging dashboard |
 
 ### Module icon
 
