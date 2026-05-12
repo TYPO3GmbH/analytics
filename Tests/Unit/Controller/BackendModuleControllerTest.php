@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -193,130 +194,118 @@ final class BackendModuleControllerTest extends UnitTestCase
     /** registerAction */
 
     #[Test]
-    public function registerActionRedirectsWithErrorWhenBodyIsMissingSiteIdentifier(): void
+    public function registerActionReturnsErrorJsonWhenBodyIsMissingSiteIdentifier(): void
     {
-        $indexUri = '/module/site/analytics';
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri($indexUri));
-
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
         $this->siteFinder->expects(self::never())->method('getSiteByIdentifier');
 
         $response = $this->subject->registerAction($this->buildRequest(['siteIdentifier' => '', 'email' => 'user@example.com']));
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
-        self::assertStringContainsString($indexUri, $response->getHeaderLine('location'));
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
     }
 
     #[Test]
-    public function registerActionRedirectsWithErrorWhenBodyIsMissingEmail(): void
+    public function registerActionReturnsErrorJsonWhenBodyIsMissingEmail(): void
     {
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
-
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
         $this->siteFinder->expects(self::never())->method('getSiteByIdentifier');
 
         $response = $this->subject->registerAction($this->buildRequest(['siteIdentifier' => 'main', 'email' => '']));
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
     }
 
     #[Test]
-    public function registerActionRedirectsWithErrorWhenSiteNotFound(): void
+    public function registerActionReturnsErrorJsonWhenSiteNotFound(): void
     {
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willThrowException(new SiteNotFoundException('not found', 1));
-
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
         $response = $this->subject->registerAction(
             $this->buildRequest(['siteIdentifier' => 'unknown', 'email' => 'user@example.com'])
         );
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(404, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
     }
 
     #[Test]
-    public function registerActionRedirectsWithErrorWhenApiCallFails(): void
+    public function registerActionReturnsErrorJsonWhenApiCallFails(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
         $this->mockHandler->append(new \RuntimeException('connection refused'));
 
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
-
         $response = $this->subject->registerAction(
             $this->buildRequest(['siteIdentifier' => 'main', 'email' => 'user@example.com'])
         );
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(500, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
     }
 
     #[Test]
-    public function registerActionRedirectsToIndexAfterSuccessfulRegistration(): void
+    public function registerActionReturnsSuccessJsonAfterSuccessfulRegistration(): void
     {
-        $indexUri = '/module/site/analytics';
         $site = $this->buildSiteMock('main', 'https://example.com');
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri($indexUri));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
         $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","websiteId":"w-123","instanceSecret":"s3cr3t"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
         $response = $this->subject->registerAction(
             $this->buildRequest(['siteIdentifier' => 'main', 'email' => 'user@example.com'])
         );
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
-        self::assertStringContainsString($indexUri, $response->getHeaderLine('location'));
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertTrue($this->decodeJson($response)['success']);
     }
 
     /** statusAction */
 
     #[Test]
-    public function statusActionRedirectsWithErrorWhenSiteIdentifierMissing(): void
+    public function statusActionReturnsErrorJsonWhenSiteIdentifierMissing(): void
     {
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
-
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
-
         $response = $this->subject->statusAction($this->buildRequest(['siteIdentifier' => '']));
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
     }
 
     #[Test]
-    public function statusActionRedirectsWithoutErrorWhenStatusFetchSucceeds(): void
+    public function statusActionReturnsSuccessJsonWhenStatusFetchSucceeds(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com', [
             'websiteId' => 'w-123',
             'instanceId' => 'i-456',
             'instanceSecret' => $this->encryptedTestSecret,
         ]);
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","consumption":{}}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
-        $this->flashMessageQueue->expects(self::never())->method('addMessage');
-
         $response = $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertTrue($this->decodeJson($response)['success']);
     }
 
     #[Test]
-    public function statusActionAddsErrorFlashMessageWhenSiteHasNoCredentials(): void
+    public function statusActionReturnsErrorJsonWhenSiteHasNoCredentials(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-
-        $this->flashMessageQueue->expects(self::once())->method('addMessage');
 
         $response = $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(500, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
     }
 
     /** invalidateStatusCacheAction */
@@ -478,5 +467,11 @@ final class BackendModuleControllerTest extends UnitTestCase
         $site->method('getRootPageId')->willReturn(1);
         $site->method('getSettings')->willReturn(new SiteSettings(new Settings($siteSettings), [], []));
         return $site;
+    }
+
+    /** @return array<string, mixed> */
+    private function decodeJson(\Psr\Http\Message\ResponseInterface $response): array
+    {
+        return json_decode((string)$response->getBody(), true, flags: JSON_THROW_ON_ERROR);
     }
 }

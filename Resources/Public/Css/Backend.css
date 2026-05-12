@@ -34,6 +34,10 @@
     border: 0;
 }
 
+typo3-notification {
+    z-index: 99999 !important;
+}
+
 @media (max-width: 500px) {
     .tx-analytics-registration-form,
     .tx-analytics-registration-form .form-control {

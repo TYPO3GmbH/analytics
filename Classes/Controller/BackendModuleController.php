@@ -64,37 +64,35 @@ final readonly class BackendModuleController
         return $moduleTemplate->renderResponse('Backend/Index');
     }
 
-    /**
-     * @throws RouteNotFoundException
-     */
     public function registerAction(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
         $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
         $email = is_array($body) ? (string)($body['email'] ?? '') : '';
-        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '' || $email === '') {
             $this->logger->warning('Register action called with missing siteIdentifier or email.');
-            $this->addFlashMessage('flash.invalidInput', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
+            return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
-        $site = $this->resolveSite($siteIdentifier);
-        if (!$site instanceof Site) {
-            return new RedirectResponse($indexUri);
+        try {
+            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+        } catch (SiteNotFoundException) {
+            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+            return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
         try {
             $this->registrationService->register($site, $email);
         } catch (RuntimeException $e) {
-            $this->addFlashMessage('flash.registrationFailed', 'flash.error.title', ContextualFeedbackSeverity::ERROR, [$e->getMessage()]);
-            return new RedirectResponse($indexUri);
+            return new JsonResponse($this->errorPayload('flash.registrationFailed', [$e->getMessage()]), 500);
         }
 
-        $this->addFlashMessage('flash.success.registered', 'flash.success.title', arguments: [$site->getIdentifier()]);
-
-        return new RedirectResponse($indexUri);
+        return new JsonResponse([
+            'success' => true,
+            'title' => LocalizationUtility::translate('flash.success.title', 'analytics') ?? '',
+            'message' => LocalizationUtility::translate('flash.success.registered', 'analytics', [$site->getIdentifier()]) ?? '',
+        ]);
     }
 
     /**
@@ -126,9 +124,9 @@ final readonly class BackendModuleController
             return new RedirectResponse($indexUri);
         }
 
+        $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $headline = LocalizationUtility::translate('backend.headline', 'analytics') ?? 'backend.headline';
         $dashboardLabel = LocalizationUtility::translate('button.dashboard', 'analytics') ?? 'button.dashboard';
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $this->moduleHelper->configureModuleTemplate(
             $moduleTemplate,
             $headline,
@@ -194,9 +192,9 @@ final readonly class BackendModuleController
             return new RedirectResponse($indexUri);
         }
 
+        $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $headline = LocalizationUtility::translate('backend.headline', 'analytics') ?? 'backend.headline';
         $managePlanLabel = LocalizationUtility::translate('button.managePlan', 'analytics') ?? 'button.managePlan';
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $this->moduleHelper->configureModuleTemplate(
             $moduleTemplate,
             $headline,
@@ -227,33 +225,32 @@ final readonly class BackendModuleController
         return $moduleTemplate->renderResponse('Backend/ManagePlan');
     }
 
-    /**
-     * @throws RouteNotFoundException
-     */
     public function statusAction(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
         $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
-        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '') {
             $this->logger->warning('Status action called without siteIdentifier.');
-            $this->addFlashMessage('flash.invalidInput', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
+            return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
-        $site = $this->resolveSite($siteIdentifier);
-        if (!$site instanceof Site) {
-            return new RedirectResponse($indexUri);
+        try {
+            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+        } catch (SiteNotFoundException) {
+            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+            return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
         if ($this->analyticsStatusService->getStatus($site, forceRefresh: true) === null) {
             $this->logger->error('Status action: status fetch failed.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage('flash.statusFetchFailed', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
+            return new JsonResponse($this->errorPayload('flash.statusFetchFailed'), 500);
         }
 
-        return new RedirectResponse($indexUri);
+        return new JsonResponse([
+            'success' => true,
+            'title' => LocalizationUtility::translate('notification.statusRefreshed.title', 'analytics') ?? '',
+        ]);
     }
 
     public function invalidateStatusCacheAction(ServerRequestInterface $request): ResponseInterface
@@ -305,14 +302,26 @@ final readonly class BackendModuleController
         ContextualFeedbackSeverity $severity = ContextualFeedbackSeverity::OK,
         array $arguments = []
     ): void {
-        $flashMessage = GeneralUtility::makeInstance(
+        $message = GeneralUtility::makeInstance(
             FlashMessage::class,
             LocalizationUtility::translate($messageKey, 'analytics', $arguments ?: null) ?? $messageKey,
             $titleKey !== '' ? (LocalizationUtility::translate($titleKey, 'analytics') ?? $titleKey) : '',
             $severity,
-            true
+            true,
         );
+        $this->flashMessageService->getMessageQueueByIdentifier()->addMessage($message);
+    }
 
-        $this->flashMessageService->getMessageQueueByIdentifier()->addMessage($flashMessage);
+    /**
+     * @param list<mixed> $arguments
+     * @return array{success: false, title: string, message: string}
+     */
+    private function errorPayload(string $messageKey, array $arguments = []): array
+    {
+        return [
+            'success' => false,
+            'title' => LocalizationUtility::translate('flash.error.title', 'analytics') ?? 'Error',
+            'message' => LocalizationUtility::translate($messageKey, 'analytics', $arguments ?: null) ?? $messageKey,
+        ];
     }
 }

@@ -110,6 +110,15 @@
             <trans-unit id="button.backToOverview" resname="button.backToOverview">
                 <source>Back to overview</source>
             </trans-unit>
+            <trans-unit id="notification.statusRefreshed.title" resname="notification.statusRefreshed.title">
+                <source>Status updated</source>
+            </trans-unit>
+            <trans-unit id="notification.subscriptionUpgraded.title" resname="notification.subscriptionUpgraded.title">
+                <source>Plan upgraded</source>
+            </trans-unit>
+            <trans-unit id="notification.subscriptionUpgraded.message" resname="notification.subscriptionUpgraded.message">
+                <source>Your plan has been successfully upgraded.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

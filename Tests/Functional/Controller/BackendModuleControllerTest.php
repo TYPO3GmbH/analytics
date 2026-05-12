@@ -200,7 +200,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     /** statusAction */
 
     #[Test]
-    public function statusActionRedirectsToIndexAfterSuccessfulRefresh(): void
+    public function statusActionReturnsSuccessJsonAfterSuccessfulRefresh(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"status":"active","consumption":{}}'));
 
@@ -214,7 +214,9 @@ final class BackendModuleControllerTest extends FunctionalTestCase
 
         $response = $controller->statusAction($request);
 
-        self::assertSame(302, $response->getStatusCode());
+        self::assertSame(200, $response->getStatusCode());
+        $data = json_decode((string)$response->getBody(), true);
+        self::assertTrue($data['success']);
     }
 
     /** Helpers */

@@ -146,6 +146,18 @@
                 <source>Back to overview</source>
                 <target>Zurück zur Übersicht</target>
             </trans-unit>
+            <trans-unit id="notification.statusRefreshed.title" resname="notification.statusRefreshed.title">
+                <source>Status updated</source>
+                <target>Status aktualisiert</target>
+            </trans-unit>
+            <trans-unit id="notification.subscriptionUpgraded.title" resname="notification.subscriptionUpgraded.title">
+                <source>Plan upgraded</source>
+                <target>Plan aktualisiert</target>
+            </trans-unit>
+            <trans-unit id="notification.subscriptionUpgraded.message" resname="notification.subscriptionUpgraded.message">
+                <source>Your plan has been successfully upgraded.</source>
+                <target>Dein Plan wurde erfolgreich aktualisiert.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
