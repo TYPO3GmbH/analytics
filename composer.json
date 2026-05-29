@@ -42,6 +42,7 @@
   },
   "scripts": {
     "dummy-typo3": "bash .ddev/commands/web/setup-dummy-typo3.sh",
+    "t3g:typo3:composer-update": "composer --working-dir .Build/dummy-typo3 update",
     "t3g:rector:dry-run": "rector process --dry-run --config rector.php",
     "t3g:rector:fix": "rector process --config rector.php",
     "t3g:cgl": [
