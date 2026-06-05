@@ -17,8 +17,8 @@ use Ssch\TYPO3Rector\Set\Typo3SetList;
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__ . '/Classes',
-        __DIR__ . '/Configuration',
+        __DIR__ . '/../Classes',
+        __DIR__ . '/../Configuration',
     ])
     // uncomment to reach your current PHP version
     // ->withPhpSets()
@@ -51,7 +51,7 @@ return RectorConfig::configure()
     )
     ->withSkip([
         // @see https://github.com/sabbelasichon/typo3-rector/issues/2536
-        __DIR__ . '/**/Configuration/ExtensionBuilder/*',
+        __DIR__ . '/../**/Configuration/ExtensionBuilder/*',
         NameImportingPostRector::class => [
             'ClassAliasMap.php',
         ],
@@ -60,10 +60,10 @@ return RectorConfig::configure()
          * to register different icon files for v13 and v14+.
          */
         RemoveTypo3VersionChecksRector::class => [
-            __DIR__ . '/Configuration/Icons.php',
+            __DIR__ . '/../Configuration/Icons.php',
         ],
         NewMethodCallWithoutParenthesesRector::class => [
-            __DIR__ . '/Configuration/Icons.php',
+            __DIR__ . '/../Configuration/Icons.php',
         ],
     ])
 ;

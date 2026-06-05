@@ -10,6 +10,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Site\SiteFinder;
 
@@ -103,11 +104,16 @@ final readonly class SiteDataProvider
      */
     public function getRootPageTitle(int $pageUid): string
     {
-        $row = $this->connectionPool
-            ->getQueryBuilderForTable('pages')
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('pages');
+        $row = $queryBuilder
             ->select('title')
             ->from('pages')
-            ->where('uid = ' . $pageUid)
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'uid',
+                    $queryBuilder->createNamedParameter($pageUid, Connection::PARAM_INT)
+                )
+            )
             ->executeQuery()
             ->fetchAssociative();
 

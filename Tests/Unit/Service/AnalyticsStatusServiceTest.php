@@ -11,10 +11,15 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -58,9 +63,22 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('plain-secret');
 
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiConfiguration = new ApiConfiguration($extensionConfiguration);
+        $apiClient = new AnalyticsApiClient(
+            new RequestFactory(new GuzzleClientFactory()),
+            $apiConfiguration,
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
+
         $this->subject = new AnalyticsStatusService(
             $this->cache,
-            new RequestFactory(new GuzzleClientFactory()),
+            $apiClient,
             $cipherService,
             new NullLogger(),
             $this->siteSettingsService,
@@ -114,7 +132,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     /** getStatus */
 
     #[Test]
-    public function persistsTrackingCodeAndStatusWhenApiResponseContainsThem(): void
+    public function syncSiteSettingsFromStatusPersistsTrackingCodeAndStatus(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
@@ -132,29 +150,32 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
                 })
             );
 
-        $this->subject->getStatus($site, forceRefresh: true);
+        $status = $this->subject->getStatus($site, forceRefresh: true);
+        $this->subject->syncSiteSettingsFromStatus($site, $status ?? []);
     }
 
     #[Test]
-    public function skipsWriteSettingsWhenValuesUnchanged(): void
+    public function syncSiteSettingsFromStatusSkipsWriteWhenValuesUnchanged(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456', ['trackingCode' => 'tc-abc', 'status' => 'active']);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $this->subject->getStatus($site, forceRefresh: true);
+        $status = $this->subject->getStatus($site, forceRefresh: true);
+        $this->subject->syncSiteSettingsFromStatus($site, $status ?? []);
     }
 
     #[Test]
-    public function skipsWriteSettingsWhenApiResponseHasNoTrackingIdOrStatus(): void
+    public function syncSiteSettingsFromStatusSkipsWriteWhenApiResponseHasNoTrackingIdOrStatus(): void
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
         $this->mockHandler->append(new Response(200, [], '{"packageName":"Pro"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $this->subject->getStatus($site, forceRefresh: true);
+        $status = $this->subject->getStatus($site, forceRefresh: true);
+        $this->subject->syncSiteSettingsFromStatus($site, $status ?? []);
     }
 
     #[Test]

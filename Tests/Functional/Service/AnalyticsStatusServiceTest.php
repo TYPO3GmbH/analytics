@@ -9,11 +9,16 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -53,9 +58,21 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
         $this->cache = $this->get(CacheManager::class)->getCache('tx_analytics_status');
         $this->cipherService = new CipherService();
 
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiClient = new AnalyticsApiClient(
+            new RequestFactory(new GuzzleClientFactory()),
+            new ApiConfiguration($extensionConfiguration),
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
+
         $this->subject = new AnalyticsStatusService(
             $this->cache,
-            new RequestFactory(new GuzzleClientFactory()),
+            $apiClient,
             $this->cipherService,
             new \Psr\Log\NullLogger(),
             $this->createMock(SiteSettingsService::class),

@@ -10,9 +10,14 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Service\AnalyticsApiClient;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -57,8 +62,20 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
         $this->cipherService = new CipherService();
 
-        $this->subject = new InstanceRegistrationService(
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
+            new ApiConfiguration($extensionConfiguration),
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
+
+        $this->subject = new InstanceRegistrationService(
+            $apiClient,
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,

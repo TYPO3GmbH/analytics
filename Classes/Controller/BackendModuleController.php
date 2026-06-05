@@ -8,8 +8,8 @@ use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
-use T3G\Analytics\Helper\BackendModuleHelper;
+use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
@@ -24,8 +24,6 @@ use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 final readonly class BackendModuleController
 {
@@ -36,7 +34,7 @@ final readonly class BackendModuleController
         private SiteFinder $siteFinder,
         private InstanceRegistrationService $registrationService,
         private AnalyticsStatusService $analyticsStatusService,
-        private BackendModuleHelper $moduleHelper,
+        private ModuleConfigurator $moduleHelper,
         private SiteDataProvider $siteDataProvider,
         private LoggerInterface $logger,
     ) {
@@ -51,7 +49,7 @@ final readonly class BackendModuleController
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $this->moduleHelper->configureModuleTemplate(
             $moduleTemplate,
-            LocalizationUtility::translate('backend.headline', 'analytics') ?? 'backend.headline',
+            $this->translate('backend.headline'),
             moduleClass: 'module-layout-normal'
         );
 
@@ -70,8 +68,13 @@ final readonly class BackendModuleController
     public function registerAction(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
-        $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
-        $email = is_array($body) ? (string)($body['email'] ?? '') : '';
+        if (!is_array($body)) {
+            $this->logger->warning('Register action called with invalid request body.');
+            return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
+        }
+
+        $siteIdentifier = (string)($body['siteIdentifier'] ?? '');
+        $email = (string)($body['email'] ?? '');
 
         if ($siteIdentifier === '' || $email === '') {
             $this->logger->warning('Register action called with missing siteIdentifier or email.');
@@ -87,14 +90,14 @@ final readonly class BackendModuleController
 
         try {
             $this->registrationService->register($site, $email);
-        } catch (RuntimeException $e) {
+        } catch (AnalyticsApiException $e) {
             return new JsonResponse($this->errorPayload('flash.registrationFailed', [$e->getMessage()]), 500);
         }
 
         return new JsonResponse([
             'success' => true,
-            'title' => LocalizationUtility::translate('flash.success.title', 'analytics') ?? '',
-            'message' => LocalizationUtility::translate('flash.success.registered', 'analytics', [$site->getIdentifier()]) ?? '',
+            'title' => $this->translate('flash.success.title'),
+            'message' => $this->translate('flash.success.registered', [$site->getIdentifier()]),
             'dashboardUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier]),
         ]);
     }
@@ -106,65 +109,34 @@ final readonly class BackendModuleController
     public function dashboardAction(ServerRequestInterface $request): ResponseInterface
     {
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
-        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '') {
             $this->logger->warning('Dashboard action called without siteIdentifier.');
             $this->addFlashMessage('flash.invalidInput', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
+            return new RedirectResponse($this->indexUri());
         }
 
-        $site = $this->resolveSite($siteIdentifier);
-        if (!$site instanceof Site) {
-            return new RedirectResponse($indexUri);
-        }
-        $pageName = $this->siteDataProvider->getRootPageTitle($site->getRootPageId());
-        $siteLabel = $this->siteDataProvider->siteLabel($pageName, $site->getIdentifier());
-
-        $dashboardUrl = $this->analyticsStatusService->getDashboardUrl($site);
-        if ($dashboardUrl === null) {
-            $this->logger->error('Dashboard action: dashboard URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage('flash.dashboardUrlUnavailable', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
-        }
-
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $headline = LocalizationUtility::translate('backend.headline', 'analytics') ?? 'backend.headline';
-        $dashboardLabel = LocalizationUtility::translate('button.dashboard', 'analytics') ?? 'button.dashboard';
-        $this->moduleHelper->configureModuleTemplate(
-            $moduleTemplate,
-            $headline,
-            $dashboardLabel . ': ' . $siteLabel,
-            'tx-analytics-iframe-module',
-            'site_analytics.dashboard',
-            ['siteIdentifier' => $siteIdentifier],
-            $this->shortcutLabel($headline, $dashboardLabel, $siteLabel),
-            $siteIdentifier,
-            'site_analytics.dashboard'
+        return $this->renderIframeModule(
+            request: $request,
+            siteIdentifier: $siteIdentifier,
+            urlResolver: fn (Site $site): ?string => $this->analyticsStatusService->getDashboardUrl($site),
+            template: 'Dashboard',
+            routeName: 'site_analytics.dashboard',
+            actionLabelKey: 'button.dashboard',
+            urlUnavailableKey: 'flash.dashboardUrlUnavailable',
+            breadcrumbId: 'dashboard',
+            breadcrumbIcon: 'actions-view',
+            urlVar: 'dashboardUrl',
+            extraTemplateVars: static function (Site $site, string $pn): array {
+                return [
+                    'site' => [
+                        'identifier' => $site->getIdentifier(),
+                        'title' => $site->getConfiguration()['websiteTitle'] ?? $site->getIdentifier(),
+                        'pageName' => $pn,
+                    ],
+                ];
+            },
         );
-        $this->moduleHelper->addBreadcrumbSuffix($moduleTemplate, 'dashboard', $dashboardLabel . ': ' . $siteLabel, 'actions-view');
-
-        $parsedUrl = parse_url($dashboardUrl);
-        $iframeOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
-        if (isset($parsedUrl['port'])) {
-            $iframeOrigin .= ':' . $parsedUrl['port'];
-        }
-
-        $moduleTemplate->assignMultiple([
-            'site' => [
-                'identifier' => $site->getIdentifier(),
-                'title' => $site->getConfiguration()['websiteTitle'] ?? $site->getIdentifier(),
-                'pageName' => $pageName,
-            ],
-            'dashboardUrl' => $dashboardUrl,
-            'iframeOrigin' => $iframeOrigin,
-            'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
-                'site_analytics.invalidate_status_cache',
-                ['siteIdentifier' => $siteIdentifier]
-            ),
-        ]);
-
-        return $moduleTemplate->renderResponse('Backend/Dashboard');
     }
 
     /**
@@ -174,59 +146,25 @@ final readonly class BackendModuleController
     public function managePlanAction(ServerRequestInterface $request): ResponseInterface
     {
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
-        $indexUri = $this->indexUri();
 
         if ($siteIdentifier === '') {
             $this->logger->warning('Manage plan action called without siteIdentifier.');
             $this->addFlashMessage('flash.invalidInput', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
+            return new RedirectResponse($this->indexUri());
         }
 
-        $site = $this->resolveSite($siteIdentifier);
-        if (!$site instanceof Site) {
-            return new RedirectResponse($indexUri);
-        }
-        $pageName = $this->siteDataProvider->getRootPageTitle($site->getRootPageId());
-        $siteLabel = $this->siteDataProvider->siteLabel($pageName, $site->getIdentifier());
-
-        $managePlanUrl = $this->analyticsStatusService->getManagePlanUrl($site);
-        if ($managePlanUrl === null) {
-            $this->logger->error('Manage plan action: URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage('flash.managePlanUrlUnavailable', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
-            return new RedirectResponse($indexUri);
-        }
-
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $headline = LocalizationUtility::translate('backend.headline', 'analytics') ?? 'backend.headline';
-        $managePlanLabel = LocalizationUtility::translate('button.managePlan', 'analytics') ?? 'button.managePlan';
-        $this->moduleHelper->configureModuleTemplate(
-            $moduleTemplate,
-            $headline,
-            $managePlanLabel . ': ' . $siteLabel,
-            'tx-analytics-iframe-module',
-            'site_analytics.manage_plan',
-            ['siteIdentifier' => $siteIdentifier],
-            $this->shortcutLabel($headline, $managePlanLabel, $siteLabel),
-            $siteIdentifier,
-            'site_analytics.manage_plan'
+        return $this->renderIframeModule(
+            request: $request,
+            siteIdentifier: $siteIdentifier,
+            urlResolver: fn (Site $site): ?string => $this->analyticsStatusService->getManagePlanUrl($site),
+            template: 'ManagePlan',
+            routeName: 'site_analytics.manage_plan',
+            actionLabelKey: 'button.managePlan',
+            urlUnavailableKey: 'flash.managePlanUrlUnavailable',
+            breadcrumbId: 'manage-plan',
+            breadcrumbIcon: 'actions-credit-card',
+            urlVar: 'managePlanUrl',
         );
-        $this->moduleHelper->addBreadcrumbSuffix($moduleTemplate, 'manage-plan', $managePlanLabel . ': ' . $siteLabel, 'actions-credit-card');
-        $parsedUrl = parse_url($managePlanUrl);
-        $iframeOrigin = ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? '');
-        if (isset($parsedUrl['port'])) {
-            $iframeOrigin .= ':' . $parsedUrl['port'];
-        }
-
-        $moduleTemplate->assignMultiple([
-            'managePlanUrl' => $managePlanUrl,
-            'iframeOrigin' => $iframeOrigin,
-            'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
-                'site_analytics.invalidate_status_cache',
-                ['siteIdentifier' => $siteIdentifier]
-            ),
-        ]);
-
-        return $moduleTemplate->renderResponse('Backend/ManagePlan');
     }
 
     public function statusAction(ServerRequestInterface $request): ResponseInterface
@@ -246,14 +184,17 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
-        if ($this->analyticsStatusService->getStatus($site, forceRefresh: true) === null) {
+        $status = $this->analyticsStatusService->getStatus($site, forceRefresh: true);
+        if ($status === null) {
             $this->logger->error('Status action: status fetch failed.', ['siteIdentifier' => $siteIdentifier]);
             return new JsonResponse($this->errorPayload('flash.statusFetchFailed'), 500);
         }
 
+        $this->analyticsStatusService->syncSiteSettingsFromStatus($site, $status);
+
         return new JsonResponse([
             'success' => true,
-            'title' => LocalizationUtility::translate('notification.statusRefreshed.title', 'analytics') ?? '',
+            'title' => $this->translate('notification.statusRefreshed.title'),
         ]);
     }
 
@@ -273,6 +214,85 @@ final readonly class BackendModuleController
 
         $this->analyticsStatusService->clearCache($site);
         return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @param callable(Site): ?string $urlResolver
+     * @param callable(Site, string): array<string, mixed>|null $extraTemplateVars
+     * @throws RouteNotFoundException
+     * @throws Exception
+     */
+    private function renderIframeModule(
+        ServerRequestInterface $request,
+        string $siteIdentifier,
+        callable $urlResolver,
+        string $template,
+        string $routeName,
+        string $actionLabelKey,
+        string $urlUnavailableKey,
+        string $breadcrumbId,
+        string $breadcrumbIcon,
+        string $urlVar,
+        ?callable $extraTemplateVars = null,
+    ): ResponseInterface {
+        $indexUri = $this->indexUri();
+
+        $site = $this->resolveSite($siteIdentifier);
+        if (!$site instanceof Site) {
+            return new RedirectResponse($indexUri);
+        }
+
+        $pageName = $this->siteDataProvider->getRootPageTitle($site->getRootPageId());
+        $siteLabel = $this->siteDataProvider->siteLabel($pageName, $site->getIdentifier());
+
+        $url = $urlResolver($site);
+        if ($url === null) {
+            $this->logger->error($template . ' action: URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
+            $this->addFlashMessage($urlUnavailableKey, 'flash.error.title', ContextualFeedbackSeverity::ERROR);
+            return new RedirectResponse($indexUri);
+        }
+
+        $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $headline = $this->translate('backend.headline');
+        $actionLabel = $this->translate($actionLabelKey);
+
+        $this->moduleHelper->configureModuleTemplate(
+            $moduleTemplate,
+            $headline,
+            $actionLabel . ': ' . $siteLabel,
+            'tx-analytics-iframe-module',
+            $routeName,
+            ['siteIdentifier' => $siteIdentifier],
+            $this->shortcutLabel($headline, $actionLabel, $siteLabel),
+            $siteIdentifier,
+            $routeName
+        );
+        $this->moduleHelper->addBreadcrumbSuffix($moduleTemplate, $breadcrumbId, $actionLabel . ': ' . $siteLabel, $breadcrumbIcon);
+
+        $vars = array_merge(
+            [
+                $urlVar => $url,
+                'iframeOrigin' => $this->buildIframeOrigin($url),
+                'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
+                    'site_analytics.invalidate_status_cache',
+                    ['siteIdentifier' => $siteIdentifier]
+                ),
+            ],
+            $extraTemplateVars !== null ? $extraTemplateVars($site, $pageName) : []
+        );
+        $moduleTemplate->assignMultiple($vars);
+
+        return $moduleTemplate->renderResponse('Backend/' . $template);
+    }
+
+    private function buildIframeOrigin(string $url): string
+    {
+        $parsed = parse_url($url);
+        $origin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+        if (isset($parsed['port'])) {
+            $origin .= ':' . $parsed['port'];
+        }
+        return $origin;
     }
 
     private function resolveSite(string $siteIdentifier): ?Site
@@ -306,10 +326,9 @@ final readonly class BackendModuleController
         ContextualFeedbackSeverity $severity = ContextualFeedbackSeverity::OK,
         array $arguments = []
     ): void {
-        $message = GeneralUtility::makeInstance(
-            FlashMessage::class,
-            LocalizationUtility::translate($messageKey, 'analytics', $arguments ?: null) ?? $messageKey,
-            $titleKey !== '' ? (LocalizationUtility::translate($titleKey, 'analytics') ?? $titleKey) : '',
+        $message = new FlashMessage(
+            $this->translate($messageKey, $arguments),
+            $titleKey !== '' ? $this->translate($titleKey) : '',
             $severity,
             true,
         );
@@ -324,8 +343,19 @@ final readonly class BackendModuleController
     {
         return [
             'success' => false,
-            'title' => LocalizationUtility::translate('flash.error.title', 'analytics') ?? 'Error',
-            'message' => LocalizationUtility::translate($messageKey, 'analytics', $arguments ?: null) ?? $messageKey,
+            'title' => $this->translate('flash.error.title'),
+            'message' => $this->translate($messageKey, $arguments),
         ];
+    }
+
+    /** @param list<mixed> $args */
+    private function translate(string $key, array $args = []): string
+    {
+        $lll = 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:' . $key;
+        $value = (string)($GLOBALS['LANG']->sL($lll) ?? '');
+        if ($value === '') {
+            return $key;
+        }
+        return $args !== [] ? vsprintf($value, $args) : $value;
     }
 }

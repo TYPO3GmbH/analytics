@@ -1,0 +1,5 @@
+# cat = API Configuration; type = string; label = API Base URL (leave empty for production default)
+apiBaseUrl =
+
+# cat = API Configuration; type = boolean; label = Verify SSL Certificates (set to 0 only for local development with self-signed certificates)
+verifySsl = 1

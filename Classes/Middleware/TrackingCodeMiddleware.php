@@ -23,6 +23,10 @@ final class TrackingCodeMiddleware implements MiddlewareInterface
     {
         $response = $handler->handle($request);
 
+        if ($response->getStatusCode() !== 200) {
+            return $response;
+        }
+
         $site = $request->getAttribute('site');
         if (!$site instanceof Site) {
             return $response;
@@ -43,10 +47,13 @@ final class TrackingCodeMiddleware implements MiddlewareInterface
             return $response;
         }
 
-        $body = str_replace('</body>', "\n" . $trackingCode . "\n</body>", $body);
+        $newBodyContent = preg_replace('/<\/body>/i', "\n" . $trackingCode . "\n</body>", $body, 1);
+        if ($newBodyContent === null || $newBodyContent === $body) {
+            return $response;
+        }
 
         $newBody = new Stream('php://temp', 'r+');
-        $newBody->write($body);
+        $newBody->write($newBodyContent);
 
         return $response->withBody($newBody);
     }

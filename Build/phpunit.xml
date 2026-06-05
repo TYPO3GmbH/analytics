@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
-    bootstrap="Build/UnitTestsBootstrap.php"
+    bootstrap="UnitTestsBootstrap.php"
     colors="true"
-    cacheDirectory=".build/phpunit"
+    cacheDirectory="../var/phpunit-cache"
 >
     <testsuites>
         <testsuite name="unit">
-            <directory>Tests/Unit</directory>
+            <directory>../Tests/Unit</directory>
         </testsuite>
     </testsuites>
 

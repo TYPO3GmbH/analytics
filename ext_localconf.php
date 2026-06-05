@@ -7,6 +7,6 @@ call_user_func(static function (): void {
     $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_analytics_status'] ??= [
         'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
         'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
-        'options' => ['defaultLifetime' => 86400],
+        'options' => ['defaultLifetime' => \T3G\Analytics\Service\AnalyticsStatusService::STATUS_CACHE_LIFETIME],
     ];
 });

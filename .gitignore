@@ -3,6 +3,9 @@
 /.Build/
 composer.lock
 
+# Generated / cache
+/var/
+
 # TYPO3
 /public/
 .php-cs-fixer.cache

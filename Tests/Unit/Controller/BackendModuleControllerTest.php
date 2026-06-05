@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Unit\Controller;
 
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -12,10 +13,14 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Controller\BackendModuleController;
-use T3G\Analytics\Helper\BackendModuleHelper;
+use T3G\Analytics\Backend\ModuleConfigurator;
+use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -23,8 +28,8 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
-use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -32,8 +37,6 @@ use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageService;
-use TYPO3\CMS\Core\Localization\Locale;
-use TYPO3\CMS\Core\Localization\Locales;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -42,7 +45,6 @@ use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -87,26 +89,9 @@ final class BackendModuleControllerTest extends UnitTestCase
         $stack->push(Middleware::history($this->httpHistory));
         $GLOBALS['TYPO3_CONF_VARS']['HTTP'] = ['verify' => false, 'handler' => $stack];
 
-        /**
-         * Pre-populate the LocalizationUtility runtime cache with a stub LanguageService.
-         */
         $languageService = $this->createMock(LanguageService::class);
         $languageService->method('sL')->willReturnArgument(0);
-
-        $locale = new Locale('en');
-        $locales = $this->createMock(Locales::class);
-        $locales->method('createLocale')->willReturn($locale);
-        $locales->method('createLocaleFromRequest')->willReturn($locale);
-        GeneralUtility::setSingletonInstance(Locales::class, $locales);
-
-        $runtimeCache = new VariableFrontend('runtime', new TransientMemoryBackend('production'));
-        $languageFilePath = 'EXT:analytics/Resources/Private/Language/locallang.xlf';
-        $cacheKey = sha1(json_encode(array_merge([(string)$locale], $locale->getDependencies(), [$languageFilePath])));
-        $runtimeCache->set($cacheKey, $languageService);
-
-        $cacheManager = $this->createMock(CacheManager::class);
-        $cacheManager->method('getCache')->willReturn($runtimeCache);
-        GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManager);
+        $GLOBALS['LANG'] = $languageService;
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
@@ -123,12 +108,22 @@ final class BackendModuleControllerTest extends UnitTestCase
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('test-instance-secret');
 
-        $requestFactory = new RequestFactory(new GuzzleClientFactory());
-        $statusCache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiClient = new AnalyticsApiClient(
+            new RequestFactory(new GuzzleClientFactory()),
+            new ApiConfiguration($extensionConfiguration),
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
 
+        $statusCache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
         $analyticsStatusService = new AnalyticsStatusService(
             $statusCache,
-            $requestFactory,
+            $apiClient,
             $cipherService,
             new NullLogger(),
             $this->siteSettingsService,
@@ -136,12 +131,15 @@ final class BackendModuleControllerTest extends UnitTestCase
         );
 
         $registrationService = new InstanceRegistrationService(
-            $requestFactory,
+            $apiClient,
             $cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
             new NullLogger(),
         );
+
+        $expressionBuilder = $this->createMock(ExpressionBuilder::class);
+        $expressionBuilder->method('eq')->willReturn('uid = :dcValue1');
 
         $result = $this->createMock(\Doctrine\DBAL\Result::class);
         $result->method('fetchAssociative')->willReturn(false);
@@ -151,6 +149,8 @@ final class BackendModuleControllerTest extends UnitTestCase
         $queryBuilder->method('from')->willReturnSelf();
         $queryBuilder->method('where')->willReturnSelf();
         $queryBuilder->method('executeQuery')->willReturn($result);
+        $queryBuilder->method('expr')->willReturn($expressionBuilder);
+        $queryBuilder->method('createNamedParameter')->willReturn(':dcValue1');
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
@@ -163,7 +163,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             new NullLogger(),
         );
 
-        $moduleHelper = new BackendModuleHelper(
+        $moduleHelper = new ModuleConfigurator(
             $this->uriBuilder,
             $siteDataProvider,
         );
@@ -188,6 +188,7 @@ final class BackendModuleControllerTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        unset($GLOBALS['LANG']);
         parent::tearDown();
     }
 

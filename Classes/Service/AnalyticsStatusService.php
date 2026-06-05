@@ -7,11 +7,8 @@ namespace T3G\Analytics\Service;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
-use T3G\Analytics\Analytics;
-use T3G\Analytics\Utility\ApiExceptionUtility;
-use T3G\Analytics\Utility\HmacUtility;
+use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -19,10 +16,11 @@ use TYPO3\CMS\Core\Site\SiteSettingsService;
 final readonly class AnalyticsStatusService
 {
     private const CREDIT_WARNING_REMAINING_RATIO = 0.25;
+    public const STATUS_CACHE_LIFETIME = 86400;
 
     public function __construct(
         private FrontendInterface $cache,
-        private RequestFactory $requestFactory,
+        private AnalyticsApiClient $apiClient,
         private CipherService $cipherService,
         private LoggerInterface $logger,
         private SiteSettingsService $siteSettingsService,
@@ -52,7 +50,7 @@ final readonly class AnalyticsStatusService
         $prepared = $this->prepareStatus($status);
 
         if ($prepared !== null) {
-            $this->cache->set($cacheKey, $prepared, [], 86400);
+            $this->cache->set($cacheKey, $prepared, [], self::STATUS_CACHE_LIFETIME);
         }
 
         return $prepared;
@@ -61,6 +59,52 @@ final readonly class AnalyticsStatusService
     public function clearCache(Site $site): void
     {
         $this->cache->remove($this->cacheKey($site));
+    }
+
+    /**
+     * Persists trackingCode and status from a status API response to the site settings.
+     * Must be called explicitly after a successful status fetch — not on every read.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function syncSiteSettingsFromStatus(Site $site, array $data): void
+    {
+        $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
+        $newStatus = (string)($data['status'] ?? '');
+        $siteIdentifier = $site->getIdentifier();
+        $settings = $site->getSettings();
+
+        try {
+            $existingTrackingCode = $settings->get('trackingCode', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('syncSiteSettingsFromStatus: failed to read trackingCode.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $existingTrackingCode = '';
+        }
+        try {
+            $existingStatus = $settings->get('status', '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $this->logger->warning('syncSiteSettingsFromStatus: failed to read status.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
+            $existingStatus = '';
+        }
+
+        $update = [];
+        if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
+            $update['trackingCode'] = $trackingCode;
+        }
+        if ($newStatus !== '' && $newStatus !== $existingStatus) {
+            $update['status'] = $newStatus;
+        }
+
+        if ($update === []) {
+            return;
+        }
+
+        $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
+        $this->logger->info(
+            'Site settings updated from status response.',
+            ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]
+        );
     }
 
     /**
@@ -73,23 +117,11 @@ final readonly class AnalyticsStatusService
         if ($credentials === null) {
             return null;
         }
-
         [$websiteId, $instanceId, $instanceSecret] = $credentials;
-        $path = '/api/checkout-url/' . $websiteId;
-
         try {
-            $response = $this->requestFactory->request(
-                Analytics::getApiBaseUrl() . '/checkout-url/' . $websiteId,
-                'GET',
-                array_merge(Analytics::getApiRequestOptions(), [
-                    'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
-                ])
-            );
-
-            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            return isset($data['checkoutUrl']) ? (string)$data['checkoutUrl'] : null;
-        } catch (\Throwable $e) {
-            $this->logger->error('getManagePlanUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionUtility::extractReason($e)]);
+            return $this->apiClient->fetchCheckoutUrl($websiteId, $instanceId, $instanceSecret);
+        } catch (AnalyticsApiException $e) {
+            $this->logger->error('getManagePlanUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => $e->reason]);
             return null;
         }
     }
@@ -104,23 +136,11 @@ final readonly class AnalyticsStatusService
         if ($credentials === null) {
             return null;
         }
-
         [$websiteId, $instanceId, $instanceSecret] = $credentials;
-        $path = '/api/dashboard-url/' . $websiteId;
-
         try {
-            $response = $this->requestFactory->request(
-                Analytics::getApiBaseUrl() . '/dashboard-url/' . $websiteId,
-                'GET',
-                array_merge(Analytics::getApiRequestOptions(), [
-                    'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
-                ])
-            );
-
-            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            return isset($data['dashboardUrl']) ? (string)$data['dashboardUrl'] : null;
-        } catch (\Throwable $e) {
-            $this->logger->error('getDashboardUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionUtility::extractReason($e)]);
+            return $this->apiClient->fetchDashboardUrl($websiteId, $instanceId, $instanceSecret);
+        } catch (AnalyticsApiException $e) {
+            $this->logger->error('getDashboardUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => $e->reason]);
             return null;
         }
     }
@@ -134,28 +154,13 @@ final readonly class AnalyticsStatusService
         if ($credentials === null) {
             return null;
         }
-
         [$websiteId, $instanceId, $instanceSecret] = $credentials;
-        $path = '/api/status/' . $websiteId;
-
         try {
-            $response = $this->requestFactory->request(
-                Analytics::getApiBaseUrl() . '/status/' . $websiteId,
-                'GET',
-                array_merge(Analytics::getApiRequestOptions(), [
-                    'headers' => HmacUtility::buildHeaders('GET', $path, $instanceId, $instanceSecret),
-                ])
-            );
-
-            /** @var array<string, mixed> $data */
-            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $data = $this->apiClient->fetchStatus($websiteId, $instanceId, $instanceSecret);
             $data['_fetchedAt'] = time();
-
-            $this->persistStatusSettings($site, $data);
-
             return $data;
-        } catch (\Throwable $e) {
-            $this->logger->error('fetchFromApi: API request failed.', ['websiteId' => $websiteId, 'reason' => ApiExceptionUtility::extractReason($e)]);
+        } catch (AnalyticsApiException $e) {
+            $this->logger->error('fetchFromApi: API request failed.', ['websiteId' => $websiteId, 'reason' => $e->reason]);
             return null;
         }
     }
@@ -200,48 +205,6 @@ final readonly class AnalyticsStatusService
         }
 
         return [$websiteId, $instanceId, $instanceSecret];
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function persistStatusSettings(Site $site, array $data): void
-    {
-        $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
-        $newStatus = (string)($data['status'] ?? '');
-        $siteIdentifier = $site->getIdentifier();
-        $settings = $site->getSettings();
-        try {
-            $existingTrackingCode = $settings->get('trackingCode', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('persistStatusSettings: failed to read trackingCode.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $existingTrackingCode = '';
-        }
-        try {
-            $existingStatus = $settings->get('status', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('persistStatusSettings: failed to read status.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $existingStatus = '';
-        }
-
-        $update = [];
-        if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
-            $update['trackingCode'] = $trackingCode;
-        }
-        if ($newStatus !== '' && $newStatus !== $existingStatus) {
-            $update['status'] = $newStatus;
-        }
-
-        if ($update === []) {
-            return;
-        }
-
-        $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
-        $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
-        $this->logger->info(
-            'Site settings updated from status response.',
-            ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]
-        );
     }
 
     /**

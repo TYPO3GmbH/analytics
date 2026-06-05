@@ -21,7 +21,5 @@ abstract class FunctionalTestCase extends BaseFunctionalTestCase
     protected array $coreExtensionsToLoad = [
         'core',
         'backend',
-        'extbase',
-        'fluid',
     ];
 }

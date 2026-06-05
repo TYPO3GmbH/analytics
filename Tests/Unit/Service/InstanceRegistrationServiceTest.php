@@ -11,8 +11,14 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Service\AnalyticsApiClient;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -51,8 +57,20 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
         $this->cipherService = new CipherService();
 
-        $this->subject = new InstanceRegistrationService(
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
+            new ApiConfiguration($extensionConfiguration),
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
+
+        $this->subject = new InstanceRegistrationService(
+            $apiClient,
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
@@ -72,7 +90,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     {
         $this->mockHandler->append(new \RuntimeException('connection refused'));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(AnalyticsApiException::class);
         $this->expectExceptionMessage('connection refused');
 
         $this->subject->register($this->buildSite(), 'user@example.com');
@@ -83,7 +101,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     {
         $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","instanceSecret":"s3cr3t"}'));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(AnalyticsApiException::class);
 
         $this->subject->register($this->buildSite(), 'user@example.com');
     }
@@ -93,7 +111,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     {
         $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceSecret":"s3cr3t"}'));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(AnalyticsApiException::class);
 
         $this->subject->register($this->buildSite(), 'user@example.com');
     }

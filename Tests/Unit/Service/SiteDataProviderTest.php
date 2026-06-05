@@ -11,12 +11,18 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteDataProvider;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -58,12 +64,17 @@ final class SiteDataProviderTest extends UnitTestCase
         $this->siteFinder = $this->createMock(SiteFinder::class);
         $this->uriBuilder = $this->createMock(UriBuilder::class);
 
+        $expressionBuilder = $this->createMock(ExpressionBuilder::class);
+        $expressionBuilder->method('eq')->willReturn('uid = :dcValue1');
+
         $this->queryResult = $this->createMock(\Doctrine\DBAL\Result::class);
         $queryBuilder = $this->createMock(QueryBuilder::class);
         $queryBuilder->method('select')->willReturnSelf();
         $queryBuilder->method('from')->willReturnSelf();
         $queryBuilder->method('where')->willReturnSelf();
         $queryBuilder->method('executeQuery')->willReturn($this->queryResult);
+        $queryBuilder->method('expr')->willReturn($expressionBuilder);
+        $queryBuilder->method('createNamedParameter')->willReturn(':dcValue1');
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
@@ -71,9 +82,20 @@ final class SiteDataProviderTest extends UnitTestCase
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('test-secret');
 
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiClient = new AnalyticsApiClient(
+            new RequestFactory(new GuzzleClientFactory()),
+            new ApiConfiguration($extensionConfiguration),
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
         $statusService = new AnalyticsStatusService(
             new VariableFrontend('analytics_status', new TransientMemoryBackend('production')),
-            new RequestFactory(new GuzzleClientFactory()),
+            $apiClient,
             $cipherService,
             new NullLogger(),
             $this->createMock(SiteSettingsService::class),

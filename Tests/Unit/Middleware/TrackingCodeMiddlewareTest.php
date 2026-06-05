@@ -107,6 +107,7 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
         $stream->method('__toString')->willReturn($html);
 
         $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
         $response->method('getBody')->willReturn($stream);
         $response->method('getHeaderLine')->with('Content-Type')->willReturn('text/html; charset=utf-8');
 
@@ -139,6 +140,7 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
         $stream->method('__toString')->willReturn($html);
 
         $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
         $response->method('getBody')->willReturn($stream);
         $response->method('getHeaderLine')->with('Content-Type')->willReturn('');
         $response->method('withBody')->willReturnCallback(static function ($newBody) use ($response): ResponseInterface {
@@ -182,12 +184,13 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
         return $this->buildResponse($body, 'text/html; charset=utf-8');
     }
 
-    private function buildResponse(string $body, string $contentType): ResponseInterface
+    private function buildResponse(string $body, string $contentType, int $statusCode = 200): ResponseInterface
     {
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('__toString')->willReturn($body);
 
         $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn($statusCode);
         $response->method('getBody')->willReturn($stream);
         $response->method('getHeaderLine')->with('Content-Type')->willReturn($contentType);
         $response->method('withBody')->willReturnSelf();

@@ -2,22 +2,30 @@
 
 declare(strict_types=1);
 
-namespace T3G\Analytics\Tests\Unit\Utility;
+namespace T3G\Analytics\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use T3G\Analytics\Utility\ApiExceptionUtility;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-final class ApiExceptionUtilityTest extends UnitTestCase
+final class ApiExceptionExtractorTest extends UnitTestCase
 {
+    private ApiExceptionExtractor $subject;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->subject = new ApiExceptionExtractor();
+    }
+
     #[Test]
     public function extractReasonReturnsDetailFromJsonBody(): void
     {
         $e = $this->buildExceptionWithJsonBody(['detail' => 'quota exceeded'], 422, 'Unprocessable Entity');
 
-        self::assertSame('quota exceeded', ApiExceptionUtility::extractReason($e));
+        self::assertSame('quota exceeded', $this->subject->extractReason($e));
     }
 
     #[Test]
@@ -25,7 +33,7 @@ final class ApiExceptionUtilityTest extends UnitTestCase
     {
         $e = $this->buildExceptionWithJsonBody(['description' => 'not found'], 404, 'Not Found');
 
-        self::assertSame('not found', ApiExceptionUtility::extractReason($e));
+        self::assertSame('not found', $this->subject->extractReason($e));
     }
 
     #[Test]
@@ -33,7 +41,7 @@ final class ApiExceptionUtilityTest extends UnitTestCase
     {
         $e = $this->buildExceptionWithJsonBody(['code' => 42], 400, 'Bad Request', 'original message');
 
-        self::assertSame('original message', ApiExceptionUtility::extractReason($e));
+        self::assertSame('original message', $this->subject->extractReason($e));
     }
 
     #[Test]
@@ -41,7 +49,7 @@ final class ApiExceptionUtilityTest extends UnitTestCase
     {
         $e = $this->buildExceptionWithRawBody('<!DOCTYPE html><html><body>Error</body></html>', 500, 'Internal Server Error');
 
-        self::assertSame('HTTP 500 Internal Server Error', ApiExceptionUtility::extractReason($e));
+        self::assertSame('HTTP 500 Internal Server Error', $this->subject->extractReason($e));
     }
 
     #[Test]
@@ -49,7 +57,7 @@ final class ApiExceptionUtilityTest extends UnitTestCase
     {
         $e = $this->buildExceptionWithRawBody('', 503, 'Service Unavailable');
 
-        self::assertSame('HTTP 503 Service Unavailable', ApiExceptionUtility::extractReason($e));
+        self::assertSame('HTTP 503 Service Unavailable', $this->subject->extractReason($e));
     }
 
     #[Test]
@@ -57,10 +65,8 @@ final class ApiExceptionUtilityTest extends UnitTestCase
     {
         $e = new \RuntimeException('Connection refused');
 
-        self::assertSame('Connection refused', ApiExceptionUtility::extractReason($e));
+        self::assertSame('Connection refused', $this->subject->extractReason($e));
     }
-
-    /** Helpers */
 
     private function buildExceptionWithJsonBody(array $data, int $status, string $reason, string $message = ''): \Throwable
     {

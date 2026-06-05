@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in([
-        __DIR__ . '/Classes',
-        __DIR__ . '/Tests',
-        __DIR__ . '/Configuration',
+        __DIR__ . '/../Classes',
+        __DIR__ . '/../Tests',
+        __DIR__ . '/../Configuration',
     ])
-    ->exclude(['vendor', '.build']);
+    ->exclude(['vendor', '.Build', 'var']);
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)

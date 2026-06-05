@@ -11,10 +11,14 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Controller\BackendModuleController;
-use T3G\Analytics\Helper\BackendModuleHelper;
+use T3G\Analytics\Backend\ModuleConfigurator;
+use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
+use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
@@ -24,6 +28,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -225,12 +230,23 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         ?SiteFinder $siteFinder = null,
     ): BackendModuleController {
         $resolvedSiteFinder = $siteFinder ?? $this->get(SiteFinder::class);
-        $requestFactory = new RequestFactory(new GuzzleClientFactory());
+
+        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $extensionConfiguration->method('get')->willReturnMap([
+            ['analytics', 'apiBaseUrl', ''],
+            ['analytics', 'verifySsl', '0'],
+        ]);
+        $apiClient = new AnalyticsApiClient(
+            new RequestFactory(new GuzzleClientFactory()),
+            new ApiConfiguration($extensionConfiguration),
+            new HmacSigner(),
+            new ApiExceptionExtractor(),
+        );
 
         $cipherService = new CipherService();
         $statusService = new AnalyticsStatusService(
             $this->get(CacheManager::class)->getCache('tx_analytics_status'),
-            $requestFactory,
+            $apiClient,
             $cipherService,
             new NullLogger(),
             $this->createMock(SiteSettingsService::class),
@@ -245,13 +261,13 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             new NullLogger(),
         );
 
-        $moduleHelper = new BackendModuleHelper(
+        $moduleHelper = new ModuleConfigurator(
             $this->get(UriBuilder::class),
             $siteDataProvider,
         );
 
         $registrationService = new InstanceRegistrationService(
-            $requestFactory,
+            $apiClient,
             $cipherService,
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),

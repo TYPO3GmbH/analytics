@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace T3G\Analytics\Helper;
+namespace T3G\Analytics\Backend;
 
 use Doctrine\DBAL\Exception;
 use T3G\Analytics\Service\SiteDataProvider;
@@ -11,10 +11,8 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
-final readonly class BackendModuleHelper
+final readonly class ModuleConfigurator
 {
     public function __construct(
         private UriBuilder $uriBuilder,
@@ -103,7 +101,7 @@ final readonly class BackendModuleHelper
             return;
         }
 
-        $registeredSitesLabel = LocalizationUtility::translate('label.registeredSites', 'analytics') ?? 'label.registeredSites';
+        $registeredSitesLabel = $this->translate('label.registeredSites');
         $selectedLabel = $registeredSitesLabel;
         foreach ($sites as $site) {
             if ($site['identifier'] === $selectedSiteIdentifier) {
@@ -120,7 +118,7 @@ final readonly class BackendModuleHelper
             ->setShowLabelText(true);
 
         foreach ($sites as $site) {
-            $dropdownItem = GeneralUtility::makeInstance(DropDownItem::class);
+            $dropdownItem = new DropDownItem();
             $dropdownItem->setLabel($site['label']);
             $dropdownItem->setTitle($site['label']);
             $dropdownItem->setHref((string)$this->uriBuilder->buildUriFromRoute(
@@ -137,4 +135,10 @@ final readonly class BackendModuleHelper
             ->addButton($dropdown, ButtonBar::BUTTON_POSITION_LEFT);
     }
 
+    private function translate(string $key): string
+    {
+        $lll = 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:' . $key;
+        $value = (string)($GLOBALS['LANG']->sL($lll) ?? '');
+        return $value !== '' ? $value : $key;
+    }
 }
