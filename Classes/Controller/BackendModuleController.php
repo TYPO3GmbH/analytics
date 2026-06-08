@@ -94,6 +94,18 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.registrationFailed', [$e->getMessage()]), 500);
         }
 
+        // Re-load the site so the freshly written credentials are visible, then
+        // fetch and persist the initial status (including trackingCode) immediately.
+        try {
+            $registeredSite = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+            $status = $this->analyticsStatusService->getStatus($registeredSite, forceRefresh: true);
+            if ($status !== null) {
+                $this->analyticsStatusService->syncSiteSettingsFromStatus($registeredSite, $status);
+            }
+        } catch (SiteNotFoundException) {
+            // Non-fatal: tracking code will be synced on the next manual refresh.
+        }
+
         return new JsonResponse([
             'success' => true,
             'title' => $this->translate('flash.success.title'),
@@ -250,6 +262,11 @@ final readonly class BackendModuleController
             $this->logger->error($template . ' action: URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
             $this->addFlashMessage($urlUnavailableKey, 'flash.error.title', ContextualFeedbackSeverity::ERROR);
             return new RedirectResponse($indexUri);
+        }
+
+        $status = $this->analyticsStatusService->getStatus($site);
+        if ($status !== null) {
+            $this->analyticsStatusService->syncSiteSettingsFromStatus($site, $status);
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
