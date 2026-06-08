@@ -18,3 +18,8 @@ services:
   T3G\Analytics\Service\AnalyticsStatusService:
     arguments:
       $cache: '@cache.tx_analytics_status'
+
+  T3G\Analytics\EventListener\PagePerformanceBarListener:
+    tags:
+      - name: event.listener
+        identifier: 'analytics/page-performance-bar'

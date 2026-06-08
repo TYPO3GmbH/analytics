@@ -1,0 +1,298 @@
+.tx-analytics-performance-bar {
+    display: grid;
+    container-type: inline-size;
+    grid-template-columns: repeat(4, minmax(12rem, 1fr)) minmax(12rem, auto);
+    align-items: stretch;
+    margin: 0 0 1rem;
+    border: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
+    background: var(--typo3-component-bg);
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-performance-metric,
+.tx-analytics-performance-period {
+    min-height: 4.5rem;
+    border-right: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-performance-metric {
+    position: relative;
+    container-type: inline-size;
+}
+
+.tx-analytics-performance-metric:focus-visible {
+    outline: var(--typo3-outline-width) var(--typo3-outline-style) color-mix(in srgb, var(--typo3-state-primary-border-color), transparent var(--typo3-outline-transparent-mix));
+    outline-offset: calc(var(--typo3-outline-width) * -1);
+}
+
+.tx-analytics-performance-metric-body {
+    display: grid;
+    grid-template-areas:
+        "icon value trend"
+        "icon label trend";
+    grid-template-columns: 3.75rem minmax(0, 1fr) max-content;
+    grid-template-rows: 1fr 1fr;
+    column-gap: 1rem;
+    align-items: center;
+    min-height: 100%;
+    padding: .75rem 1.25rem;
+}
+
+.tx-analytics-performance-icon {
+    display: inline-flex;
+    grid-area: icon;
+    align-items: center;
+    justify-content: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: var(--typo3-component-border-radius);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tx-analytics-performance-icon::before,
+.tx-analytics-performance-trend-icon,
+.tx-analytics-performance-period-icon {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: currentColor;
+    content: "";
+    mask: var(--tx-analytics-performance-icon) center / contain no-repeat;
+    -webkit-mask: var(--tx-analytics-performance-icon) center / contain no-repeat;
+}
+
+.tx-analytics-performance-icon::before {
+    width: 1.875rem;
+    height: 1.875rem;
+}
+
+.tx-analytics-performance-metric-primary .tx-analytics-performance-icon {
+    color: var(--typo3-surface-container-primary-text);
+    background: var(--typo3-surface-container-primary);
+}
+
+.tx-analytics-performance-metric-danger .tx-analytics-performance-icon {
+    color: var(--typo3-surface-container-danger-text);
+    background: var(--typo3-surface-container-danger);
+}
+
+.tx-analytics-performance-metric-success .tx-analytics-performance-icon {
+    color: var(--typo3-surface-container-success-text);
+    background: var(--typo3-surface-container-success);
+}
+
+.tx-analytics-performance-metric-info .tx-analytics-performance-icon {
+    color: var(--typo3-surface-container-info-text);
+    background: var(--typo3-surface-container-info);
+}
+
+.tx-analytics-performance-value {
+    grid-area: value;
+    align-self: end;
+    color: var(--typo3-component-color);
+    font-size: clamp(var(--typo3-font-size, 12px), 1cqw + .85rem, 1.5rem);
+    font-weight: 700;
+    line-height: 1;
+    min-width: 0;
+}
+
+.tx-analytics-performance-label {
+    grid-area: label;
+    align-self: start;
+    color: var(--typo3-text-color-variant);
+    font-size: clamp(var(--typo3-font-size, 12px), .6cqw + .75rem, 1rem);
+    line-height: 1.35;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.tx-analytics-performance-trend {
+    display: inline-flex;
+    grid-area: trend;
+    gap: .35rem;
+    align-items: center;
+    align-self: center;
+    justify-self: end;
+    white-space: nowrap;
+    font-size: clamp(var(--typo3-font-size, 12px), .55cqw + .75rem, 1rem);
+}
+
+.tx-analytics-performance-trend-icon {
+    width: .875rem;
+    height: .875rem;
+}
+
+.tx-analytics-performance-trend-up {
+    color: var(--typo3-text-color-success);
+}
+
+.tx-analytics-performance-trend-down {
+    color: var(--typo3-text-color-danger);
+}
+
+.tx-analytics-performance-period {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    justify-content: flex-end;
+    padding: .75rem 1rem;
+    border-right: 0;
+    background: var(--typo3-surface-container-low);
+}
+
+.tx-analytics-performance-period-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--typo3-text-color-primary);
+}
+
+.tx-analytics-performance-period-form {
+    min-width: 7.5rem;
+    margin: 0;
+}
+
+.tx-analytics-performance-tooltip {
+    position: absolute;
+    z-index: 100;
+    inset-inline-start: 1rem;
+    inset-block-start: calc(100% - .5rem);
+    width: min(18rem, calc(100vw - 2rem));
+    padding: .75rem;
+    border: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
+    background: var(--typo3-component-bg);
+    box-shadow: var(--typo3-component-box-shadow);
+    color: var(--typo3-component-color);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-.25rem);
+    transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+}
+
+.tx-analytics-performance-metric:hover .tx-analytics-performance-tooltip,
+.tx-analytics-performance-metric:focus-visible .tx-analytics-performance-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tx-analytics-performance-tooltip-title {
+    margin-bottom: .5rem;
+    font-weight: 700;
+}
+
+.tx-analytics-performance-tooltip-data {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+    margin: 0 0 .75rem;
+}
+
+.tx-analytics-performance-tooltip-data div,
+.tx-analytics-performance-tooltip-data dt,
+.tx-analytics-performance-tooltip-data dd {
+    min-width: 0;
+    margin: 0;
+}
+
+.tx-analytics-performance-tooltip-data dt {
+    color: var(--typo3-text-color-variant);
+    font-size: var(--typo3-font-size-small, 11px);
+}
+
+.tx-analytics-performance-tooltip-data dd {
+    font-weight: 700;
+}
+
+.tx-analytics-performance-tooltip-chart {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .25rem;
+    align-items: end;
+    height: 3.25rem;
+    padding-block-start: .25rem;
+    border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-performance-tooltip-chart span {
+    display: block;
+    height: var(--tx-analytics-chart-height);
+    min-height: .35rem;
+    border-radius: 2px;
+    background: var(--typo3-surface-container-primary);
+}
+
+.tx-analytics-performance-metric-danger .tx-analytics-performance-tooltip-chart span {
+    background: var(--typo3-surface-container-danger);
+}
+
+.tx-analytics-performance-metric-success .tx-analytics-performance-tooltip-chart span {
+    background: var(--typo3-surface-container-success);
+}
+
+.tx-analytics-performance-metric-info .tx-analytics-performance-tooltip-chart span {
+    background: var(--typo3-surface-container-info);
+}
+
+@media (max-width: 1200px) {
+    .tx-analytics-performance-bar {
+        grid-template-columns: repeat(2, minmax(12rem, 1fr));
+    }
+
+    .tx-analytics-performance-period {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    }
+}
+
+@media (max-width: 700px) {
+    .tx-analytics-performance-bar {
+        grid-template-columns: 1fr;
+    }
+
+    .tx-analytics-performance-metric {
+        border-right: 0;
+        border-bottom: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    }
+
+    .tx-analytics-performance-period {
+        flex-wrap: wrap;
+    }
+}
+
+@container (max-width: 300px) {
+    .tx-analytics-performance-metric-body {
+        grid-template-areas:
+            "icon value"
+            "icon trend"
+            "icon label";
+        grid-template-columns: 3.25rem minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        row-gap: .25rem;
+        column-gap: .75rem;
+        padding: .75rem;
+    }
+
+    .tx-analytics-performance-icon {
+        width: 3.25rem;
+        height: 3.25rem;
+    }
+
+    .tx-analytics-performance-value,
+    .tx-analytics-performance-label {
+        align-self: center;
+    }
+
+    .tx-analytics-performance-trend {
+        justify-self: start;
+        align-self: center;
+    }
+
+    .tx-analytics-performance-tooltip {
+        inset-inline-start: .75rem;
+        width: min(16rem, calc(100vw - 1.5rem));
+    }
+}

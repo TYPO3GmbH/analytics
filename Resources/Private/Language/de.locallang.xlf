@@ -158,6 +158,54 @@
                 <source>Your plan has been successfully upgraded.</source>
                 <target>Dein Plan wurde erfolgreich aktualisiert.</target>
             </trans-unit>
+            <trans-unit id="pagePerformance.ariaLabel" resname="pagePerformance.ariaLabel">
+                <source>Page performance</source>
+                <target>Seitenperformance</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Aufrufe</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Absprungrate</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Ø Verweildauer</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.entryRate" resname="pagePerformance.entryRate">
+                <source>Entry rate</source>
+                <target>Einstiegsrate</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
+                <source>Period</source>
+                <target>Zeitraum</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
+                <source>%d days</source>
+                <target>%d Tage</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.noData" resname="pagePerformance.noData">
+                <source>No data available yet.</source>
+                <target>Noch keine Daten verfügbar.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.current" resname="pagePerformance.tooltip.current">
+                <source>Current</source>
+                <target>Aktuell</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.previous" resname="pagePerformance.tooltip.previous">
+                <source>Previous</source>
+                <target>Vorperiode</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.peak" resname="pagePerformance.tooltip.peak">
+                <source>Peak</source>
+                <target>Spitze</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.chart" resname="pagePerformance.tooltip.chart">
+                <source>Trend chart</source>
+                <target>Trenddiagramm</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
