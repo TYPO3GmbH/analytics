@@ -28,13 +28,12 @@ final class SparklineRenderer
         }
 
         $label = trim((string)($options['label'] ?? ''));
-        $class = trim('tx-analytics-sparkline ' . (string)($options['class'] ?? ''));
+        $class = trim('tx-analytics-sparkline ' . ($options['class'] ?? ''));
         $tone = $this->normalizeTone((string)($options['tone'] ?? 'primary'));
         $linePath = $this->buildLinePath($points);
-        $fillPath = $this->buildFillPath($points);
         $lastPoint = $points[array_key_last($points)];
         $showLastPoint = (bool)($options['showLastPoint'] ?? true);
-        $showFill = (bool)($options['fill'] ?? true);
+        $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
 
         $html = '<div class="' . $this->escape($class) . '" data-sparkline-tone="' . $this->escape($tone) . '">';
         $html .= '<svg class="tx-analytics-sparkline-svg" viewBox="0 0 ' . self::VIEW_BOX_WIDTH . ' ' . self::VIEW_BOX_HEIGHT . '" role="img"';
@@ -45,9 +44,9 @@ final class SparklineRenderer
         }
         $html .= ' focusable="false">';
         if ($showFill) {
-            $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->escape($fillPath) . '"></path>';
+            $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath) . '"></path>';
         }
-        $html .= '<path class="tx-analytics-sparkline-line" d="' . $this->escape($linePath) . '"></path>';
+        $html .= '<path class="tx-analytics-sparkline-line" d="' . $linePath . '"></path>';
         if ($showLastPoint) {
             $html .= '<circle class="tx-analytics-sparkline-point" cx="' . $this->formatNumber($lastPoint[0]) . '" cy="' . $this->formatNumber($lastPoint[1]) . '" r="1.9"></circle>';
         }
@@ -107,11 +106,10 @@ final class SparklineRenderer
     }
 
     /**
-     * @param list<array{0: float, 1: float}> $points
+     * @param non-empty-list<array{0: float, 1: float}> $points
      */
-    private function buildFillPath(array $points): string
+    private function buildFillPath(array $points, string $linePath): string
     {
-        $linePath = $this->buildLinePath($points);
         $firstPoint = $points[0];
         $lastPoint = $points[array_key_last($points)];
         $baseline = self::VIEW_BOX_HEIGHT - self::PADDING;
