@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Analytics Sparkline Preview</title>
+    <link rel="stylesheet" href="../Css/Components/Sparkline.css">
+    <style>
+        :root {
+            color-scheme: light dark;
+            --typo3-component-bg: light-dark(#fff, #141414);
+            --typo3-component-color: light-dark(#1a1a1a, #e6e6e6);
+            --typo3-component-border-color: light-dark(#d9d9d9, #404040);
+            --typo3-component-border-radius: 4px;
+            --typo3-text-color-primary: light-dark(#1f5aad, #7daae8);
+            --typo3-text-color-success: light-dark(#247554, #3cc38c);
+            --typo3-text-color-warning: light-dark(#806000, #fc3);
+            --typo3-text-color-danger: light-dark(#a72e25, #da6158);
+            --typo3-text-color-info: light-dark(#1b657e, #57b9db);
+            --typo3-text-color-variant: light-dark(#666, #b3b3b3);
+            --typo3-surface-container-low: light-dark(#f7f7f7, #1a1a1a);
+            font-family: Verdana, Arial, Helvetica, sans-serif;
+            font-size: 12px;
+        }
+
+        body {
+            margin: 0;
+            background: var(--typo3-surface-container-low);
+            color: var(--typo3-component-color);
+        }
+
+        main {
+            width: min(70rem, calc(100vw - 2rem));
+            margin: 2rem auto;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+            gap: 1rem;
+        }
+
+        .preview-card {
+            padding: 1rem;
+            border: 1px solid var(--typo3-component-border-color);
+            border-radius: var(--typo3-component-border-radius);
+            background: var(--typo3-component-bg);
+        }
+
+        .preview-card-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: .75rem;
+        }
+
+        .preview-card-title {
+            min-width: 0;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .preview-card-value {
+            color: var(--typo3-text-color-variant);
+            white-space: nowrap;
+        }
+
+        .preview-sparkline {
+            height: 5.5rem;
+        }
+
+        .preview-sparkline .tx-analytics-sparkline-svg {
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Analytics Sparkline Preview</h1>
+    <div class="preview-grid">
+        <section class="preview-card">
+            <div class="preview-card-header">
+                <h2 class="preview-card-title">Views</h2>
+                <span class="preview-card-value">184</span>
+            </div>
+            <div class="preview-sparkline">
+                <div class="tx-analytics-sparkline" data-sparkline-tone="primary">
+                    <svg class="tx-analytics-sparkline-svg" viewBox="0 0 100 32" role="img" aria-label="Views" focusable="false">
+                        <path class="tx-analytics-sparkline-fill" d="M0 30 L16.67 22 L33.33 25.43 L50 14.57 L66.67 18.29 L83.33 7.43 L100 2 L100 30 L0 30 Z"></path>
+                        <path class="tx-analytics-sparkline-line" d="M0 30 L16.67 22 L33.33 25.43 L50 14.57 L66.67 18.29 L83.33 7.43 L100 2"></path>
+                        <circle class="tx-analytics-sparkline-point" cx="100" cy="2" r="1.9"></circle>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="preview-card">
+            <div class="preview-card-header">
+                <h2 class="preview-card-title">Bounce Rate</h2>
+                <span class="preview-card-value">42%</span>
+            </div>
+            <div class="preview-sparkline">
+                <div class="tx-analytics-sparkline" data-sparkline-tone="danger">
+                    <svg class="tx-analytics-sparkline-svg" viewBox="0 0 100 32" role="img" aria-label="Bounce rate" focusable="false">
+                        <path class="tx-analytics-sparkline-fill" d="M0 2 L16.67 7.25 L33.33 12.5 L50 3.75 L66.67 17.75 L83.33 21.25 L100 28.25 L100 30 L0 30 Z"></path>
+                        <path class="tx-analytics-sparkline-line" d="M0 2 L16.67 7.25 L33.33 12.5 L50 3.75 L66.67 17.75 L83.33 21.25 L100 28.25"></path>
+                        <circle class="tx-analytics-sparkline-point" cx="100" cy="28.25" r="1.9"></circle>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="preview-card">
+            <div class="preview-card-header">
+                <h2 class="preview-card-title">Average Time</h2>
+                <span class="preview-card-value">3:12</span>
+            </div>
+            <div class="preview-sparkline">
+                <div class="tx-analytics-sparkline" data-sparkline-tone="success">
+                    <svg class="tx-analytics-sparkline-svg" viewBox="0 0 100 32" role="img" aria-label="Average time" focusable="false">
+                        <path class="tx-analytics-sparkline-fill" d="M0 30 L16.67 26.32 L33.33 29.26 L50 19.68 L66.67 15.26 L83.33 9.37 L100 2 L100 30 L0 30 Z"></path>
+                        <path class="tx-analytics-sparkline-line" d="M0 30 L16.67 26.32 L33.33 29.26 L50 19.68 L66.67 15.26 L83.33 9.37 L100 2"></path>
+                        <circle class="tx-analytics-sparkline-point" cx="100" cy="2" r="1.9"></circle>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="preview-card">
+            <div class="preview-card-header">
+                <h2 class="preview-card-title">Flat Data</h2>
+                <span class="preview-card-value">5</span>
+            </div>
+            <div class="preview-sparkline">
+                <div class="tx-analytics-sparkline" data-sparkline-tone="info">
+                    <svg class="tx-analytics-sparkline-svg" viewBox="0 0 100 32" role="img" aria-label="Flat data" focusable="false">
+                        <path class="tx-analytics-sparkline-fill" d="M0 16 L25 16 L50 16 L75 16 L100 16 L100 30 L0 30 Z"></path>
+                        <path class="tx-analytics-sparkline-line" d="M0 16 L25 16 L50 16 L75 16 L100 16"></path>
+                        <circle class="tx-analytics-sparkline-point" cx="100" cy="16" r="1.9"></circle>
+                    </svg>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>
