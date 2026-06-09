@@ -24,7 +24,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
      * @param array{site?: string, refreshAvailable?: bool} $options
      */
     public function __construct(
-        WidgetConfigurationInterface $configuration,
+        private WidgetConfigurationInterface $configuration,
         private SiteFinder $siteFinder,
         private ViewFactoryInterface $viewFactory,
         array $options = [],
@@ -139,7 +139,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         ));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
-            'siteSelectId' => 'tx-analytics-traffic-sources-site-' . substr(sha1($siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
+            'siteSelectId' => 'tx-analytics-traffic-sources-site-' . substr(sha1($this->configuration->getIdentifier() . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
             'siteLabel' => $this->translate('dashboardWidget.trafficSources.setting.site.label'),
             'siteOptions' => $this->buildSiteOptions($siteOptions, $siteIdentifier),
             'sections' => [
