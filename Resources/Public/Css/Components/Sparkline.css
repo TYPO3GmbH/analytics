@@ -1,0 +1,55 @@
+.tx-analytics-sparkline {
+    --tx-analytics-sparkline-line: var(--typo3-text-color-primary);
+    --tx-analytics-sparkline-fill: color-mix(in srgb, var(--tx-analytics-sparkline-line), transparent 82%);
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="success"] {
+    --tx-analytics-sparkline-line: var(--typo3-text-color-success);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="warning"] {
+    --tx-analytics-sparkline-line: var(--typo3-text-color-warning);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="danger"] {
+    --tx-analytics-sparkline-line: var(--typo3-text-color-danger);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="info"] {
+    --tx-analytics-sparkline-line: var(--typo3-text-color-info);
+}
+
+.tx-analytics-sparkline-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.tx-analytics-sparkline-line,
+.tx-analytics-sparkline-fill,
+.tx-analytics-sparkline-point {
+    vector-effect: non-scaling-stroke;
+}
+
+.tx-analytics-sparkline-line {
+    fill: none;
+    stroke: var(--tx-analytics-sparkline-line);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.tx-analytics-sparkline-fill {
+    fill: var(--tx-analytics-sparkline-fill);
+    stroke: none;
+}
+
+.tx-analytics-sparkline-point {
+    fill: var(--typo3-component-bg);
+    stroke: var(--tx-analytics-sparkline-line);
+    stroke-width: 1.5;
+}
