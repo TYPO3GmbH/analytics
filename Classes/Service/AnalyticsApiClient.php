@@ -99,6 +99,37 @@ final readonly class AnalyticsApiClient
     }
 
     /**
+     * Creates a TYPO3 Analytics API key via the middleware. The returned 'apiKey' is only
+     * available in this response and must be stored immediately.
+     *
+     * @return array{apiKeyId: string, apiKey: string}
+     * @throws AnalyticsApiException
+     */
+    public function createApiKey(string $websiteId, string $instanceId, string $instanceSecret): array
+    {
+        $path = '/api/api-keys/' . $websiteId;
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getBaseUrl() . '/api-keys/' . $websiteId,
+                'POST',
+                array_merge($this->apiConfiguration->getRequestOptions(), [
+                    'headers' => $this->hmacSigner->buildHeaders('POST', $path, $instanceId, $instanceSecret),
+                ])
+            );
+            /** @var array<string, mixed> $body */
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            return [
+                'apiKeyId' => (string)($body['apiKeyId'] ?? ''),
+                'apiKey' => (string)($body['apiKey'] ?? ''),
+            ];
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
      * @throws AnalyticsApiException
      */
     public function fetchCheckoutUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string

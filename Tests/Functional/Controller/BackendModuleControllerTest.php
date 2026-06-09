@@ -19,6 +19,7 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
@@ -208,6 +209,8 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     public function statusActionReturnsSuccessJsonAfterSuccessfulRefresh(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"status":"active","consumption":{}}'));
+        // provisionIfNeeded triggers createApiKey when status is active and no apiKeyId is set
+        $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"key-uuid","apiKey":"key-value"}'));
 
         $siteFinder = $this->createMock(SiteFinder::class);
         $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
@@ -274,6 +277,14 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             new NullLogger(),
         );
 
+        $apiKeyService = new ApiKeyService(
+            $apiClient,
+            $cipherService,
+            $this->createMock(SiteSettingsService::class),
+            $this->createMock(SiteSettingsFactory::class),
+            new NullLogger(),
+        );
+
         return new BackendModuleController(
             $this->get(ModuleTemplateFactory::class),
             $this->get(UriBuilder::class),
@@ -281,6 +292,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $resolvedSiteFinder,
             $registrationService,
             $statusService,
+            $apiKeyService,
             $moduleHelper,
             $siteDataProvider,
             $this->createMock(LoggerInterface::class),

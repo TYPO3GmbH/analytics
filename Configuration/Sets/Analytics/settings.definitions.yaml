@@ -40,3 +40,17 @@ settings:
     default: ''
     category: typo3_analytics
     readonly: true
+  apiKeyId:
+    label: 'API Key ID'
+    description: 'UUID of the provisioned analytics API key. Set automatically when the site becomes active.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  apiKey:
+    label: 'API Key'
+    description: 'Encrypted analytics API key. Set automatically when the site becomes active.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true

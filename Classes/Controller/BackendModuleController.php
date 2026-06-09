@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Backend\ModuleConfigurator;
+use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\InstanceRegistrationService;
@@ -34,6 +35,7 @@ final readonly class BackendModuleController
         private SiteFinder $siteFinder,
         private InstanceRegistrationService $registrationService,
         private AnalyticsStatusService $analyticsStatusService,
+        private ApiKeyService $apiKeyService,
         private ModuleConfigurator $moduleHelper,
         private SiteDataProvider $siteDataProvider,
         private LoggerInterface $logger,
@@ -203,6 +205,7 @@ final readonly class BackendModuleController
         }
 
         $this->analyticsStatusService->syncSiteSettingsFromStatus($site, $status);
+        $this->apiKeyService->provisionIfNeeded($site, $status);
 
         return new JsonResponse([
             'success' => true,
@@ -267,6 +270,7 @@ final readonly class BackendModuleController
         $status = $this->analyticsStatusService->getStatus($site);
         if ($status !== null) {
             $this->analyticsStatusService->syncSiteSettingsFromStatus($site, $status);
+            $this->apiKeyService->provisionIfNeeded($site, $status);
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);

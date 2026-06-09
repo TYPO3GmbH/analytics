@@ -19,6 +19,7 @@ use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
+use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
@@ -138,6 +139,14 @@ final class BackendModuleControllerTest extends UnitTestCase
             new NullLogger(),
         );
 
+        $apiKeyService = new ApiKeyService(
+            $apiClient,
+            $cipherService,
+            $this->siteSettingsService,
+            $this->siteSettingsFactory,
+            new NullLogger(),
+        );
+
         $expressionBuilder = $this->createMock(ExpressionBuilder::class);
         $expressionBuilder->method('eq')->willReturn('uid = :dcValue1');
 
@@ -178,6 +187,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteFinder,
             $registrationService,
             $analyticsStatusService,
+            $apiKeyService,
             $moduleHelper,
             $siteDataProvider,
             $this->logger,
