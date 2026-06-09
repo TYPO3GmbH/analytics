@@ -8,6 +8,9 @@ use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Site\SiteFinder;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\View\ViewFactoryData;
+use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
 use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
@@ -15,11 +18,47 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetInterface;
 
 final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCssInterface, JavaScriptInterface
 {
-    private const DUMMY_DATA = [520, 610, 580, 640, 720, 690, 750, 800, 780, 840, 820, 880, 870, 935, 905, 965, 945, 1010, 990, 1055, 1025, 1085, 1065, 1145, 1125, 1205, 1285, 1355];
-    private const Y_MIN = 0;
-    private const Y_MAX = 1800;
-    private const Y_LABELS = [['value' => 1800, 'label' => '1.8k'], ['value' => 1200, 'label' => '1.2k'], ['value' => 600, 'label' => '600'], ['value' => 0, 'label' => '0']];
-    private const X_LABELS = ['15.4.', '22.4.', '29.4.', '6.5.', '12.5.'];
+    private const DUMMY_VISITS_RESPONSE = [
+        'payload' => [
+            'labels' => [
+                '2026-04-15T00:00:00+02:00',
+                '2026-04-16T00:00:00+02:00',
+                '2026-04-17T00:00:00+02:00',
+                '2026-04-18T00:00:00+02:00',
+                '2026-04-19T00:00:00+02:00',
+                '2026-04-20T00:00:00+02:00',
+                '2026-04-21T00:00:00+02:00',
+                '2026-04-22T00:00:00+02:00',
+                '2026-04-23T00:00:00+02:00',
+                '2026-04-24T00:00:00+02:00',
+                '2026-04-25T00:00:00+02:00',
+                '2026-04-26T00:00:00+02:00',
+                '2026-04-27T00:00:00+02:00',
+                '2026-04-28T00:00:00+02:00',
+                '2026-04-29T00:00:00+02:00',
+                '2026-04-30T00:00:00+02:00',
+                '2026-05-01T00:00:00+02:00',
+                '2026-05-02T00:00:00+02:00',
+                '2026-05-03T00:00:00+02:00',
+                '2026-05-04T00:00:00+02:00',
+                '2026-05-05T00:00:00+02:00',
+                '2026-05-06T00:00:00+02:00',
+                '2026-05-07T00:00:00+02:00',
+                '2026-05-08T00:00:00+02:00',
+                '2026-05-09T00:00:00+02:00',
+                '2026-05-10T00:00:00+02:00',
+                '2026-05-11T00:00:00+02:00',
+                '2026-05-12T00:00:00+02:00',
+            ],
+            'datasets' => [
+                [
+                    'label' => 'Overall Visits',
+                    'data' => [520, 610, 580, 640, 720, 690, 750, 800, 780, 840, 820, 880, 870, 935, 905, 965, 945, 1010, 990, 1055, 1025, 1085, 1065, 1145, 1125, 1205, 1285, 1355],
+                    'total' => 26195,
+                ],
+            ],
+        ],
+    ];
 
     /** @var array{site?: string, refreshAvailable?: bool} */
     private array $options;
@@ -31,6 +70,7 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
         WidgetConfigurationInterface $configuration,
         private SparklineRenderer $sparklineRenderer,
         private SiteFinder $siteFinder,
+        private ViewFactoryInterface $viewFactory,
         array $options = [],
     ) {
         $this->options = array_replace(
@@ -79,95 +119,151 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
     private function renderContent(string $siteIdentifier): string
     {
         $uid = substr(sha1($siteIdentifier), 0, 8);
+        $chart = $this->buildChartData();
+        $siteOptions = $this->siteOptions($siteIdentifier);
 
-        $html = '<div class="tx-analytics-traffic-graph" data-site="' . $this->escape($siteIdentifier) . '">';
-        $html .= $this->renderHeader($siteIdentifier, $uid);
-        $html .= $this->renderChart();
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    private function renderHeader(string $siteIdentifier, string $uid): string
-    {
-        $siteSelect = $this->renderSiteSelect($siteIdentifier, $uid);
-
-        $html = '<div class="tx-analytics-traffic-graph-header">';
-        $html .= '<a href="#" class="tx-analytics-traffic-graph-analyse-link">';
-        $html .= '<span>' . $this->escape($this->translate('dashboardWidget.trafficGraph.analyse')) . '</span>';
-        $html .= '<span class="tx-analytics-traffic-graph-icon tx-analytics-traffic-graph-icon-arrow-up-right-from-square" aria-hidden="true"></span>';
-        $html .= '</a>';
-        $html .= $siteSelect;
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    private function renderSiteSelect(string $siteIdentifier, string $uid): string
-    {
-        $options = $this->siteOptions();
-        if (count($options) <= 1) {
-            return '';
-        }
-
-        $selectId = 'tx-analytics-traffic-graph-site-' . $uid;
-        $html = '<div class="tx-analytics-traffic-graph-toolbar">';
-        $html .= '<label class="form-label tx-analytics-traffic-graph-site-label" for="' . $this->escape($selectId) . '">' . $this->escape($this->translate('dashboardWidget.trafficGraph.setting.site.label')) . '</label>';
-        $html .= '<select id="' . $this->escape($selectId) . '" class="form-select form-select-sm tx-analytics-traffic-graph-site-select">';
-        foreach ($options as $identifier => $label) {
-            $selected = $identifier === $siteIdentifier ? ' selected' : '';
-            $html .= '<option value="' . $this->escape($identifier) . '"' . $selected . '>' . $this->escape($label) . '</option>';
-        }
-        $html .= '</select></div>';
-
-        return $html;
-    }
-
-    private function renderChart(): string
-    {
-        $sparkline = $this->sparklineRenderer->render(self::DUMMY_DATA, [
-            'label' => $this->translate('dashboardWidget.trafficGraph.chartLabel'),
-            'class' => 'tx-analytics-traffic-graph-sparkline',
-            'yMin' => self::Y_MIN,
-            'yMax' => self::Y_MAX,
-            'gridLines' => array_column(self::Y_LABELS, 'value'),
-            'showLastPoint' => false,
-            'preserveAspectRatio' => 'none',
+        $view = $this->viewFactory->create(new ViewFactoryData(
+            templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
+            partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
+            layoutRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Layouts')],
+        ));
+        $view->assignMultiple([
+            'siteIdentifier' => $siteIdentifier,
+            'analyseLabel' => $this->translate('dashboardWidget.trafficGraph.analyse'),
+            'siteSelect' => [
+                'id' => 'tx-analytics-traffic-graph-site-' . $uid,
+                'label' => $this->translate('dashboardWidget.trafficGraph.setting.site.label'),
+                'options' => $siteOptions,
+                'visible' => count($siteOptions) > 1,
+            ],
+            'chart' => $chart,
         ]);
 
-        $html = '<div class="tx-analytics-traffic-graph-chart-wrap">';
-
-        $html .= '<div class="tx-analytics-traffic-graph-y-axis" aria-hidden="true">';
-        foreach (self::Y_LABELS as $label) {
-            $html .= '<span class="tx-analytics-traffic-graph-y-label">' . $this->escape($label['label']) . '</span>';
-        }
-        $html .= '</div>';
-
-        $html .= '<div class="tx-analytics-traffic-graph-chart-area">' . $sparkline . '</div>';
-
-        $html .= '<div class="tx-analytics-traffic-graph-x-axis" aria-hidden="true">';
-        foreach (self::X_LABELS as $label) {
-            $html .= '<span>' . $this->escape($label) . '</span>';
-        }
-        $html .= '</div>';
-
-        $html .= '</div>';
-
-        return $html;
+        return $view->render('Dashboard/Widget/TrafficGraph');
     }
 
     /**
-     * @return array<string, string>
+     * @return array{sparkline: string, yLabels: list<array{value: int, label: string}>, xLabels: list<string>}
      */
-    private function siteOptions(): array
+    private function buildChartData(): array
     {
-        $options = ['' => $this->translate('dashboardWidget.trafficGraph.setting.site.allSites')];
+        $payload = $this->transformVisitsGraph(self::DUMMY_VISITS_RESPONSE['payload']);
+        $data = $payload['datasets'][0]['data'];
+        $scale = $payload['scale'];
+
+        return [
+            'sparkline' => $this->sparklineRenderer->render($data, [
+                'label' => $this->translate('dashboardWidget.trafficGraph.chartLabel'),
+                'class' => 'tx-analytics-traffic-graph-sparkline',
+                'yMin' => $scale['min'],
+                'yMax' => $scale['max'],
+                'gridLines' => array_column($scale['ticks'], 'value'),
+                'showLastPoint' => false,
+                'preserveAspectRatio' => 'none',
+            ]),
+            'yLabels' => $scale['ticks'],
+            'xLabels' => $this->visibleLabels($payload['labels']),
+        ];
+    }
+
+    /**
+     * @param array{
+     *     labels?: list<string>,
+     *     datasets?: list<array{label?: string, data?: list<int>, total?: int}>
+     * } $apiPayload
+     * @return array{
+     *     labels: list<string>,
+     *     datasets: list<array{label: string, data: list<int>}>,
+     *     scale: array{min: int, max: int, ticks: list<array{value: int, label: string}>}
+     * }
+     */
+    private function transformVisitsGraph(array $apiPayload): array
+    {
+        $labels = $apiPayload['labels'] ?? [];
+        $datasets = $apiPayload['datasets'] ?? [];
+        $data = $datasets[0]['data'] ?? [];
+
+        $formattedLabels = array_map(
+            static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('j.n.'),
+            $labels
+        );
+
+        $max = $data === [] ? 100 : max($data);
+        $scaleMax = $this->calcScaleMax($max);
+        $step = intdiv($scaleMax, 3);
+
+        $ticks = [];
+        for ($i = 3; $i >= 0; $i--) {
+            $value = $step * $i;
+            $ticks[] = [
+                'value' => $value,
+                'label' => $this->formatScaleLabel($value),
+            ];
+        }
+
+        return [
+            'labels' => $formattedLabels,
+            'datasets' => [
+                [
+                    'label' => 'Visits',
+                    'data' => $data,
+                ],
+            ],
+            'scale' => [
+                'min' => 0,
+                'max' => $scaleMax,
+                'ticks' => $ticks,
+            ],
+        ];
+    }
+
+    private function calcScaleMax(int $max): int
+    {
+        if ($max === 0) {
+            return 100;
+        }
+
+        $magnitude = 10 ** (int)floor(log10($max));
+        $nice = (int)(ceil($max / $magnitude) * $magnitude);
+
+        return $nice < $max * 1.2 ? $nice * 2 : $nice;
+    }
+
+    private function formatScaleLabel(int $value): string
+    {
+        if ($value === 0) {
+            return '0';
+        }
+
+        if ($value >= 1000) {
+            return number_format($value / 1000, 1, '.', '') . 'k';
+        }
+
+        return (string)$value;
+    }
+
+    /**
+     * @return list<array{value: string, label: string, selected: bool}>
+     */
+    private function siteOptions(string $selectedSiteIdentifier): array
+    {
+        $options = [
+            [
+                'value' => '',
+                'label' => $this->translate('dashboardWidget.trafficGraph.setting.site.allSites'),
+                'selected' => $selectedSiteIdentifier === '',
+            ],
+        ];
         try {
             foreach ($this->siteFinder->getAllSites() as $site) {
                 $siteTitle = trim((string)($site->getConfiguration()['websiteTitle'] ?? ''));
-                $options[$site->getIdentifier()] = $siteTitle === ''
-                    ? $site->getIdentifier()
-                    : $siteTitle . ' (' . $site->getIdentifier() . ')';
+                $options[] = [
+                    'value' => $site->getIdentifier(),
+                    'label' => $siteTitle === ''
+                        ? $site->getIdentifier()
+                        : $siteTitle . ' (' . $site->getIdentifier() . ')',
+                    'selected' => $site->getIdentifier() === $selectedSiteIdentifier,
+                ];
             }
         } catch (\Throwable) {
             return $options;
@@ -176,9 +272,26 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
         return $options;
     }
 
-    private function escape(string $value): string
+    /**
+     * @param list<string> $labels
+     * @return list<string>
+     */
+    private function visibleLabels(array $labels): array
     {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        if ($labels === []) {
+            return [];
+        }
+
+        $lastIndex = count($labels) - 1;
+        $visibleIndexes = array_unique([
+            0,
+            (int)floor($lastIndex * 0.25),
+            (int)floor($lastIndex * 0.5),
+            (int)floor($lastIndex * 0.75),
+            $lastIndex,
+        ]);
+
+        return array_values(array_intersect_key($labels, array_flip($visibleIndexes)));
     }
 
     private function translate(string $key): string

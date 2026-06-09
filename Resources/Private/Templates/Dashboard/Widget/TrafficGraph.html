@@ -1,0 +1,40 @@
+<div class="tx-analytics-traffic-graph" data-site="{siteIdentifier}">
+    <div class="tx-analytics-traffic-graph-header">
+        <a href="#" class="tx-analytics-traffic-graph-analyse-link">
+            <span>{analyseLabel}</span>
+            <span class="tx-analytics-traffic-graph-icon tx-analytics-traffic-graph-icon-arrow-up-right-from-square" aria-hidden="true"></span>
+        </a>
+        <f:if condition="{siteSelect.visible}">
+            <div class="tx-analytics-traffic-graph-toolbar">
+                <label class="form-label tx-analytics-traffic-graph-site-label" for="{siteSelect.id}">{siteSelect.label}</label>
+                <select id="{siteSelect.id}" class="form-select form-select-sm tx-analytics-traffic-graph-site-select">
+                    <f:for each="{siteSelect.options}" as="option">
+                        <f:if condition="{option.selected}">
+                            <f:then>
+                                <option value="{option.value}" selected="selected">{option.label}</option>
+                            </f:then>
+                            <f:else>
+                                <option value="{option.value}">{option.label}</option>
+                            </f:else>
+                        </f:if>
+                    </f:for>
+                </select>
+            </div>
+        </f:if>
+    </div>
+    <div class="tx-analytics-traffic-graph-chart-wrap">
+        <div class="tx-analytics-traffic-graph-y-axis" aria-hidden="true">
+            <f:for each="{chart.yLabels}" as="label">
+                <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
+            </f:for>
+        </div>
+        <div class="tx-analytics-traffic-graph-chart-area">
+            <f:format.raw>{chart.sparkline}</f:format.raw>
+        </div>
+        <div class="tx-analytics-traffic-graph-x-axis" aria-hidden="true">
+            <f:for each="{chart.xLabels}" as="label">
+                <span>{label}</span>
+            </f:for>
+        </div>
+    </div>
+</div>
