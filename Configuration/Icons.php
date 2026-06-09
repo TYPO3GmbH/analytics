@@ -20,4 +20,8 @@ return [
         'provider' => SvgIconProvider::class,
         'source' => 'EXT:analytics/Resources/Public/Icons/TopPages/widget.svg',
     ],
+    'analytics-traffic-graph-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficGraph/widget.svg',
+    ],
 ];

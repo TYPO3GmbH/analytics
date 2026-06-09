@@ -322,6 +322,34 @@
                 <source>Compared to previous period</source>
                 <target>Gegenüber Vorperiode</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
+                <source>TYPO3 Analytics</source>
+                <target>TYPO3 Analytics</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.title" resname="dashboardWidget.trafficGraph.title">
+                <source>Analytics: Traffic Graph</source>
+                <target>Analytics: Traffic-Verlauf</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.description" resname="dashboardWidget.trafficGraph.description">
+                <source>Shows the visitor traffic over time as an area chart.</source>
+                <target>Zeigt den Besuchertraffic über die Zeit als Flächendiagramm.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.analyse" resname="dashboardWidget.trafficGraph.analyse">
+                <source>Analyse</source>
+                <target>Analysieren</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel" resname="dashboardWidget.trafficGraph.chartLabel">
+                <source>Visitor traffic over time</source>
+                <target>Besuchertraffic über die Zeit</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.setting.site.label" resname="dashboardWidget.trafficGraph.setting.site.label">
+                <source>Site</source>
+                <target>Site</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.setting.site.allSites" resname="dashboardWidget.trafficGraph.setting.site.allSites">
+                <source>All sites</source>
+                <target>Alle Sites</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

@@ -123,3 +123,15 @@ services:
         iconIdentifier: 'analytics-top-pages-widget-icon'
         height: 'medium'
         width: 'medium'
+
+  dashboard.widget.analyticsTrafficGraph:
+    class: T3G\Analytics\Dashboard\Widget\TrafficGraphWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsTrafficGraph'
+        groupNames: 'analytics'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.description'
+        iconIdentifier: 'analytics-traffic-graph-widget-icon'
+        height: 'medium'
+        width: 'large'
