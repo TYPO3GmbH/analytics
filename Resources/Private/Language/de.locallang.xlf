@@ -382,17 +382,13 @@
                 <source>Devices</source>
                 <target>Geräte</target>
             </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.source.organic" resname="dashboardWidget.trafficSources.source.organic">
-                <source>Organic (SEO)</source>
-                <target>Organisch (SEO)</target>
-            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.direct" resname="dashboardWidget.trafficSources.source.direct">
                 <source>Direct</source>
                 <target>Direkt</target>
             </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.source.referral" resname="dashboardWidget.trafficSources.source.referral">
-                <source>Referral</source>
-                <target>Referral</target>
+            <trans-unit id="dashboardWidget.trafficSources.source.search" resname="dashboardWidget.trafficSources.source.search">
+                <source>Search</source>
+                <target>Suche</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.social" resname="dashboardWidget.trafficSources.source.social">
                 <source>Social</source>
@@ -401,6 +397,18 @@
             <trans-unit id="dashboardWidget.trafficSources.source.email" resname="dashboardWidget.trafficSources.source.email">
                 <source>Email</source>
                 <target>E-Mail</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.paid" resname="dashboardWidget.trafficSources.source.paid">
+                <source>Paid</source>
+                <target>Bezahlt</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.unknown" resname="dashboardWidget.trafficSources.source.unknown">
+                <source>Unknown</source>
+                <target>Unbekannt</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.ai_traffic" resname="dashboardWidget.trafficSources.source.ai_traffic">
+                <source>AI traffic</source>
+                <target>KI-Traffic</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.device.desktop" resname="dashboardWidget.trafficSources.device.desktop">
                 <source>Desktop</source>

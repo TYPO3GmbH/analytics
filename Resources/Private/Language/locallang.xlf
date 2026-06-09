@@ -287,20 +287,26 @@
             <trans-unit id="dashboardWidget.trafficSources.devices" resname="dashboardWidget.trafficSources.devices">
                 <source>Devices</source>
             </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.source.organic" resname="dashboardWidget.trafficSources.source.organic">
-                <source>Organic (SEO)</source>
-            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.direct" resname="dashboardWidget.trafficSources.source.direct">
                 <source>Direct</source>
             </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.source.referral" resname="dashboardWidget.trafficSources.source.referral">
-                <source>Referral</source>
+            <trans-unit id="dashboardWidget.trafficSources.source.search" resname="dashboardWidget.trafficSources.source.search">
+                <source>Search</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.social" resname="dashboardWidget.trafficSources.source.social">
                 <source>Social</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.email" resname="dashboardWidget.trafficSources.source.email">
                 <source>Email</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.paid" resname="dashboardWidget.trafficSources.source.paid">
+                <source>Paid</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.unknown" resname="dashboardWidget.trafficSources.source.unknown">
+                <source>Unknown</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.ai_traffic" resname="dashboardWidget.trafficSources.source.ai_traffic">
+                <source>AI traffic</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.device.desktop" resname="dashboardWidget.trafficSources.device.desktop">
                 <source>Desktop</source>

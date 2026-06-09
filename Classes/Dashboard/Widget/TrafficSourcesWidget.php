@@ -7,6 +7,9 @@ namespace T3G\Analytics\Dashboard\Widget;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Site\SiteFinder;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\View\ViewFactoryData;
+use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
 use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
@@ -23,6 +26,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
     public function __construct(
         WidgetConfigurationInterface $configuration,
         private SiteFinder $siteFinder,
+        private ViewFactoryInterface $viewFactory,
         array $options = [],
     ) {
         $this->options = array_replace(
@@ -70,84 +74,184 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
 
     private function renderContent(string $siteIdentifier): string
     {
-        $html = '<div class="tx-analytics-traffic-sources" data-site="' . $this->escape($siteIdentifier) . '">';
-        $html .= $this->renderSection(
-            'earth-europe',
-            $this->translate('dashboardWidget.trafficSources.sources'),
-            [
-                ['label' => $this->translate('dashboardWidget.trafficSources.source.organic'), 'value' => 42, 'tone' => 'blue'],
-                ['label' => $this->translate('dashboardWidget.trafficSources.source.direct'), 'value' => 31, 'tone' => 'green'],
-                ['label' => $this->translate('dashboardWidget.trafficSources.source.referral'), 'value' => 14, 'tone' => 'purple'],
-                ['label' => $this->translate('dashboardWidget.trafficSources.source.social'), 'value' => 8, 'tone' => 'orange'],
-                ['label' => $this->translate('dashboardWidget.trafficSources.source.email'), 'value' => 5, 'tone' => 'gray'],
+        $trafficSourcesResponse = [
+            'points' => [
+                [
+                    'channelType' => 'direct',
+                    'values' => [
+                        ['value' => 388],
+                    ],
+                ],
+                [
+                    'channelType' => 'search',
+                    'values' => [
+                        ['value' => 525],
+                    ],
+                ],
+                [
+                    'channelType' => 'social',
+                    'values' => [
+                        ['value' => 100],
+                    ],
+                ],
+                [
+                    'channelType' => 'email',
+                    'values' => [
+                        ['value' => 62],
+                    ],
+                ],
+                [
+                    'channelType' => 'paid',
+                    'values' => [
+                        ['value' => 88],
+                    ],
+                ],
+                [
+                    'channelType' => 'unknown',
+                    'values' => [
+                        ['value' => 54],
+                    ],
+                ],
+                [
+                    'channelType' => 'ai_traffic',
+                    'values' => [
+                        ['value' => 33],
+                    ],
+                ],
             ],
-            $this->renderSiteSelect($siteIdentifier)
-        );
-        $html .= $this->renderSection(
-            'display',
-            $this->translate('dashboardWidget.trafficSources.devices'),
-            [
-                ['label' => $this->translate('dashboardWidget.trafficSources.device.desktop'), 'value' => 62, 'tone' => 'blue', 'icon' => 'display'],
-                ['label' => $this->translate('dashboardWidget.trafficSources.device.mobile'), 'value' => 31, 'tone' => 'green', 'icon' => 'mobile'],
-                ['label' => $this->translate('dashboardWidget.trafficSources.device.tablet'), 'value' => 7, 'tone' => 'gray', 'icon' => 'tablet'],
-            ]
-        );
-        $html .= '</div>';
+        ];
+        $devicesResponse = [
+            'payload' => [
+                ['deviceType' => 'desktop', 'sessionCount' => 775, 'sessionPercentOfTotal' => 62.0],
+                ['deviceType' => 'mobile', 'sessionCount' => 388, 'sessionPercentOfTotal' => 31.0],
+                ['deviceType' => 'tablet', 'sessionCount' => 87, 'sessionPercentOfTotal' => 7.0],
+            ],
+        ];
 
-        return $html;
-    }
+        $siteOptions = $this->siteOptions();
+        $view = $this->viewFactory->create(new ViewFactoryData(
+            templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
+            partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
+            layoutRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Layouts')],
+        ));
+        $view->assignMultiple([
+            'siteIdentifier' => $siteIdentifier,
+            'siteSelectId' => 'tx-analytics-traffic-sources-site-' . substr(sha1($siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
+            'siteLabel' => $this->translate('dashboardWidget.trafficSources.setting.site.label'),
+            'siteOptions' => $this->buildSiteOptions($siteOptions, $siteIdentifier),
+            'sections' => [
+                [
+                    'icon' => 'earth-europe',
+                    'title' => $this->translate('dashboardWidget.trafficSources.sources'),
+                    'showSiteSelect' => count($siteOptions) > 1,
+                    'items' => $this->buildTrafficSourceItems($trafficSourcesResponse['points']),
+                ],
+                [
+                    'icon' => 'display',
+                    'title' => $this->translate('dashboardWidget.trafficSources.devices'),
+                    'showSiteSelect' => false,
+                    'items' => $this->buildDeviceItems($devicesResponse['payload']),
+                ],
+            ],
+        ]);
 
-    private function renderSiteSelect(string $siteIdentifier): string
-    {
-        $options = $this->siteOptions();
-        if (count($options) <= 1) {
-            return '';
-        }
-
-        $selectId = 'tx-analytics-traffic-sources-site-' . substr(sha1($siteIdentifier . implode('', array_keys($options))), 0, 8);
-        $html = '<div class="tx-analytics-traffic-sources-toolbar">';
-        $html .= '<label class="form-label tx-analytics-traffic-sources-site-label" for="' . $this->escape($selectId) . '">' . $this->escape($this->translate('dashboardWidget.trafficSources.setting.site.label')) . '</label>';
-        $html .= '<select id="' . $this->escape($selectId) . '" class="form-select form-select-sm tx-analytics-traffic-sources-site-select">';
-        foreach ($options as $identifier => $label) {
-            $selected = $identifier === $siteIdentifier ? ' selected' : '';
-            $html .= '<option value="' . $this->escape($identifier) . '"' . $selected . '>' . $this->escape($label) . '</option>';
-        }
-        $html .= '</select></div>';
-
-        return $html;
+        return $view->render('Dashboard/Widget/TrafficSources');
     }
 
     /**
-     * @param list<array{label: string, value: int, tone: string, icon?: string}> $items
+     * @param array<string, string> $siteOptions
+     * @return list<array{value: string, label: string, selected: bool}>
      */
-    private function renderSection(string $icon, string $title, array $items, string $toolbar = ''): string
+    private function buildSiteOptions(array $siteOptions, string $siteIdentifier): array
     {
-        $html = '<section class="tx-analytics-traffic-sources-section" aria-label="' . $this->escape($title) . '">';
-        $html .= '<div class="tx-analytics-traffic-sources-section-header">';
-        $html .= '<h3 class="tx-analytics-traffic-sources-heading">';
-        $html .= '<span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-' . $this->escape($icon) . '" aria-hidden="true"></span>';
-        $html .= '<span>' . $this->escape($title) . '</span></h3>';
-        $html .= $toolbar;
-        $html .= '</div>';
-        $html .= '<ul class="tx-analytics-traffic-sources-list">';
-        foreach ($items as $item) {
-            $value = max(0, min(100, $item['value']));
-            $itemIcon = $item['icon'] ?? null;
-            $html .= '<li class="tx-analytics-traffic-sources-row tx-analytics-traffic-sources-tone-' . $this->escape($item['tone']) . '">';
-            $html .= '<span class="tx-analytics-traffic-sources-label">';
-            if ($itemIcon !== null) {
-                $html .= '<span class="tx-analytics-traffic-sources-device-icon tx-analytics-traffic-sources-icon-' . $this->escape($itemIcon) . '" aria-hidden="true"></span>';
-            } else {
-                $html .= '<span class="tx-analytics-traffic-sources-dot" aria-hidden="true"></span>';
-            }
-            $html .= '<span>' . $this->escape($item['label']) . '</span></span>';
-            $html .= '<typo3-backend-progress-bar class="tx-analytics-traffic-sources-bar" value="' . $value . '" max="100"></typo3-backend-progress-bar>';
-            $html .= '<span class="tx-analytics-traffic-sources-value">' . $value . '%</span>';
-            $html .= '</li>';
+        $options = [];
+        foreach ($siteOptions as $identifier => $label) {
+            $options[] = [
+                'value' => $identifier,
+                'label' => $label,
+                'selected' => $identifier === $siteIdentifier,
+            ];
         }
-        $html .= '</ul></section>';
 
-        return $html;
+        return $options;
+    }
+
+    /**
+     * @param list<array{channelType: string, values: list<array{value: int}>}> $points
+     * @return list<array{label: string, value: int, tone: string, icon: string}>
+     */
+    private function buildTrafficSourceItems(array $points): array
+    {
+        $tones = [
+            'direct' => 'green',
+            'search' => 'blue',
+            'social' => 'orange',
+            'email' => 'gray',
+            'paid' => 'purple',
+            'unknown' => 'gray',
+            'ai_traffic' => 'purple',
+        ];
+
+        $totalVisitCount = array_sum(array_map(
+            static fn (array $point): int => array_sum(array_column($point['values'], 'value')),
+            $points,
+        ));
+
+        $items = [];
+        foreach ($points as $point) {
+            $source = $point['channelType'];
+            $visitCount = array_sum(array_column($point['values'], 'value'));
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.source.' . $source),
+                'value' => $this->percentage($visitCount, $totalVisitCount),
+                'tone' => $tones[$source] ?? 'gray',
+                'icon' => '',
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: int|float}> $payload
+     * @return list<array{label: string, value: int, tone: string, icon: string}>
+     */
+    private function buildDeviceItems(array $payload): array
+    {
+        $tones = [
+            'desktop' => 'blue',
+            'mobile' => 'green',
+            'tablet' => 'gray',
+        ];
+        $icons = [
+            'desktop' => 'display',
+            'mobile' => 'mobile',
+            'tablet' => 'tablet',
+        ];
+
+        $totalVisitCount = array_sum(array_column($payload, 'sessionCount'));
+
+        $items = [];
+        foreach ($payload as $item) {
+            $deviceType = $item['deviceType'];
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.device.' . $deviceType),
+                'value' => $this->percentage($item['sessionCount'], $totalVisitCount),
+                'tone' => $tones[$deviceType] ?? 'gray',
+                'icon' => $icons[$deviceType] ?? '',
+            ];
+        }
+
+        return $items;
+    }
+
+    private function percentage(int $value, int $total): int
+    {
+        if ($total <= 0) {
+            return 0;
+        }
+
+        return max(0, min(100, (int)round($value / $total * 100)));
     }
 
     /**
@@ -171,11 +275,6 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         }
 
         return $options;
-    }
-
-    private function escape(string $value): string
-    {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     private function translate(string $key): string
