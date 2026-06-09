@@ -182,6 +182,10 @@
                 <source>Period</source>
                 <target>Zeitraum</target>
             </trans-unit>
+            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
+                <source>Details</source>
+                <target>Details</target>
+            </trans-unit>
             <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
                 <source>%d days</source>
                 <target>%d Tage</target>

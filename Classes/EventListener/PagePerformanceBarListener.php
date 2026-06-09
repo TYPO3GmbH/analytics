@@ -6,9 +6,13 @@ namespace T3G\Analytics\EventListener;
 
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
@@ -18,6 +22,8 @@ final readonly class PagePerformanceBarListener
         private PageRenderer $pageRenderer,
         private AssetCollector $assetCollector,
         private SparklineRenderer $sparklineRenderer,
+        private SiteFinder $siteFinder,
+        private UriBuilder $uriBuilder,
     ) {
     }
 
@@ -38,13 +44,13 @@ final readonly class PagePerformanceBarListener
             'analytics-page-performance-icons',
             $this->renderIconVariables(),
         );
-        $event->addHeaderContent($this->render($pageId, $days, $queryParams));
+        $event->addHeaderContent($this->render($pageId, $days, $queryParams, $this->buildDetailsUri($pageId)));
     }
 
     /**
      * @param array<string, mixed> $queryParams
      */
-    private function render(int $pageId, int $days, array $queryParams): string
+    private function render(int $pageId, int $days, array $queryParams, string $detailsUri): string
     {
         $metrics = [
             [
@@ -112,8 +118,9 @@ final readonly class PagePerformanceBarListener
             $html .= '</div>';
         }
 
-        $html .= '<div class="tx-analytics-performance-period">';
-        $html .= '<span class="tx-analytics-performance-period-icon tx-analytics-performance-icon-calendar-days" aria-hidden="true"></span>';
+        $html .= '<div class="tx-analytics-performance-meta">';
+        $html .= '<div class="tx-analytics-performance-meta-item tx-analytics-performance-period">';
+        $html .= '<span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-calendar-days" aria-hidden="true"></span>';
         $html .= '<form class="tx-analytics-performance-period-form" method="get">';
         foreach ($this->hiddenQueryFields($queryParams, $pageId) as $name => $value) {
             $html .= '<input type="hidden" name="' . $this->escape($name) . '" value="' . $this->escape($value) . '">';
@@ -124,7 +131,13 @@ final readonly class PagePerformanceBarListener
             $selected = $period === $days ? ' selected' : '';
             $html .= '<option value="' . $period . '"' . $selected . '>' . $this->escape($this->translate('pagePerformance.days', [$period])) . '</option>';
         }
-        $html .= '</select></form>';
+        $html .= '</select></form></div>';
+        if ($detailsUri !== '') {
+            $html .= '<a class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link" href="' . $this->escape($detailsUri) . '">';
+            $html .= '<span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-circle-plus" aria-hidden="true"></span>';
+            $html .= '<span>' . $this->escape($this->translate('pagePerformance.details')) . '</span>';
+            $html .= '</a>';
+        }
         $html .= '</div></section>';
 
         return $html;
@@ -168,6 +181,19 @@ final readonly class PagePerformanceBarListener
         return in_array($days, [7, 14, 30], true) ? $days : 7;
     }
 
+    private function buildDetailsUri(int $pageId): string
+    {
+        try {
+            $site = $this->siteFinder->getSiteByPageId($pageId);
+            return (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', [
+                'siteIdentifier' => $site->getIdentifier(),
+                'pageId' => $pageId,
+            ]);
+        } catch (RouteNotFoundException | SiteNotFoundException) {
+            return '';
+        }
+    }
+
     /**
      * @param array<string, mixed> $queryParams
      * @return array<string, string>
@@ -191,6 +217,7 @@ final readonly class PagePerformanceBarListener
             'arrow-trend-down',
             'arrow-trend-up',
             'calendar-days',
+            'circle-plus',
             'clock',
             'eye',
             'right-to-bracket',

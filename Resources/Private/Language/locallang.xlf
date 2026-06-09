@@ -137,6 +137,9 @@
             <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
                 <source>Period</source>
             </trans-unit>
+            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
+                <source>Details</source>
+            </trans-unit>
             <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
                 <source>%d days</source>
             </trans-unit>
