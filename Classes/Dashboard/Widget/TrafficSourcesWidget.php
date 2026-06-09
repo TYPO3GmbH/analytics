@@ -132,7 +132,10 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
-            layoutRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Layouts')],
+            layoutRootPaths: [
+                GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Layouts'),
+                GeneralUtility::getFileAbsFileName('EXT:dashboard/Resources/Private/Layouts'),
+            ],
         ));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,

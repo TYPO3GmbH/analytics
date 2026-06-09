@@ -2,7 +2,6 @@
     display: grid;
     gap: 1rem;
     min-width: 0;
-    padding: 1rem;
     color: var(--typo3-component-color);
 }
 
