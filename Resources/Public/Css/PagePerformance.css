@@ -207,33 +207,17 @@
 }
 
 .tx-analytics-performance-tooltip-chart {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: .25rem;
-    align-items: end;
-    height: 3.25rem;
+    height: 3.75rem;
     padding-block-start: .25rem;
     border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
 }
 
-.tx-analytics-performance-tooltip-chart span {
-    display: block;
-    height: var(--tx-analytics-chart-height);
-    min-height: .35rem;
-    border-radius: 2px;
-    background: var(--typo3-surface-container-primary);
+.tx-analytics-performance-sparkline {
+    height: 100%;
 }
 
-.tx-analytics-performance-metric-danger .tx-analytics-performance-tooltip-chart span {
-    background: var(--typo3-surface-container-danger);
-}
-
-.tx-analytics-performance-metric-success .tx-analytics-performance-tooltip-chart span {
-    background: var(--typo3-surface-container-success);
-}
-
-.tx-analytics-performance-metric-info .tx-analytics-performance-tooltip-chart span {
-    background: var(--typo3-surface-container-info);
+.tx-analytics-performance-sparkline .tx-analytics-sparkline-svg {
+    height: 100%;
 }
 
 @media (max-width: 1200px) {

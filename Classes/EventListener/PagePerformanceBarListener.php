@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\EventListener;
 
+use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\AssetCollector;
@@ -16,6 +17,7 @@ final readonly class PagePerformanceBarListener
     public function __construct(
         private PageRenderer $pageRenderer,
         private AssetCollector $assetCollector,
+        private SparklineRenderer $sparklineRenderer,
     ) {
     }
 
@@ -31,6 +33,7 @@ final readonly class PagePerformanceBarListener
         $days = $this->normalizeDays((int)($queryParams['tx_analytics_period'] ?? 7));
 
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/PagePerformance.css');
+        $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/Components/Sparkline.css');
         $this->assetCollector->addInlineStyleSheet(
             'analytics-page-performance-icons',
             $this->renderIconVariables(),
@@ -124,7 +127,7 @@ final readonly class PagePerformanceBarListener
     }
 
     /**
-     * @param array{label: string, details: list<string>, chart: list<int>} $metric
+     * @param array{label: string, tone: string, details: list<string>, chart: list<int>} $metric
      */
     private function renderTooltip(array $metric): string
     {
@@ -142,9 +145,11 @@ final readonly class PagePerformanceBarListener
         }
         $html .= '</dl>';
         $html .= '<div class="tx-analytics-performance-tooltip-chart" aria-label="' . $this->escape($this->translate('pagePerformance.tooltip.chart')) . '">';
-        foreach ($metric['chart'] as $height) {
-            $html .= '<span style="--tx-analytics-chart-height:' . max(8, min(100, $height)) . '%"></span>';
-        }
+        $html .= $this->sparklineRenderer->render($metric['chart'], [
+            'label' => $this->translate('pagePerformance.tooltip.chart') . ': ' . $metric['label'],
+            'class' => 'tx-analytics-performance-sparkline',
+            'tone' => $metric['tone'],
+        ]);
         $html .= '</div></div>';
 
         return $html;
