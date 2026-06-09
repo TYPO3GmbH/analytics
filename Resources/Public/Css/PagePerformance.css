@@ -71,22 +71,22 @@
 
 .tx-analytics-performance-metric-primary .tx-analytics-performance-icon {
     color: var(--typo3-surface-container-primary-text);
-    background: var(--typo3-surface-container-primary);
+    background: light-dark(var(--typo3-surface-container-primary), var(--token-color-blue-80));
 }
 
 .tx-analytics-performance-metric-danger .tx-analytics-performance-icon {
     color: var(--typo3-surface-container-danger-text);
-    background: var(--typo3-surface-container-danger);
+    background: light-dark(var(--typo3-surface-container-danger), var(--token-color-red-80));
 }
 
 .tx-analytics-performance-metric-success .tx-analytics-performance-icon {
     color: var(--typo3-surface-container-success-text);
-    background: var(--typo3-surface-container-success);
+    background: light-dark(var(--typo3-surface-container-success), var(--token-color-green-80));
 }
 
 .tx-analytics-performance-metric-info .tx-analytics-performance-icon {
     color: var(--typo3-surface-container-info-text);
-    background: var(--typo3-surface-container-info);
+    background: light-dark(var(--typo3-surface-container-info), var(--token-color-teal-80));
 }
 
 .tx-analytics-performance-value {
