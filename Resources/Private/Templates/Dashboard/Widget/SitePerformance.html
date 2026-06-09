@@ -1,0 +1,41 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Widget/Widget" />
+<f:section name="main">
+
+    <div class="tx-analytics-site-performance" data-site="{siteIdentifier}">
+        <f:if condition="{showSiteSelect}">
+            <div class="tx-analytics-site-performance-toolbar">
+                <label class="form-label tx-analytics-site-performance-site-label" for="{siteSelectId}">{siteLabel}</label>
+                <select id="{siteSelectId}" class="form-select form-select-sm tx-analytics-site-performance-site-select">
+                    <f:for each="{siteOptions}" as="siteOption">
+                        <f:if condition="{siteOption.selected}">
+                            <f:then>
+                                <option value="{siteOption.value}" selected="selected">{siteOption.label}</option>
+                            </f:then>
+                            <f:else>
+                                <option value="{siteOption.value}">{siteOption.label}</option>
+                            </f:else>
+                        </f:if>
+                    </f:for>
+                </select>
+            </div>
+        </f:if>
+        <ul class="tx-analytics-site-performance-list">
+            <f:for each="{metrics}" as="metric">
+                <li class="tx-analytics-site-performance-metric tx-analytics-site-performance-metric-{metric.tone}">
+                    <span class="tx-analytics-site-performance-icon tx-analytics-site-performance-icon-{metric.icon}" aria-hidden="true"></span>
+                    <span class="tx-analytics-site-performance-label">{metric.label}</span>
+                    <strong class="tx-analytics-site-performance-value">{metric.value}</strong>
+                    <f:if condition="{metric.trend}">
+                        <span class="tx-analytics-site-performance-trend tx-analytics-site-performance-trend-{metric.trendDirection}" title="{metric.trendLabel}">
+                            <span class="tx-analytics-site-performance-trend-icon tx-analytics-site-performance-icon-arrow-trend-{metric.trendDirection}" aria-hidden="true"></span>
+                            {metric.trend}
+                        </span>
+                    </f:if>
+                </li>
+            </f:for>
+        </ul>
+    </div>
+
+</f:section>
+</html>

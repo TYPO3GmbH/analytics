@@ -270,6 +270,46 @@
                 <source>Compared to previous period</source>
                 <target>Verglichen mit dem vorherigen Zeitraum</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
+                <source>Analytics</source>
+                <target>Analytics</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.title" resname="dashboardWidget.sitePerformance.title">
+                <source>Site performance</source>
+                <target>Site-Performance</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description" resname="dashboardWidget.sitePerformance.description">
+                <source>Shows page views, visitors, bounce rate and average visit duration for a selected site.</source>
+                <target>Zeigt Seitenaufrufe, Besucher, Absprungrate und durchschnittliche Verweildauer für eine ausgewählte Site.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.setting.site.label" resname="dashboardWidget.sitePerformance.setting.site.label">
+                <source>Site</source>
+                <target>Site</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.setting.site.allSites" resname="dashboardWidget.sitePerformance.setting.site.allSites">
+                <source>All sites</source>
+                <target>Alle Sites</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.pageViews" resname="dashboardWidget.sitePerformance.pageViews">
+                <source>Page views</source>
+                <target>Seitenaufrufe</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.visitors" resname="dashboardWidget.sitePerformance.visitors">
+                <source>Visitors</source>
+                <target>Besucher</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.bounceRate" resname="dashboardWidget.sitePerformance.bounceRate">
+                <source>Avg. bounce rate</source>
+                <target>Durchschn. Absprungrate</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.averageVisitDuration" resname="dashboardWidget.sitePerformance.averageVisitDuration">
+                <source>Avg. visit duration</source>
+                <target>Durchschn. Verweildauer</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.comparedToPreviousPeriod" resname="dashboardWidget.sitePerformance.comparedToPreviousPeriod">
+                <source>Compared to previous period</source>
+                <target>Gegenüber Vorperiode</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

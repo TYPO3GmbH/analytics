@@ -74,6 +74,18 @@ services:
       - name: event.listener
         identifier: 'analytics/page-performance-bar'
 
+  dashboard.widget.analyticsSitePerformance:
+    class: T3G\Analytics\Dashboard\Widget\SitePerformanceWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsSitePerformance'
+        groupNames: 'analytics'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.description'
+        iconIdentifier: 'analytics-site-performance-widget-icon'
+        height: 'medium'
+        width: 'small'
+
   dashboard.widget.analyticsTopPages:
     class: T3G\Analytics\Dashboard\Widget\TopPagesWidget
     tags:
