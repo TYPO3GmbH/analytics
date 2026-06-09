@@ -10,13 +10,39 @@
     min-width: 0;
 }
 
+.tx-analytics-traffic-sources-section-header {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    margin: 0 0 .625rem;
+}
+
+.tx-analytics-traffic-sources-toolbar {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.tx-analytics-traffic-sources-site-select {
+    width: 8rem;
+}
+
+.tx-analytics-traffic-sources-site-label {
+    margin: 0;
+    white-space: nowrap;
+}
+
 .tx-analytics-traffic-sources-heading {
     display: inline-flex;
     gap: .5rem;
     align-items: center;
-    margin: 0 0 .625rem;
+    margin: 0;
     color: var(--typo3-component-color);
-    font-size: var(--typo3-font-size-large, 14px);
+    font-size: var(--typo3-font-size, 12px);
     font-weight: 700;
     line-height: 1.25;
 }
@@ -141,6 +167,20 @@
 }
 
 @container (max-width: 300px) {
+    .tx-analytics-traffic-sources-section-header {
+        display: grid;
+        gap: .5rem;
+    }
+
+    .tx-analytics-traffic-sources-toolbar {
+        display: grid;
+        gap: .25rem;
+    }
+
+    .tx-analytics-traffic-sources-site-select {
+        width: 100%;
+    }
+
     .tx-analytics-traffic-sources-row {
         grid-template-columns: minmax(0, 1fr) 2.5rem;
         gap: .5rem;

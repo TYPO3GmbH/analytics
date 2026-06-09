@@ -158,9 +158,9 @@ services:
     tags:
       - name: dashboard.widget
         identifier: 'analyticsTrafficSources'
-        groupNames: 'general'
+        groupNames: 'analytics'
         title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.title'
         description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.description'
-        iconIdentifier: 'analytics-traffic-sources-widget'
+        iconIdentifier: 'analytics-traffic-sources-widget-icon'
         height: 'medium'
         width: 'medium'

@@ -354,9 +354,13 @@
                 <source>Show in Analytics</source>
                 <target>In Analytics anzeigen</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
+                <source>TYPO3 Analytics</source>
+                <target>TYPO3 Analytics</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.title" resname="dashboardWidget.trafficSources.title">
-                <source>Traffic Sources</source>
-                <target>Traffic-Quellen</target>
+                <source>Analytics: Traffic Sources</source>
+                <target>Analytics: Traffic-Quellen</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.description" resname="dashboardWidget.trafficSources.description">
                 <source>Shows the top traffic sources and device distribution for a site.</source>
@@ -366,13 +370,9 @@
                 <source>Site</source>
                 <target>Site</target>
             </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.setting.site.description" resname="dashboardWidget.trafficSources.setting.site.description">
-                <source>Select the site whose traffic sources should be shown.</source>
-                <target>Wähle die Site aus, deren Traffic-Quellen angezeigt werden sollen.</target>
-            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.setting.site.allSites" resname="dashboardWidget.trafficSources.setting.site.allSites">
-                <source>All registered sites</source>
-                <target>Alle registrierten Sites</target>
+                <source>All sites</source>
+                <target>Alle Sites</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.sources" resname="dashboardWidget.trafficSources.sources">
                 <source>Traffic Sources</source>

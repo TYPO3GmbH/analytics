@@ -4,48 +4,47 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
-use T3G\Analytics\Service\SiteDataProvider;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
-use TYPO3\CMS\Core\Settings\SettingDefinition;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
 use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
-use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
-use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
-use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
+use TYPO3\CMS\Dashboard\Widgets\WidgetInterface;
 
-final readonly class TrafficSourcesWidget implements WidgetRendererInterface, AdditionalCssInterface, JavaScriptInterface
+final readonly class TrafficSourcesWidget implements WidgetInterface, AdditionalCssInterface, JavaScriptInterface
 {
+    /** @var array{site?: string, refreshAvailable?: bool} */
+    private array $options;
+
+    /**
+     * @param array{site?: string, refreshAvailable?: bool} $options
+     */
     public function __construct(
         WidgetConfigurationInterface $configuration,
-        private SiteDataProvider $siteDataProvider,
+        private SiteFinder $siteFinder,
+        array $options = [],
     ) {
+        $this->options = array_replace(
+            [
+                'site' => '',
+                'refreshAvailable' => true,
+            ],
+            $options
+        );
+    }
+
+    public function renderWidgetContent(): string
+    {
+        return $this->renderContent((string)$this->options['site']);
     }
 
     /**
-     * @return SettingDefinition[]
+     * @return array{site?: string, refreshAvailable?: bool}
      */
-    public function getSettingsDefinitions(): array
+    public function getOptions(): array
     {
-        return [
-            new SettingDefinition(
-                key: 'site',
-                type: 'string',
-                default: '',
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.site.label',
-                description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.site.description',
-                enum: $this->siteOptions(),
-            ),
-        ];
-    }
-
-    public function renderWidget(WidgetContext $context): WidgetResult
-    {
-        return new WidgetResult(
-            content: $this->renderContent((string)$context->settings->get('site')),
-            refreshable: true,
-        );
+        return $this->options;
     }
 
     /**
@@ -65,6 +64,7 @@ final readonly class TrafficSourcesWidget implements WidgetRendererInterface, Ad
     {
         return [
             JavaScriptModuleInstruction::create('@typo3/backend/element/progress-bar-element.js'),
+            JavaScriptModuleInstruction::create('@t3g/analytics/traffic-sources-widget.js'),
         ];
     }
 
@@ -80,7 +80,8 @@ final readonly class TrafficSourcesWidget implements WidgetRendererInterface, Ad
                 ['label' => $this->translate('dashboardWidget.trafficSources.source.referral'), 'value' => 14, 'tone' => 'purple'],
                 ['label' => $this->translate('dashboardWidget.trafficSources.source.social'), 'value' => 8, 'tone' => 'orange'],
                 ['label' => $this->translate('dashboardWidget.trafficSources.source.email'), 'value' => 5, 'tone' => 'gray'],
-            ]
+            ],
+            $this->renderSiteSelect($siteIdentifier)
         );
         $html .= $this->renderSection(
             'display',
@@ -96,15 +97,38 @@ final readonly class TrafficSourcesWidget implements WidgetRendererInterface, Ad
         return $html;
     }
 
+    private function renderSiteSelect(string $siteIdentifier): string
+    {
+        $options = $this->siteOptions();
+        if (count($options) <= 1) {
+            return '';
+        }
+
+        $selectId = 'tx-analytics-traffic-sources-site-' . substr(sha1($siteIdentifier . implode('', array_keys($options))), 0, 8);
+        $html = '<div class="tx-analytics-traffic-sources-toolbar">';
+        $html .= '<label class="form-label tx-analytics-traffic-sources-site-label" for="' . $this->escape($selectId) . '">' . $this->escape($this->translate('dashboardWidget.trafficSources.setting.site.label')) . '</label>';
+        $html .= '<select id="' . $this->escape($selectId) . '" class="form-select form-select-sm tx-analytics-traffic-sources-site-select">';
+        foreach ($options as $identifier => $label) {
+            $selected = $identifier === $siteIdentifier ? ' selected' : '';
+            $html .= '<option value="' . $this->escape($identifier) . '"' . $selected . '>' . $this->escape($label) . '</option>';
+        }
+        $html .= '</select></div>';
+
+        return $html;
+    }
+
     /**
      * @param list<array{label: string, value: int, tone: string, icon?: string}> $items
      */
-    private function renderSection(string $icon, string $title, array $items): string
+    private function renderSection(string $icon, string $title, array $items, string $toolbar = ''): string
     {
         $html = '<section class="tx-analytics-traffic-sources-section" aria-label="' . $this->escape($title) . '">';
+        $html .= '<div class="tx-analytics-traffic-sources-section-header">';
         $html .= '<h3 class="tx-analytics-traffic-sources-heading">';
         $html .= '<span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-' . $this->escape($icon) . '" aria-hidden="true"></span>';
         $html .= '<span>' . $this->escape($title) . '</span></h3>';
+        $html .= $toolbar;
+        $html .= '</div>';
         $html .= '<ul class="tx-analytics-traffic-sources-list">';
         foreach ($items as $item) {
             $value = max(0, min(100, $item['value']));
@@ -136,8 +160,11 @@ final readonly class TrafficSourcesWidget implements WidgetRendererInterface, Ad
         ];
 
         try {
-            foreach ($this->siteDataProvider->registeredSiteOptions() as $site) {
-                $options[$site['identifier']] = $site['label'];
+            foreach ($this->siteFinder->getAllSites() as $site) {
+                $siteTitle = trim((string)($site->getConfiguration()['websiteTitle'] ?? ''));
+                $options[$site->getIdentifier()] = $siteTitle === ''
+                    ? $site->getIdentifier()
+                    : $siteTitle . ' (' . $site->getIdentifier() . ')';
             }
         } catch (\Throwable) {
             return $options;
