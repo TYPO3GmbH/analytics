@@ -48,48 +48,52 @@ final readonly class PagePerformanceBarListener
     {
         $metrics = [
             [
-                'key' => 'views',
+                'key' => 'visitCount',
                 'label' => $this->translate('pagePerformance.views'),
                 'icon' => 'eye',
                 'tone' => 'primary',
-                'value' => '184',
-                'trend' => '+23%',
+                'value' => '536',
+                'trend' => '+11%',
                 'trendDirection' => 'up',
-                'details' => ['184', '149', '42'],
-                'chart' => [42, 56, 48, 72, 64, 88, 100],
+                'details' => ['536', '482', '95'],
+                'chart' => [64, 72, 58, 84, 76, 87, 95],
+                'chartLegend' => ['64', '95'],
             ],
             [
                 'key' => 'bounceRate',
                 'label' => $this->translate('pagePerformance.bounceRate'),
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'danger',
-                'value' => '42%',
-                'trend' => '-6%',
+                'value' => '54.2%',
+                'trend' => '-3.7%',
                 'trendDirection' => 'down',
-                'details' => ['42%', '48%', '35%'],
-                'chart' => [70, 64, 58, 68, 52, 48, 42],
+                'details' => ['54.2%', '57.9%', '61.4%'],
+                'chart' => [61.4, 58.8, 56.1, 59.6, 55.2, 53.9, 54.2],
+                'chartLegend' => ['61.4%', '54.2%'],
             ],
             [
                 'key' => 'averageTimeOnPage',
                 'label' => $this->translate('pagePerformance.averageTimeOnPage'),
                 'icon' => 'clock',
                 'tone' => 'success',
-                'value' => '3:12',
-                'trend' => '+14%',
+                'value' => '2:08',
+                'trend' => '+18s',
                 'trendDirection' => 'up',
-                'details' => ['3:12', '2:48', '4:21'],
-                'chart' => [45, 50, 46, 60, 66, 74, 82],
+                'details' => ['2:08', '1:50', '2:21'],
+                'chart' => [96, 104, 99, 112, 118, 141, 128],
+                'chartLegend' => ['1:36', '2:08'],
             ],
             [
-                'key' => 'entryRate',
-                'label' => $this->translate('pagePerformance.entryRate'),
+                'key' => 'continuationRate',
+                'label' => $this->translate('pagePerformance.continuationRate'),
                 'icon' => 'right-to-bracket',
                 'tone' => 'info',
-                'value' => '51%',
-                'trend' => '+18%',
+                'value' => '45.8%',
+                'trend' => '+5.1%',
                 'trendDirection' => 'up',
-                'details' => ['51%', '43%', '58%'],
-                'chart' => [48, 44, 52, 55, 60, 64, 70],
+                'details' => ['45.8%', '40.7%', '48.3%'],
+                'chart' => [38.6, 41.2, 39.4, 44.8, 42.1, 48.3, 45.8],
+                'chartLegend' => ['38.6%', '45.8%'],
             ],
         ];
 
@@ -127,7 +131,7 @@ final readonly class PagePerformanceBarListener
     }
 
     /**
-     * @param array{label: string, tone: string, details: list<string>, chart: list<int>} $metric
+     * @param array{label: string, tone: string, details: list<string>, chart: list<int|float>, chartLegend: array{0: string, 1: string}} $metric
      */
     private function renderTooltip(array $metric): string
     {
@@ -150,6 +154,10 @@ final readonly class PagePerformanceBarListener
             'class' => 'tx-analytics-performance-sparkline',
             'tone' => $metric['tone'],
         ]);
+        $html .= '<div class="tx-analytics-performance-tooltip-chart-legend">';
+        $html .= '<span><span>' . $this->escape($this->translate('pagePerformance.tooltip.start')) . '</span><strong>' . $this->escape($metric['chartLegend'][0]) . '</strong></span>';
+        $html .= '<span><span>' . $this->escape($this->translate('pagePerformance.tooltip.now')) . '</span><strong>' . $this->escape($metric['chartLegend'][1]) . '</strong></span>';
+        $html .= '</div>';
         $html .= '</div></div>';
 
         return $html;

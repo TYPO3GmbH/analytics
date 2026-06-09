@@ -207,17 +207,41 @@
 }
 
 .tx-analytics-performance-tooltip-chart {
-    height: 3.75rem;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: .35rem;
     padding-block-start: .25rem;
     border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
 }
 
 .tx-analytics-performance-sparkline {
-    height: 100%;
+    width: 100%;
 }
 
-.tx-analytics-performance-sparkline .tx-analytics-sparkline-svg {
-    height: 100%;
+.tx-analytics-performance-tooltip-chart-legend {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    color: var(--typo3-text-color-variant);
+    font-size: var(--typo3-font-size-small, 11px);
+    line-height: 1.25;
+}
+
+.tx-analytics-performance-tooltip-chart-legend > span {
+    display: inline-flex;
+    gap: .25rem;
+    align-items: baseline;
+    min-width: 0;
+}
+
+.tx-analytics-performance-tooltip-chart-legend > span:last-child {
+    justify-content: flex-end;
+    text-align: end;
+}
+
+.tx-analytics-performance-tooltip-chart-legend strong {
+    color: var(--typo3-component-color);
+    font-weight: 700;
 }
 
 @media (max-width: 1200px) {

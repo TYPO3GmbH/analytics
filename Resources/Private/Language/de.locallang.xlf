@@ -174,9 +174,9 @@
                 <source>Avg. time on page</source>
                 <target>Ø Verweildauer</target>
             </trans-unit>
-            <trans-unit id="pagePerformance.entryRate" resname="pagePerformance.entryRate">
-                <source>Entry rate</source>
-                <target>Einstiegsrate</target>
+            <trans-unit id="pagePerformance.continuationRate" resname="pagePerformance.continuationRate">
+                <source>Continuation rate</source>
+                <target>Weiterleserate</target>
             </trans-unit>
             <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
                 <source>Period</source>
@@ -205,6 +205,14 @@
             <trans-unit id="pagePerformance.tooltip.chart" resname="pagePerformance.tooltip.chart">
                 <source>Trend chart</source>
                 <target>Trenddiagramm</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.start" resname="pagePerformance.tooltip.start">
+                <source>Start</source>
+                <target>Start</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.now" resname="pagePerformance.tooltip.now">
+                <source>Now</source>
+                <target>Jetzt</target>
             </trans-unit>
         </body>
     </file>
