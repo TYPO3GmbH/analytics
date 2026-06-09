@@ -152,3 +152,15 @@ services:
         height: 'medium'
         width: 'large'
 
+
+  dashboard.widget.analyticsTrafficSources:
+    class: T3G\Analytics\Dashboard\Widget\TrafficSourcesWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsTrafficSources'
+        groupNames: 'general'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.description'
+        iconIdentifier: 'analytics-traffic-sources-widget'
+        height: 'medium'
+        width: 'medium'

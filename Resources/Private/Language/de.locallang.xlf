@@ -354,6 +354,66 @@
                 <source>Show in Analytics</source>
                 <target>In Analytics anzeigen</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.title" resname="dashboardWidget.trafficSources.title">
+                <source>Traffic Sources</source>
+                <target>Traffic-Quellen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.description" resname="dashboardWidget.trafficSources.description">
+                <source>Shows the top traffic sources and device distribution for a site.</source>
+                <target>Zeigt die wichtigsten Traffic-Quellen und Geräteverteilung für eine Site.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.site.label" resname="dashboardWidget.trafficSources.setting.site.label">
+                <source>Site</source>
+                <target>Site</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.site.description" resname="dashboardWidget.trafficSources.setting.site.description">
+                <source>Select the site whose traffic sources should be shown.</source>
+                <target>Wähle die Site aus, deren Traffic-Quellen angezeigt werden sollen.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.site.allSites" resname="dashboardWidget.trafficSources.setting.site.allSites">
+                <source>All registered sites</source>
+                <target>Alle registrierten Sites</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.sources" resname="dashboardWidget.trafficSources.sources">
+                <source>Traffic Sources</source>
+                <target>Traffic-Quellen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.devices" resname="dashboardWidget.trafficSources.devices">
+                <source>Devices</source>
+                <target>Geräte</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.organic" resname="dashboardWidget.trafficSources.source.organic">
+                <source>Organic (SEO)</source>
+                <target>Organisch (SEO)</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.direct" resname="dashboardWidget.trafficSources.source.direct">
+                <source>Direct</source>
+                <target>Direkt</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.referral" resname="dashboardWidget.trafficSources.source.referral">
+                <source>Referral</source>
+                <target>Referral</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.social" resname="dashboardWidget.trafficSources.source.social">
+                <source>Social</source>
+                <target>Social</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.email" resname="dashboardWidget.trafficSources.source.email">
+                <source>Email</source>
+                <target>E-Mail</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.desktop" resname="dashboardWidget.trafficSources.device.desktop">
+                <source>Desktop</source>
+                <target>Desktop</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.mobile" resname="dashboardWidget.trafficSources.device.mobile">
+                <source>Mobile</source>
+                <target>Mobile</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.tablet" resname="dashboardWidget.trafficSources.device.tablet">
+                <source>Tablet</source>
+                <target>Tablet</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
