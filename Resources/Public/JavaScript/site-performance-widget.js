@@ -18,29 +18,48 @@ function applySite(widget, siteIdentifier) {
   }
 }
 
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore (e.g. Safari private mode)
+  }
+}
+
 function initializeWidget(widget) {
   const select = widget.querySelector('.tx-analytics-site-performance-site-select');
   if (!(select instanceof HTMLSelectElement)) {
-    return;
+    return false;
   }
 
   const key = storageKey(widget);
-  const storedValue = localStorage.getItem(key);
+  const storedValue = readStorage(key);
   if (storedValue !== null && Array.from(select.options).some((option) => option.value === storedValue)) {
     applySite(widget, storedValue);
   }
 
   select.addEventListener('change', () => {
-    localStorage.setItem(key, select.value);
+    writeStorage(key, select.value);
     applySite(widget, select.value);
   });
+
+  return true;
 }
 
 function initializeWidgets(root = document) {
   root.querySelectorAll('.tx-analytics-site-performance').forEach((widget) => {
     if (widget instanceof HTMLElement && widget.dataset.initialized !== 'true') {
-      widget.dataset.initialized = 'true';
-      initializeWidget(widget);
+      if (initializeWidget(widget)) {
+        widget.dataset.initialized = 'true';
+      }
     }
   });
 }

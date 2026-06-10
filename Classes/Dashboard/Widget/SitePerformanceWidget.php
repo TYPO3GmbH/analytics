@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
+use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -44,6 +45,7 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
         private WidgetConfigurationInterface $configuration,
         private SiteFinder $siteFinder,
         private ViewFactoryInterface $viewFactory,
+        private LoggerInterface $logger,
         array $options = [],
     ) {
         $this->options = array_replace(
@@ -101,7 +103,7 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
         ));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
-            'siteSelectId' => 'tx-analytics-site-performance-site-' . substr(sha1($this->configuration->getIdentifier() . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
+            'siteSelectId' => 'tx-analytics-site-performance-site-' . substr(sha1($this->configuration->getIdentifier() . $siteIdentifier), 0, 8),
             'siteLabel' => $this->translate('dashboardWidget.sitePerformance.setting.site.label'),
             'showSiteSelect' => count($siteOptions) > 1,
             'siteOptions' => $this->buildSiteOptions($siteOptions, $siteIdentifier),
@@ -147,7 +149,7 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
                 'value' => $this->formatPercentage($current['bounceRate']),
                 'tone' => 'danger',
                 'icon' => 'arrow-right-from-bracket',
-                'trend' => $this->formatRelativeTrend($current['bounceRate'], $previous['bounceRate']),
+                'trend' => $this->formatRelativeTrend($previous['bounceRate'], $current['bounceRate']),
                 'trendDirection' => $this->trendDirection($previous['bounceRate'], $current['bounceRate']),
                 'trendLabel' => $this->translate('dashboardWidget.sitePerformance.comparedToPreviousPeriod'),
             ],
@@ -197,7 +199,11 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
                     ? $site->getIdentifier()
                     : $siteTitle . ' (' . $site->getIdentifier() . ')';
             }
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to load sites for performance widget: {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
             return $options;
         }
 
@@ -225,7 +231,9 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
             return '';
         }
 
-        return $this->formatSignedNumber((($currentValue - $previousValue) / $previousValue) * 100) . '%';
+        $formatted = $this->formatSignedNumber((($currentValue - $previousValue) / $previousValue) * 100);
+
+        return $formatted === '±0' ? '' : $formatted . '%';
     }
 
     private function trendDirection(float $currentValue, float $previousValue): string
@@ -250,15 +258,20 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
 
     private function translate(string $key): string
     {
-        $label = $this->getLanguageService()->sL(
+        $languageService = $this->getLanguageService();
+        if ($languageService === null) {
+            return $key;
+        }
+
+        $label = $languageService->sL(
             'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:' . $key
         );
 
         return $label === '' ? $key : $label;
     }
 
-    private function getLanguageService(): LanguageService
+    private function getLanguageService(): ?LanguageService
     {
-        return $GLOBALS['LANG'];
+        return $GLOBALS['LANG'] ?? null;
     }
 }
