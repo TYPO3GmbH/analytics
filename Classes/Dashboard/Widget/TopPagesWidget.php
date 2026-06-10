@@ -118,7 +118,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
         ));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
-            'siteSelectId' => 'tx-analytics-top-pages-site-' . substr(sha1($this->configuration->getIdentifier() . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
+            'siteSelectId' => 'tx-analytics-top-pages-site-' . substr(sha1((string)spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
             'siteLabel' => $this->translate('dashboardWidget.topPages.setting.site.label'),
             'showSiteSelect' => count($siteOptions) > 1,
             'siteOptions' => $this->buildSiteOptions($siteOptions, $siteIdentifier),
@@ -139,22 +139,24 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
     private function buildPageItems(array $response): array
     {
         $previousByUrl = [];
-        foreach ($response['previous']['payload'] as $previousPage) {
+        foreach ($response['previous']['payload'] ?? [] as $previousPage) {
             $previousByUrl[$previousPage['pageUrl']] = $previousPage['visitCount'];
         }
 
+        $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');
         $items = [];
         foreach ($response['current']['payload'] as $index => $page) {
             $previousVisitCount = $previousByUrl[$page['pageUrl']] ?? 0;
+            $trend = $this->formatRelativeTrend((float)$page['visitCount'], (float)$previousVisitCount);
             $items[] = [
                 'position' => $index + 1,
                 'url' => $page['pageUrl'],
                 'title' => $page['pageTitle'],
                 'visitCount' => $this->formatNumber($page['visitCount']),
                 'visitPercentOfTotal' => $this->formatPercentageWidth($page['visitPercentOfTotal']),
-                'trend' => $this->formatRelativeTrend((float)$page['visitCount'], (float)$previousVisitCount),
-                'trendDirection' => $this->trendDirection((float)$page['visitCount'], (float)$previousVisitCount),
-                'trendLabel' => $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod'),
+                'trend' => $trend,
+                'trendDirection' => $trend !== '' ? $this->trendDirection((float)$page['visitCount'], (float)$previousVisitCount) : 'neutral',
+                'trendLabel' => $trendLabel,
             ];
         }
 

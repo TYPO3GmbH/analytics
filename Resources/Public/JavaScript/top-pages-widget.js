@@ -3,6 +3,7 @@ const storagePrefix = 'tx-analytics-top-pages-site';
 function resolveWidgetIdentifier(widget) {
   return widget.closest('.dashboard-item')?.dataset.widgetIdentifier
     || widget.closest('.dashboard-item')?.dataset.widgetHash
+    || widget.querySelector('.tx-analytics-top-pages-site-select')?.id
     || 'default';
 }
 
@@ -49,6 +50,10 @@ function initializeWidget(widget) {
   select.addEventListener('change', () => {
     writeStorage(key, select.value);
     applySite(widget, select.value);
+  });
+
+  widget.querySelector('.tx-analytics-top-pages-link')?.addEventListener('click', (event) => {
+    event.preventDefault();
   });
 
   return true;

@@ -15,16 +15,13 @@
 
 .tx-analytics-top-pages-link {
     display: inline-flex;
+    flex: 0 0 auto;
     gap: .375rem;
     align-items: center;
     min-width: 0;
     margin: 0;
     font-size: var(--typo3-font-size, 12px);
     line-height: 1.25;
-}
-
-.tx-analytics-top-pages-link {
-    flex: 0 0 auto;
     color: var(--typo3-text-color-primary);
     text-decoration: none;
 }
