@@ -275,8 +275,8 @@
                 <target>Analytics</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.title" resname="dashboardWidget.sitePerformance.title">
-                <source>Site performance</source>
-                <target>Site-Performance</target>
+                <source>Analytics: Site performance</source>
+                <target>Analytics: Site-Performance</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description" resname="dashboardWidget.sitePerformance.description">
                 <source>Shows page views, visitors, bounce rate and average visit duration for a selected site.</source>
