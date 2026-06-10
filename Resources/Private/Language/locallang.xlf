@@ -164,6 +164,18 @@
             <trans-unit id="pagePerformance.tooltip.now" resname="pagePerformance.tooltip.now">
                 <source>Now</source>
             </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.views" resname="pagePerformance.tooltip.description.views">
+                <source>The number of page views for this page in the selected period.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.averageTimeOnPage" resname="pagePerformance.tooltip.description.averageTimeOnPage">
+                <source>How long visitors typically engage with this page. Higher values generally indicate more engaging content.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
+                <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

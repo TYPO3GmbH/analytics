@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="pl" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Wyświetlenia strony</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Współczynnik odrzuceń strony</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Średni czas trwania sesji strony</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>Procent odwiedzin, które opuściły Twoją witrynę ponownie tylko po przejściu jednej strony. Nie ma znaczenia jak długo odwiedzający był na stronie i w jaki sposób ją opuścił. Nazywamy to &quot;odbiciem&quot;, jeśli jest to wizyta z tylko jedną interakcją z Twoją witryną.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

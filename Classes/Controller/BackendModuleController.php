@@ -122,7 +122,8 @@ final readonly class BackendModuleController
      */
     public function dashboardAction(ServerRequestInterface $request): ResponseInterface
     {
-        $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
+        $queryParams = $request->getQueryParams();
+        $siteIdentifier = (string)($queryParams['siteIdentifier'] ?? '');
 
         if ($siteIdentifier === '') {
             $this->logger->warning('Dashboard action called without siteIdentifier.');
@@ -130,10 +131,18 @@ final readonly class BackendModuleController
             return new RedirectResponse($this->indexUri());
         }
 
+        $dateParams = $this->buildDateParams((int)($queryParams['days'] ?? 0));
+
         return $this->renderIframeModule(
             request: $request,
             siteIdentifier: $siteIdentifier,
-            urlResolver: fn (Site $site): ?string => $this->analyticsStatusService->getDashboardUrl($site),
+            urlResolver: function (Site $site) use ($dateParams): ?string {
+                $url = $this->analyticsStatusService->getDashboardUrl($site);
+                if ($url !== null && $dateParams !== '') {
+                    $url .= (str_contains($url, '?') ? '&' : '?') . $dateParams;
+                }
+                return $url;
+            },
             template: 'Dashboard',
             routeName: 'site_analytics.dashboard',
             actionLabelKey: 'button.dashboard',
@@ -304,6 +313,16 @@ final readonly class BackendModuleController
         $moduleTemplate->assignMultiple($vars);
 
         return $moduleTemplate->renderResponse('Backend/' . $template);
+    }
+
+    private function buildDateParams(int $days): string
+    {
+        if ($days <= 0) {
+            return '';
+        }
+        $now = new \DateTimeImmutable('today');
+        $from = $now->modify('-' . ($days - 1) . ' days');
+        return 'startDate=' . $from->format('Y-m-d') . '&endDate=' . $now->format('Y-m-d');
     }
 
     private function buildIframeOrigin(string $url): string

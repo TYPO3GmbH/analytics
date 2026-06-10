@@ -1,5 +1,11 @@
 # cat = API Configuration; type = string; label = API Base URL (leave empty for production default)
 apiBaseUrl =
 
+# cat = API Configuration; type = string; label = Analytics Data API Base URL (leave empty for production default: https://api.example.com/api)
+analyticsApiBaseUrl =
+
 # cat = API Configuration; type = boolean; label = Verify SSL Certificates (set to 0 only for local development with self-signed certificates)
 verifySsl = 1
+
+# cat = Cache; type = int+; label = Page analytics cache lifetime in seconds (default: 3600)
+pageAnalyticsCacheTtl = 3600

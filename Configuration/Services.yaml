@@ -15,11 +15,18 @@ services:
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
     arguments: ['tx_analytics_status']
 
+  cache.tx_analytics_pages:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_pages']
+
   T3G\Analytics\Service\AnalyticsStatusService:
     arguments:
       $cache: '@cache.tx_analytics_status'
 
   T3G\Analytics\EventListener\PagePerformanceBarListener:
+    arguments:
+      $pageAnalyticsCache: '@cache.tx_analytics_pages'
     tags:
       - name: event.listener
         identifier: 'analytics/page-performance-bar'

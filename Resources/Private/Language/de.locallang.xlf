@@ -218,6 +218,22 @@
                 <source>Now</source>
                 <target>Jetzt</target>
             </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.views" resname="pagePerformance.tooltip.description.views">
+                <source>The number of page views for this page in the selected period.</source>
+                <target>Die Anzahl der Seitenaufrufe dieser Seite im gewählten Zeitraum.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>Der Prozentsatz der Besucher, die die Website nach dem Aufrufen nur einer Seite verlassen haben, unabhängig von der Dauer ihres Besuchs oder der Art und Weise des Verlassens.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.averageTimeOnPage" resname="pagePerformance.tooltip.description.averageTimeOnPage">
+                <source>How long visitors typically engage with this page. Higher values generally indicate more engaging content.</source>
+                <target>Wie lange sich Besucher typischerweise mit dieser Seite beschäftigen. Höhere Werte deuten in der Regel auf interessanteren Inhalt hin.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
+                <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
+                <target>Der Prozentsatz der Besucher, die nach dem Aufrufen dieser Seite weiter gesurft haben. Berechnet als 100 % minus Absprungrate.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

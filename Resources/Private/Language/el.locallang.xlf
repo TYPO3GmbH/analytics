@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="el" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Προβολές σελίδας</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Ποσοστό εγκατάλειψης της σελίδας</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Μέση διάρκεια περιόδου σύνδεσης σελίδας</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>Το ποσοστό των επισκέψεων που εγκατέλειψαν τον ιστότοπό σας ξανά μόνο μετά από προβολή μιας σελίδας. Δεν έχει σημασία πόση ώρα παρέμεινε ο επισκέπτης στη σελίδα ή πώς έφυγε. Το αποκαλούμε &quot;&quot;bounce&quot;&quot; αν πρόκειται για μια επίσκεψη με μία μόνο αλληλεπίδραση με τον ιστότοπό σας.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
