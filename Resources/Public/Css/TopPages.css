@@ -1,0 +1,205 @@
+.tx-analytics-top-pages {
+    display: grid;
+    gap: .75rem;
+    min-width: 0;
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-top-pages-header {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.tx-analytics-top-pages-link {
+    display: inline-flex;
+    gap: .375rem;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--typo3-font-size, 12px);
+    line-height: 1.25;
+}
+
+.tx-analytics-top-pages-link {
+    flex: 0 0 auto;
+    color: var(--typo3-text-color-primary);
+    text-decoration: none;
+}
+
+.tx-analytics-top-pages-link:hover {
+    color: var(--typo3-text-color-primary);
+    text-decoration: underline;
+}
+
+.tx-analytics-top-pages-toolbar {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    min-width: 0;
+}
+
+.tx-analytics-top-pages-actions {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+    margin-left: auto;
+}
+
+.tx-analytics-top-pages-site-label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.tx-analytics-top-pages-site-select {
+    width: 8rem;
+}
+
+.tx-analytics-top-pages-icon,
+.tx-analytics-top-pages-trend-icon {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+    background: currentColor;
+    content: "";
+    mask: center / contain no-repeat;
+    -webkit-mask: center / contain no-repeat;
+}
+
+.tx-analytics-top-pages-icon-arrow-up-right {
+    width: .75rem;
+    height: .75rem;
+    mask-image: url("../Icons/TopPages/arrow-up-right.svg");
+    -webkit-mask-image: url("../Icons/TopPages/arrow-up-right.svg");
+}
+
+.tx-analytics-top-pages-icon-file-text {
+    mask-image: url("../Icons/TopPages/file-text.svg");
+    -webkit-mask-image: url("../Icons/TopPages/file-text.svg");
+}
+
+.tx-analytics-top-pages-icon-trend-up {
+    mask-image: url("../Icons/TopPages/arrow-up.svg");
+    -webkit-mask-image: url("../Icons/TopPages/arrow-up.svg");
+}
+
+.tx-analytics-top-pages-icon-trend-down {
+    mask-image: url("../Icons/TopPages/arrow-down.svg");
+    -webkit-mask-image: url("../Icons/TopPages/arrow-down.svg");
+}
+
+.tx-analytics-top-pages-icon-trend-neutral {
+    mask-image: url("../Icons/TopPages/arrow-right.svg");
+    -webkit-mask-image: url("../Icons/TopPages/arrow-right.svg");
+}
+
+.tx-analytics-top-pages-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tx-analytics-top-pages-row {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(5rem, 1fr) minmax(3rem, 4.5rem) 3rem 4rem;
+    gap: .5rem;
+    align-items: center;
+    min-height: 2rem;
+    padding: .375rem 0;
+    border-bottom: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-top-pages-row:last-child {
+    border-bottom: 0;
+}
+
+.tx-analytics-top-pages-position {
+    color: var(--typo3-text-color-variant);
+    font-variant-numeric: tabular-nums;
+    text-align: start;
+}
+
+.tx-analytics-top-pages-title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--typo3-component-color);
+    line-height: 1.25;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tx-analytics-top-pages-title:hover {
+    color: var(--typo3-text-color-primary);
+    text-decoration: underline;
+}
+
+.tx-analytics-top-pages-bar {
+    display: block;
+    width: 100%;
+    --progress-bar-height: .25rem;
+    --progress-border-radius: 999px;
+    --progress-bar-color: var(--typo3-text-color-primary);
+}
+
+.tx-analytics-top-pages-count {
+    justify-self: end;
+    color: var(--typo3-component-color);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.tx-analytics-top-pages-trend {
+    display: inline-flex;
+    gap: .125rem;
+    align-items: center;
+    justify-self: end;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.tx-analytics-top-pages-trend-icon {
+    width: .75rem;
+    height: .75rem;
+}
+
+.tx-analytics-top-pages-trend-up {
+    color: var(--typo3-text-color-success);
+}
+
+.tx-analytics-top-pages-trend-down {
+    color: var(--typo3-text-color-danger);
+}
+
+.tx-analytics-top-pages-trend-neutral {
+    color: var(--typo3-text-color-variant);
+}
+
+@container (max-width: 300px) {
+    .tx-analytics-top-pages-header,
+    .tx-analytics-top-pages-toolbar {
+        display: grid;
+        gap: .5rem;
+    }
+
+    .tx-analytics-top-pages-site-select {
+        width: 100%;
+    }
+
+    .tx-analytics-top-pages-row {
+        grid-template-columns: 1.25rem minmax(0, 1fr) 3rem 4rem;
+    }
+
+    .tx-analytics-top-pages-bar {
+        grid-column: 2 / -1;
+        order: 6;
+    }
+}
