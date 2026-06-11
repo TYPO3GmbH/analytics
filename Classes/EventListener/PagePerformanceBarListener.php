@@ -50,6 +50,10 @@ final readonly class PagePerformanceBarListener
             return;
         }
 
+        if ((int)($queryParams['viewMode'] ?? 0) === 2) {
+            return;
+        }
+
         $days = $this->normalizeDays((int)($queryParams['tx_analytics_period'] ?? 7));
 
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/PagePerformance.css');
@@ -127,6 +131,7 @@ final readonly class PagePerformanceBarListener
         }
 
         $pageData = $analyticsData['page'];
+        $previousPage = $analyticsData['previousPage'] ?? null;
         $visitsSeries = $analyticsData['visitsSeries'];
         $bounceRateSeries = $analyticsData['bounceRateSeries'];
         $avgDurationSeries = $analyticsData['avgDurationSeries'];
@@ -135,6 +140,11 @@ final readonly class PagePerformanceBarListener
         $bounceRate = (float)($pageData['bounceRate'] ?? 0.0);
         $avgDuration = (float)($pageData['averageVisitDuration'] ?? 0.0);
         $continuationRate = max(0.0, 100.0 - $bounceRate);
+
+        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : null;
+        $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : null;
+        $prevAvgDuration = $previousPage !== null ? (float)($previousPage['averageVisitDuration'] ?? 0.0) : null;
+        $prevContinuationRate = $prevBounceRate !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
 
         $visitsChart = $visitsSeries !== [] ? $visitsSeries : [$visitCount];
         $visitsCurrent = $this->seriesCurrent($visitsSeries);
@@ -165,8 +175,8 @@ final readonly class PagePerformanceBarListener
                 'icon' => 'eye',
                 'tone' => 'primary',
                 'value' => number_format($visitCount, 0, '.', "\u{202F}"),
-                'trend' => null,
-                'trendDirection' => null,
+                'trend' => $this->percentTrend($visitCount, $prevVisitCount),
+                'trendDirection' => $this->trendDirection($visitCount, $prevVisitCount),
                 'details' => [
                     $visitsCurrent !== null ? number_format((int)$visitsCurrent, 0, '.', "\u{202F}") : '-',
                     $visitsPrevious !== null ? number_format((int)$visitsPrevious, 0, '.', "\u{202F}") : '-',
@@ -185,8 +195,8 @@ final readonly class PagePerformanceBarListener
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'danger',
                 'value' => number_format($bounceRate, 1) . '%',
-                'trend' => null,
-                'trendDirection' => null,
+                'trend' => $this->percentTrend($bounceRate, $prevBounceRate),
+                'trendDirection' => $this->trendDirection($bounceRate, $prevBounceRate),
                 'details' => [
                     $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 1) . '%' : '-',
                     $bounceRatePrevious !== null ? number_format($bounceRatePrevious, 1) . '%' : '-',
@@ -205,8 +215,8 @@ final readonly class PagePerformanceBarListener
                 'icon' => 'clock',
                 'tone' => 'success',
                 'value' => $this->formatDuration($avgDuration),
-                'trend' => null,
-                'trendDirection' => null,
+                'trend' => $this->durationTrend($avgDuration, $prevAvgDuration),
+                'trendDirection' => $this->trendDirection($avgDuration, $prevAvgDuration),
                 'details' => [
                     $avgDurationCurrent !== null ? $this->formatDuration($avgDurationCurrent) : '-',
                     $avgDurationPrevious !== null ? $this->formatDuration($avgDurationPrevious) : '-',
@@ -225,8 +235,8 @@ final readonly class PagePerformanceBarListener
                 'icon' => 'right-to-bracket',
                 'tone' => 'info',
                 'value' => number_format($continuationRate, 1) . '%',
-                'trend' => null,
-                'trendDirection' => null,
+                'trend' => $this->percentTrend($continuationRate, $prevContinuationRate),
+                'trendDirection' => $this->trendDirection($continuationRate, $prevContinuationRate),
                 'details' => [
                     $continuationCurrent !== null ? number_format($continuationCurrent, 1) . '%' : '-',
                     $continuationPrevious !== null ? number_format($continuationPrevious, 1) . '%' : '-',
@@ -281,7 +291,7 @@ final readonly class PagePerformanceBarListener
      * Loads page analytics and time series data from cache or API.
      * Returns null when data is unavailable.
      *
-     * @return array{page: array<string, mixed>, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null
+     * @return array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null
      */
     private function loadPageData(int $pageId, ?Site $site, ?SiteLanguage $language, int $days): ?array
     {
@@ -314,7 +324,7 @@ final readonly class PagePerformanceBarListener
 
         $cacheKey = 'page_' . md5($websiteId . '_' . $pageUrl . '_' . $days);
 
-        /** @var array{page: array<string, mixed>, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null|false $cached */
+        /** @var array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null|false $cached */
         $cached = $this->pageAnalyticsCache->get($cacheKey);
         if ($cached === false) {
             try {
@@ -333,19 +343,23 @@ final readonly class PagePerformanceBarListener
     }
 
     /**
-     * @return array{page: array<string, mixed>, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null
+     * @return array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null
      * @throws AnalyticsApiException
      */
     private function fetchFromApi(string $websiteId, string $apiKey, string $pageUrl, int $days): ?array
     {
         $to = new \DateTimeImmutable('today 23:59:59');
         $from = $to->modify('-' . ($days - 1) . ' days');
+        $prevTo = $from->modify('-1 day');
+        $prevFrom = $prevTo->modify('-' . ($days - 1) . ' days');
 
         $page = $this->analyticsClient->fetchPageAnalytics($websiteId, $apiKey, $pageUrl, $from, $to);
 
         if ($page === null) {
             return null;
         }
+
+        $previousPage = $this->analyticsClient->fetchPageAnalytics($websiteId, $apiKey, $pageUrl, $prevFrom, $prevTo);
 
         $seriesResult = $this->analyticsClient->fetchAllTimeSeries($websiteId, $apiKey, $pageUrl, $from, $to);
         foreach ($seriesResult['failures'] as $key => $reason) {
@@ -358,6 +372,7 @@ final readonly class PagePerformanceBarListener
 
         return [
             'page' => $page,
+            'previousPage' => $previousPage,
             'visitsSeries' => $seriesResult['visits'],
             'bounceRateSeries' => $seriesResult['bounceRate'],
             'avgDurationSeries' => $seriesResult['avgDuration'],
@@ -398,6 +413,45 @@ final readonly class PagePerformanceBarListener
     private function seriesPeak(array $series): int|float|null
     {
         return $series !== [] ? max($series) : null;
+    }
+
+    private function percentTrend(int|float $current, int|float|null $previous): ?string
+    {
+        if ($previous === null || $previous == 0) {
+            return null;
+        }
+        $change = (($current - $previous) / $previous) * 100.0;
+        return ($change >= 0 ? '+' : '') . number_format($change, 1) . '%';
+    }
+
+    private function durationTrend(float $current, float|null $previous): ?string
+    {
+        if ($previous === null) {
+            return null;
+        }
+        $delta = (int)round($current - $previous);
+        if ($delta === 0) {
+            return null;
+        }
+        $abs = abs($delta);
+        $sign = $delta > 0 ? '+' : '-';
+        return $abs < 60
+            ? $sign . $abs . 's'
+            : $sign . intdiv($abs, 60) . ':' . str_pad((string)($abs % 60), 2, '0', STR_PAD_LEFT);
+    }
+
+    private function trendDirection(int|float $current, int|float|null $previous): ?string
+    {
+        if ($previous === null) {
+            return null;
+        }
+        if ($current > $previous) {
+            return 'up';
+        }
+        if ($current < $previous) {
+            return 'down';
+        }
+        return null;
     }
 
     private function formatDuration(float $seconds): string
