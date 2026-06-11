@@ -21,6 +21,7 @@ use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Routing\RouterInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
@@ -59,15 +60,18 @@ final readonly class PagePerformanceBarListener
             $this->renderIconVariables(),
         );
         $site = $this->trySite($pageId);
-        $event->addHeaderContent($this->render($pageId, $site, $days, $queryParams, $this->buildDetailsUri($site, $days)));
+        $languagesParam = $queryParams['languages'] ?? [];
+        $languageId = is_array($languagesParam) ? (int)($languagesParam[0] ?? 0) : 0;
+        $language = $this->trySiteLanguage($site, $languageId);
+        $event->addHeaderContent($this->render($pageId, $site, $language, $days, $queryParams, $this->buildDetailsUri($site, $days)));
     }
 
     /**
      * @param array<string, mixed> $queryParams
      */
-    private function render(int $pageId, ?Site $site, int $days, array $queryParams, string $detailsUri): string
+    private function render(int $pageId, ?Site $site, ?SiteLanguage $language, int $days, array $queryParams, string $detailsUri): string
     {
-        $metrics = $this->buildMetrics($pageId, $site, $days);
+        $metrics = $this->buildMetrics($pageId, $site, $language, $days);
 
         $html = '<section class="tx-analytics-performance-bar" aria-label="' . $this->escape($this->translate('pagePerformance.ariaLabel')) . '">';
         foreach ($metrics as $metric) {
@@ -114,9 +118,9 @@ final readonly class PagePerformanceBarListener
     /**
      * @return list<array<string, mixed>>
      */
-    private function buildMetrics(int $pageId, ?Site $site, int $days): array
+    private function buildMetrics(int $pageId, ?Site $site, ?SiteLanguage $language, int $days): array
     {
-        $analyticsData = $this->loadPageData($pageId, $site, $days);
+        $analyticsData = $this->loadPageData($pageId, $site, $language, $days);
 
         if ($analyticsData === null) {
             return $this->buildPlaceholderMetrics();
@@ -247,7 +251,7 @@ final readonly class PagePerformanceBarListener
      *
      * @return array{page: array<string, mixed>, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null
      */
-    private function loadPageData(int $pageId, ?Site $site, int $days): ?array
+    private function loadPageData(int $pageId, ?Site $site, ?SiteLanguage $language, int $days): ?array
     {
         if ($site === null) {
             return null;
@@ -271,7 +275,7 @@ final readonly class PagePerformanceBarListener
             return null;
         }
 
-        $pageUrl = $this->resolvePageUrl($site, $pageId);
+        $pageUrl = $this->resolvePageUrl($site, $pageId, $language);
         if ($pageUrl === '') {
             return null;
         }
@@ -328,10 +332,11 @@ final readonly class PagePerformanceBarListener
         ];
     }
 
-    private function resolvePageUrl(Site $site, int $pageId): string
+    private function resolvePageUrl(Site $site, int $pageId, ?SiteLanguage $language = null): string
     {
         try {
-            $url = (string)$site->getRouter()->generateUri($pageId, [], '', RouterInterface::ABSOLUTE_URL);
+            $routeParams = $language !== null ? ['_language' => $language] : [];
+            $url = (string)$site->getRouter()->generateUri($pageId, $routeParams, '', RouterInterface::ABSOLUTE_URL);
             return rtrim($url, '/');
         } catch (\Throwable) {
             return '';
@@ -411,6 +416,18 @@ final readonly class PagePerformanceBarListener
         try {
             return $this->siteFinder->getSiteByPageId($pageId);
         } catch (SiteNotFoundException) {
+            return null;
+        }
+    }
+
+    private function trySiteLanguage(?Site $site, int $languageId): ?SiteLanguage
+    {
+        if ($site === null) {
+            return null;
+        }
+        try {
+            return $site->getLanguageById($languageId);
+        } catch (\InvalidArgumentException) {
             return null;
         }
     }

@@ -102,7 +102,7 @@ final class PagePerformanceBarListenerTest extends UnitTestCase
     private function callLoadPageData(PagePerformanceBarListener $subject, int $pageId = 1, int $days = 7): mixed
     {
         $site = (new \ReflectionMethod($subject, 'trySite'))->invoke($subject, $pageId);
-        return (new \ReflectionMethod($subject, 'loadPageData'))->invoke($subject, $pageId, $site, $days);
+        return (new \ReflectionMethod($subject, 'loadPageData'))->invoke($subject, $pageId, $site, null, $days);
     }
 
     private function siteFinder(): SiteFinder
