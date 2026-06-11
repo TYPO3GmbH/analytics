@@ -13,15 +13,15 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 
-final readonly class AnalyticsStatusService
+readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
 {
     private const CREDIT_WARNING_REMAINING_RATIO = 0.25;
     public const STATUS_CACHE_LIFETIME = 86400;
 
     public function __construct(
         private FrontendInterface $cache,
-        private AnalyticsApiClient $apiClient,
-        private CipherService $cipherService,
+        private AnalyticsApiClientInterface $apiClient,
+        private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,

@@ -153,14 +153,14 @@ final class AnalyticsDataClientTest extends UnitTestCase
     /** fetchVisitsTimeSeries */
 
     #[Test]
-    public function fetchVisitsTimeSeriesSendsGetToVisitsGraphEndpoint(): void
+    public function fetchVisitsTimeSeriesSendsPostToVisitsGraphEndpoint(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[]}]}}'));
 
-        $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         $request = $this->httpHistory[0]['request'];
-        self::assertSame('GET', $request->getMethod());
+        self::assertSame('POST', $request->getMethod());
         self::assertStringContainsString('/v2/websites/w-123/visits/graph', (string)$request->getUri());
     }
 
@@ -169,7 +169,7 @@ final class AnalyticsDataClientTest extends UnitTestCase
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"label":"Overall Visits","data":[1,4,2],"total":7}]}}'));
 
-        $result = $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $result = $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([1.0, 4.0, 2.0], $result);
     }
@@ -179,21 +179,24 @@ final class AnalyticsDataClientTest extends UnitTestCase
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{}}'));
 
-        $result = $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $result = $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([], $result);
     }
 
     #[Test]
-    public function fetchVisitsTimeSeriesIncludesTimeSeriesQueryParams(): void
+    public function fetchVisitsTimeSeriesIncludesTimeSeriesBodyParams(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[]}]}}'));
 
-        $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
-        $query = (string)$this->httpHistory[0]['request']->getUri();
+        $request = $this->httpHistory[0]['request'];
+        $query = (string)$request->getUri();
         self::assertStringContainsString('type=time-series', $query);
         self::assertStringContainsString('unit=day', $query);
+        $body = json_decode((string)$request->getBody(), true);
+        self::assertSame('https://example.com/', $body['where']['and'][0]['values'][0]);
     }
 
     #[Test]
@@ -203,20 +206,20 @@ final class AnalyticsDataClientTest extends UnitTestCase
 
         $this->expectException(AnalyticsApiException::class);
 
-        $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $this->subject->fetchVisitsTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
     }
 
     /** fetchBounceRateTimeSeries */
 
     #[Test]
-    public function fetchBounceRateTimeSeriesSendsGetToBounceRateEndpoint(): void
+    public function fetchBounceRateTimeSeriesSendsPostToBounceRateEndpoint(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[]}]}}'));
 
-        $this->subject->fetchBounceRateTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $this->subject->fetchBounceRateTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         $request = $this->httpHistory[0]['request'];
-        self::assertSame('GET', $request->getMethod());
+        self::assertSame('POST', $request->getMethod());
         self::assertStringContainsString('/v2/websites/w-123/stats/bounce-rate/graph', (string)$request->getUri());
     }
 
@@ -225,7 +228,7 @@ final class AnalyticsDataClientTest extends UnitTestCase
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"label":"Bounce Rate","data":[0,50,25],"totalAverage":25}]}}'));
 
-        $result = $this->subject->fetchBounceRateTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $result = $this->subject->fetchBounceRateTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([0.0, 50.0, 25.0], $result);
     }
@@ -233,14 +236,14 @@ final class AnalyticsDataClientTest extends UnitTestCase
     /** fetchAvgDurationTimeSeries */
 
     #[Test]
-    public function fetchAvgDurationTimeSeriesSendsGetToCorrectEndpoint(): void
+    public function fetchAvgDurationTimeSeriesSendsPostToCorrectEndpoint(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[]}]}}'));
 
-        $this->subject->fetchAvgDurationTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $this->subject->fetchAvgDurationTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         $request = $this->httpHistory[0]['request'];
-        self::assertSame('GET', $request->getMethod());
+        self::assertSame('POST', $request->getMethod());
         self::assertStringContainsString('/v2/websites/w-123/stats/average-page-view-duration/graph', (string)$request->getUri());
     }
 
@@ -249,7 +252,7 @@ final class AnalyticsDataClientTest extends UnitTestCase
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"label":"Avg Duration","data":[30,90,60]}]}}'));
 
-        $result = $this->subject->fetchAvgDurationTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $result = $this->subject->fetchAvgDurationTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([30.0, 90.0, 60.0], $result);
     }
@@ -257,18 +260,18 @@ final class AnalyticsDataClientTest extends UnitTestCase
     /** fetchAllTimeSeries */
 
     #[Test]
-    public function fetchAllTimeSeriesSendsThreeParallelGetRequests(): void
+    public function fetchAllTimeSeriesSendsThreeParallelPostRequests(): void
     {
         $empty = '{"payload":{"datasets":[{"data":[]}]}}';
         $this->mockHandler->append(new Response(200, [], $empty));
         $this->mockHandler->append(new Response(200, [], $empty));
         $this->mockHandler->append(new Response(200, [], $empty));
 
-        $this->subject->fetchAllTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $this->subject->fetchAllTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertCount(3, $this->httpHistory);
         foreach ($this->httpHistory as $entry) {
-            self::assertSame('GET', $entry['request']->getMethod());
+            self::assertSame('POST', $entry['request']->getMethod());
         }
     }
 
@@ -279,7 +282,7 @@ final class AnalyticsDataClientTest extends UnitTestCase
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[10,20,30]}]}}'));
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[60,90,120]}]}}'));
 
-        $result = $this->subject->fetchAllTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $result = $this->subject->fetchAllTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([1.0, 2.0, 3.0], $result['visits']);
         self::assertSame([10.0, 20.0, 30.0], $result['bounceRate']);
@@ -294,7 +297,7 @@ final class AnalyticsDataClientTest extends UnitTestCase
         $this->mockHandler->append(new Response(500, [], '{}'));
         $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[60,90,120]}]}}'));
 
-        $result = $this->subject->fetchAllTimeSeries('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+        $result = $this->subject->fetchAllTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([1.0, 2.0, 3.0], $result['visits']);
         self::assertSame([], $result['bounceRate']);

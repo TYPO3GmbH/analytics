@@ -10,10 +10,10 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Backend\ModuleConfigurator;
-use T3G\Analytics\Service\ApiKeyService;
-use T3G\Analytics\Service\SiteDataProvider;
-use T3G\Analytics\Service\AnalyticsStatusService;
-use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\ApiKeyServiceInterface;
+use T3G\Analytics\Service\SiteDataProviderInterface;
+use T3G\Analytics\Service\AnalyticsStatusServiceInterface;
+use T3G\Analytics\Service\InstanceRegistrationServiceInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -33,11 +33,11 @@ final readonly class BackendModuleController
         private UriBuilder $uriBuilder,
         private FlashMessageService $flashMessageService,
         private SiteFinder $siteFinder,
-        private InstanceRegistrationService $registrationService,
-        private AnalyticsStatusService $analyticsStatusService,
-        private ApiKeyService $apiKeyService,
+        private InstanceRegistrationServiceInterface $registrationService,
+        private AnalyticsStatusServiceInterface $analyticsStatusService,
+        private ApiKeyServiceInterface $apiKeyService,
         private ModuleConfigurator $moduleHelper,
-        private SiteDataProvider $siteDataProvider,
+        private SiteDataProviderInterface $siteDataProvider,
         private LoggerInterface $logger,
     ) {
     }

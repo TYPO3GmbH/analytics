@@ -10,6 +10,33 @@ services:
   T3G\Analytics\Controller\BackendModuleController:
     public: true
 
+  T3G\Analytics\Service\AnalyticsApiClientInterface:
+    alias: T3G\Analytics\Service\AnalyticsApiClient
+
+  T3G\Analytics\Service\AnalyticsDataClientInterface:
+    alias: T3G\Analytics\Service\AnalyticsDataClient
+
+  T3G\Analytics\Service\AnalyticsStatusServiceInterface:
+    alias: T3G\Analytics\Service\AnalyticsStatusService
+
+  T3G\Analytics\Service\ApiExceptionExtractorInterface:
+    alias: T3G\Analytics\Service\ApiExceptionExtractor
+
+  T3G\Analytics\Service\ApiKeyServiceInterface:
+    alias: T3G\Analytics\Service\ApiKeyService
+
+  T3G\Analytics\Service\CipherServiceInterface:
+    alias: T3G\Analytics\Service\CipherService
+
+  T3G\Analytics\Service\HmacSignerInterface:
+    alias: T3G\Analytics\Service\HmacSigner
+
+  T3G\Analytics\Service\InstanceRegistrationServiceInterface:
+    alias: T3G\Analytics\Service\InstanceRegistrationService
+
+  T3G\Analytics\Service\SiteDataProviderInterface:
+    alias: T3G\Analytics\Service\SiteDataProvider
+
   cache.tx_analytics_status:
     class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']

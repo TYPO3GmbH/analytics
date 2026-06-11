@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
-final readonly class ApiExceptionExtractor
+readonly class ApiExceptionExtractor implements ApiExceptionExtractorInterface
 {
     public function extractReason(\Throwable $e): string
     {

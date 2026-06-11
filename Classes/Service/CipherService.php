@@ -19,7 +19,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * BLAKE2b keyed hash over a domain-specific seed derived from
  * $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'].
  */
-final class CipherService
+class CipherService implements CipherServiceInterface
 {
     /** @internal class name of the v14 core service – kept as string to avoid autoload errors on v13 */
     private const CORE_CIPHER_SERVICE = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherService';

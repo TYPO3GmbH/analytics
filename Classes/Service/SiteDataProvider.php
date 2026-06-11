@@ -14,11 +14,11 @@ use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Site\SiteFinder;
 
-final readonly class SiteDataProvider
+readonly class SiteDataProvider implements SiteDataProviderInterface
 {
     public function __construct(
         private SiteFinder $siteFinder,
-        private AnalyticsStatusService $analyticsStatusService,
+        private AnalyticsStatusServiceInterface $analyticsStatusService,
         private ConnectionPool $connectionPool,
         private UriBuilder $uriBuilder,
         private LoggerInterface $logger,

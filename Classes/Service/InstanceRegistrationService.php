@@ -10,11 +10,11 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 
-final readonly class InstanceRegistrationService
+readonly class InstanceRegistrationService implements InstanceRegistrationServiceInterface
 {
     public function __construct(
-        private AnalyticsApiClient $apiClient,
-        private CipherService $cipherService,
+        private AnalyticsApiClientInterface $apiClient,
+        private CipherServiceInterface $cipherService,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
         private LoggerInterface $logger,

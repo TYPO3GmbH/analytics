@@ -8,8 +8,8 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
-use T3G\Analytics\Service\CipherService;
-use T3G\Analytics\Service\AnalyticsDataClient;
+use T3G\Analytics\Service\CipherServiceInterface;
+use T3G\Analytics\Service\AnalyticsDataClientInterface;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
@@ -34,8 +34,8 @@ final readonly class PagePerformanceBarListener
         private SparklineRenderer $sparklineRenderer,
         private SiteFinder $siteFinder,
         private UriBuilder $uriBuilder,
-        private AnalyticsDataClient $analyticsClient,
-        private CipherService $cipherService,
+        private AnalyticsDataClientInterface $analyticsClient,
+        private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
         private FrontendInterface $pageAnalyticsCache,
     ) {
@@ -137,18 +137,25 @@ final readonly class PagePerformanceBarListener
         $continuationRate = max(0.0, 100.0 - $bounceRate);
 
         $visitsChart = $visitsSeries !== [] ? $visitsSeries : [$visitCount];
-        $visitsLegendStart = $visitsSeries !== [] ? (string)(int)$visitsSeries[0] : '-';
-        $visitsLegendEnd = number_format($visitCount, 0, '.', "\u{202F}");
+        $visitsCurrent = $this->seriesCurrent($visitsSeries);
+        $visitsPrevious = $this->seriesPrevious($visitsSeries);
+        $visitsPeak = $this->seriesPeak($visitsSeries);
 
         $bounceChart = $bounceRateSeries !== [] ? $bounceRateSeries : [$bounceRate];
-        $bounceLegendStart = $bounceRateSeries !== [] ? number_format((float)$bounceRateSeries[0], 1) . '%' : '-';
+        $bounceRateCurrent = $this->seriesCurrent($bounceRateSeries);
+        $bounceRatePrevious = $this->seriesPrevious($bounceRateSeries);
+        $bounceRatePeak = $this->seriesPeak($bounceRateSeries);
 
         $continuationChart = $bounceRateSeries !== []
             ? array_map(static fn (int|float $v): float => max(0.0, 100.0 - (float)$v), $bounceRateSeries)
             : [$continuationRate];
-        $continuationLegendStart = $bounceRateSeries !== []
-            ? number_format(max(0.0, 100.0 - (float)$bounceRateSeries[0]), 1) . '%'
-            : '-';
+        $continuationCurrent = $bounceRateCurrent !== null ? max(0.0, 100.0 - $bounceRateCurrent) : null;
+        $continuationPrevious = $bounceRatePrevious !== null ? max(0.0, 100.0 - $bounceRatePrevious) : null;
+        $continuationPeak = $bounceRateSeries !== [] ? max(0.0, 100.0 - (float)min($bounceRateSeries)) : null;
+
+        $avgDurationCurrent = $this->seriesCurrent($avgDurationSeries);
+        $avgDurationPrevious = $this->seriesPrevious($avgDurationSeries);
+        $avgDurationPeak = $this->seriesPeak($avgDurationSeries);
 
         return [
             [
@@ -160,9 +167,16 @@ final readonly class PagePerformanceBarListener
                 'value' => number_format($visitCount, 0, '.', "\u{202F}"),
                 'trend' => null,
                 'trendDirection' => null,
-                'details' => [number_format($visitCount, 0, '.', "\u{202F}"), '-', '-'],
+                'details' => [
+                    $visitsCurrent !== null ? number_format((int)$visitsCurrent, 0, '.', "\u{202F}") : '-',
+                    $visitsPrevious !== null ? number_format((int)$visitsPrevious, 0, '.', "\u{202F}") : '-',
+                    $visitsPeak !== null ? number_format((int)$visitsPeak, 0, '.', "\u{202F}") : '-',
+                ],
                 'chart' => $visitsChart,
-                'chartLegend' => [$visitsLegendStart, $visitsLegendEnd],
+                'chartLegend' => [
+                    $visitsSeries !== [] ? number_format((int)$visitsSeries[0], 0, '.', "\u{202F}") : '-',
+                    $visitsCurrent !== null ? number_format((int)$visitsCurrent, 0, '.', "\u{202F}") : '-',
+                ],
             ],
             [
                 'key' => 'bounceRate',
@@ -173,9 +187,16 @@ final readonly class PagePerformanceBarListener
                 'value' => number_format($bounceRate, 1) . '%',
                 'trend' => null,
                 'trendDirection' => null,
-                'details' => [number_format($bounceRate, 1) . '%', '-', '-'],
+                'details' => [
+                    $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 1) . '%' : '-',
+                    $bounceRatePrevious !== null ? number_format($bounceRatePrevious, 1) . '%' : '-',
+                    $bounceRatePeak !== null ? number_format($bounceRatePeak, 1) . '%' : '-',
+                ],
                 'chart' => $bounceChart,
-                'chartLegend' => [$bounceLegendStart, number_format($bounceRate, 1) . '%'],
+                'chartLegend' => [
+                    $bounceRateSeries !== [] ? number_format((float)$bounceRateSeries[0], 1) . '%' : '-',
+                    $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 1) . '%' : '-',
+                ],
             ],
             [
                 'key' => 'averageVisitDuration',
@@ -186,11 +207,15 @@ final readonly class PagePerformanceBarListener
                 'value' => $this->formatDuration($avgDuration),
                 'trend' => null,
                 'trendDirection' => null,
-                'details' => [$this->formatDuration($avgDuration), '-', '-'],
+                'details' => [
+                    $avgDurationCurrent !== null ? $this->formatDuration($avgDurationCurrent) : '-',
+                    $avgDurationPrevious !== null ? $this->formatDuration($avgDurationPrevious) : '-',
+                    $avgDurationPeak !== null ? $this->formatDuration($avgDurationPeak) : '-',
+                ],
                 'chart' => $avgDurationSeries !== [] ? $avgDurationSeries : [$avgDuration],
                 'chartLegend' => [
                     $avgDurationSeries !== [] ? $this->formatDuration((float)$avgDurationSeries[0]) : '-',
-                    $this->formatDuration($avgDuration),
+                    $avgDurationCurrent !== null ? $this->formatDuration($avgDurationCurrent) : '-',
                 ],
             ],
             [
@@ -202,9 +227,16 @@ final readonly class PagePerformanceBarListener
                 'value' => number_format($continuationRate, 1) . '%',
                 'trend' => null,
                 'trendDirection' => null,
-                'details' => [number_format($continuationRate, 1) . '%', '-', '-'],
+                'details' => [
+                    $continuationCurrent !== null ? number_format($continuationCurrent, 1) . '%' : '-',
+                    $continuationPrevious !== null ? number_format($continuationPrevious, 1) . '%' : '-',
+                    $continuationPeak !== null ? number_format($continuationPeak, 1) . '%' : '-',
+                ],
                 'chart' => $continuationChart,
-                'chartLegend' => [$continuationLegendStart, number_format($continuationRate, 1) . '%'],
+                'chartLegend' => [
+                    $bounceRateSeries !== [] ? number_format(max(0.0, 100.0 - (float)$bounceRateSeries[0]), 1) . '%' : '-',
+                    $continuationCurrent !== null ? number_format($continuationCurrent, 1) . '%' : '-',
+                ],
             ],
         ];
     }
@@ -315,7 +347,7 @@ final readonly class PagePerformanceBarListener
             return null;
         }
 
-        $seriesResult = $this->analyticsClient->fetchAllTimeSeries($websiteId, $apiKey, $from, $to);
+        $seriesResult = $this->analyticsClient->fetchAllTimeSeries($websiteId, $apiKey, $pageUrl, $from, $to);
         foreach ($seriesResult['failures'] as $key => $reason) {
             $this->logger->warning('PagePerformanceBarListener: Time series call failed.', [
                 'websiteId' => $websiteId,
@@ -343,6 +375,31 @@ final readonly class PagePerformanceBarListener
         }
     }
 
+    /**
+     * @param list<int|float> $series
+     */
+    private function seriesCurrent(array $series): int|float|null
+    {
+        return $series !== [] ? $series[count($series) - 1] : null;
+    }
+
+    /**
+     * @param list<int|float> $series
+     */
+    private function seriesPrevious(array $series): int|float|null
+    {
+        $count = count($series);
+        return $count >= 2 ? $series[$count - 2] : null;
+    }
+
+    /**
+     * @param list<int|float> $series
+     */
+    private function seriesPeak(array $series): int|float|null
+    {
+        return $series !== [] ? max($series) : null;
+    }
+
     private function formatDuration(float $seconds): string
     {
         if ($seconds <= 0) {
@@ -358,8 +415,8 @@ final readonly class PagePerformanceBarListener
     private function renderTooltip(array $metric): string
     {
         $detailLabels = [
-            $this->translate('pagePerformance.tooltip.current'),
-            $this->translate('pagePerformance.tooltip.previous'),
+            $this->translate('pagePerformance.tooltip.today'),
+            $this->translate('pagePerformance.tooltip.yesterday'),
             $this->translate('pagePerformance.tooltip.peak'),
         ];
 
@@ -440,10 +497,18 @@ final readonly class PagePerformanceBarListener
     {
         $fields = ['id' => (string)$pageId];
         foreach ($queryParams as $name => $value) {
-            if ($name === 'id' || $name === 'tx_analytics_period' || !is_scalar($value)) {
+            if ($name === 'id' || $name === 'tx_analytics_period') {
                 continue;
             }
-            $fields[(string)$name] = (string)$value;
+            if (is_array($value)) {
+                foreach ($value as $k => $v) {
+                    if (is_scalar($v)) {
+                        $fields[$name . '[' . $k . ']'] = (string)$v;
+                    }
+                }
+            } elseif (is_scalar($value)) {
+                $fields[$name] = (string)$value;
+            }
         }
         return $fields;
     }

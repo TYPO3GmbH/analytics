@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
-final readonly class HmacSigner
+readonly class HmacSigner implements HmacSignerInterface
 {
     /**
      * Builds HMAC authentication headers for a signed API request.

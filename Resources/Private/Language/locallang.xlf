@@ -146,11 +146,11 @@
             <trans-unit id="pagePerformance.noData" resname="pagePerformance.noData">
                 <source>No data available yet.</source>
             </trans-unit>
-            <trans-unit id="pagePerformance.tooltip.current" resname="pagePerformance.tooltip.current">
-                <source>Current</source>
+            <trans-unit id="pagePerformance.tooltip.today" resname="pagePerformance.tooltip.today">
+                <source>Today</source>
             </trans-unit>
-            <trans-unit id="pagePerformance.tooltip.previous" resname="pagePerformance.tooltip.previous">
-                <source>Previous</source>
+            <trans-unit id="pagePerformance.tooltip.yesterday" resname="pagePerformance.tooltip.yesterday">
+                <source>Yesterday</source>
             </trans-unit>
             <trans-unit id="pagePerformance.tooltip.peak" resname="pagePerformance.tooltip.peak">
                 <source>Peak</source>

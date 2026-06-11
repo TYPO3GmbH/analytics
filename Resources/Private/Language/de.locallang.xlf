@@ -194,13 +194,13 @@
                 <source>No data available yet.</source>
                 <target>Noch keine Daten verfügbar.</target>
             </trans-unit>
-            <trans-unit id="pagePerformance.tooltip.current" resname="pagePerformance.tooltip.current">
-                <source>Current</source>
-                <target>Aktuell</target>
+            <trans-unit id="pagePerformance.tooltip.today" resname="pagePerformance.tooltip.today">
+                <source>Today</source>
+                <target>Heute</target>
             </trans-unit>
-            <trans-unit id="pagePerformance.tooltip.previous" resname="pagePerformance.tooltip.previous">
-                <source>Previous</source>
-                <target>Vorperiode</target>
+            <trans-unit id="pagePerformance.tooltip.yesterday" resname="pagePerformance.tooltip.yesterday">
+                <source>Yesterday</source>
+                <target>Gestern</target>
             </trans-unit>
             <trans-unit id="pagePerformance.tooltip.peak" resname="pagePerformance.tooltip.peak">
                 <source>Peak</source>

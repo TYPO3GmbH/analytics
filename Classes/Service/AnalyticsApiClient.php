@@ -9,15 +9,15 @@ use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
 
-final readonly class AnalyticsApiClient
+readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
 {
     private const INTP_ID = 'cad26303-1c79-415e-8b39-45d8aadfb7f3';
 
     public function __construct(
         private RequestFactory $requestFactory,
         private ApiConfiguration $apiConfiguration,
-        private HmacSigner $hmacSigner,
-        private ApiExceptionExtractor $exceptionExtractor,
+        private HmacSignerInterface $hmacSigner,
+        private ApiExceptionExtractorInterface $exceptionExtractor,
     ) {
     }
 

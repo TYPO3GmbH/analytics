@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Backend;
 
 use Doctrine\DBAL\Exception;
-use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteDataProviderInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
@@ -16,7 +16,7 @@ final readonly class ModuleConfigurator
 {
     public function __construct(
         private UriBuilder $uriBuilder,
-        private SiteDataProvider $siteDataProvider,
+        private SiteDataProviderInterface $siteDataProvider,
     ) {
     }
 

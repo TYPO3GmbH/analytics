@@ -10,7 +10,7 @@ use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 
-final readonly class AnalyticsDataClient
+readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
 {
     private const PAGE_METRICS = [
         'visitCount',
@@ -20,7 +20,7 @@ final readonly class AnalyticsDataClient
 
     public function __construct(
         private RequestFactory $requestFactory,
-        private ApiExceptionExtractor $exceptionExtractor,
+        private ApiExceptionExtractorInterface $exceptionExtractor,
         private ApiConfiguration $apiConfiguration,
         private GuzzleClientFactory $guzzleClientFactory,
     ) {
@@ -89,10 +89,11 @@ final readonly class AnalyticsDataClient
     public function fetchVisitsTimeSeries(
         string $websiteId,
         string $apiKey,
+        string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        return $this->fetchTimeSeries($websiteId, $apiKey, 'visits/graph', $from, $to);
+        return $this->fetchTimeSeries($websiteId, $apiKey, $pageUrl, 'visits/graph', $from, $to);
     }
 
     /**
@@ -104,10 +105,11 @@ final readonly class AnalyticsDataClient
     public function fetchBounceRateTimeSeries(
         string $websiteId,
         string $apiKey,
+        string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        return $this->fetchTimeSeries($websiteId, $apiKey, 'stats/bounce-rate/graph', $from, $to);
+        return $this->fetchTimeSeries($websiteId, $apiKey, $pageUrl, 'stats/bounce-rate/graph', $from, $to);
     }
 
     /**
@@ -119,10 +121,11 @@ final readonly class AnalyticsDataClient
     public function fetchAvgDurationTimeSeries(
         string $websiteId,
         string $apiKey,
+        string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        return $this->fetchTimeSeries($websiteId, $apiKey, 'stats/average-page-view-duration/graph', $from, $to);
+        return $this->fetchTimeSeries($websiteId, $apiKey, $pageUrl, 'stats/average-page-view-duration/graph', $from, $to);
     }
 
     /**
@@ -138,26 +141,33 @@ final readonly class AnalyticsDataClient
     public function fetchAllTimeSeries(
         string $websiteId,
         string $apiKey,
+        string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
         $websiteBase = $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/';
-        $query = http_build_query([
+        $query = '?' . http_build_query([
             'from' => $from->format('Y-m-d\T00:00:00.000P'),
             'until' => $to->format('Y-m-d\T23:59:59.999P'),
             'type' => 'time-series',
             'unit' => 'day',
         ]);
+        $body = ['where' => ['and' => [
+            ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
+        ]]];
         $options = array_merge(
-            ['headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json']],
+            [
+                'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                'json' => $body,
+            ],
             $this->apiConfiguration->getRequestOptions()
         );
 
         $client = $this->guzzleClientFactory->getClient();
         $promises = [
-            'visits' => $client->requestAsync('GET', $websiteBase . 'visits/graph?' . $query, $options),
-            'bounceRate' => $client->requestAsync('GET', $websiteBase . 'stats/bounce-rate/graph?' . $query, $options),
-            'avgDuration' => $client->requestAsync('GET', $websiteBase . 'stats/average-page-view-duration/graph?' . $query, $options),
+            'visits' => $client->requestAsync('POST', $websiteBase . 'visits/graph' . $query, $options),
+            'bounceRate' => $client->requestAsync('POST', $websiteBase . 'stats/bounce-rate/graph' . $query, $options),
+            'avgDuration' => $client->requestAsync('POST', $websiteBase . 'stats/average-page-view-duration/graph' . $query, $options),
         ];
 
         /** @var array<string, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}> $settled */
@@ -204,23 +214,30 @@ final readonly class AnalyticsDataClient
     private function fetchTimeSeries(
         string $websiteId,
         string $apiKey,
+        string $pageUrl,
         string $graphPath,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        $query = http_build_query([
+        $query = '?' . http_build_query([
             'from' => $from->format('Y-m-d\T00:00:00.000P'),
             'until' => $to->format('Y-m-d\T23:59:59.999P'),
             'type' => 'time-series',
             'unit' => 'day',
         ]);
+        $body = ['where' => ['and' => [
+            ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
+        ]]];
 
         try {
             $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/' . $graphPath . '?' . $query,
-                'GET',
+                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/' . $graphPath . $query,
+                'POST',
                 array_merge(
-                    ['headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json']],
+                    [
+                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                        'json' => $body,
+                    ],
                     $this->apiConfiguration->getRequestOptions()
                 )
             );
