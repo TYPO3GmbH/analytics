@@ -119,6 +119,63 @@
             <trans-unit id="notification.subscriptionUpgraded.message" resname="notification.subscriptionUpgraded.message">
                 <source>Your plan has been successfully upgraded.</source>
             </trans-unit>
+            <trans-unit id="pagePerformance.ariaLabel" resname="pagePerformance.ariaLabel">
+                <source>Page performance</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.continuationRate" resname="pagePerformance.continuationRate">
+                <source>Continuation rate</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
+                <source>Period</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
+                <source>Details</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
+                <source>%d days</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.noData" resname="pagePerformance.noData">
+                <source>No data available yet.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.current" resname="pagePerformance.tooltip.current">
+                <source>Current</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.previous" resname="pagePerformance.tooltip.previous">
+                <source>Previous</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.peak" resname="pagePerformance.tooltip.peak">
+                <source>Peak</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.chart" resname="pagePerformance.tooltip.chart">
+                <source>Trend chart</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.start" resname="pagePerformance.tooltip.start">
+                <source>Start</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.now" resname="pagePerformance.tooltip.now">
+                <source>Now</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.views" resname="pagePerformance.tooltip.description.views">
+                <source>The number of page views for this page in the selected period.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.averageTimeOnPage" resname="pagePerformance.tooltip.description.averageTimeOnPage">
+                <source>How long visitors typically engage with this page. Higher values generally indicate more engaging content.</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
+                <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

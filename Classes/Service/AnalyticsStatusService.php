@@ -71,6 +71,7 @@ final readonly class AnalyticsStatusService
     {
         $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
         $newStatus = (string)($data['status'] ?? '');
+        $newExternalWebsiteId = (string)($data['externalWebsiteId'] ?? '');
         $siteIdentifier = $site->getIdentifier();
         $settings = $site->getSettings();
 
@@ -86,6 +87,11 @@ final readonly class AnalyticsStatusService
             $this->logger->warning('syncSiteSettingsFromStatus: failed to read status.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
             $existingStatus = '';
         }
+        try {
+            $existingExternalWebsiteId = (string)($settings->get('externalWebsiteId', '') ?: '');
+        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $existingExternalWebsiteId = '';
+        }
 
         $update = [];
         if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
@@ -93,6 +99,9 @@ final readonly class AnalyticsStatusService
         }
         if ($newStatus !== '' && $newStatus !== $existingStatus) {
             $update['status'] = $newStatus;
+        }
+        if ($newExternalWebsiteId !== '' && $newExternalWebsiteId !== $existingExternalWebsiteId) {
+            $update['externalWebsiteId'] = $newExternalWebsiteId;
         }
 
         if ($update === []) {

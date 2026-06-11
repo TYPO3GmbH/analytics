@@ -54,3 +54,10 @@ settings:
     default: ''
     category: typo3_analytics
     readonly: true
+  externalWebsiteId:
+    label: 'External Website ID'
+    description: 'External analytics website ID used for data API calls. Synced automatically on status refresh.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="nl" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Paginaweergaven</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Het bouncepercentage van de pagina</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Gemiddelde sessieduur van pagina</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>Het percentage bezoeken dat uw website weer verliet na slechts één pagina te hebben bekeken. Het maakt niet uit hoe lang de bezoeker op de pagina was of hoe hij de pagina verliet. We noemen het een &quot;&quot;bounce&quot;&quot; als het een bezoek is met slechts één interactie met uw website.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

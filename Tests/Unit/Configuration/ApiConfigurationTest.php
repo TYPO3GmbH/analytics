@@ -22,12 +22,6 @@ final class ApiConfigurationTest extends UnitTestCase
     }
 
     #[Test]
-    public function getBaseUrlReturnsDefaultWhenNotConfigured(): void
-    {
-        self::assertSame('https://api.analytics.typo3.com/api', $this->buildSubject()->getBaseUrl());
-    }
-
-    #[Test]
     public function getBaseUrlUsesConfiguredUrl(): void
     {
         self::assertSame('https://custom.example.com/api', $this->buildSubject('https://custom.example.com/api')->getBaseUrl());

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="ko" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>페이지 조회수</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>페이지 이탈률</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>평균 페이지 세션 시간</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>한 페이지 조회 후에만 웹사이트를 다시 떠난 방문의 비율입니다. 방문자가 페이지에 머문 시간이나 페이지를 떠난 시간은 중요하지 않습니다. 대응에 대해 [/b][/u] 모든 : [/b][/u] 더 많은 정보와이 주제 나 용어에 대해 정확히 정의, here[/url].</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

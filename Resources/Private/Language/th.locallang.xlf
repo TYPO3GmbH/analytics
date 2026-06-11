@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="th" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>การดูหน้าเว็บ</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>อัตราตีกลับของเพจ</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>ระยะเวลาเซสชันของเพจเฉลี่ย</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>เปอร์เซ็นต์ของการเข้าชมที่ออกจากเว็บไซต์ของคุณอีกครั้งหลังจากการดูหน้าเดียว ไม่สำคัญว่าผู้เยี่ยมชมจะอยู่บนหน้าเพจนานแค่ไหนหรือออกไปอย่างไร เราเรียกมันว่า &quot;&quot; ตีกลับ &quot;&quot; ถ้ามันคือการไปเยือนที่มีเพียงหนึ่งการมีปฏิสัมพันธ์กับ website.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

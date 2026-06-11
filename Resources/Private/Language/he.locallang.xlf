@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="he" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>צפיות בדף</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>שיעור היציאה מדף הכניסה</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>משך ההפעלה הממוצע של הדף</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

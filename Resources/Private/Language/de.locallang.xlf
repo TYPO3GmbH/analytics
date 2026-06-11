@@ -158,6 +158,82 @@
                 <source>Your plan has been successfully upgraded.</source>
                 <target>Dein Plan wurde erfolgreich aktualisiert.</target>
             </trans-unit>
+            <trans-unit id="pagePerformance.ariaLabel" resname="pagePerformance.ariaLabel">
+                <source>Page performance</source>
+                <target>Seitenperformance</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Aufrufe</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Absprungrate</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Ø Verweildauer</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.continuationRate" resname="pagePerformance.continuationRate">
+                <source>Continuation rate</source>
+                <target>Weiterleserate</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
+                <source>Period</source>
+                <target>Zeitraum</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
+                <source>Details</source>
+                <target>Details</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
+                <source>%d days</source>
+                <target>%d Tage</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.noData" resname="pagePerformance.noData">
+                <source>No data available yet.</source>
+                <target>Noch keine Daten verfügbar.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.current" resname="pagePerformance.tooltip.current">
+                <source>Current</source>
+                <target>Aktuell</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.previous" resname="pagePerformance.tooltip.previous">
+                <source>Previous</source>
+                <target>Vorperiode</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.peak" resname="pagePerformance.tooltip.peak">
+                <source>Peak</source>
+                <target>Spitze</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.chart" resname="pagePerformance.tooltip.chart">
+                <source>Trend chart</source>
+                <target>Trenddiagramm</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.start" resname="pagePerformance.tooltip.start">
+                <source>Start</source>
+                <target>Start</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.now" resname="pagePerformance.tooltip.now">
+                <source>Now</source>
+                <target>Jetzt</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.views" resname="pagePerformance.tooltip.description.views">
+                <source>The number of page views for this page in the selected period.</source>
+                <target>Die Anzahl der Seitenaufrufe dieser Seite im gewählten Zeitraum.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>Der Prozentsatz der Besucher, die die Website nach dem Aufrufen nur einer Seite verlassen haben, unabhängig von der Dauer ihres Besuchs oder der Art und Weise des Verlassens.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.averageTimeOnPage" resname="pagePerformance.tooltip.description.averageTimeOnPage">
+                <source>How long visitors typically engage with this page. Higher values generally indicate more engaging content.</source>
+                <target>Wie lange sich Besucher typischerweise mit dieser Seite beschäftigen. Höhere Werte deuten in der Regel auf interessanteren Inhalt hin.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
+                <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
+                <target>Der Prozentsatz der Besucher, die nach dem Aufrufen dieser Seite weiter gesurft haben. Berechnet als 100 % minus Absprungrate.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>
