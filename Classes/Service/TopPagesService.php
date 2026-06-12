@@ -46,7 +46,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
     /**
      * @return list<array<string, mixed>>|null
      */
-    public function loadTopPagesData(string $siteIdentifier, int $days): ?array
+    public function loadTopPagesData(string $siteIdentifier, int $days, int $limit = 10): ?array
     {
         $siteData = $this->resolveAnalyticsSite($siteIdentifier);
         if ($siteData === null) {
@@ -54,11 +54,12 @@ final readonly class TopPagesService implements TopPagesServiceInterface
         }
 
         $days = max(1, $days);
+        $limit = max(1, $limit);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
         $site = $siteData['site'];
 
-        $cacheKey = 'top_pages_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'top_pages_' . md5($websiteId . '_' . $days . '_' . $limit);
 
         /** @var list<array<string, mixed>>|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -69,7 +70,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
             $prevFrom = $prevTo->modify('-' . ($days - 1) . ' days');
 
             try {
-                $cached = $this->analyticsClient->fetchTopPages($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo);
+                $cached = $this->analyticsClient->fetchTopPages($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo, $limit);
                 $this->cache->set($cacheKey, $cached);
             } catch (AnalyticsApiException $e) {
                 $this->logger->warning('TopPagesService: Failed to fetch top pages.', ['reason' => $e->reason]);

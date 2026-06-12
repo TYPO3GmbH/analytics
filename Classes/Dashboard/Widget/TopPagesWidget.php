@@ -88,7 +88,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
         }
         $days = max(1, (int)$this->options['days']);
 
-        $pages = $this->topPagesService->loadTopPagesData($siteIdentifier, $days);
+        $pages = $this->topPagesService->loadTopPagesData($siteIdentifier, $days, 5);
         $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');
         $pages = $pages !== null ? $this->topPagesService->buildPageItems($pages, $trendLabel) : [];
 

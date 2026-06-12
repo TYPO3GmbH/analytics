@@ -197,6 +197,9 @@
             <trans-unit id="dashboardWidget.topPages.setting.period.label" resname="dashboardWidget.topPages.setting.period.label">
                 <source>Period</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.limit.label" resname="dashboardWidget.topPages.setting.limit.label">
+                <source>Number of pages</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
             </trans-unit>

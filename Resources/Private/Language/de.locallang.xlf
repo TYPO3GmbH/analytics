@@ -262,6 +262,10 @@
                 <source>Period</source>
                 <target>Zeitraum</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.limit.label" resname="dashboardWidget.topPages.setting.limit.label">
+                <source>Number of pages</source>
+                <target>Anzahl der Seiten</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
                 <target>Verglichen mit dem vorherigen Zeitraum</target>

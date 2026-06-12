@@ -59,6 +59,13 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.setting.period.label',
                 enum: $this->periodOptions(),
             ),
+            new SettingDefinition(
+                key: 'limit',
+                type: 'int',
+                default: 5,
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.setting.limit.label',
+                enum: $this->limitOptions(),
+            ),
         ];
     }
 
@@ -66,8 +73,9 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
     {
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
+        $limit = max(1, (int)$context->settings->get('limit'));
 
-        $pages = $this->topPagesService->loadTopPagesData($siteIdentifier, $days);
+        $pages = $this->topPagesService->loadTopPagesData($siteIdentifier, $days, $limit);
         $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');
         $pages = $pages !== null ? $this->topPagesService->buildPageItems($pages, $trendLabel) : [];
 
@@ -133,6 +141,18 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
             ]);
         }
 
+        return $options;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function limitOptions(): array
+    {
+        $options = [];
+        foreach ([5, 10, 20] as $limit) {
+            $options[$limit] = (string)$limit;
+        }
         return $options;
     }
 

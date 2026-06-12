@@ -15,7 +15,7 @@ interface TopPagesServiceInterface
     /**
      * @return list<array<string, mixed>>|null
      */
-    public function loadTopPagesData(string $siteIdentifier, int $days): ?array;
+    public function loadTopPagesData(string $siteIdentifier, int $days, int $limit = 10): ?array;
 
     /**
      * @param list<array<string, mixed>> $pages
