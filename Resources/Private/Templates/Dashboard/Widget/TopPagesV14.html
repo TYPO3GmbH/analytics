@@ -1,0 +1,29 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Widget/Widget" />
+<f:section name="main">
+
+    <div class="tx-analytics-top-pages">
+        <div class="tx-analytics-top-pages-header">
+            <div class="tx-analytics-top-pages-actions">
+                <f:if condition="{showAllUrl}">
+                    <f:then>
+                        <a class="tx-analytics-top-pages-link" href="{showAllUrl}" aria-label="{showAllLabel}">
+                            <span>{showAllLabel}</span>
+                            <span class="tx-analytics-top-pages-icon tx-analytics-top-pages-icon-arrow-up-right" aria-hidden="true"></span>
+                        </a>
+                    </f:then>
+                    <f:else>
+                        <a class="tx-analytics-top-pages-link tx-analytics-top-pages-link-disabled" href="#" aria-label="{showAllLabel}" aria-disabled="true">
+                            <span>{showAllLabel}</span>
+                            <span class="tx-analytics-top-pages-icon tx-analytics-top-pages-icon-arrow-up-right" aria-hidden="true"></span>
+                        </a>
+                    </f:else>
+                </f:if>
+            </div>
+        </div>
+
+        <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
+    </div>
+
+</f:section>
+</html>

@@ -1,4 +1,4 @@
-const storagePrefix = 'tx-analytics-top-pages-site';
+const storagePrefix = 'tx-analytics-top-pages';
 
 function resolveWidgetIdentifier(widget) {
   return widget.closest('.dashboard-item')?.dataset.widgetIdentifier
@@ -7,16 +7,12 @@ function resolveWidgetIdentifier(widget) {
     || 'default';
 }
 
-function storageKey(widget) {
-  return `${storagePrefix}:${resolveWidgetIdentifier(widget)}`;
+function siteKey(widget) {
+  return `${storagePrefix}:site:${resolveWidgetIdentifier(widget)}`;
 }
 
-function applySite(widget, siteIdentifier) {
-  widget.dataset.site = siteIdentifier;
-  const select = widget.querySelector('.tx-analytics-top-pages-site-select');
-  if (select instanceof HTMLSelectElement && select.value !== siteIdentifier) {
-    select.value = siteIdentifier;
-  }
+function daysKey(widget) {
+  return `${storagePrefix}:days:${resolveWidgetIdentifier(widget)}`;
 }
 
 function readStorage(key) {
@@ -35,25 +31,94 @@ function writeStorage(key, value) {
   }
 }
 
+async function loadPageList(widget) {
+  const ajaxUrl = TYPO3?.settings?.ajaxUrls?.analytics_top_pages_content;
+  if (!ajaxUrl) {
+    return;
+  }
+
+  const listContainer = widget.querySelector('.tx-analytics-top-pages-list-container');
+  if (!listContainer) {
+    return;
+  }
+
+  const site = widget.dataset.site ?? '';
+  const days = widget.dataset.days ?? '7';
+
+  listContainer.classList.add('tx-analytics-top-pages-loading');
+
+  try {
+    const url = new URL(ajaxUrl, window.location.origin);
+    url.searchParams.set('site', site);
+    url.searchParams.set('days', days);
+
+    const response = await fetch(url.toString(), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    if (data.status === 'ok') {
+      listContainer.innerHTML = data.html;
+      const link = widget.querySelector('.tx-analytics-top-pages-link');
+      if (link instanceof HTMLAnchorElement && typeof data.showAllUrl === 'string') {
+        link.href = data.showAllUrl || '#';
+      }
+    }
+  } catch {
+    // fail silently
+  } finally {
+    listContainer.classList.remove('tx-analytics-top-pages-loading');
+  }
+}
+
 function initializeWidget(widget) {
-  const select = widget.querySelector('.tx-analytics-top-pages-site-select');
-  if (!(select instanceof HTMLSelectElement)) {
-    return false;
+  const siteSelect = widget.querySelector('.tx-analytics-top-pages-site-select');
+  const periodSelect = widget.querySelector('.tx-analytics-top-pages-period-select');
+
+  // Restore stored values
+  const storedSite = readStorage(siteKey(widget));
+  const storedDays = readStorage(daysKey(widget));
+
+  let needsReload = false;
+
+  if (storedSite !== null && siteSelect instanceof HTMLSelectElement) {
+    if (Array.from(siteSelect.options).some((o) => o.value === storedSite)) {
+      siteSelect.value = storedSite;
+      if (storedSite !== widget.dataset.site) {
+        widget.dataset.site = storedSite;
+        needsReload = true;
+      }
+    }
   }
 
-  const key = storageKey(widget);
-  const storedValue = readStorage(key);
-  if (storedValue !== null && Array.from(select.options).some((option) => option.value === storedValue)) {
-    applySite(widget, storedValue);
+  if (storedDays !== null && periodSelect instanceof HTMLSelectElement) {
+    if (Array.from(periodSelect.options).some((o) => o.value === storedDays)) {
+      periodSelect.value = storedDays;
+      if (storedDays !== widget.dataset.days) {
+        widget.dataset.days = storedDays;
+        needsReload = true;
+      }
+    }
   }
 
-  select.addEventListener('change', () => {
-    writeStorage(key, select.value);
-    applySite(widget, select.value);
+  if (needsReload) {
+    loadPageList(widget);
+  }
+
+  siteSelect?.addEventListener('change', () => {
+    writeStorage(siteKey(widget), siteSelect.value);
+    widget.dataset.site = siteSelect.value;
+    loadPageList(widget);
   });
 
-  widget.querySelector('.tx-analytics-top-pages-link')?.addEventListener('click', (event) => {
-    event.preventDefault();
+  periodSelect?.addEventListener('change', () => {
+    writeStorage(daysKey(widget), periodSelect.value);
+    widget.dataset.days = periodSelect.value;
+    loadPageList(widget);
   });
 
   return true;

@@ -11,6 +11,7 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Service\AnalyticsApiClient;
@@ -115,6 +116,7 @@ final class SiteDataProviderTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        unset($GLOBALS['BE_USER']);
         parent::tearDown();
     }
 
@@ -214,6 +216,20 @@ final class SiteDataProviderTest extends UnitTestCase
         self::assertSame('My Site', $result[0]['title']);
     }
 
+    #[Test]
+    public function fetchSitesExcludesSiteWhenBackendUserHasNoPageAccess(): void
+    {
+        $backendUser = $this->createMock(BackendUserAuthentication::class);
+        $backendUser->method('getPagePermsClause')->willReturn('');
+        $GLOBALS['BE_USER'] = $backendUser;
+
+        $this->siteFinder->method('getAllSites')->willReturn([
+            $this->buildSiteMock('main', 'https://example.com', []),
+        ]);
+
+        self::assertSame([], $this->subject->fetchSites());
+    }
+
     /** registeredSiteOptions */
 
     #[Test]
@@ -266,6 +282,20 @@ final class SiteDataProviderTest extends UnitTestCase
         $result = $this->subject->registeredSiteOptions();
 
         self::assertSame('main', $result[0]['label']);
+    }
+
+    #[Test]
+    public function registeredSiteOptionsExcludesSiteWhenBackendUserHasNoPageAccess(): void
+    {
+        $backendUser = $this->createMock(BackendUserAuthentication::class);
+        $backendUser->method('getPagePermsClause')->willReturn('');
+        $GLOBALS['BE_USER'] = $backendUser;
+
+        $this->siteFinder->method('getAllSites')->willReturn([
+            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-123']),
+        ]);
+
+        self::assertSame([], $this->subject->registeredSiteOptions());
     }
 
     /** siteLabel */

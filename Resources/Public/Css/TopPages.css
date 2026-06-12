@@ -45,7 +45,8 @@
     margin-left: auto;
 }
 
-.tx-analytics-top-pages-site-label {
+.tx-analytics-top-pages-site-label,
+.tx-analytics-top-pages-period-label {
     margin: 0;
     white-space: nowrap;
 }

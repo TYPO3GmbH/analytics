@@ -258,6 +258,10 @@
                 <source>All sites</source>
                 <target>Alle Sites</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.period.label" resname="dashboardWidget.topPages.setting.period.label">
+                <source>Period</source>
+                <target>Zeitraum</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
                 <target>Verglichen mit dem vorherigen Zeitraum</target>

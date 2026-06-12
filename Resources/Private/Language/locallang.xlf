@@ -194,6 +194,9 @@
             <trans-unit id="dashboardWidget.topPages.setting.site.allSites" resname="dashboardWidget.topPages.setting.site.allSites">
                 <source>All sites</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.period.label" resname="dashboardWidget.topPages.setting.period.label">
+                <source>Period</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
             </trans-unit>

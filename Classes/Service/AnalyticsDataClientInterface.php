@@ -57,6 +57,20 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
+     * @return list<array<string, mixed>>
+     * @throws AnalyticsApiException
+     */
+    public function fetchTopPages(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        \DateTimeImmutable $previousFrom,
+        \DateTimeImmutable $previousTo,
+        int $limit = 10,
+    ): array;
+
+    /**
      * @return array{visits: list<int|float>, bounceRate: list<int|float>, avgDuration: list<int|float>, failures: array<string, string>}
      */
     public function fetchAllTimeSeries(

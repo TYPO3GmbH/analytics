@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace T3G\Analytics\Dashboard\Widget;
 
 use Psr\Log\LoggerInterface;
+use T3G\Analytics\Service\TopPagesServiceInterface;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -18,46 +20,18 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetInterface;
 
 final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInterface, JavaScriptInterface
 {
-    private const DUMMY_TOP_PAGES_RESPONSE = [
-        'current' => [
-            'payload' => [
-                ['pageUrl' => 'https://example.com/', 'pageTitle' => 'Startseite', 'visitCount' => 8241, 'visitPercentOfTotal' => 32.4],
-                ['pageUrl' => 'https://example.com/de/typo3-cms', 'pageTitle' => 'TYPO3 CMS – Übersi...', 'visitCount' => 5934, 'visitPercentOfTotal' => 23.3],
-                ['pageUrl' => 'https://example.com/de/preise', 'pageTitle' => 'Preise & Pakete', 'visitCount' => 4512, 'visitPercentOfTotal' => 17.7],
-                ['pageUrl' => 'https://example.com/de/kontakt', 'pageTitle' => 'Kontakt', 'visitCount' => 3128, 'visitPercentOfTotal' => 12.3],
-                ['pageUrl' => 'https://example.com/de/blog-ki', 'pageTitle' => 'Blog – KI im CMS', 'visitCount' => 2307, 'visitPercentOfTotal' => 9.1],
-                ['pageUrl' => 'https://example.com/de/referenzen', 'pageTitle' => 'Referenzen', 'visitCount' => 1648, 'visitPercentOfTotal' => 6.5],
-                ['pageUrl' => 'https://example.com/de/agentur', 'pageTitle' => 'Agentur', 'visitCount' => 1326, 'visitPercentOfTotal' => 5.2],
-                ['pageUrl' => 'https://example.com/de/support', 'pageTitle' => 'Support', 'visitCount' => 986, 'visitPercentOfTotal' => 3.9],
-                ['pageUrl' => 'https://example.com/de/newsletter', 'pageTitle' => 'Newsletter', 'visitCount' => 742, 'visitPercentOfTotal' => 2.9],
-                ['pageUrl' => 'https://example.com/de/impressum', 'pageTitle' => 'Impressum', 'visitCount' => 516, 'visitPercentOfTotal' => 2.0],
-            ],
-        ],
-        'previous' => [
-            'payload' => [
-                ['pageUrl' => 'https://example.com/', 'pageTitle' => 'Startseite', 'visitCount' => 7924],
-                ['pageUrl' => 'https://example.com/de/typo3-cms', 'pageTitle' => 'TYPO3 CMS – Übersi...', 'visitCount' => 5298],
-                ['pageUrl' => 'https://example.com/de/preise', 'pageTitle' => 'Preise & Pakete', 'visitCount' => 4652],
-                ['pageUrl' => 'https://example.com/de/kontakt', 'pageTitle' => 'Kontakt', 'visitCount' => 3128],
-                ['pageUrl' => 'https://example.com/de/blog-ki', 'pageTitle' => 'Blog – KI im CMS', 'visitCount' => 1636],
-                ['pageUrl' => 'https://example.com/de/referenzen', 'pageTitle' => 'Referenzen', 'visitCount' => 1715],
-                ['pageUrl' => 'https://example.com/de/agentur', 'pageTitle' => 'Agentur', 'visitCount' => 1184],
-                ['pageUrl' => 'https://example.com/de/support', 'pageTitle' => 'Support', 'visitCount' => 1039],
-                ['pageUrl' => 'https://example.com/de/newsletter', 'pageTitle' => 'Newsletter', 'visitCount' => 604],
-                ['pageUrl' => 'https://example.com/de/impressum', 'pageTitle' => 'Impressum', 'visitCount' => 516],
-            ],
-        ],
-    ];
-
-    /** @var array{site?: string, refreshAvailable?: bool} */
+    /** @var array{site: string, days: int, refreshAvailable: bool} */
     private array $options;
 
     /**
-     * @param array{site?: string, refreshAvailable?: bool} $options
+     * @param array{site?: string, days?: int, refreshAvailable?: bool} $options
      */
     public function __construct(
+        /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private SiteFinder $siteFinder,
+        private TopPagesServiceInterface $topPagesService,
+        private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
         private LoggerInterface $logger,
         array $options = [],
@@ -65,6 +39,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
         $this->options = array_replace(
             [
                 'site' => '',
+                'days' => 7,
                 'refreshAvailable' => true,
             ],
             $options
@@ -77,7 +52,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
     }
 
     /**
-     * @return array{site?: string, refreshAvailable?: bool}
+     * @return array{site: string, days: int, refreshAvailable: bool}
      */
     public function getOptions(): array
     {
@@ -108,6 +83,21 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
     private function renderContent(string $siteIdentifier): string
     {
         $siteOptions = $this->siteOptions();
+        if ($siteIdentifier === '' && $siteOptions !== []) {
+            $siteIdentifier = array_key_first($siteOptions);
+        }
+        $days = max(1, (int)$this->options['days']);
+
+        $pages = $this->topPagesService->loadTopPagesData($siteIdentifier, $days);
+        $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');
+        $pages = $pages !== null ? $this->topPagesService->buildPageItems($pages, $trendLabel) : [];
+
+        $showAllUrl = $siteIdentifier !== ''
+            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier])
+            : '';
+
+        $uniqueId = substr(sha1((string)spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8);
+
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
@@ -118,49 +108,20 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
         ));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
-            'siteSelectId' => 'tx-analytics-top-pages-site-' . substr(sha1((string)spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8),
+            'selectedDays' => $days,
+            'siteSelectId' => 'tx-analytics-top-pages-site-' . $uniqueId,
             'siteLabel' => $this->translate('dashboardWidget.topPages.setting.site.label'),
             'showSiteSelect' => count($siteOptions) > 1,
             'siteOptions' => $this->buildSiteOptions($siteOptions, $siteIdentifier),
+            'periodSelectId' => 'tx-analytics-top-pages-period-' . $uniqueId,
+            'periodLabel' => $this->translate('dashboardWidget.topPages.setting.period.label'),
+            'periodOptions' => $this->buildPeriodOptions($days),
             'showAllLabel' => $this->translate('dashboardWidget.topPages.showAll'),
-            'pages' => $this->buildPageItems(self::DUMMY_TOP_PAGES_RESPONSE),
+            'showAllUrl' => $showAllUrl,
+            'pages' => $pages,
         ]);
 
         return $view->render('Dashboard/Widget/TopPages');
-    }
-
-    /**
-     * @param array{
-     *     current: array{payload: list<array{pageUrl: string, pageTitle: string, visitCount: int, visitPercentOfTotal: float}>},
-     *     previous: array{payload: list<array{pageUrl: string, pageTitle: string, visitCount: int}>}
-     * } $response
-     * @return list<array{position: int, url: string, title: string, visitCount: string, visitPercentOfTotal: string, trend: string, trendDirection: string, trendLabel: string}>
-     */
-    private function buildPageItems(array $response): array
-    {
-        $previousByUrl = [];
-        foreach ($response['previous']['payload'] ?? [] as $previousPage) {
-            $previousByUrl[$previousPage['pageUrl']] = $previousPage['visitCount'];
-        }
-
-        $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');
-        $items = [];
-        foreach ($response['current']['payload'] as $index => $page) {
-            $previousVisitCount = $previousByUrl[$page['pageUrl']] ?? 0;
-            $trend = $this->formatRelativeTrend((float)$page['visitCount'], (float)$previousVisitCount);
-            $items[] = [
-                'position' => $index + 1,
-                'url' => $page['pageUrl'],
-                'title' => $page['pageTitle'],
-                'visitCount' => $this->formatNumber($page['visitCount']),
-                'visitPercentOfTotal' => $this->formatPercentageWidth($page['visitPercentOfTotal']),
-                'trend' => $trend,
-                'trendDirection' => $trend !== '' ? $this->trendDirection((float)$page['visitCount'], (float)$previousVisitCount) : 'neutral',
-                'trendLabel' => $trendLabel,
-            ];
-        }
-
-        return $items;
     }
 
     /**
@@ -177,7 +138,22 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
                 'selected' => $identifier === $siteIdentifier,
             ];
         }
+        return $options;
+    }
 
+    /**
+     * @return list<array{value: int, label: string, selected: bool}>
+     */
+    private function buildPeriodOptions(int $selectedDays): array
+    {
+        $options = [];
+        foreach ([7, 14, 30] as $period) {
+            $options[] = [
+                'value' => $period,
+                'label' => sprintf($this->translate('pagePerformance.days'), $period),
+                'selected' => $period === $selectedDays,
+            ];
+        }
         return $options;
     }
 
@@ -186,12 +162,16 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
      */
     private function siteOptions(): array
     {
-        $options = [
-            '' => $this->translate('dashboardWidget.topPages.setting.site.allSites'),
-        ];
+        $options = [];
 
         try {
             foreach ($this->siteFinder->getAllSites() as $site) {
+                if (!$this->topPagesService->isAnalyticsSite($site)) {
+                    continue;
+                }
+                if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
+                    continue;
+                }
                 $siteTitle = trim((string)($site->getConfiguration()['websiteTitle'] ?? ''));
                 $options[$site->getIdentifier()] = $siteTitle === ''
                     ? $site->getIdentifier()
@@ -202,51 +182,9 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
                 'message' => $e->getMessage(),
                 'exception' => $e,
             ]);
-            return $options;
         }
 
         return $options;
-    }
-
-    private function formatNumber(int $value): string
-    {
-        return number_format($value, 0, '.', '.');
-    }
-
-    private function formatPercentageWidth(float $value): string
-    {
-        return rtrim(rtrim(number_format(max(0.0, min(100.0, $value)), 1, '.', ''), '0'), '.');
-    }
-
-    private function formatRelativeTrend(float $currentValue, float $previousValue): string
-    {
-        if ($previousValue === 0.0) {
-            return '';
-        }
-
-        $formatted = $this->formatSignedNumber((($currentValue - $previousValue) / $previousValue) * 100);
-
-        return $formatted === '±0' ? '' : $formatted . '%';
-    }
-
-    private function trendDirection(float $currentValue, float $previousValue): string
-    {
-        if ($previousValue === 0.0 || $currentValue === $previousValue) {
-            return 'neutral';
-        }
-
-        return $currentValue > $previousValue ? 'up' : 'down';
-    }
-
-    private function formatSignedNumber(float $value): string
-    {
-        $formattedValue = rtrim(rtrim(number_format(abs($value), 1, '.', ''), '0'), '.');
-
-        if ($formattedValue === '0') {
-            return '±0';
-        }
-
-        return ($value >= 0 ? '+' : '-') . $formattedValue;
     }
 
     private function translate(string $key): string

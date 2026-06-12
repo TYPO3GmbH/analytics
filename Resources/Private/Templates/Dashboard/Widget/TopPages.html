@@ -2,7 +2,7 @@
 <f:layout name="Widget/Widget" />
 <f:section name="main">
 
-    <div class="tx-analytics-top-pages" data-site="{siteIdentifier}">
+    <div class="tx-analytics-top-pages" data-site="{siteIdentifier}" data-days="{selectedDays}">
         <div class="tx-analytics-top-pages-header">
             <f:if condition="{showSiteSelect}">
                 <div class="tx-analytics-top-pages-toolbar">
@@ -21,35 +21,42 @@
                     </select>
                 </div>
             </f:if>
+            <div class="tx-analytics-top-pages-toolbar">
+                <label class="form-label tx-analytics-top-pages-period-label" for="{periodSelectId}">{periodLabel}</label>
+                <select id="{periodSelectId}" class="form-select form-select-sm tx-analytics-top-pages-period-select">
+                    <f:for each="{periodOptions}" as="periodOption">
+                        <f:if condition="{periodOption.selected}">
+                            <f:then>
+                                <option value="{periodOption.value}" selected="selected">{periodOption.label}</option>
+                            </f:then>
+                            <f:else>
+                                <option value="{periodOption.value}">{periodOption.label}</option>
+                            </f:else>
+                        </f:if>
+                    </f:for>
+                </select>
+            </div>
             <div class="tx-analytics-top-pages-actions">
-                <a class="tx-analytics-top-pages-link" href="#" aria-label="{showAllLabel}">
-                    <span>{showAllLabel}</span>
-                    <span class="tx-analytics-top-pages-icon tx-analytics-top-pages-icon-arrow-up-right" aria-hidden="true"></span>
-                </a>
+                <f:if condition="{showAllUrl}">
+                    <f:then>
+                        <a class="tx-analytics-top-pages-link" href="{showAllUrl}" target="_blank" rel="noreferrer" aria-label="{showAllLabel}">
+                            <span>{showAllLabel}</span>
+                            <span class="tx-analytics-top-pages-icon tx-analytics-top-pages-icon-arrow-up-right" aria-hidden="true"></span>
+                        </a>
+                    </f:then>
+                    <f:else>
+                        <a class="tx-analytics-top-pages-link tx-analytics-top-pages-link-disabled" href="#" aria-label="{showAllLabel}" aria-disabled="true">
+                            <span>{showAllLabel}</span>
+                            <span class="tx-analytics-top-pages-icon tx-analytics-top-pages-icon-arrow-up-right" aria-hidden="true"></span>
+                        </a>
+                    </f:else>
+                </f:if>
             </div>
         </div>
 
-        <ol class="tx-analytics-top-pages-list">
-            <f:for each="{pages}" as="page">
-                <li class="tx-analytics-top-pages-row">
-                    <span class="tx-analytics-top-pages-position">{page.position}</span>
-                    <a class="tx-analytics-top-pages-title" href="{page.url}" title="{page.title}" target="_blank" rel="noreferrer">{page.title}</a>
-                    <typo3-backend-progress-bar class="tx-analytics-top-pages-bar" value="{page.visitPercentOfTotal}" max="100"></typo3-backend-progress-bar>
-                    <span class="tx-analytics-top-pages-count">{page.visitCount}</span>
-                    <span class="tx-analytics-top-pages-trend tx-analytics-top-pages-trend-{page.trendDirection}" title="{page.trendLabel}">
-                        <f:if condition="{page.trend}">
-                            <f:then>
-                                <span>{page.trend}</span>
-                                <span class="tx-analytics-top-pages-trend-icon tx-analytics-top-pages-icon-trend-{page.trendDirection}" aria-hidden="true"></span>
-                            </f:then>
-                            <f:else>
-                                <span class="tx-analytics-top-pages-trend-icon tx-analytics-top-pages-icon-trend-neutral" aria-hidden="true"></span>
-                            </f:else>
-                        </f:if>
-                    </span>
-                </li>
-            </f:for>
-        </ol>
+        <div class="tx-analytics-top-pages-list-container">
+            <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
+        </div>
     </div>
 
 </f:section>
