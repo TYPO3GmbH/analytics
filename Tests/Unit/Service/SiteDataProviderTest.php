@@ -19,6 +19,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -45,6 +46,8 @@ final class SiteDataProviderTest extends UnitTestCase
     private SiteFinder&MockObject $siteFinder;
     private UriBuilder&MockObject $uriBuilder;
     private \Doctrine\DBAL\Result&MockObject $queryResult;
+    private TopPagesServiceInterface&MockObject $topPagesService;
+    private bool $userCanAccessPage = true;
 
     private string $encryptedTestSecret;
     private SiteDataProvider $subject;
@@ -102,9 +105,14 @@ final class SiteDataProviderTest extends UnitTestCase
             $this->createMock(SiteSettingsFactory::class),
         );
 
+        $this->topPagesService = $this->createMock(TopPagesServiceInterface::class);
+        $this->topPagesService->method('userCanAccessPage')
+            ->willReturnCallback(fn () => $this->userCanAccessPage);
+
         $this->subject = new SiteDataProvider(
             $this->siteFinder,
             $statusService,
+            $this->topPagesService,
             $connectionPool,
             $this->uriBuilder,
             new NullLogger(),
@@ -115,6 +123,7 @@ final class SiteDataProviderTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        unset($GLOBALS['BE_USER']);
         parent::tearDown();
     }
 
@@ -214,6 +223,18 @@ final class SiteDataProviderTest extends UnitTestCase
         self::assertSame('My Site', $result[0]['title']);
     }
 
+    #[Test]
+    public function fetchSitesExcludesSiteWhenBackendUserHasNoPageAccess(): void
+    {
+        $this->userCanAccessPage = false;
+
+        $this->siteFinder->method('getAllSites')->willReturn([
+            $this->buildSiteMock('main', 'https://example.com', []),
+        ]);
+
+        self::assertSame([], $this->subject->fetchSites());
+    }
+
     /** registeredSiteOptions */
 
     #[Test]
@@ -266,6 +287,18 @@ final class SiteDataProviderTest extends UnitTestCase
         $result = $this->subject->registeredSiteOptions();
 
         self::assertSame('main', $result[0]['label']);
+    }
+
+    #[Test]
+    public function registeredSiteOptionsExcludesSiteWhenBackendUserHasNoPageAccess(): void
+    {
+        $this->userCanAccessPage = false;
+
+        $this->siteFinder->method('getAllSites')->willReturn([
+            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-123']),
+        ]);
+
+        self::assertSame([], $this->subject->registeredSiteOptions());
     }
 
     /** siteLabel */

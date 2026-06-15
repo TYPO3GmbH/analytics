@@ -18,6 +18,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         'averageVisitDuration',
     ];
 
+
     public function __construct(
         private RequestFactory $requestFactory,
         private ApiExceptionExtractorInterface $exceptionExtractor,
@@ -51,7 +52,6 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 'start' => $from->format('Y-m-d\T00:00:00.000P'),
                 'end' => $to->format('Y-m-d\T23:59:59.999P'),
             ],
-            'segments' => [],
         ];
 
         try {
@@ -73,6 +73,63 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
             return $rows[0] ?? null;
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
+     * Fetches top pages ordered by visit count (no page-URL filter).
+     *
+     * @return list<array<string, mixed>>
+     * @throws AnalyticsApiException
+     */
+    public function fetchTopPages(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        \DateTimeImmutable $previousFrom,
+        \DateTimeImmutable $previousTo,
+        int $limit = 10,
+    ): array {
+        $payload = [
+            'metrics' => ['visitCount', 'previousVisitCount', 'visitPercentOfTotal', 'visitCountPercentageChange'],
+            'dimensions' => ['pageUrl'],
+            'order' => [['member' => 'visitCount', 'direction' => 'desc']],
+            'pagination' => ['page' => 1, 'pageSize' => $limit],
+            'where' => ['and' => []],
+            'dateRange' => [
+                'start' => $from->format('Y-m-d\T00:00:00.000P'),
+                'end' => $to->format('Y-m-d\T23:59:59.999P'),
+            ],
+            'previousDateRange' => [
+                'start' => $previousFrom->format('Y-m-d\T00:00:00.000P'),
+                'end' => $previousTo->format('Y-m-d\T23:59:59.999P'),
+            ],
+        ];
+
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/analytics/pages?trace=topPagesDashboard',
+                'POST',
+                array_merge(
+                    [
+                        'headers' => [
+                            'X-Api-Key' => $apiKey,
+                            'Accept' => 'application/json',
+                        ],
+                        'json' => $payload,
+                    ],
+                    $this->apiConfiguration->getRequestOptions()
+                )
+            );
+            /** @var array<string, mixed> $body */
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+            return array_values($rows);
         } catch (AnalyticsApiException $e) {
             throw $e;
         } catch (\Throwable $e) {

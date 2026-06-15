@@ -19,6 +19,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
     public function __construct(
         private SiteFinder $siteFinder,
         private AnalyticsStatusServiceInterface $analyticsStatusService,
+        private TopPagesServiceInterface $topPagesService,
         private ConnectionPool $connectionPool,
         private UriBuilder $uriBuilder,
         private LoggerInterface $logger,
@@ -35,6 +36,10 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         $sites = [];
 
         foreach ($this->siteFinder->getAllSites() as $site) {
+            if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
+                continue;
+            }
+
             try {
                 $websiteId = $site->getSettings()->get('websiteId', '') ?: null;
             } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
@@ -77,6 +82,10 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         $sites = [];
 
         foreach ($this->siteFinder->getAllSites() as $site) {
+            if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
+                continue;
+            }
+
             try {
                 $websiteId = $site->getSettings()->get('websiteId', '') ?: null;
             } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {

@@ -7,5 +7,5 @@ analyticsApiBaseUrl =
 # cat = API Configuration; type = boolean; label = Verify SSL Certificates (set to 0 only for local development with self-signed certificates)
 verifySsl = 1
 
-# cat = Cache; type = int+; label = Page analytics cache lifetime in seconds (default: 3600)
+# cat = Cache; type = int+; label = Analytics data cache lifetime in seconds (default: 3600)
 pageAnalyticsCacheTtl = 3600

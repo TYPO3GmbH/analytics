@@ -234,6 +234,42 @@
                 <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
                 <target>Der Prozentsatz der Besucher, die nach dem Aufrufen dieser Seite weiter gesurft haben. Berechnet als 100 % minus Absprungrate.</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
+                <source>Analytics</source>
+                <target>Analytics</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.title" resname="dashboardWidget.topPages.title">
+                <source>Analytics: Top pages</source>
+                <target>Analytics: Top-Seiten</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.description" resname="dashboardWidget.topPages.description">
+                <source>Shows the pages with the most visits.</source>
+                <target>Zeigt die Seiten mit den meisten Besuchen.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.showAll" resname="dashboardWidget.topPages.showAll">
+                <source>Show all</source>
+                <target>Alle anzeigen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.site.label" resname="dashboardWidget.topPages.setting.site.label">
+                <source>Site</source>
+                <target>Site</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.site.allSites" resname="dashboardWidget.topPages.setting.site.allSites">
+                <source>All sites</source>
+                <target>Alle Sites</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.period.label" resname="dashboardWidget.topPages.setting.period.label">
+                <source>Period</source>
+                <target>Zeitraum</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.limit.label" resname="dashboardWidget.topPages.setting.limit.label">
+                <source>Number of pages</source>
+                <target>Anzahl der Seiten</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
+                <source>Compared to previous period</source>
+                <target>Verglichen mit dem vorherigen Zeitraum</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

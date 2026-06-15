@@ -59,6 +59,126 @@ final class AnalyticsDataClientTest extends UnitTestCase
         return new \DateTimeImmutable($value);
     }
 
+    /** fetchTopPages */
+
+    #[Test]
+    public function fetchTopPagesSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/v2/websites/w-123/analytics/pages', (string)$request->getUri());
+    }
+
+    #[Test]
+    public function fetchTopPagesSendsXApiKeyHeader(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
+    }
+
+    #[Test]
+    public function fetchTopPagesRequestsComparisonMetrics(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertContains('visitCount', $body['metrics']);
+        self::assertContains('previousVisitCount', $body['metrics']);
+        self::assertContains('visitCountPercentageChange', $body['metrics']);
+        self::assertContains('visitPercentOfTotal', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchTopPagesRequestsOnlyPageUrlDimension(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['pageUrl'], $body['dimensions']);
+    }
+
+    #[Test]
+    public function fetchTopPagesIncludesEmptyWhereAndFilter(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['and' => []], $body['where']);
+    }
+
+    #[Test]
+    public function fetchTopPagesIncludesPreviousDateRange(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertArrayHasKey('previousDateRange', $body);
+        self::assertStringStartsWith('2026-05-25', $body['previousDateRange']['start']);
+        self::assertStringStartsWith('2026-05-31', $body['previousDateRange']['end']);
+    }
+
+    #[Test]
+    public function fetchTopPagesReturnsAllPayloadRows(): void
+    {
+        $rows = [
+            ['pageUrl' => 'https://example.com/', 'visitCount' => 100, 'previousVisitCount' => 80],
+            ['pageUrl' => 'https://example.com/about', 'visitCount' => 50, 'previousVisitCount' => 60],
+        ];
+        $this->mockHandler->append(new Response(200, [], json_encode(['payload' => $rows])));
+
+        $result = $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertCount(2, $result);
+        self::assertSame(100, $result[0]['visitCount']);
+        self::assertSame(50, $result[1]['visitCount']);
+    }
+
+    #[Test]
+    public function fetchTopPagesReturnsEmptyArrayOnEmptyPayload(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $result = $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame([], $result);
+    }
+
+    #[Test]
+    public function fetchTopPagesThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(422, [], '{"error":{"code":"unprocessable_entity"}}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+    }
+
+    #[Test]
+    public function fetchTopPagesRespectsCustomLimit(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchTopPages('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'), 5);
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(5, $body['pagination']['pageSize']);
+    }
+
     /** fetchPageAnalytics */
 
     #[Test]

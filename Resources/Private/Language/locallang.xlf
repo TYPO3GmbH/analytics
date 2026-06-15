@@ -176,6 +176,33 @@
             <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
                 <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
+                <source>Analytics</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.title" resname="dashboardWidget.topPages.title">
+                <source>Analytics: Top pages</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.description" resname="dashboardWidget.topPages.description">
+                <source>Shows the pages with the most visits.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.showAll" resname="dashboardWidget.topPages.showAll">
+                <source>Show all</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.site.label" resname="dashboardWidget.topPages.setting.site.label">
+                <source>Site</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.site.allSites" resname="dashboardWidget.topPages.setting.site.allSites">
+                <source>All sites</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.period.label" resname="dashboardWidget.topPages.setting.period.label">
+                <source>Period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.setting.limit.label" resname="dashboardWidget.topPages.setting.limit.label">
+                <source>Number of pages</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
+                <source>Compared to previous period</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
