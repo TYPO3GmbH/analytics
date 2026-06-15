@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Register autoloader for typo3/cms-dashboard which is only installed in .Build/dummy-typo3
+// Register autoloader for typo3/cms-dashboard when the local dummy install exists.
 $dashboardClassesDir = __DIR__ . '/../.Build/dummy-typo3/vendor/typo3/cms-dashboard/Classes/';
 if (is_dir($dashboardClassesDir)) {
     spl_autoload_register(static function (string $class) use ($dashboardClassesDir): void {
@@ -17,6 +17,8 @@ if (is_dir($dashboardClassesDir)) {
     });
 }
 
-// Declare TYPO3 v14-only dashboard types so PHPStan can analyse TopPagesWidgetV14
-// against a v13 cms-dashboard installation. Guards prevent redeclaration on v14.
+// v13 fallback stubs — declared when cms-dashboard is not available (e.g. CI).
+require_once __DIR__ . '/phpstan.bootstrap-v13stubs.php';
+
+// v14-only types — also declared as fallback stubs when not installed.
 require_once __DIR__ . '/phpstan.bootstrap-v14stubs.php';

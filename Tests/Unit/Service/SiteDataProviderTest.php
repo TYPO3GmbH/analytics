@@ -11,7 +11,6 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Service\AnalyticsApiClient;
@@ -20,6 +19,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -46,6 +46,8 @@ final class SiteDataProviderTest extends UnitTestCase
     private SiteFinder&MockObject $siteFinder;
     private UriBuilder&MockObject $uriBuilder;
     private \Doctrine\DBAL\Result&MockObject $queryResult;
+    private TopPagesServiceInterface&MockObject $topPagesService;
+    private bool $userCanAccessPage = true;
 
     private string $encryptedTestSecret;
     private SiteDataProvider $subject;
@@ -103,9 +105,14 @@ final class SiteDataProviderTest extends UnitTestCase
             $this->createMock(SiteSettingsFactory::class),
         );
 
+        $this->topPagesService = $this->createMock(TopPagesServiceInterface::class);
+        $this->topPagesService->method('userCanAccessPage')
+            ->willReturnCallback(fn () => $this->userCanAccessPage);
+
         $this->subject = new SiteDataProvider(
             $this->siteFinder,
             $statusService,
+            $this->topPagesService,
             $connectionPool,
             $this->uriBuilder,
             new NullLogger(),
@@ -219,9 +226,7 @@ final class SiteDataProviderTest extends UnitTestCase
     #[Test]
     public function fetchSitesExcludesSiteWhenBackendUserHasNoPageAccess(): void
     {
-        $backendUser = $this->createMock(BackendUserAuthentication::class);
-        $backendUser->method('getPagePermsClause')->willReturn('');
-        $GLOBALS['BE_USER'] = $backendUser;
+        $this->userCanAccessPage = false;
 
         $this->siteFinder->method('getAllSites')->willReturn([
             $this->buildSiteMock('main', 'https://example.com', []),
@@ -287,9 +292,7 @@ final class SiteDataProviderTest extends UnitTestCase
     #[Test]
     public function registeredSiteOptionsExcludesSiteWhenBackendUserHasNoPageAccess(): void
     {
-        $backendUser = $this->createMock(BackendUserAuthentication::class);
-        $backendUser->method('getPagePermsClause')->willReturn('');
-        $GLOBALS['BE_USER'] = $backendUser;
+        $this->userCanAccessPage = false;
 
         $this->siteFinder->method('getAllSites')->willReturn([
             $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-123']),

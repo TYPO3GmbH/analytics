@@ -17,6 +17,8 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
 
 final readonly class TopPagesService implements TopPagesServiceInterface
 {
+    private const MAX_LIMIT = 20;
+
     public function __construct(
         private SiteFinder $siteFinder,
         private AnalyticsDataClientInterface $analyticsClient,
@@ -44,6 +46,36 @@ final readonly class TopPagesService implements TopPagesServiceInterface
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function siteOptions(): array
+    {
+        $options = [];
+
+        try {
+            foreach ($this->siteFinder->getAllSites() as $site) {
+                if (!$this->isAnalyticsSite($site)) {
+                    continue;
+                }
+                if (!$this->userCanAccessPage($site->getRootPageId())) {
+                    continue;
+                }
+                $siteTitle = trim((string)($site->getConfiguration()['websiteTitle'] ?? ''));
+                $options[$site->getIdentifier()] = $siteTitle === ''
+                    ? $site->getIdentifier()
+                    : $siteTitle . ' (' . $site->getIdentifier() . ')';
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to load sites for top pages widget: {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+        }
+
+        return $options;
+    }
+
+    /**
      * @return list<array<string, mixed>>|null
      */
     public function loadTopPagesData(string $siteIdentifier, int $days, int $limit = 10): ?array
@@ -59,7 +91,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
         $apiKey = $siteData['apiKey'];
         $site = $siteData['site'];
 
-        $cacheKey = 'top_pages_' . md5($websiteId . '_' . $days . '_' . $limit);
+        $cacheKey = 'top_pages_' . md5($websiteId . '_' . $days);
 
         /** @var list<array<string, mixed>>|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -70,7 +102,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
             $prevFrom = $prevTo->modify('-' . ($days - 1) . ' days');
 
             try {
-                $cached = $this->analyticsClient->fetchTopPages($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo, $limit);
+                $cached = $this->analyticsClient->fetchTopPages($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo, self::MAX_LIMIT);
                 $this->cache->set($cacheKey, $cached);
             } catch (AnalyticsApiException $e) {
                 $this->logger->warning('TopPagesService: Failed to fetch top pages.', ['reason' => $e->reason]);
@@ -78,7 +110,8 @@ final readonly class TopPagesService implements TopPagesServiceInterface
             }
         }
 
-        return $this->filterPagesByAccess($site, $cached);
+        $pages = $this->filterPagesByAccess($site, $cached);
+        return array_values(array_slice($pages, 0, $limit));
     }
 
     /**

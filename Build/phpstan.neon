@@ -11,6 +11,3 @@ parameters:
 
     bootstrapFiles:
         - phpstan.bootstrap-dashboard.php
-
-    scanDirectories:
-        - %currentWorkingDirectory%/.Build/dummy-typo3/vendor/typo3/cms-dashboard/Classes/

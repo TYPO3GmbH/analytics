@@ -34,7 +34,7 @@ final readonly class TopPagesAjaxController
         $pages = $pages !== null ? $this->topPagesService->buildPageItems($pages, $trendLabel) : [];
 
         $showAllUrl = $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier])
+            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier, 'days' => $days])
             : '';
 
         $view = $this->viewFactory->create(new ViewFactoryData(

@@ -7,28 +7,10 @@
 
 .tx-analytics-top-pages-header {
     display: flex;
-    gap: .75rem;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 0;
-}
-
-.tx-analytics-top-pages-link {
-    display: inline-flex;
-    flex: 0 0 auto;
-    gap: .375rem;
+    flex-wrap: wrap;
+    gap: .5rem;
     align-items: center;
     min-width: 0;
-    margin: 0;
-    font-size: var(--typo3-font-size, 12px);
-    line-height: 1.25;
-    color: var(--typo3-text-color-primary);
-    text-decoration: none;
-}
-
-.tx-analytics-top-pages-link:hover {
-    color: var(--typo3-text-color-primary);
-    text-decoration: underline;
 }
 
 .tx-analytics-top-pages-toolbar {
@@ -36,13 +18,6 @@
     gap: .5rem;
     align-items: center;
     min-width: 0;
-}
-
-.tx-analytics-top-pages-actions {
-    display: flex;
-    justify-content: flex-end;
-    min-width: 0;
-    margin-left: auto;
 }
 
 .tx-analytics-top-pages-site-label,
@@ -67,12 +42,6 @@
     -webkit-mask: center / contain no-repeat;
 }
 
-.tx-analytics-top-pages-icon-arrow-up-right {
-    width: .75rem;
-    height: .75rem;
-    mask-image: url("../Icons/TopPages/arrow-up-right.svg");
-    -webkit-mask-image: url("../Icons/TopPages/arrow-up-right.svg");
-}
 
 .tx-analytics-top-pages-icon-file-text {
     mask-image: url("../Icons/TopPages/file-text.svg");
@@ -182,7 +151,6 @@
 }
 
 @container (max-width: 300px) {
-    .tx-analytics-top-pages-header,
     .tx-analytics-top-pages-toolbar {
         display: grid;
         gap: .5rem;

@@ -63,7 +63,7 @@ async function loadPageList(widget) {
     const data = await response.json();
     if (data.status === 'ok') {
       listContainer.innerHTML = data.html;
-      const link = widget.querySelector('.tx-analytics-top-pages-link');
+      const link = widget.closest('.widget-content')?.querySelector('.widget-content-footer a');
       if (link instanceof HTMLAnchorElement && typeof data.showAllUrl === 'string') {
         link.href = data.showAllUrl || '#';
       }

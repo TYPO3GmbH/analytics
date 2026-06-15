@@ -10,18 +10,16 @@ use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Site\SiteFinder;
-use TYPO3\CMS\Core\Type\Bitmask\Permission;
 
 readonly class SiteDataProvider implements SiteDataProviderInterface
 {
     public function __construct(
         private SiteFinder $siteFinder,
         private AnalyticsStatusServiceInterface $analyticsStatusService,
+        private TopPagesServiceInterface $topPagesService,
         private ConnectionPool $connectionPool,
         private UriBuilder $uriBuilder,
         private LoggerInterface $logger,
@@ -38,7 +36,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         $sites = [];
 
         foreach ($this->siteFinder->getAllSites() as $site) {
-            if (!$this->userCanAccessPage($site->getRootPageId())) {
+            if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
                 continue;
             }
 
@@ -84,7 +82,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         $sites = [];
 
         foreach ($this->siteFinder->getAllSites() as $site) {
-            if (!$this->userCanAccessPage($site->getRootPageId())) {
+            if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
                 continue;
             }
 
@@ -139,18 +137,6 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         }
 
         return $pageName . ' (' . $siteIdentifier . ')';
-    }
-
-    private function userCanAccessPage(int $pageId): bool
-    {
-        $backendUser = $GLOBALS['BE_USER'] ?? null;
-        if (!$backendUser instanceof BackendUserAuthentication) {
-            return true;
-        }
-        return BackendUtility::readPageAccess(
-            $pageId,
-            $backendUser->getPagePermsClause(Permission::PAGE_SHOW)
-        ) !== false;
     }
 
     /** @param array<string, mixed>|null $status */

@@ -13,6 +13,11 @@ interface TopPagesServiceInterface
     public function userCanAccessPage(int $pageId): bool;
 
     /**
+     * @return array<string, string>
+     */
+    public function siteOptions(): array;
+
+    /**
      * @return list<array<string, mixed>>|null
      */
     public function loadTopPagesData(string $siteIdentifier, int $days, int $limit = 10): ?array;
