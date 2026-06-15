@@ -53,13 +53,97 @@ Activate the extension in the TYPO3 Extension Manager or via:
 vendor/bin/typo3 extension:setup analytics
 ```
 
-### Custom API base URL
+## Configuration reference
 
-By default the extension points to the production API. Override via `AdditionalConfiguration.php` or `additional.php`:
+All settings are stored under `$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']`. They can be edited in the TYPO3 Extension Manager (Settings → Extension Configuration → analytics) or set in `AdditionalConfiguration.php` / `config/system/additional.php`:
 
 ```php
-$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = 'https://your-api-host/api';
+$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['settingName'] = 'value';
 ```
+
+### API settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `apiBaseUrl` | string | _(production)_ | Base URL for the analytics management API. Leave empty to use the production default. |
+| `analyticsApiBaseUrl` | string | _(production)_ | Base URL for the analytics data API. Leave empty to use the production default. |
+| `verifySsl` | bool | `1` | Whether to verify SSL certificates on API requests. Disable (`0`) only for local development with self-signed certificates. |
+| `pageAnalyticsCacheTtl` | int | `3600` | Lifetime in seconds for cached page analytics data. |
+
+### Dashboard settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `dashboardPeriods` | string | `7,14,30` | Comma-separated list of period options (in days) shown in all dashboard widget dropdowns and the page performance bar. Must be positive integers. |
+| `dashboardDefaultPeriod` | int | `7` | Pre-selected period (in days) for all dashboard widgets. Must be one of the values in `dashboardPeriods`. |
+
+**Example — custom period options:**
+
+```php
+$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardPeriods'] = '7,30,90';
+$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod'] = 30;
+```
+
+## Modules and widgets
+
+### Backend module — Sites → Analytics
+
+Registered as `site_analytics` (route prefix `site_analytics.*`). Visible in the **Sites** section of the backend module menu.
+
+The module offers per-site views for:
+- **Registration** — enter an e-mail address to register a site with the TYPO3 Analytics API.
+- **Status** — shows registration status, website ID and API key, with a manual refresh button.
+- **Dashboard** — embeds the TYPO3 Analytics web dashboard as an iframe.
+
+### Dashboard widgets
+
+The extension registers two dashboard widget types, each available in a TYPO3 v13 variant (inline dropdowns, AJAX-driven) and a TYPO3 v14+ variant (native widget settings panel).
+
+#### Top Pages widget
+
+Displays the top-visited pages for a configured site over a configurable time period. Results are sorted by page views; a "Show all" link leads to the full analytics dashboard filtered to the same site.
+
+| Variant | Class | Widget ID | TYPO3 version |
+|---------|-------|-----------|---------------|
+| v13 | `TopPagesWidget` | `dashboard.widget.analyticsTopPages` | ^13.4 |
+| v14+ | `TopPagesWidgetV14` | `dashboard.widget.analyticsTopPagesV14` | ^14.0 |
+
+Widget settings (v14+): **Site**, **Period** (days), **Limit** (number of pages shown).
+
+AJAX endpoint (v13): `TopPagesAjaxController` — registered as backend route `ajax_analytics_top_pages`.
+
+#### Site Performance widget
+
+Displays aggregate performance metrics for a configured site over a configurable time period:
+
+| Metric | Tone |
+|--------|------|
+| Visits | primary |
+| Visitors | success |
+| Bounce rate | danger |
+| Avg. visit duration | info |
+
+Each metric shows the current value and a trend indicator (compared to the previous period of equal length).
+
+| Variant | Class | Widget ID | TYPO3 version |
+|---------|-------|-----------|---------------|
+| v13 | `SitePerformanceWidget` | `dashboard.widget.analyticsSitePerformance` | ^13.4 |
+| v14+ | `SitePerformanceWidgetV14` | `dashboard.widget.analyticsSitePerformanceV14` | ^14.0 |
+
+Widget settings (v14+): **Site**, **Period** (days).
+
+AJAX endpoint (v13): `SitePerformanceAjaxController` — registered as backend route `ajax_analytics_site_performance`.
+
+### Page Performance Bar
+
+An event listener (`PagePerformanceBarListener`) on `ModifyPageLayoutContentEvent` that injects an analytics bar above the page content in the **Page** module. The bar shows per-page metrics for the currently viewed page:
+
+- Page views with sparkline and trend
+- Bounce rate with sparkline and trend
+- Average time on page with sparkline and trend
+- Continuation rate (100 − bounce rate) with sparkline and trend
+
+A period selector (values from `dashboardPeriods`) and a link to the full site analytics dashboard are included. The bar is hidden in language-comparison mode (viewMode = 2).
 
 ## Local development with DDEV
 

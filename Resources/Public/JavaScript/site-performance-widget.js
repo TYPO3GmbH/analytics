@@ -1,21 +1,18 @@
-const storagePrefix = 'tx-analytics-site-performance-site';
+const storagePrefix = 'tx-analytics-site-performance';
 
 function resolveWidgetIdentifier(widget) {
   return widget.closest('.dashboard-item')?.dataset.widgetIdentifier
     || widget.closest('.dashboard-item')?.dataset.widgetHash
+    || widget.querySelector('.tx-analytics-site-performance-site-select')?.id
     || 'default';
 }
 
-function storageKey(widget) {
-  return `${storagePrefix}:${resolveWidgetIdentifier(widget)}`;
+function siteKey(widget) {
+  return `${storagePrefix}:site:${resolveWidgetIdentifier(widget)}`;
 }
 
-function applySite(widget, siteIdentifier) {
-  widget.dataset.site = siteIdentifier;
-  const select = widget.querySelector('.tx-analytics-site-performance-site-select');
-  if (select instanceof HTMLSelectElement && select.value !== siteIdentifier) {
-    select.value = siteIdentifier;
-  }
+function daysKey(widget) {
+  return `${storagePrefix}:days:${resolveWidgetIdentifier(widget)}`;
 }
 
 function readStorage(key) {
@@ -34,21 +31,93 @@ function writeStorage(key, value) {
   }
 }
 
+async function loadMetrics(widget) {
+  const ajaxUrl = TYPO3?.settings?.ajaxUrls?.analytics_site_performance_content;
+  if (!ajaxUrl) {
+    return;
+  }
+
+  const metricsContainer = widget.querySelector('.tx-analytics-site-performance-metrics-container');
+  if (!metricsContainer) {
+    return;
+  }
+
+  const site = widget.dataset.site ?? '';
+  const days = widget.dataset.days ?? '7';
+
+  metricsContainer.classList.add('tx-analytics-site-performance-loading');
+
+  try {
+    const url = new URL(ajaxUrl, window.location.origin);
+    url.searchParams.set('site', site);
+    url.searchParams.set('days', days);
+
+    const response = await fetch(url.toString(), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    if (data.status === 'ok') {
+      metricsContainer.innerHTML = data.html;
+      const link = widget.closest('.widget-content')?.querySelector('.widget-content-footer a');
+      if (link instanceof HTMLAnchorElement && typeof data.showAllUrl === 'string') {
+        link.href = data.showAllUrl || '#';
+      }
+    }
+  } catch {
+    // fail silently
+  } finally {
+    metricsContainer.classList.remove('tx-analytics-site-performance-loading');
+  }
+}
+
 function initializeWidget(widget) {
-  const select = widget.querySelector('.tx-analytics-site-performance-site-select');
-  if (!(select instanceof HTMLSelectElement)) {
-    return false;
+  const siteSelect = widget.querySelector('.tx-analytics-site-performance-site-select');
+  const periodSelect = widget.querySelector('.tx-analytics-site-performance-period-select');
+
+  const storedSite = readStorage(siteKey(widget));
+  const storedDays = readStorage(daysKey(widget));
+
+  let needsReload = false;
+
+  if (storedSite !== null && siteSelect instanceof HTMLSelectElement) {
+    if (Array.from(siteSelect.options).some((o) => o.value === storedSite)) {
+      siteSelect.value = storedSite;
+      if (storedSite !== widget.dataset.site) {
+        widget.dataset.site = storedSite;
+        needsReload = true;
+      }
+    }
   }
 
-  const key = storageKey(widget);
-  const storedValue = readStorage(key);
-  if (storedValue !== null && Array.from(select.options).some((option) => option.value === storedValue)) {
-    applySite(widget, storedValue);
+  if (storedDays !== null && periodSelect instanceof HTMLSelectElement) {
+    if (Array.from(periodSelect.options).some((o) => o.value === storedDays)) {
+      periodSelect.value = storedDays;
+      if (storedDays !== widget.dataset.days) {
+        widget.dataset.days = storedDays;
+        needsReload = true;
+      }
+    }
   }
 
-  select.addEventListener('change', () => {
-    writeStorage(key, select.value);
-    applySite(widget, select.value);
+  if (needsReload) {
+    loadMetrics(widget);
+  }
+
+  siteSelect?.addEventListener('change', () => {
+    writeStorage(siteKey(widget), siteSelect.value);
+    widget.dataset.site = siteSelect.value;
+    loadMetrics(widget);
+  });
+
+  periodSelect?.addEventListener('change', () => {
+    writeStorage(daysKey(widget), periodSelect.value);
+    widget.dataset.days = periodSelect.value;
+    loadMetrics(widget);
   });
 
   return true;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
+use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -113,7 +114,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
     private function buildPeriodOptions(int $selectedDays): array
     {
         $options = [];
-        foreach ([7, 14, 30] as $period) {
+        foreach (DashboardPeriods::periods() as $period) {
             $options[] = [
                 'value' => $period,
                 'label' => sprintf($this->translate('pagePerformance.days'), $period),

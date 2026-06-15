@@ -1,3 +1,9 @@
+# cat = Dashboard; type = string; label = Period options for dashboard widgets (comma-separated days, e.g. 7,14,30)
+dashboardPeriods = 7,14,30
+
+# cat = Dashboard; type = int+; label = Default period in days for dashboard widgets (must be one of the configured period options)
+dashboardDefaultPeriod = 7
+
 # cat = API Configuration; type = string; label = API Base URL (leave empty for production default)
 apiBaseUrl =
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use T3G\Analytics\DependencyInjection\SitePerformanceWidgetV14Pass;
 use T3G\Analytics\DependencyInjection\TopPagesWidgetV14Pass;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
 
@@ -19,6 +20,12 @@ return static function (ContainerConfigurator $container, ContainerBuilder $cont
     // before DashboardWidgetPass at priority 0) to swap the class to the v14 implementation.
     $containerBuilder->addCompilerPass(
         new TopPagesWidgetV14Pass(),
+        PassConfig::TYPE_BEFORE_OPTIMIZATION,
+        10,
+    );
+
+    $containerBuilder->addCompilerPass(
+        new SitePerformanceWidgetV14Pass(),
         PassConfig::TYPE_BEFORE_OPTIMIZATION,
         10,
     );

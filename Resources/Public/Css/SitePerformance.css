@@ -6,31 +6,49 @@
     container-type: inline-size;
 }
 
+.tx-analytics-site-performance-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: center;
+    min-width: 0;
+    margin: .75rem 0 0;
+}
+
 .tx-analytics-site-performance-toolbar {
     display: flex;
     gap: .5rem;
     align-items: center;
-    justify-content: flex-end;
-    margin: .75rem 0 0;
+    min-width: 0;
 }
 
-.tx-analytics-site-performance-site-label {
+.tx-analytics-site-performance-site-label,
+.tx-analytics-site-performance-period-label {
     margin: 0;
     white-space: nowrap;
 }
 
 .tx-analytics-site-performance-site-select {
     width: auto;
-    max-width: 18rem;
+    max-width: 14rem;
+}
+
+.tx-analytics-site-performance-period-select {
+    width: auto;
+}
+
+.tx-analytics-site-performance-metrics-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .tx-analytics-site-performance-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    flex: 1 1 auto;
     gap: .5rem;
-    min-height: 0;
     padding: 0;
     margin: 0;
     list-style: none;
@@ -169,13 +187,19 @@
     display: none;
 }
 
-@container (max-width: 260px) {
-    .tx-analytics-site-performance-toolbar {
-        align-items: stretch;
+@container (max-width: 300px) {
+    .tx-analytics-site-performance-header {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .tx-analytics-site-performance-site-select {
+    .tx-analytics-site-performance-toolbar {
+        display: grid;
+        gap: .5rem;
+    }
+
+    .tx-analytics-site-performance-site-select,
+    .tx-analytics-site-performance-period-select {
         width: 100%;
         max-width: none;
     }
