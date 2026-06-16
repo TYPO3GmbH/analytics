@@ -13,4 +13,9 @@ return [
         'target' => \T3G\Analytics\Controller\SitePerformanceAjaxController::class . '::handle',
         'access' => 'user',
     ],
+    'analytics_traffic_graph_content' => [
+        'path' => '/analytics/traffic-graph/content',
+        'target' => \T3G\Analytics\Controller\TrafficGraphAjaxController::class . '::handle',
+        'access' => 'user',
+    ],
 ];

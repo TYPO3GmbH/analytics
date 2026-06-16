@@ -307,6 +307,49 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchSiteVisitsGraph(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        $query = '?' . http_build_query([
+            'from' => $from->format('Y-m-d\T00:00:00.000P'),
+            'until' => $to->format('Y-m-d\T23:59:59.999P'),
+            'type' => 'time-series',
+            'unit' => 'day',
+        ]);
+
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/visits/graph' . $query,
+                'POST',
+                array_merge(
+                    [
+                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                        'json' => ['where' => ['and' => []]],
+                    ],
+                    $this->apiConfiguration->getRequestOptions()
+                )
+            );
+            /** @var array{payload?: array{labels?: list<string>, datasets?: list<array{label: string, data: list<int>, total: int}>}} $body */
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $payload = $body['payload'] ?? [];
+            return [
+                'labels' => $payload['labels'] ?? [],
+                'datasets' => $payload['datasets'] ?? [],
+            ];
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},

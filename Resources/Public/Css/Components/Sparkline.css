@@ -53,3 +53,9 @@
     stroke: var(--tx-analytics-sparkline-line);
     stroke-width: 1.5;
 }
+
+.tx-analytics-sparkline-grid-line {
+    stroke: var(--typo3-component-border-color);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
