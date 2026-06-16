@@ -82,6 +82,19 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
+     * Fetches site-wide daily visit counts as a time-series (POST, no page filter).
+     *
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchSiteVisitsGraph(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array;
+
+    /**
      * Fetches site-wide performance metrics for two date ranges via analytics/pages (2 parallel requests).
      *
      * @return array{

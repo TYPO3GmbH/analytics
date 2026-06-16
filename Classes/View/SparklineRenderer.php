@@ -34,6 +34,9 @@ final class SparklineRenderer
         $yMin = isset($options['yMin']) ? (float)$options['yMin'] : min($numericValues);
         $yMax = isset($options['yMax']) ? (float)$options['yMax'] : max($numericValues);
         $points = $this->buildPoints($numericValues, $yMin, $yMax);
+        if ($points === []) {
+            return '';
+        }
 
         $label = trim((string)($options['label'] ?? ''));
         $class = trim('tx-analytics-sparkline ' . ($options['class'] ?? ''));

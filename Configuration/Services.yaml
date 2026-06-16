@@ -9,6 +9,7 @@ services:
     exclude:
       - '../Classes/Dashboard/Widget/TopPagesWidgetV14.php'
       - '../Classes/Dashboard/Widget/SitePerformanceWidgetV14.php'
+      - '../Classes/Dashboard/Widget/TrafficGraphWidgetV14.php'
 
   T3G\Analytics\Service\TopPagesServiceInterface:
     alias: T3G\Analytics\Service\TopPagesService
@@ -23,6 +24,9 @@ services:
     public: true
 
   T3G\Analytics\Controller\SitePerformanceAjaxController:
+    public: true
+
+  T3G\Analytics\Controller\TrafficGraphAjaxController:
     public: true
 
   T3G\Analytics\Service\AnalyticsApiClientInterface:
@@ -61,6 +65,9 @@ services:
   T3G\Analytics\Service\SiteDataProviderInterface:
     alias: T3G\Analytics\Service\SiteDataProvider
 
+  T3G\Analytics\Service\TrafficGraphServiceInterface:
+    alias: T3G\Analytics\Service\TrafficGraphService
+
   cache.tx_analytics_status:
     class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
@@ -81,6 +88,11 @@ services:
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
     arguments: ['tx_analytics_site_performance']
 
+  cache.tx_analytics_traffic_graph:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_traffic_graph']
+
   T3G\Analytics\Service\AnalyticsStatusService:
     arguments:
       $cache: '@cache.tx_analytics_status'
@@ -92,6 +104,10 @@ services:
   T3G\Analytics\Service\SitePerformanceService:
     arguments:
       $cache: '@cache.tx_analytics_site_performance'
+
+  T3G\Analytics\Service\TrafficGraphService:
+    arguments:
+      $cache: '@cache.tx_analytics_traffic_graph'
 
   T3G\Analytics\EventListener\PagePerformanceBarListener:
     arguments:
@@ -135,3 +151,4 @@ services:
         iconIdentifier: 'analytics-traffic-graph-widget-icon'
         height: 'medium'
         width: 'large'
+

@@ -8,6 +8,7 @@
     padding: 1rem;
     color: var(--typo3-component-color);
     box-sizing: border-box;
+    container-type: inline-size;
 }
 
 .tx-analytics-traffic-graph-header {
@@ -20,55 +21,33 @@
     min-width: 0;
 }
 
-.tx-analytics-traffic-graph-icon {
-    display: inline-block;
-    flex: 0 0 auto;
-    width: 1rem;
-    height: 1rem;
-    background: currentColor;
-    content: "";
-    mask: center / contain no-repeat;
-    -webkit-mask: center / contain no-repeat;
-}
-
-.tx-analytics-traffic-graph-icon-arrow-up-right-from-square {
-    mask-image: url("../Icons/TrafficGraph/arrow-up-right-from-square.svg");
-    -webkit-mask-image: url("../Icons/TrafficGraph/arrow-up-right-from-square.svg");
-    width: .875rem;
-    height: .875rem;
-}
-
-.tx-analytics-traffic-graph-analyse-link {
-    display: inline-flex;
-    flex-shrink: 0;
-    gap: .375rem;
-    align-items: center;
-    color: var(--typo3-text-color-primary);
-    font-size: var(--typo3-font-size, 12px);
-    font-weight: 600;
-    line-height: 1.25;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.tx-analytics-traffic-graph-analyse-link:hover {
-    color: var(--typo3-text-color-primary);
-    text-decoration: underline;
-}
-
 .tx-analytics-traffic-graph-toolbar {
     display: flex;
     gap: .5rem;
     align-items: center;
 }
 
-.tx-analytics-traffic-graph-site-label {
+.tx-analytics-traffic-graph-site-label,
+.tx-analytics-traffic-graph-period-label {
     margin: 0;
     white-space: nowrap;
 }
 
-.tx-analytics-traffic-graph-site-select {
+.tx-analytics-traffic-graph-site-select,
+.tx-analytics-traffic-graph-period-select {
     width: 10rem;
+}
+
+.tx-analytics-traffic-graph-chart-container {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.tx-analytics-traffic-graph-loading {
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 /* Chart layout: [y-axis | sparkline] / [x-axis below sparkline] */

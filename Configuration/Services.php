@@ -7,6 +7,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use T3G\Analytics\DependencyInjection\SitePerformanceWidgetV14Pass;
 use T3G\Analytics\DependencyInjection\TopPagesWidgetV14Pass;
+use T3G\Analytics\DependencyInjection\TrafficGraphWidgetV14Pass;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
 
 return static function (ContainerConfigurator $container, ContainerBuilder $containerBuilder): void {
@@ -26,6 +27,12 @@ return static function (ContainerConfigurator $container, ContainerBuilder $cont
 
     $containerBuilder->addCompilerPass(
         new SitePerformanceWidgetV14Pass(),
+        PassConfig::TYPE_BEFORE_OPTIMIZATION,
+        10,
+    );
+
+    $containerBuilder->addCompilerPass(
+        new TrafficGraphWidgetV14Pass(),
         PassConfig::TYPE_BEFORE_OPTIMIZATION,
         10,
     );

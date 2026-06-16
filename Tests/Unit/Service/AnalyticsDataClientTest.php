@@ -559,4 +559,88 @@ final class AnalyticsDataClientTest extends UnitTestCase
         self::assertSame([60.0, 90.0, 120.0], $result['avgDuration']);
         self::assertArrayHasKey('bounceRate', $result['failures']);
     }
+
+    /** fetchSiteVisitsGraph */
+
+    #[Test]
+    public function fetchSiteVisitsGraphSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":[],"datasets":[]}}'));
+
+        $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/v2/websites/w-123/visits/graph', (string)$request->getUri());
+    }
+
+    #[Test]
+    public function fetchSiteVisitsGraphSendsXApiKeyHeader(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":[],"datasets":[]}}'));
+
+        $this->subject->fetchSiteVisitsGraph('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
+    }
+
+    #[Test]
+    public function fetchSiteVisitsGraphIncludesTimeSeriesQueryParams(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":[],"datasets":[]}}'));
+
+        $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('type=time-series', $uri);
+        self::assertStringContainsString('unit=day', $uri);
+    }
+
+    #[Test]
+    public function fetchSiteVisitsGraphSendsEmptyWhereClause(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":[],"datasets":[]}}'));
+
+        $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['and' => []], $body['where']);
+    }
+
+    #[Test]
+    public function fetchSiteVisitsGraphReturnsLabelsAndDatasets(): void
+    {
+        $payload = json_encode(['payload' => [
+            'labels' => ['2026-06-01', '2026-06-02'],
+            'datasets' => [['label' => 'Overall Visits', 'data' => [12, 34], 'total' => 46]],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+
+        $result = $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-02'));
+
+        self::assertSame(['2026-06-01', '2026-06-02'], $result['labels']);
+        self::assertCount(1, $result['datasets']);
+        self::assertSame([12, 34], $result['datasets'][0]['data']);
+    }
+
+    #[Test]
+    public function fetchSiteVisitsGraphReturnsEmptyArraysOnEmptyPayload(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":{}}'));
+
+        $result = $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertSame([], $result['labels']);
+        self::assertSame([], $result['datasets']);
+    }
+
+    #[Test]
+    public function fetchSiteVisitsGraphThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(403, [], '{}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+    }
 }
