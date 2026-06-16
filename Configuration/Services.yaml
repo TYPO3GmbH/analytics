@@ -43,8 +43,17 @@ services:
   T3G\Analytics\Service\CipherServiceInterface:
     alias: T3G\Analytics\Service\CipherService
 
+  T3G\Analytics\Service\AnalyticsSiteProviderInterface:
+    alias: T3G\Analytics\Service\AnalyticsSiteProvider
+
+  T3G\Analytics\Service\BackendPageAccessCheckerInterface:
+    alias: T3G\Analytics\Service\BackendPageAccessChecker
+
   T3G\Analytics\Service\HmacSignerInterface:
     alias: T3G\Analytics\Service\HmacSigner
+
+  T3G\Analytics\Service\MetricFormatterInterface:
+    alias: T3G\Analytics\Service\MetricFormatter
 
   T3G\Analytics\Service\InstanceRegistrationServiceInterface:
     alias: T3G\Analytics\Service\InstanceRegistrationService

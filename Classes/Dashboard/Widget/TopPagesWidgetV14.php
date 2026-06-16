@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Dashboard\Widget;
 
 use T3G\Analytics\Dashboard\DashboardPeriods;
+use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
@@ -29,6 +30,7 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
         /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private TopPagesServiceInterface $topPagesService,
+        private AnalyticsSiteProviderInterface $siteProvider,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
@@ -39,7 +41,7 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
      */
     public function getSettingsDefinitions(): array
     {
-        $siteOptions = $this->topPagesService->siteOptions();
+        $siteOptions = $this->siteProvider->siteOptions();
 
         return [
             new SettingDefinition(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Dashboard\Widget;
 
 use T3G\Analytics\Dashboard\DashboardPeriods;
+use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
@@ -29,6 +30,7 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
         /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private SitePerformanceServiceInterface $sitePerformanceService,
+        private AnalyticsSiteProviderInterface $siteProvider,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
@@ -39,7 +41,7 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
      */
     public function getSettingsDefinitions(): array
     {
-        $siteOptions = $this->sitePerformanceService->siteOptions();
+        $siteOptions = $this->siteProvider->siteOptions();
 
         return [
             new SettingDefinition(

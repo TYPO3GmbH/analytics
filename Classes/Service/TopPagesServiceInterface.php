@@ -4,19 +4,8 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
-use TYPO3\CMS\Core\Site\Entity\Site;
-
 interface TopPagesServiceInterface
 {
-    public function isAnalyticsSite(Site $site): bool;
-
-    public function userCanAccessPage(int $pageId): bool;
-
-    /**
-     * @return array<string, string>
-     */
-    public function siteOptions(): array;
-
     /**
      * @return list<array<string, mixed>>|null
      */

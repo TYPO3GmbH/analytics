@@ -7,10 +7,10 @@ namespace T3G\Analytics\Tests\Unit\Service;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Service\AnalyticsDataClientInterface;
-use T3G\Analytics\Service\CipherServiceInterface;
+use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\SitePerformanceService;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class SitePerformanceServiceTest extends UnitTestCase
@@ -24,11 +24,11 @@ final class SitePerformanceServiceTest extends UnitTestCase
         parent::setUp();
 
         $this->subject = new SitePerformanceService(
-            $this->createMock(SiteFinder::class),
             $this->createMock(AnalyticsDataClientInterface::class),
-            $this->createMock(CipherServiceInterface::class),
             $this->createMock(LoggerInterface::class),
             $this->createMock(FrontendInterface::class),
+            new MetricFormatter(),
+            $this->createMock(AnalyticsSiteProviderInterface::class),
         );
     }
 

@@ -24,7 +24,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
-use T3G\Analytics\Service\TopPagesServiceInterface;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -168,7 +168,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $siteDataProvider = new SiteDataProvider(
             $this->siteFinder,
             $analyticsStatusService,
-            $this->createMock(TopPagesServiceInterface::class),
+            $this->createMock(BackendPageAccessCheckerInterface::class),
             $connectionPool,
             $this->uriBuilder,
             new NullLogger(),

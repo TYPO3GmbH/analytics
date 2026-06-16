@@ -7,11 +7,6 @@ namespace T3G\Analytics\Service;
 interface SitePerformanceServiceInterface
 {
     /**
-     * @return array<string, string>
-     */
-    public function siteOptions(): array;
-
-    /**
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}

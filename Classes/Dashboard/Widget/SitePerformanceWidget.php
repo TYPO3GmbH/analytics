@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
+use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -27,6 +28,7 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
         /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private SitePerformanceServiceInterface $sitePerformanceService,
+        private AnalyticsSiteProviderInterface $siteProvider,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
         array $options = [],
@@ -62,7 +64,7 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
 
     private function renderContent(string $siteIdentifier): string
     {
-        $siteOptions = $this->sitePerformanceService->siteOptions();
+        $siteOptions = $this->siteProvider->siteOptions();
         if ($siteIdentifier === '' && $siteOptions !== []) {
             $siteIdentifier = array_key_first($siteOptions);
         }
