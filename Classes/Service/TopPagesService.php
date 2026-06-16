@@ -6,73 +6,23 @@ namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Routing\PageArguments;
 use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\SiteFinder;
-use TYPO3\CMS\Core\Type\Bitmask\Permission;
 
 final readonly class TopPagesService implements TopPagesServiceInterface
 {
     private const MAX_LIMIT = 20;
 
     public function __construct(
-        private SiteFinder $siteFinder,
         private AnalyticsDataClientInterface $analyticsClient,
-        private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
         private FrontendInterface $cache,
+        private BackendPageAccessCheckerInterface $pageAccessChecker,
+        private MetricFormatterInterface $formatter,
+        private AnalyticsSiteProviderInterface $siteProvider,
     ) {
-    }
-
-    public function isAnalyticsSite(Site $site): bool
-    {
-        return $this->extractSiteCredentials($site) !== null;
-    }
-
-    public function userCanAccessPage(int $pageId): bool
-    {
-        $backendUser = $GLOBALS['BE_USER'] ?? null;
-        if (!$backendUser instanceof BackendUserAuthentication) {
-            return true;
-        }
-        return BackendUtility::readPageAccess(
-            $pageId,
-            $backendUser->getPagePermsClause(Permission::PAGE_SHOW)
-        ) !== false;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function siteOptions(): array
-    {
-        $options = [];
-
-        try {
-            foreach ($this->siteFinder->getAllSites() as $site) {
-                if (!$this->isAnalyticsSite($site)) {
-                    continue;
-                }
-                if (!$this->userCanAccessPage($site->getRootPageId())) {
-                    continue;
-                }
-                $siteTitle = trim((string)($site->getConfiguration()['websiteTitle'] ?? ''));
-                $options[$site->getIdentifier()] = $siteTitle === ''
-                    ? $site->getIdentifier()
-                    : $siteTitle . ' (' . $site->getIdentifier() . ')';
-            }
-        } catch (\Throwable $e) {
-            $this->logger->error('Failed to load sites for top pages widget: {message}', [
-                'message' => $e->getMessage(),
-                'exception' => $e,
-            ]);
-        }
-
-        return $options;
     }
 
     /**
@@ -80,7 +30,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
      */
     public function loadTopPagesData(string $siteIdentifier, int $days, int $limit = 10): ?array
     {
-        $siteData = $this->resolveAnalyticsSite($siteIdentifier);
+        $siteData = $this->siteProvider->resolveAnalyticsSite($siteIdentifier);
         if ($siteData === null) {
             return null;
         }
@@ -129,7 +79,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
             $trend = '';
             $trendDirection = 'neutral';
             if ($previousVisitCount > 0) {
-                $formatted = $this->formatSignedNumber($percentageChange);
+                $formatted = $this->formatter->formatSignedNumber($percentageChange);
                 $trend = $formatted === '±0' ? '' : $formatted . '%';
                 if ($trend !== '') {
                     $trendDirection = $currentVisitCount > $previousVisitCount ? 'up' : 'down';
@@ -140,8 +90,8 @@ final readonly class TopPagesService implements TopPagesServiceInterface
                 'position' => $index + 1,
                 'url' => (string)($page['pageUrl'] ?? ''),
                 'title' => (string)($page['pageTitle'] ?? ($page['pageUrl'] ?? '')),
-                'visitCount' => $this->formatNumber($currentVisitCount),
-                'visitPercentOfTotal' => $this->formatPercentageWidth((float)($page['visitPercentOfTotal'] ?? 0.0)),
+                'visitCount' => $this->formatter->formatNumber($currentVisitCount),
+                'visitPercentOfTotal' => $this->formatter->formatPercentageWidth((float)($page['visitPercentOfTotal'] ?? 0.0)),
                 'trend' => $trend,
                 'trendDirection' => $trendDirection,
                 'trendLabel' => $trendLabel,
@@ -149,51 +99,6 @@ final readonly class TopPagesService implements TopPagesServiceInterface
         }
 
         return $items;
-    }
-
-    /**
-     * @return array{site: Site, websiteId: string, apiKey: string}|null
-     */
-    private function resolveAnalyticsSite(string $siteIdentifier): ?array
-    {
-        try {
-            $sites = $siteIdentifier !== ''
-                ? [$this->siteFinder->getSiteByIdentifier($siteIdentifier)]
-                : $this->siteFinder->getAllSites();
-        } catch (\Throwable) {
-            return null;
-        }
-
-        foreach ($sites as $site) {
-            if (!$this->userCanAccessPage($site->getRootPageId())) {
-                continue;
-            }
-            $credentials = $this->extractSiteCredentials($site);
-            if ($credentials !== null) {
-                return $credentials;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @return array{site: Site, websiteId: string, apiKey: string}|null
-     */
-    public function extractSiteCredentials(Site $site): ?array
-    {
-        try {
-            $settings = $site->getSettings();
-            $websiteId = (string)($settings->get('externalWebsiteId', '') ?: '');
-            $encryptedApiKey = (string)($settings->get('apiKey', '') ?: '');
-            if ($websiteId === '' || $encryptedApiKey === '') {
-                return null;
-            }
-            $apiKey = $this->cipherService->decrypt($encryptedApiKey);
-            return ['site' => $site, 'websiteId' => $websiteId, 'apiKey' => $apiKey];
-        } catch (\Throwable) {
-            return null;
-        }
     }
 
     /**
@@ -211,7 +116,7 @@ final readonly class TopPagesService implements TopPagesServiceInterface
             if ($pageId === null) {
                 return true;
             }
-            return $this->userCanAccessPage($pageId);
+            return $this->pageAccessChecker->userCanAccessPage($pageId);
         }));
     }
 
@@ -224,24 +129,5 @@ final readonly class TopPagesService implements TopPagesServiceInterface
         } catch (\Throwable) {
             return null;
         }
-    }
-
-    private function formatNumber(int $value): string
-    {
-        return number_format($value, 0, '.', '.');
-    }
-
-    private function formatPercentageWidth(float $value): string
-    {
-        return rtrim(rtrim(number_format(max(0.0, min(100.0, $value)), 1, '.', ''), '0'), '.');
-    }
-
-    private function formatSignedNumber(float $value): string
-    {
-        $formattedValue = rtrim(rtrim(number_format(abs($value), 1, '.', ''), '0'), '.');
-        if ($formattedValue === '0') {
-            return '±0';
-        }
-        return ($value >= 0 ? '+' : '-') . $formattedValue;
     }
 }

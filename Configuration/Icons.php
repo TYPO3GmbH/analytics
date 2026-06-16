@@ -12,6 +12,10 @@ return [
             ? 'EXT:analytics/Resources/Public/Icons/Extension.svg'
             : 'EXT:analytics/Resources/Public/Icons/Extension-v13.svg',
     ],
+    'analytics-site-performance-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/SitePerformance/widget.svg',
+    ],
     'analytics-top-pages-widget-icon' => [
         'provider' => SvgIconProvider::class,
         'source' => 'EXT:analytics/Resources/Public/Icons/TopPages/widget.svg',

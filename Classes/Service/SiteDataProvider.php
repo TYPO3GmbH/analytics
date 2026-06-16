@@ -19,7 +19,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
     public function __construct(
         private SiteFinder $siteFinder,
         private AnalyticsStatusServiceInterface $analyticsStatusService,
-        private TopPagesServiceInterface $topPagesService,
+        private BackendPageAccessCheckerInterface $pageAccessChecker,
         private ConnectionPool $connectionPool,
         private UriBuilder $uriBuilder,
         private LoggerInterface $logger,
@@ -36,7 +36,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         $sites = [];
 
         foreach ($this->siteFinder->getAllSites() as $site) {
-            if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
+            if (!$this->pageAccessChecker->userCanAccessPage($site->getRootPageId())) {
                 continue;
             }
 
@@ -82,7 +82,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         $sites = [];
 
         foreach ($this->siteFinder->getAllSites() as $site) {
-            if (!$this->topPagesService->userCanAccessPage($site->getRootPageId())) {
+            if (!$this->pageAccessChecker->userCanAccessPage($site->getRootPageId())) {
                 continue;
             }
 

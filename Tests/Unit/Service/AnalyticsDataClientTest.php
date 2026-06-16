@@ -377,6 +377,141 @@ final class AnalyticsDataClientTest extends UnitTestCase
         self::assertSame([30.0, 90.0, 60.0], $result);
     }
 
+    /** fetchSitePerformance */
+
+    #[Test]
+    public function fetchSitePerformanceSendsTwoPostRequests(): void
+    {
+        $empty = '{"payload":[]}';
+        $this->mockHandler->append(new Response(200, [], $empty));
+        $this->mockHandler->append(new Response(200, [], $empty));
+
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertCount(2, $this->httpHistory);
+        foreach ($this->httpHistory as $entry) {
+            self::assertSame('POST', $entry['request']->getMethod());
+        }
+    }
+
+    #[Test]
+    public function fetchSitePerformanceSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('/v2/websites/w-123/analytics/pages', $uri);
+        self::assertStringContainsString('trace=sitePerformanceDashboard', $uri);
+    }
+
+    #[Test]
+    public function fetchSitePerformanceSendsXApiKeyHeader(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchSitePerformance('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
+        self::assertSame('twpl-test-key', $this->httpHistory[1]['request']->getHeaderLine('X-Api-Key'));
+    }
+
+    #[Test]
+    public function fetchSitePerformanceRequestsRequiredMetrics(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertContains('visitCount', $body['metrics']);
+        self::assertContains('visitorCount', $body['metrics']);
+        self::assertContains('bounceRate', $body['metrics']);
+        self::assertContains('averageVisitDuration', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchSitePerformanceSumsVisitCountAcrossRows(): void
+    {
+        $payload = json_encode(['payload' => [
+            ['visitCount' => 10, 'visitorCount' => 8, 'bounceRate' => 50.0, 'averageVisitDuration' => 60.0],
+            ['visitCount' => 20, 'visitorCount' => 15, 'bounceRate' => 30.0, 'averageVisitDuration' => 90.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame(30, $result['current']['visitCount']);
+        self::assertSame(23, $result['current']['visitorCount']);
+    }
+
+    #[Test]
+    public function fetchSitePerformanceComputesWeightedAverageBounceRate(): void
+    {
+        // 10 visits @ 50% + 20 visits @ 20% = (500 + 400) / 30 = 30%
+        $payload = json_encode(['payload' => [
+            ['visitCount' => 10, 'visitorCount' => 10, 'bounceRate' => 50.0, 'averageVisitDuration' => 0.0],
+            ['visitCount' => 20, 'visitorCount' => 20, 'bounceRate' => 20.0, 'averageVisitDuration' => 0.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertEqualsWithDelta(30.0, $result['current']['bounceRate'], 0.01);
+    }
+
+    #[Test]
+    public function fetchSitePerformanceComputesWeightedAverageAvgDuration(): void
+    {
+        // 10 visits @ 60s + 20 visits @ 90s = (600 + 1800) / 30 = 80s
+        $payload = json_encode(['payload' => [
+            ['visitCount' => 10, 'visitorCount' => 10, 'bounceRate' => 0.0, 'averageVisitDuration' => 60.0],
+            ['visitCount' => 20, 'visitorCount' => 20, 'bounceRate' => 0.0, 'averageVisitDuration' => 90.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame(80, $result['current']['avgDuration']);
+    }
+
+    #[Test]
+    public function fetchSitePerformanceReturnsZeroValuesOnEmptyPayload(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame(0, $result['current']['visitCount']);
+        self::assertSame(0, $result['current']['visitorCount']);
+        self::assertSame(0.0, $result['current']['bounceRate']);
+        self::assertSame(0, $result['current']['avgDuration']);
+    }
+
+    #[Test]
+    public function fetchSitePerformanceRecordsFailureAndReturnsZerosOnHttpError(): void
+    {
+        $payload = json_encode(['payload' => [
+            ['visitCount' => 5, 'visitorCount' => 4, 'bounceRate' => 40.0, 'averageVisitDuration' => 30.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+        $this->mockHandler->append(new Response(500, [], '{}'));
+
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+
+        self::assertSame(5, $result['current']['visitCount']);
+        self::assertSame(0, $result['previous']['visitCount']);
+        self::assertArrayHasKey('previous', $result['failures']);
+    }
+
     /** fetchAllTimeSeries */
 
     #[Test]

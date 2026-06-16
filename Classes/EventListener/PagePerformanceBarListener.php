@@ -7,6 +7,7 @@ namespace T3G\Analytics\EventListener;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
+use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\CipherServiceInterface;
 use T3G\Analytics\Service\AnalyticsDataClientInterface;
@@ -67,7 +68,8 @@ final readonly class PagePerformanceBarListener
         $languagesParam = $queryParams['languages'] ?? [];
         $languageId = is_array($languagesParam) ? (int)($languagesParam[0] ?? 0) : 0;
         $language = $this->trySiteLanguage($site, $languageId);
-        $event->addHeaderContent($this->render($pageId, $site, $language, $days, $queryParams, $this->buildDetailsUri($site, $days)));
+        $pageUrl = $site !== null ? $this->resolvePageUrl($site, $pageId, $language) : '';
+        $event->addHeaderContent($this->render($pageId, $site, $language, $days, $queryParams, $this->buildDetailsUri($site, $days, $pageUrl)));
     }
 
     /**
@@ -103,7 +105,7 @@ final readonly class PagePerformanceBarListener
         }
         $html .= '<label class="visually-hidden" for="tx-analytics-period-select">' . $this->escape($this->translate('pagePerformance.period')) . '</label>';
         $html .= '<select id="tx-analytics-period-select" class="form-select form-select-sm" name="tx_analytics_period">';
-        foreach ([7, 14, 30] as $period) {
+        foreach (DashboardPeriods::periods() as $period) {
             $selected = $period === $days ? ' selected' : '';
             $html .= '<option value="' . $period . '"' . $selected . '>' . $this->escape($this->translate('pagePerformance.days', [$period])) . '</option>';
         }
@@ -504,19 +506,20 @@ final readonly class PagePerformanceBarListener
 
     private function normalizeDays(int $days): int
     {
-        return in_array($days, [7, 14, 30], true) ? $days : 7;
+        return in_array($days, DashboardPeriods::periods(), true) ? $days : DashboardPeriods::defaultPeriod();
     }
 
-    private function buildDetailsUri(?Site $site, int $days): string
+    private function buildDetailsUri(?Site $site, int $days, string $pageUrl = ''): string
     {
         if ($site === null) {
             return '';
         }
         try {
-            return (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', [
-                'siteIdentifier' => $site->getIdentifier(),
-                'days' => $days,
-            ]);
+            $params = ['siteIdentifier' => $site->getIdentifier(), 'days' => $days];
+            if ($pageUrl !== '') {
+                $params['pageUrl'] = $pageUrl;
+            }
+            return (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', $params);
         } catch (RouteNotFoundException) {
             return '';
         }

@@ -6,7 +6,7 @@ namespace T3G\Analytics\Dashboard\Widget;
 
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
-use T3G\Analytics\Service\TopPagesServiceInterface;
+use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -17,19 +17,19 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
 
 /**
- * Top Pages dashboard widget for TYPO3 v14+.
+ * Site Performance dashboard widget for TYPO3 v14+.
  *
- * Site, period and limit are configured via the native widget settings panel (WidgetRendererInterface)
+ * Site and period are configured via the native widget settings panel (WidgetRendererInterface)
  * rather than inline dropdowns. Requires TYPO3 >= 14 (WidgetRendererInterface).
  */
-final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
+final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
 {
-    use TopPagesWidgetTrait;
+    use SitePerformanceWidgetTrait;
 
     public function __construct(
         /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
-        private TopPagesServiceInterface $topPagesService,
+        private SitePerformanceServiceInterface $sitePerformanceService,
         private AnalyticsSiteProviderInterface $siteProvider,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
@@ -48,22 +48,15 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
                 key: 'site',
                 type: 'string',
                 default: array_key_first($siteOptions) ?? '',
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.setting.site.label',
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.setting.site.label',
                 enum: $siteOptions,
             ),
             new SettingDefinition(
                 key: 'days',
                 type: 'int',
                 default: DashboardPeriods::defaultPeriod(),
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.setting.period.label',
-                enum: $this->periodOptions(),
-            ),
-            new SettingDefinition(
-                key: 'limit',
-                type: 'int',
-                default: 10,
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.setting.limit.label',
-                enum: $this->limitOptions(),
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.setting.period.label',
+                enum: $this->periodEnumOptions(),
             ),
         ];
     }
@@ -72,36 +65,26 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
     {
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
-        $limit = max(1, (int)$context->settings->get('limit'));
+
+        $data = $this->sitePerformanceService->loadPerformanceData($siteIdentifier, $days);
+        $metrics = $data !== null ? $this->buildMetrics($data) : [];
 
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
-            'pages' => $this->buildPages($siteIdentifier, $days, $limit),
+            'metrics' => $metrics,
+            'showAllLabel' => $this->translate('dashboardWidget.sitePerformance.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
-            'showAllLabel' => $this->translate('dashboardWidget.topPages.showAll'),
         ]);
 
         return new WidgetResult(
-            content: $view->render('Dashboard/Widget/TopPagesV14'),
+            content: $view->render('Dashboard/Widget/SitePerformanceV14'),
         );
     }
 
     /**
      * @return array<int, string>
      */
-    private function limitOptions(): array
-    {
-        $options = [];
-        foreach ([5, 10, 20] as $limit) {
-            $options[$limit] = (string)$limit;
-        }
-        return $options;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function periodOptions(): array
+    private function periodEnumOptions(): array
     {
         $label = $this->translate('pagePerformance.days');
         $hasLabel = $label !== 'pagePerformance.days';

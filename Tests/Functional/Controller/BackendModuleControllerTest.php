@@ -22,7 +22,7 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
-use T3G\Analytics\Service\TopPagesServiceInterface;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -260,7 +260,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $siteDataProvider = new SiteDataProvider(
             $resolvedSiteFinder,
             $statusService,
-            $this->createMock(TopPagesServiceInterface::class),
+            $this->createMock(BackendPageAccessCheckerInterface::class),
             $this->get(ConnectionPool::class),
             $this->get(UriBuilder::class),
             new NullLogger(),

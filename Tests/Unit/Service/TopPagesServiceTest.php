@@ -7,11 +7,11 @@ namespace T3G\Analytics\Tests\Unit\Service;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Service\AnalyticsDataClientInterface;
-use T3G\Analytics\Service\CipherServiceInterface;
+use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
+use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TopPagesService;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class TopPagesServiceTest extends UnitTestCase
@@ -25,38 +25,13 @@ final class TopPagesServiceTest extends UnitTestCase
         parent::setUp();
 
         $this->subject = new TopPagesService(
-            $this->createMock(SiteFinder::class),
             $this->createMock(AnalyticsDataClientInterface::class),
-            $this->createMock(CipherServiceInterface::class),
             $this->createMock(LoggerInterface::class),
             $this->createMock(FrontendInterface::class),
+            $this->createMock(BackendPageAccessCheckerInterface::class),
+            new MetricFormatter(),
+            $this->createMock(AnalyticsSiteProviderInterface::class),
         );
-    }
-
-    protected function tearDown(): void
-    {
-        unset($GLOBALS['BE_USER']);
-        parent::tearDown();
-    }
-
-    /** userCanAccessPage */
-
-    #[Test]
-    public function userCanAccessPageReturnsTrueWhenNoBackendUserIsSet(): void
-    {
-        unset($GLOBALS['BE_USER']);
-
-        self::assertTrue($this->subject->userCanAccessPage(1));
-    }
-
-    #[Test]
-    public function userCanAccessPageReturnsFalseWhenBackendUserHasNoPageAccess(): void
-    {
-        $backendUser = $this->createMock(BackendUserAuthentication::class);
-        $backendUser->method('getPagePermsClause')->willReturn('');
-        $GLOBALS['BE_USER'] = $backendUser;
-
-        self::assertFalse($this->subject->userCanAccessPage(1));
     }
 
     /** buildPageItems */

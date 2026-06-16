@@ -306,6 +306,110 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         }
     }
 
+    /**
+     * @return array{
+     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     failures: array<string, string>
+     * }
+     */
+    public function fetchSitePerformance(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        \DateTimeImmutable $previousFrom,
+        \DateTimeImmutable $previousTo,
+    ): array {
+        $url = $this->apiConfiguration->getAnalyticsApiBaseUrl()
+            . '/v2/websites/' . rawurlencode($websiteId)
+            . '/analytics/pages?trace=sitePerformanceDashboard';
+
+        $buildOptions = function (\DateTimeImmutable $f, \DateTimeImmutable $t) use ($apiKey): array {
+            return array_merge(
+                [
+                    'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                    'json' => [
+                        'metrics' => ['visitCount', 'visitorCount', 'bounceRate', 'averageVisitDuration'],
+                        'dimensions' => ['pageUrl'],
+                        'order' => [['member' => 'visitCount', 'direction' => 'desc']],
+                        'pagination' => ['page' => 1, 'pageSize' => 200],
+                        'where' => ['and' => []],
+                        'dateRange' => [
+                            'start' => $f->format('Y-m-d\T00:00:00.000P'),
+                            'end' => $t->format('Y-m-d\T23:59:59.999P'),
+                        ],
+                    ],
+                ],
+                $this->apiConfiguration->getRequestOptions()
+            );
+        };
+
+        $client = $this->guzzleClientFactory->getClient();
+        $promises = [
+            'current' => $client->requestAsync('POST', $url, $buildOptions($from, $to)),
+            'previous' => $client->requestAsync('POST', $url, $buildOptions($previousFrom, $previousTo)),
+        ];
+
+        /** @var array<string, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}> $settled */
+        $settled = Utils::settle($promises)->wait();
+
+        $empty = ['visitCount' => 0, 'visitorCount' => 0, 'bounceRate' => 0.0, 'avgDuration' => 0];
+        $results = ['current' => $empty, 'previous' => $empty];
+        $failures = [];
+
+        foreach ($settled as $key => $result) {
+            if ($result['state'] !== 'fulfilled' || !isset($result['value'])) {
+                $failures[$key] = $this->exceptionExtractor->extractReason($result['reason'] ?? new \RuntimeException('Unknown error'));
+                continue;
+            }
+            try {
+                $results[$key] = $this->parsePageAnalyticsAggregate((string)$result['value']->getBody());
+            } catch (\Throwable $e) {
+                $failures[$key] = $this->exceptionExtractor->extractReason($e);
+            }
+        }
+
+        return [
+            'current' => $results['current'],
+            'previous' => $results['previous'],
+            'failures' => $failures,
+        ];
+    }
+
+    /**
+     * @return array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}
+     */
+    private function parsePageAnalyticsAggregate(string $rawBody): array
+    {
+        /** @var array<string, mixed> $body */
+        $body = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
+        $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+
+        $totalVisits = 0;
+        $totalVisitors = 0;
+        $weightedBounce = 0.0;
+        $weightedDuration = 0.0;
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $visits = (int)($row['visitCount'] ?? 0);
+            $totalVisits += $visits;
+            $totalVisitors += (int)($row['visitorCount'] ?? 0);
+            $weightedBounce += $visits * (float)($row['bounceRate'] ?? 0);
+            $weightedDuration += $visits * (float)($row['averageVisitDuration'] ?? 0);
+        }
+
+        return [
+            'visitCount' => $totalVisits,
+            'visitorCount' => $totalVisitors,
+            'bounceRate' => $totalVisits > 0 ? $weightedBounce / $totalVisits : 0.0,
+            'avgDuration' => $totalVisits > 0 ? (int)round($weightedDuration / $totalVisits) : 0,
+        ];
+    }
+
     /** @return list<int|float> */
     private function parseTimeSeriesData(string $rawBody): array
     {

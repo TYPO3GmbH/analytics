@@ -132,14 +132,22 @@ final readonly class BackendModuleController
         }
 
         $dateParams = $this->buildDateParams((int)($queryParams['days'] ?? 0));
+        $pageUrl = (string)($queryParams['pageUrl'] ?? '');
 
         return $this->renderIframeModule(
             request: $request,
             siteIdentifier: $siteIdentifier,
-            urlResolver: function (Site $site) use ($dateParams): ?string {
+            urlResolver: function (Site $site) use ($dateParams, $pageUrl): ?string {
                 $url = $this->analyticsStatusService->getDashboardUrl($site);
-                if ($url !== null && $dateParams !== '') {
-                    $url .= (str_contains($url, '?') ? '&' : '?') . $dateParams;
+                if ($url === null) {
+                    return null;
+                }
+                $extra = $dateParams;
+                if ($pageUrl !== '') {
+                    $extra .= ($extra !== '' ? '&' : '') . 'mainDashboardPageUrl=' . rawurlencode($pageUrl);
+                }
+                if ($extra !== '') {
+                    $url .= (str_contains($url, '?') ? '&' : '?') . $extra;
                 }
                 return $url;
             },

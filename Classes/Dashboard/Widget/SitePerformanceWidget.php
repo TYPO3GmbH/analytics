@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
-use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
-use T3G\Analytics\Service\TopPagesServiceInterface;
+use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -15,9 +14,9 @@ use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetInterface;
 
-final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInterface, JavaScriptInterface
+final readonly class SitePerformanceWidget implements WidgetInterface, AdditionalCssInterface, JavaScriptInterface
 {
-    use TopPagesWidgetTrait;
+    use SitePerformanceWidgetTrait;
 
     /** @var array{site: string, days: int} */
     private array $options;
@@ -28,7 +27,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
     public function __construct(
         /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
-        private TopPagesServiceInterface $topPagesService,
+        private SitePerformanceServiceInterface $sitePerformanceService,
         private AnalyticsSiteProviderInterface $siteProvider,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
@@ -59,8 +58,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
     public function getJavaScriptModuleInstructions(): array
     {
         return [
-            JavaScriptModuleInstruction::create('@typo3/backend/element/progress-bar-element.js'),
-            JavaScriptModuleInstruction::create('@t3g/analytics/top-pages-widget.js'),
+            JavaScriptModuleInstruction::create('@t3g/analytics/site-performance-widget.js'),
         ];
     }
 
@@ -74,55 +72,25 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
 
         $uniqueId = substr(sha1((string)spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8);
 
+        $data = $this->sitePerformanceService->loadPerformanceData($siteIdentifier, $days);
+        $metrics = $data !== null ? $this->buildMetrics($data) : [];
+
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
             'selectedDays' => $days,
-            'siteSelectId' => 'tx-analytics-top-pages-site-' . $uniqueId,
-            'siteLabel' => $this->translate('dashboardWidget.topPages.setting.site.label'),
+            'siteSelectId' => 'tx-analytics-site-performance-site-' . $uniqueId,
+            'siteLabel' => $this->translate('dashboardWidget.sitePerformance.setting.site.label'),
             'showSiteSelect' => count($siteOptions) > 1,
             'siteOptions' => $this->buildSiteOptions($siteOptions, $siteIdentifier),
-            'periodSelectId' => 'tx-analytics-top-pages-period-' . $uniqueId,
-            'periodLabel' => $this->translate('dashboardWidget.topPages.setting.period.label'),
+            'periodSelectId' => 'tx-analytics-site-performance-period-' . $uniqueId,
+            'periodLabel' => $this->translate('dashboardWidget.sitePerformance.setting.period.label'),
             'periodOptions' => $this->buildPeriodOptions($days),
-            'showAllLabel' => $this->translate('dashboardWidget.topPages.showAll'),
+            'metrics' => $metrics,
+            'showAllLabel' => $this->translate('dashboardWidget.sitePerformance.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
-            'pages' => $this->buildPages($siteIdentifier, $days, 10),
         ]);
 
-        return $view->render('Dashboard/Widget/TopPages');
-    }
-
-    /**
-     * @param array<string, string> $siteOptions
-     * @return list<array{value: string, label: string, selected: bool}>
-     */
-    private function buildSiteOptions(array $siteOptions, string $siteIdentifier): array
-    {
-        $options = [];
-        foreach ($siteOptions as $identifier => $label) {
-            $options[] = [
-                'value' => $identifier,
-                'label' => $label,
-                'selected' => $identifier === $siteIdentifier,
-            ];
-        }
-        return $options;
-    }
-
-    /**
-     * @return list<array{value: int, label: string, selected: bool}>
-     */
-    private function buildPeriodOptions(int $selectedDays): array
-    {
-        $options = [];
-        foreach (DashboardPeriods::periods() as $period) {
-            $options[] = [
-                'value' => $period,
-                'label' => sprintf($this->translate('pagePerformance.days'), $period),
-                'selected' => $period === $selectedDays,
-            ];
-        }
-        return $options;
+        return $view->render('Dashboard/Widget/SitePerformance');
     }
 }

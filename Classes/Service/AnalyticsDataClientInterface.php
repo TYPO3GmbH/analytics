@@ -80,4 +80,22 @@ interface AnalyticsDataClientInterface
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array;
+
+    /**
+     * Fetches site-wide performance metrics for two date ranges via analytics/pages (2 parallel requests).
+     *
+     * @return array{
+     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     failures: array<string, string>
+     * }
+     */
+    public function fetchSitePerformance(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        \DateTimeImmutable $previousFrom,
+        \DateTimeImmutable $previousTo,
+    ): array;
 }

@@ -18,8 +18,8 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\SiteDataProvider;
-use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -46,7 +46,7 @@ final class SiteDataProviderTest extends UnitTestCase
     private SiteFinder&MockObject $siteFinder;
     private UriBuilder&MockObject $uriBuilder;
     private \Doctrine\DBAL\Result&MockObject $queryResult;
-    private TopPagesServiceInterface&MockObject $topPagesService;
+    private BackendPageAccessCheckerInterface&MockObject $pageAccessChecker;
     private bool $userCanAccessPage = true;
 
     private string $encryptedTestSecret;
@@ -105,14 +105,14 @@ final class SiteDataProviderTest extends UnitTestCase
             $this->createMock(SiteSettingsFactory::class),
         );
 
-        $this->topPagesService = $this->createMock(TopPagesServiceInterface::class);
-        $this->topPagesService->method('userCanAccessPage')
+        $this->pageAccessChecker = $this->createMock(BackendPageAccessCheckerInterface::class);
+        $this->pageAccessChecker->method('userCanAccessPage')
             ->willReturnCallback(fn () => $this->userCanAccessPage);
 
         $this->subject = new SiteDataProvider(
             $this->siteFinder,
             $statusService,
-            $this->topPagesService,
+            $this->pageAccessChecker,
             $connectionPool,
             $this->uriBuilder,
             new NullLogger(),
