@@ -281,11 +281,29 @@
             <trans-unit id="dashboardWidget.trafficSources.setting.site.allSites" resname="dashboardWidget.trafficSources.setting.site.allSites">
                 <source>All sites</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.period.label" resname="dashboardWidget.trafficSources.setting.period.label">
+                <source>Period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.section.label" resname="dashboardWidget.trafficSources.setting.section.label">
+                <source>Section</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.sources" resname="dashboardWidget.trafficSources.sources">
-                <source>Traffic Sources</source>
+                <source>Channel</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.devices" resname="dashboardWidget.trafficSources.devices">
                 <source>Devices</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.browsers" resname="dashboardWidget.trafficSources.browsers">
+                <source>Browser</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.countries" resname="dashboardWidget.trafficSources.countries">
+                <source>Countries</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
+                <source>Compared to previous period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.showAll" resname="dashboardWidget.trafficSources.showAll">
+                <source>Show in Analytics</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.direct" resname="dashboardWidget.trafficSources.source.direct">
                 <source>Direct</source>

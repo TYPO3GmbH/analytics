@@ -87,7 +87,7 @@ final class TopPagesServiceTest extends UnitTestCase
 
         $result = $this->subject->buildPageItems($pages, '');
 
-        self::assertSame('33.3', $result[0]['visitPercentOfTotal']);
+        self::assertSame('33.33', $result[0]['visitPercentOfTotal']);
     }
 
     #[Test]
@@ -97,7 +97,7 @@ final class TopPagesServiceTest extends UnitTestCase
 
         $result = $this->subject->buildPageItems($pages, '');
 
-        self::assertSame('100', $result[0]['visitPercentOfTotal']);
+        self::assertSame('100.00', $result[0]['visitPercentOfTotal']);
     }
 
     #[Test]
@@ -118,7 +118,7 @@ final class TopPagesServiceTest extends UnitTestCase
 
         $result = $this->subject->buildPageItems($pages, 'label');
 
-        self::assertSame('+100%', $result[0]['trend']);
+        self::assertSame('+100.00%', $result[0]['trend']);
         self::assertSame('up', $result[0]['trendDirection']);
     }
 
@@ -129,14 +129,14 @@ final class TopPagesServiceTest extends UnitTestCase
 
         $result = $this->subject->buildPageItems($pages, 'label');
 
-        self::assertSame('-50%', $result[0]['trend']);
+        self::assertSame('-50.00%', $result[0]['trend']);
         self::assertSame('down', $result[0]['trendDirection']);
     }
 
     #[Test]
-    public function buildPageItemsHasNoTrendWhenChangeRoundsToZero(): void
+    public function buildPageItemsHasNoTrendWhenChangeIsZero(): void
     {
-        $pages = [$this->row('https://example.com/', visitCount: 10, previousVisitCount: 10, visitCountPercentageChange: 0.04)];
+        $pages = [$this->row('https://example.com/', visitCount: 10, previousVisitCount: 10, visitCountPercentageChange: 0.0)];
 
         $result = $this->subject->buildPageItems($pages, 'label');
 
@@ -165,7 +165,7 @@ final class TopPagesServiceTest extends UnitTestCase
 
         $result = $this->subject->buildPageItems($pages, '');
 
-        self::assertSame('+50%', $result[0]['trend']);
+        self::assertSame('+50.00%', $result[0]['trend']);
     }
 
     #[Test]

@@ -643,4 +643,329 @@ final class AnalyticsDataClientTest extends UnitTestCase
 
         $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
     }
+
+    /** fetchTrafficShareInDepth */
+
+    #[Test]
+    public function fetchTrafficShareInDepthSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"labels":[],"datasets":[]}'));
+
+        $this->subject->fetchTrafficShareInDepth('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/v2/websites/w-123/traffic-api/traffic-share/in-depth', (string)$request->getUri());
+    }
+
+    #[Test]
+    public function fetchTrafficShareInDepthSendsXApiKeyHeader(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"labels":[],"datasets":[]}'));
+
+        $this->subject->fetchTrafficShareInDepth('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
+    }
+
+    #[Test]
+    public function fetchTrafficShareInDepthIncludesDateAndUnitQueryParams(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"labels":[],"datasets":[]}'));
+
+        $this->subject->fetchTrafficShareInDepth('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('unit=day', $uri);
+        self::assertStringNotContainsString('type=time-series', $uri);
+    }
+
+    #[Test]
+    public function fetchTrafficShareInDepthSendsEmptyWhereClause(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"labels":[],"datasets":[]}'));
+
+        $this->subject->fetchTrafficShareInDepth('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['and' => []], $body['where']);
+    }
+
+    #[Test]
+    public function fetchTrafficShareInDepthReturnsLabelsAndDatasets(): void
+    {
+        $payload = json_encode([
+            'labels' => ['2026-06-01T00:00:00+02:00', '2026-06-02T00:00:00+02:00'],
+            'datasets' => [
+                ['label' => 'direct', 'data' => [0, 4], 'total' => 4],
+                ['label' => 'search', 'data' => [2, 1], 'total' => 3],
+            ],
+        ]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+
+        $result = $this->subject->fetchTrafficShareInDepth('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-02'));
+
+        self::assertCount(2, $result['labels']);
+        self::assertCount(2, $result['datasets']);
+        self::assertSame('direct', $result['datasets'][0]['label']);
+        self::assertSame(4, $result['datasets'][0]['total']);
+    }
+
+    #[Test]
+    public function fetchTrafficShareInDepthReturnsEmptyArraysOnEmptyResponse(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{}'));
+
+        $result = $this->subject->fetchTrafficShareInDepth('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertSame([], $result['labels']);
+        self::assertSame([], $result['datasets']);
+    }
+
+    #[Test]
+    public function fetchTrafficShareInDepthThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(403, [], '{}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchTrafficShareInDepth('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+    }
+
+    /** fetchDeviceSessions */
+
+    #[Test]
+    public function fetchDeviceSessionsSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/v2/websites/w-123/analytics/sessions', (string)$request->getUri());
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsSendsXApiKeyHeader(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchDeviceSessions('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsSendsDateRangeInBody(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertArrayHasKey('dateRange', $body);
+        self::assertStringContainsString('2026-06-01', $body['dateRange']['start']);
+        self::assertStringContainsString('2026-06-08', $body['dateRange']['end']);
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsSendsDimensionsAndMetricsInBody(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['deviceType'], $body['dimensions']);
+        self::assertContains('sessionCount', $body['metrics']);
+        self::assertContains('sessionPercentOfTotal', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsReturnsPayloadRows(): void
+    {
+        $payload = json_encode(['payload' => [
+            ['deviceType' => 'desktop', 'sessionCount' => 5, 'sessionPercentOfTotal' => 100.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+
+        $result = $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertCount(1, $result);
+        self::assertSame('desktop', $result[0]['deviceType']);
+        self::assertSame(5, $result[0]['sessionCount']);
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsReturnsEmptyArrayOnEmptyPayload(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $result = $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertSame([], $result);
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(403, [], '{}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsIncludesPreviousDateRangeAndMetricWhenProvided(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchDeviceSessions(
+            'w-123',
+            'api-key',
+            $this->date('2026-06-01'),
+            $this->date('2026-06-08'),
+            $this->date('2026-05-24'),
+            $this->date('2026-05-31'),
+        );
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertArrayHasKey('previousDateRange', $body);
+        self::assertStringContainsString('2026-05-24', $body['previousDateRange']['start']);
+        self::assertContains('previousSessionCount', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchDeviceSessionsOmitsPreviousDateRangeWhenNotProvided(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchDeviceSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertArrayNotHasKey('previousDateRange', $body);
+        self::assertNotContains('previousSessionCount', $body['metrics']);
+    }
+
+    /** fetchBrowserSessions */
+
+    #[Test]
+    public function fetchBrowserSessionsSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchBrowserSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/analytics/sessions?trace=browsers', (string)$request->getUri());
+    }
+
+    #[Test]
+    public function fetchBrowserSessionsSendsDimensionAndMetrics(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchBrowserSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['browserName'], $body['dimensions']);
+        self::assertContains('sessionCount', $body['metrics']);
+        self::assertContains('sessionPercentOfTotal', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchBrowserSessionsIncludesPreviousDateRangeWhenProvided(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchBrowserSessions(
+            'w-123',
+            'api-key',
+            $this->date('2026-06-01'),
+            $this->date('2026-06-08'),
+            $this->date('2026-05-24'),
+            $this->date('2026-05-31'),
+        );
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertArrayHasKey('previousDateRange', $body);
+        self::assertContains('previousSessionCount', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchBrowserSessionsReturnsPayloadRows(): void
+    {
+        $payload = json_encode(['payload' => [
+            ['browserName' => 'Chrome', 'sessionCount' => 3, 'sessionPercentOfTotal' => 100.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+
+        $result = $this->subject->fetchBrowserSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertCount(1, $result);
+        self::assertSame('Chrome', $result[0]['browserName']);
+    }
+
+    #[Test]
+    public function fetchBrowserSessionsThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(403, [], '{}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchBrowserSessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+    }
+
+    /** fetchCountrySessions */
+
+    #[Test]
+    public function fetchCountrySessionsSendsPostToCorrectEndpoint(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchCountrySessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/analytics/sessions?trace=countryCode', (string)$request->getUri());
+    }
+
+    #[Test]
+    public function fetchCountrySessionsSendsDimensionAndMetrics(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchCountrySessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['countryCode'], $body['dimensions']);
+        self::assertContains('sessionCount', $body['metrics']);
+    }
+
+    #[Test]
+    public function fetchCountrySessionsReturnsPayloadRows(): void
+    {
+        $payload = json_encode(['payload' => [
+            ['countryCode' => 'DE', 'sessionCount' => 3, 'sessionPercentOfTotal' => 100.0],
+        ]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+
+        $result = $this->subject->fetchCountrySessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+
+        self::assertCount(1, $result);
+        self::assertSame('DE', $result[0]['countryCode']);
+    }
+
+    #[Test]
+    public function fetchCountrySessionsThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(403, [], '{}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchCountrySessions('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+    }
 }

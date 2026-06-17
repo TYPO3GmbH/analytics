@@ -1,0 +1,36 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:for each="{sections}" as="section">
+    <section class="tx-analytics-traffic-sources-section" aria-label="{section.title}">
+        <div class="tx-analytics-traffic-sources-section-header">
+            <h3 class="tx-analytics-traffic-sources-heading">
+                <span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-{section.icon}" aria-hidden="true"></span>
+                <span>{section.title}</span>
+            </h3>
+        </div>
+        <ul class="tx-analytics-traffic-sources-list">
+            <f:for each="{section.items}" as="item">
+                <li class="tx-analytics-traffic-sources-row tx-analytics-traffic-sources-tone-{item.tone}">
+                    <span class="tx-analytics-traffic-sources-label">
+                        <f:if condition="{item.icon}">
+                            <f:then>
+                                <span class="tx-analytics-traffic-sources-device-icon tx-analytics-traffic-sources-icon-{item.icon}" aria-hidden="true"></span>
+                            </f:then>
+                            <f:else>
+                                <span class="tx-analytics-traffic-sources-dot" aria-hidden="true"></span>
+                            </f:else>
+                        </f:if>
+                        <span>{item.label}</span>
+                    </span>
+                    <typo3-backend-progress-bar class="tx-analytics-traffic-sources-bar" value="{item.value}" max="100"></typo3-backend-progress-bar>
+                    <span class="tx-analytics-traffic-sources-value">
+                        <span>{item.value}%</span>
+                        <f:if condition="{item.change}">
+                            <span class="tx-analytics-traffic-sources-change tx-analytics-traffic-sources-change-{item.changeTone}" aria-label="vs. previous period">{item.change}</span>
+                        </f:if>
+                    </span>
+                </li>
+            </f:for>
+        </ul>
+    </section>
+</f:for>
+</html>

@@ -79,15 +79,15 @@ final class SitePerformanceServiceTest extends UnitTestCase
     {
         $result = $this->subject->buildMetricItems($this->data(bounceRate: 42.5), '', '', '', '', '');
 
-        self::assertSame('42.5%', $result[2]['value']);
+        self::assertSame('42.50%', $result[2]['value']);
     }
 
     #[Test]
-    public function buildMetricItemsStripsTrailingZeroFromBounceRate(): void
+    public function buildMetricItemsFormatsBounceRateWithTwoDecimals(): void
     {
         $result = $this->subject->buildMetricItems($this->data(bounceRate: 50.0), '', '', '', '', '');
 
-        self::assertSame('50%', $result[2]['value']);
+        self::assertSame('50.00%', $result[2]['value']);
     }
 
     #[Test]
@@ -114,7 +114,7 @@ final class SitePerformanceServiceTest extends UnitTestCase
         $result = $this->subject->buildMetricItems($this->data(visitCount: 20, prevVisitCount: 10), '', '', '', '', '');
 
         self::assertSame('up', $result[0]['trendDirection']);
-        self::assertSame('+100%', $result[0]['trend']);
+        self::assertSame('+100.00%', $result[0]['trend']);
     }
 
     #[Test]
@@ -123,7 +123,7 @@ final class SitePerformanceServiceTest extends UnitTestCase
         $result = $this->subject->buildMetricItems($this->data(visitCount: 5, prevVisitCount: 10), '', '', '', '', '');
 
         self::assertSame('down', $result[0]['trendDirection']);
-        self::assertSame('-50%', $result[0]['trend']);
+        self::assertSame('-50.00%', $result[0]['trend']);
     }
 
     #[Test]

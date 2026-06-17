@@ -143,10 +143,10 @@ final readonly class PagePerformanceBarListener
         $avgDuration = (float)($pageData['averageVisitDuration'] ?? 0.0);
         $continuationRate = max(0.0, 100.0 - $bounceRate);
 
-        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : null;
-        $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : null;
+        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : 0;
+        $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : 0.0;
         $prevAvgDuration = $previousPage !== null ? (float)($previousPage['averageVisitDuration'] ?? 0.0) : null;
-        $prevContinuationRate = $prevBounceRate !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
+        $prevContinuationRate = $previousPage !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
 
         $visitsChart = $visitsSeries !== [] ? $visitsSeries : [$visitCount];
         $visitsCurrent = $this->seriesCurrent($visitsSeries);
@@ -196,18 +196,18 @@ final readonly class PagePerformanceBarListener
                 'description' => $this->translate('pagePerformance.tooltip.description.bounceRate'),
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'danger',
-                'value' => number_format($bounceRate, 1) . '%',
-                'trend' => $this->percentTrend($bounceRate, $prevBounceRate),
-                'trendDirection' => $this->trendDirection($bounceRate, $prevBounceRate),
+                'value' => number_format($bounceRate, 2) . '%',
+                'trend' => $this->percentTrend($prevBounceRate, $bounceRate),
+                'trendDirection' => $this->trendDirection($prevBounceRate, $bounceRate),
                 'details' => [
-                    $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 1) . '%' : '-',
-                    $bounceRatePrevious !== null ? number_format($bounceRatePrevious, 1) . '%' : '-',
-                    $bounceRatePeak !== null ? number_format($bounceRatePeak, 1) . '%' : '-',
+                    $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 2) . '%' : '-',
+                    $bounceRatePrevious !== null ? number_format($bounceRatePrevious, 2) . '%' : '-',
+                    $bounceRatePeak !== null ? number_format($bounceRatePeak, 2) . '%' : '-',
                 ],
                 'chart' => $bounceChart,
                 'chartLegend' => [
-                    $bounceRateSeries !== [] ? number_format((float)$bounceRateSeries[0], 1) . '%' : '-',
-                    $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 1) . '%' : '-',
+                    $bounceRateSeries !== [] ? number_format((float)$bounceRateSeries[0], 2) . '%' : '-',
+                    $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 2) . '%' : '-',
                 ],
             ],
             [
@@ -236,18 +236,18 @@ final readonly class PagePerformanceBarListener
                 'description' => $this->translate('pagePerformance.tooltip.description.continuationRate'),
                 'icon' => 'right-to-bracket',
                 'tone' => 'info',
-                'value' => number_format($continuationRate, 1) . '%',
+                'value' => number_format($continuationRate, 2) . '%',
                 'trend' => $this->percentTrend($continuationRate, $prevContinuationRate),
                 'trendDirection' => $this->trendDirection($continuationRate, $prevContinuationRate),
                 'details' => [
-                    $continuationCurrent !== null ? number_format($continuationCurrent, 1) . '%' : '-',
-                    $continuationPrevious !== null ? number_format($continuationPrevious, 1) . '%' : '-',
-                    $continuationPeak !== null ? number_format($continuationPeak, 1) . '%' : '-',
+                    $continuationCurrent !== null ? number_format($continuationCurrent, 2) . '%' : '-',
+                    $continuationPrevious !== null ? number_format($continuationPrevious, 2) . '%' : '-',
+                    $continuationPeak !== null ? number_format($continuationPeak, 2) . '%' : '-',
                 ],
                 'chart' => $continuationChart,
                 'chartLegend' => [
-                    $bounceRateSeries !== [] ? number_format(max(0.0, 100.0 - (float)$bounceRateSeries[0]), 1) . '%' : '-',
-                    $continuationCurrent !== null ? number_format($continuationCurrent, 1) . '%' : '-',
+                    $bounceRateSeries !== [] ? number_format(max(0.0, 100.0 - (float)$bounceRateSeries[0]), 2) . '%' : '-',
+                    $continuationCurrent !== null ? number_format($continuationCurrent, 2) . '%' : '-',
                 ],
             ],
         ];
@@ -423,7 +423,7 @@ final readonly class PagePerformanceBarListener
             return null;
         }
         $change = (($current - $previous) / $previous) * 100.0;
-        return ($change >= 0 ? '+' : '') . number_format($change, 1) . '%';
+        return ($change >= 0 ? '+' : '') . number_format($change, 2) . '%';
     }
 
     private function durationTrend(float $current, float|null $previous): ?string

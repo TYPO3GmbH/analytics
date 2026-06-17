@@ -374,6 +374,10 @@
                 <source>All sites</source>
                 <target>Alle Sites</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.period.label" resname="dashboardWidget.trafficSources.setting.period.label">
+                <source>Period</source>
+                <target>Zeitraum</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.sources" resname="dashboardWidget.trafficSources.sources">
                 <source>Traffic Sources</source>
                 <target>Traffic-Quellen</target>

@@ -13,8 +13,8 @@ readonly class MetricFormatter implements MetricFormatterInterface
 
     public function formatSignedNumber(float $value): string
     {
-        $formattedValue = rtrim(rtrim(number_format(abs($value), 1, '.', ''), '0'), '.');
-        if ($formattedValue === '0') {
+        $formattedValue = number_format(abs($value), 2, '.', '');
+        if ($formattedValue === '0.00') {
             return '±0';
         }
         return ($value >= 0 ? '+' : '-') . $formattedValue;
@@ -22,12 +22,12 @@ readonly class MetricFormatter implements MetricFormatterInterface
 
     public function formatPercentage(float $value): string
     {
-        return rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.') . '%';
+        return number_format($value, 2, '.', '') . '%';
     }
 
     public function formatPercentageWidth(float $value): string
     {
-        return rtrim(rtrim(number_format(max(0.0, min(100.0, $value)), 1, '.', ''), '0'), '.');
+        return number_format(max(0.0, min(100.0, $value)), 2, '.', '');
     }
 
     public function formatDuration(int $seconds): string
@@ -50,5 +50,22 @@ readonly class MetricFormatter implements MetricFormatterInterface
             return 'neutral';
         }
         return $currentValue > $previousValue ? 'up' : 'down';
+    }
+
+    public function formatShare(int $value, int $total): string
+    {
+        if ($total <= 0) {
+            return '0.00';
+        }
+        return number_format(max(0.0, min(100.0, $value / $total * 100)), 2, '.', '');
+    }
+
+    public function formatPercentageChange(int $current, int $previous): ?string
+    {
+        if ($previous <= 0) {
+            return null;
+        }
+        $change = ($current - $previous) / $previous * 100;
+        return ($change >= 0.0 ? '+' : '') . number_format($change, 2, '.', '') . '%';
     }
 }

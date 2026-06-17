@@ -5,6 +5,11 @@
     color: var(--typo3-component-color);
 }
 
+.tx-analytics-traffic-sources-sections-container {
+    display: grid;
+    gap: 1.25rem;
+}
+
 .tx-analytics-traffic-sources-section {
     min-width: 0;
 }
@@ -26,13 +31,32 @@
     min-width: 0;
 }
 
-.tx-analytics-traffic-sources-site-select {
-    width: 8rem;
+.tx-analytics-traffic-sources-header {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    margin-bottom: .25rem;
 }
 
-.tx-analytics-traffic-sources-site-label {
+.tx-analytics-traffic-sources-loading {
+    opacity: .5;
+    pointer-events: none;
+}
+
+.tx-analytics-traffic-sources-site-select {
+    width: auto;
+    max-width: 14rem;
+}
+
+.tx-analytics-traffic-sources-period-select {
+    width: auto;
+}
+
+.tx-analytics-traffic-sources-site-label,
+.tx-analytics-traffic-sources-period-label {
     margin: 0;
     white-space: nowrap;
+    font-size: var(--typo3-font-size-small, .75rem);
 }
 
 .tx-analytics-traffic-sources-heading {
@@ -78,6 +102,11 @@
     -webkit-mask-image: url("../Icons/TrafficSources/tablet.svg");
 }
 
+.tx-analytics-traffic-sources-icon-browser {
+    mask-image: url("../Icons/TrafficSources/browser.svg");
+    -webkit-mask-image: url("../Icons/TrafficSources/browser.svg");
+}
+
 .tx-analytics-traffic-sources-list {
     display: grid;
     gap: 0;
@@ -88,8 +117,8 @@
 
 .tx-analytics-traffic-sources-row {
     display: grid;
-    grid-template-columns: minmax(7rem, 1fr) minmax(4rem, 6.75rem) 2.5rem;
-    gap: .75rem;
+    grid-template-columns: minmax(4rem, 1fr) minmax(3rem, 6rem) 5rem;
+    gap: .5rem;
     align-items: center;
     min-height: 2rem;
     padding: .25rem 0;
@@ -111,7 +140,9 @@
 
 .tx-analytics-traffic-sources-label > span:last-child {
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tx-analytics-traffic-sources-dot {
@@ -139,10 +170,28 @@
 
 .tx-analytics-traffic-sources-value {
     justify-self: end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .1rem;
     color: var(--typo3-component-color);
     font-variant-numeric: tabular-nums;
     line-height: 1.25;
     white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-change {
+    font-size: .75em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-change-positive {
+    color: var(--typo3-text-color-success);
+}
+
+.tx-analytics-traffic-sources-change-negative {
+    color: var(--typo3-text-color-danger, #c42b2b);
 }
 
 .tx-analytics-traffic-sources-tone-blue {
@@ -181,7 +230,7 @@
     }
 
     .tx-analytics-traffic-sources-row {
-        grid-template-columns: minmax(0, 1fr) 2.5rem;
+        grid-template-columns: minmax(0, 1fr) 5rem;
         gap: .5rem;
     }
 

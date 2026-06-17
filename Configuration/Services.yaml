@@ -10,6 +10,7 @@ services:
       - '../Classes/Dashboard/Widget/TopPagesWidgetV14.php'
       - '../Classes/Dashboard/Widget/SitePerformanceWidgetV14.php'
       - '../Classes/Dashboard/Widget/TrafficGraphWidgetV14.php'
+      - '../Classes/Dashboard/Widget/TrafficSourcesWidgetV14.php'
 
   T3G\Analytics\Service\TopPagesServiceInterface:
     alias: T3G\Analytics\Service\TopPagesService
@@ -27,6 +28,9 @@ services:
     public: true
 
   T3G\Analytics\Controller\TrafficGraphAjaxController:
+    public: true
+
+  T3G\Analytics\Controller\TrafficSourcesAjaxController:
     public: true
 
   T3G\Analytics\Service\AnalyticsApiClientInterface:
@@ -68,6 +72,9 @@ services:
   T3G\Analytics\Service\TrafficGraphServiceInterface:
     alias: T3G\Analytics\Service\TrafficGraphService
 
+  T3G\Analytics\Service\TrafficSourcesServiceInterface:
+    alias: T3G\Analytics\Service\TrafficSourcesService
+
   cache.tx_analytics_status:
     class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
@@ -93,6 +100,11 @@ services:
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
     arguments: ['tx_analytics_traffic_graph']
 
+  cache.tx_analytics_traffic_sources:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_traffic_sources']
+
   T3G\Analytics\Service\AnalyticsStatusService:
     arguments:
       $cache: '@cache.tx_analytics_status'
@@ -108,6 +120,10 @@ services:
   T3G\Analytics\Service\TrafficGraphService:
     arguments:
       $cache: '@cache.tx_analytics_traffic_graph'
+
+  T3G\Analytics\Service\TrafficSourcesService:
+    arguments:
+      $cache: '@cache.tx_analytics_traffic_sources'
 
   T3G\Analytics\EventListener\PagePerformanceBarListener:
     arguments:
@@ -126,7 +142,7 @@ services:
         description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.description'
         iconIdentifier: 'analytics-site-performance-widget-icon'
         height: 'medium'
-        width: 'small'
+        width: 'medium'
 
   dashboard.widget.analyticsTopPages:
     class: T3G\Analytics\Dashboard\Widget\TopPagesWidget
@@ -162,5 +178,5 @@ services:
         title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.title'
         description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.description'
         iconIdentifier: 'analytics-traffic-sources-widget-icon'
-        height: 'medium'
+        height: 'large'
         width: 'medium'

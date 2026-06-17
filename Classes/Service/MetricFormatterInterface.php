@@ -19,4 +19,8 @@ interface MetricFormatterInterface
     public function formatRelativeTrend(float $currentValue, float $previousValue): string;
 
     public function trendDirection(float $currentValue, float $previousValue): string;
+
+    public function formatShare(int $value, int $total): string;
+
+    public function formatPercentageChange(int $current, int $previous): ?string;
 }
