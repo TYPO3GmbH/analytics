@@ -266,6 +266,75 @@
             <trans-unit id="dashboardWidget.trafficGraph.showAll" resname="dashboardWidget.trafficGraph.showAll">
                 <source>Show in Analytics</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
+                <source>TYPO3 Analytics</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.title" resname="dashboardWidget.trafficSources.title">
+                <source>Analytics: Traffic Sources</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.description" resname="dashboardWidget.trafficSources.description">
+                <source>Shows the top traffic sources and device distribution for a site.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.site.label" resname="dashboardWidget.trafficSources.setting.site.label">
+                <source>Site</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.site.allSites" resname="dashboardWidget.trafficSources.setting.site.allSites">
+                <source>All sites</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.period.label" resname="dashboardWidget.trafficSources.setting.period.label">
+                <source>Period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.section.label" resname="dashboardWidget.trafficSources.setting.section.label">
+                <source>Section</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.sources" resname="dashboardWidget.trafficSources.sources">
+                <source>Channel</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.devices" resname="dashboardWidget.trafficSources.devices">
+                <source>Devices</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.browsers" resname="dashboardWidget.trafficSources.browsers">
+                <source>Browser</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.countries" resname="dashboardWidget.trafficSources.countries">
+                <source>Countries</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
+                <source>Compared to previous period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.showAll" resname="dashboardWidget.trafficSources.showAll">
+                <source>Show in Analytics</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.direct" resname="dashboardWidget.trafficSources.source.direct">
+                <source>Direct</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.search" resname="dashboardWidget.trafficSources.source.search">
+                <source>Search</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.social" resname="dashboardWidget.trafficSources.source.social">
+                <source>Social</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.email" resname="dashboardWidget.trafficSources.source.email">
+                <source>Email</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.paid" resname="dashboardWidget.trafficSources.source.paid">
+                <source>Paid</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.unknown" resname="dashboardWidget.trafficSources.source.unknown">
+                <source>Unknown</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.source.ai_traffic" resname="dashboardWidget.trafficSources.source.ai_traffic">
+                <source>AI traffic</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.desktop" resname="dashboardWidget.trafficSources.device.desktop">
+                <source>Desktop</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.mobile" resname="dashboardWidget.trafficSources.device.mobile">
+                <source>Mobile</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.tablet" resname="dashboardWidget.trafficSources.device.tablet">
+                <source>Tablet</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

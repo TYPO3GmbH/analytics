@@ -350,6 +350,157 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchTrafficShareInDepth(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        $query = '?' . http_build_query([
+            'from' => $from->format('Y-m-d\T00:00:00.000P'),
+            'until' => $to->format('Y-m-d\T23:59:59.999P'),
+            'unit' => 'day',
+        ]);
+
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/traffic-api/traffic-share/in-depth' . $query,
+                'POST',
+                array_merge(
+                    [
+                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                        'json' => ['where' => ['and' => []]],
+                    ],
+                    $this->apiConfiguration->getRequestOptions()
+                )
+            );
+            /** @var array{labels?: list<string>, datasets?: list<array{label: string, data: list<int>, total: int}>} $body */
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            return [
+                'labels' => $body['labels'] ?? [],
+                'datasets' => $body['datasets'] ?? [],
+            ];
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
+     * @return list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
+     * @throws AnalyticsApiException
+     */
+    public function fetchDeviceSessions(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        ?\DateTimeImmutable $previousFrom = null,
+        ?\DateTimeImmutable $previousTo = null,
+    ): array {
+        /** @var list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}> $result */
+        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'devices', 'deviceType', $from, $to, $previousFrom, $previousTo, 12);
+        return $result;
+    }
+
+    /**
+     * @return list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
+     * @throws AnalyticsApiException
+     */
+    public function fetchBrowserSessions(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        ?\DateTimeImmutable $previousFrom = null,
+        ?\DateTimeImmutable $previousTo = null,
+    ): array {
+        /** @var list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}> $result */
+        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'browsers', 'browserName', $from, $to, $previousFrom, $previousTo, 6);
+        return $result;
+    }
+
+    /**
+     * @return list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
+     * @throws AnalyticsApiException
+     */
+    public function fetchCountrySessions(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        ?\DateTimeImmutable $previousFrom = null,
+        ?\DateTimeImmutable $previousTo = null,
+    ): array {
+        /** @var list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}> $result */
+        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'countryCode', 'countryCode', $from, $to, $previousFrom, $previousTo, 6);
+        return $result;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     * @throws AnalyticsApiException
+     */
+    private function fetchSessionsWithDimension(
+        string $websiteId,
+        string $apiKey,
+        string $traceParam,
+        string $dimension,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        ?\DateTimeImmutable $previousFrom,
+        ?\DateTimeImmutable $previousTo,
+        int $pageSize,
+    ): array {
+        $metrics = ['sessionCount', 'sessionPercentOfTotal'];
+        $json = [
+            'where' => ['and' => []],
+            'metrics' => $metrics,
+            'dimensions' => [$dimension],
+            'order' => [['member' => 'sessionPercentOfTotal', 'direction' => 'desc']],
+            'dateRange' => [
+                'start' => $from->format('Y-m-d\T00:00:00.000P'),
+                'end' => $to->format('Y-m-d\T23:59:59.999P'),
+            ],
+            'pagination' => ['page' => 1, 'pageSize' => $pageSize],
+        ];
+
+        if ($previousFrom !== null && $previousTo !== null) {
+            $json['metrics'][] = 'previousSessionCount';
+            $json['previousDateRange'] = [
+                'start' => $previousFrom->format('Y-m-d\T00:00:00.000P'),
+                'end' => $previousTo->format('Y-m-d\T23:59:59.999P'),
+            ];
+        }
+
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/analytics/sessions?trace=' . $traceParam,
+                'POST',
+                array_merge(
+                    [
+                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                        'json' => $json,
+                    ],
+                    $this->apiConfiguration->getRequestOptions()
+                )
+            );
+            /** @var array{payload?: list<array<string, mixed>>} $body */
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+            return array_values($rows);
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},

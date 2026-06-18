@@ -73,7 +73,7 @@
 
 .tx-analytics-top-pages-row {
     display: grid;
-    grid-template-columns: 1.25rem minmax(5rem, 1fr) minmax(3rem, 4.5rem) 3rem 4rem;
+    grid-template-columns: 1.25rem minmax(5rem, 1fr) minmax(3rem, 4.5rem) 3rem 5.5rem;
     gap: .5rem;
     align-items: center;
     min-height: 2rem;
@@ -161,7 +161,7 @@
     }
 
     .tx-analytics-top-pages-row {
-        grid-template-columns: 1.25rem minmax(0, 1fr) 3rem 4rem;
+        grid-template-columns: 1.25rem minmax(0, 1fr) 3rem 5.5rem;
     }
 
     .tx-analytics-top-pages-bar {

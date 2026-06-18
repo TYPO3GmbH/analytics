@@ -5,38 +5,20 @@ declare(strict_types=1);
 namespace T3G\Analytics\Dashboard\Widget;
 
 use Psr\Http\Message\ServerRequestInterface;
-use T3G\Analytics\Dashboard\DashboardPeriods;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 
-trait SitePerformanceWidgetTrait
+trait TrafficSourcesWidgetTrait
 {
+    use TrafficSourcesItemsTrait;
+
     /**
      * @return list<string>
      */
     public function getCssFiles(): array
     {
-        return ['EXT:analytics/Resources/Public/Css/SitePerformance.css'];
-    }
-
-    /**
-     * @param array{
-     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}
-     * } $data
-     * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string}>
-     */
-    private function buildMetrics(array $data): array
-    {
-        return $this->sitePerformanceService->buildMetricItems(
-            $data,
-            $this->translate('dashboardWidget.sitePerformance.visits'),
-            $this->translate('dashboardWidget.sitePerformance.visitors'),
-            $this->translate('dashboardWidget.sitePerformance.bounceRate'),
-            $this->translate('dashboardWidget.sitePerformance.averageVisitDuration'),
-            $this->translate('dashboardWidget.sitePerformance.comparedToPreviousPeriod'),
-        );
+        return ['EXT:analytics/Resources/Public/Css/TrafficSources.css'];
     }
 
     /**
@@ -57,12 +39,47 @@ trait SitePerformanceWidgetTrait
     }
 
     /**
+     * @return list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}>
+     */
+    private function loadDevices(string $siteIdentifier, int $days): array
+    {
+        return $this->trafficSourcesService->loadDeviceData($siteIdentifier, $days) ?? [];
+    }
+
+    /**
+     * @return list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}>
+     */
+    private function loadBrowsers(string $siteIdentifier, int $days): array
+    {
+        return $this->trafficSourcesService->loadBrowserData($siteIdentifier, $days) ?? [];
+    }
+
+    /**
+     * @return list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}>
+     */
+    private function loadCountries(string $siteIdentifier, int $days): array
+    {
+        return $this->trafficSourcesService->loadCountryData($siteIdentifier, $days) ?? [];
+    }
+
+    private function buildDashboardUrl(string $siteIdentifier, int $days, string $dashboardPath): string
+    {
+        if ($siteIdentifier === '') {
+            return '';
+        }
+        return (string)$this->uriBuilder->buildUriFromRoute(
+            'site_analytics.dashboard',
+            ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => $dashboardPath]
+        );
+    }
+
+    /**
      * @return list<array{value: int, label: string, selected: bool}>
      */
     private function buildPeriodOptions(int $selectedDays): array
     {
         $options = [];
-        foreach (DashboardPeriods::periods() as $period) {
+        foreach (\T3G\Analytics\Dashboard\DashboardPeriods::periods() as $period) {
             $options[] = [
                 'value' => $period,
                 'label' => sprintf($this->translate('pagePerformance.days'), $period),
@@ -70,16 +87,6 @@ trait SitePerformanceWidgetTrait
             ];
         }
         return $options;
-    }
-
-    private function buildShowAllUrl(string $siteIdentifier, int $days): string
-    {
-        return $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute(
-                'site_analytics.dashboard',
-                ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => 'dashboard/pages']
-            )
-            : '';
     }
 
     private function createViewFactoryData(?ServerRequestInterface $request = null): ViewFactoryData

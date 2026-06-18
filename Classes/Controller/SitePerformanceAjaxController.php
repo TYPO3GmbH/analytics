@@ -47,7 +47,7 @@ final readonly class SitePerformanceAjaxController
         $html = $view->render('Dashboard/Widget/SitePerformanceMetrics');
 
         $showAllUrl = $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier, 'days' => $days])
+            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => 'dashboard/pages'])
             : '';
 
         return new JsonResponse(['status' => 'ok', 'html' => $html, 'showAllUrl' => $showAllUrl]);

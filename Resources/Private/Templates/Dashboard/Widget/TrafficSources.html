@@ -1,0 +1,87 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Widget/Widget" />
+<f:section name="main">
+
+    <div class="tx-analytics-traffic-sources" data-site="{siteIdentifier}" data-days="{selectedDays}">
+        <div class="tx-analytics-traffic-sources-header">
+            <f:if condition="{showSiteSelect}">
+                <div class="tx-analytics-traffic-sources-toolbar">
+                    <label class="form-label tx-analytics-traffic-sources-site-label" for="{siteSelectId}">{siteLabel}</label>
+                    <select id="{siteSelectId}" class="form-select form-select-sm tx-analytics-traffic-sources-site-select">
+                        <f:for each="{siteOptions}" as="siteOption">
+                            <f:if condition="{siteOption.selected}">
+                                <f:then>
+                                    <option value="{siteOption.value}" selected="selected">{siteOption.label}</option>
+                                </f:then>
+                                <f:else>
+                                    <option value="{siteOption.value}">{siteOption.label}</option>
+                                </f:else>
+                            </f:if>
+                        </f:for>
+                    </select>
+                </div>
+            </f:if>
+            <div class="tx-analytics-traffic-sources-toolbar">
+                <label class="form-label tx-analytics-traffic-sources-period-label" for="{periodSelectId}">{periodLabel}</label>
+                <select id="{periodSelectId}" class="form-select form-select-sm tx-analytics-traffic-sources-period-select">
+                    <f:for each="{periodOptions}" as="periodOption">
+                        <f:if condition="{periodOption.selected}">
+                            <f:then>
+                                <option value="{periodOption.value}" selected="selected">{periodOption.label}</option>
+                            </f:then>
+                            <f:else>
+                                <option value="{periodOption.value}">{periodOption.label}</option>
+                            </f:else>
+                        </f:if>
+                    </f:for>
+                </select>
+            </div>
+        </div>
+
+        <div class="tx-analytics-traffic-sources-sections-container">
+            <f:for each="{sections}" as="section">
+                <section class="tx-analytics-traffic-sources-section" aria-label="{section.title}">
+                    <div class="tx-analytics-traffic-sources-section-header">
+                        <h3 class="tx-analytics-traffic-sources-heading">
+                            <span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-{section.icon}" aria-hidden="true"></span>
+                            <span>{section.title}</span>
+                        </h3>
+                    </div>
+                    <ul class="tx-analytics-traffic-sources-list">
+                        <f:for each="{section.items}" as="item">
+                            <li class="tx-analytics-traffic-sources-row tx-analytics-traffic-sources-tone-{item.tone}">
+                                <span class="tx-analytics-traffic-sources-label">
+                                    <f:if condition="{item.icon}">
+                                        <f:then>
+                                            <span class="tx-analytics-traffic-sources-device-icon tx-analytics-traffic-sources-icon-{item.icon}" aria-hidden="true"></span>
+                                        </f:then>
+                                        <f:else>
+                                            <span class="tx-analytics-traffic-sources-dot" aria-hidden="true"></span>
+                                        </f:else>
+                                    </f:if>
+                                    <span>{item.label}</span>
+                                </span>
+                                <typo3-backend-progress-bar class="tx-analytics-traffic-sources-bar" value="{item.value}" max="100"></typo3-backend-progress-bar>
+                                <span class="tx-analytics-traffic-sources-value">
+                                    <span>{item.value}%</span>
+                                    <f:if condition="{item.change}">
+                                        <span class="tx-analytics-traffic-sources-change tx-analytics-traffic-sources-change-{item.changeTone}" aria-label="vs. previous period">{item.change}</span>
+                                    </f:if>
+                                </span>
+                            </li>
+                        </f:for>
+                    </ul>
+                </section>
+            </f:for>
+        </div>
+    </div>
+
+</f:section>
+<f:section name="footer">
+    <f:if condition="{showAllUrl}">
+        <a class="widget-cta" href="{showAllUrl}" aria-label="{showAllLabel}">
+            {showAllLabel}
+        </a>
+    </f:if>
+</f:section>
+</html>

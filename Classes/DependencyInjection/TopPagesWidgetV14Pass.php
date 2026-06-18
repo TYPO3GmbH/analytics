@@ -27,13 +27,5 @@ final class TopPagesWidgetV14Pass implements CompilerPassInterface
 
         $definition = $container->getDefinition('dashboard.widget.analyticsTopPages');
         $definition->setClass(TopPagesWidgetV14::class)->setAutowired(true);
-
-        // v14 widget is more compact (server-side rendered, no toolbar dropdowns)
-        $tags = $definition->getTag('dashboard.widget');
-        $definition->clearTag('dashboard.widget');
-        foreach ($tags as $tag) {
-            $tag['width'] = 'small';
-            $definition->addTag('dashboard.widget', $tag);
-        }
     }
 }

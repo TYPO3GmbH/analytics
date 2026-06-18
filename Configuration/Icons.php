@@ -24,4 +24,8 @@ return [
         'provider' => SvgIconProvider::class,
         'source' => 'EXT:analytics/Resources/Public/Icons/TrafficGraph/widget.svg',
     ],
+    'analytics-traffic-sources-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/widget.svg',
+    ],
 ];

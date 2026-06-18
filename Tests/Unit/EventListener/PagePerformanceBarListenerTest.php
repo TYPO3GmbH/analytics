@@ -28,6 +28,7 @@ use TYPO3\CMS\Core\Routing\RouterInterface;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -47,11 +48,15 @@ final class PagePerformanceBarListenerTest extends UnitTestCase
         $GLOBALS['TYPO3_CONF_VARS']['HTTP'] = ['verify' => false, 'handler' => HandlerStack::create($this->mockHandler)];
         $this->cache = $this->createMock(FrontendInterface::class);
         $this->encryptedApiKey = (new CipherService())->encrypt('test-api-key');
+
+        $languageService = $this->createMock(LanguageService::class);
+        $languageService->method('sL')->willReturnArgument(0);
+        $GLOBALS['LANG'] = $languageService;
     }
 
     protected function tearDown(): void
     {
-        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'], $GLOBALS['LANG']);
         parent::tearDown();
     }
 
@@ -105,12 +110,132 @@ final class PagePerformanceBarListenerTest extends UnitTestCase
         return (new \ReflectionMethod($subject, 'loadPageData'))->invoke($subject, $pageId, $site, null, $days);
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function callBuildMetrics(PagePerformanceBarListener $subject, int $pageId = 1, int $days = 7): array
+    {
+        $site = (new \ReflectionMethod($subject, 'trySite'))->invoke($subject, $pageId);
+        return (new \ReflectionMethod($subject, 'buildMetrics'))->invoke($subject, $pageId, $site, null, $days);
+    }
+
+    private function pageApiResponse(int $visitCount, float $bounceRate = 0.0, float $avgDuration = 0.0): Response
+    {
+        return new Response(200, [], json_encode(['payload' => [[
+            'visitCount' => $visitCount,
+            'bounceRate' => $bounceRate,
+            'averageVisitDuration' => $avgDuration,
+        ]]]));
+    }
+
+    private function emptyPageApiResponse(): Response
+    {
+        return new Response(200, [], '{"payload":[]}');
+    }
+
+    private function emptySeriesResponse(): Response
+    {
+        return new Response(200, [], '{"payload":{"datasets":[{"data":[]}]}}');
+    }
+
     private function siteFinder(): SiteFinder
     {
         $siteFinder = $this->createMock(SiteFinder::class);
         $siteFinder->method('getSiteByPageId')->willReturn($this->buildSite());
         return $siteFinder;
     }
+
+    /** buildMetrics — null previous period */
+
+    #[Test]
+    public function buildMetricsHasNullVisitTrendWhenNoPreviousData(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(21, 50.0, 0.0),
+            $this->emptyPageApiResponse(),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+
+        $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
+
+        // percentTrend(visitCount=21, prevVisitCount=0) → null (division by zero guarded)
+        self::assertNull($metrics[0]['trend']);
+    }
+
+    #[Test]
+    public function buildMetricsBounceRateTrendIsNonNullWhenNoPreviousData(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(21, 50.0, 0.0),
+            $this->emptyPageApiResponse(),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+
+        $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
+
+        // Bounce rate args are inverted: percentTrend(prevBounceRate=0, bounceRate=50) = -100.00%
+        // Shows a trend even when previous-period data is absent
+        self::assertSame('-100.00%', $metrics[1]['trend']);
+    }
+
+    /** buildMetrics — bounce rate direction (inverted: lower bounce = better) */
+
+    #[Test]
+    public function buildMetricsBounceRateTrendDirectionIsUpWhenBounceRateDecreased(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(21, 30.0, 0.0),
+            $this->pageApiResponse(21, 70.0, 0.0),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+
+        $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
+
+        // trendDirection(prev=70, current=30) → 70 > 30 → 'up' (lower bounce is better)
+        self::assertSame('up', $metrics[1]['trendDirection']);
+    }
+
+    #[Test]
+    public function buildMetricsBounceRateTrendDirectionIsDownWhenBounceRateIncreased(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(21, 70.0, 0.0),
+            $this->pageApiResponse(21, 30.0, 0.0),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+
+        $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
+
+        // trendDirection(prev=30, current=70) → 30 < 70 → 'down' (higher bounce is worse)
+        self::assertSame('down', $metrics[1]['trendDirection']);
+    }
+
+    #[Test]
+    public function buildMetricsVisitTrendIsComputedWhenPreviousDataExists(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(20, 0.0, 0.0),
+            $this->pageApiResponse(10, 0.0, 0.0),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+
+        $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
+
+        self::assertSame('+100.00%', $metrics[0]['trend']);
+        self::assertSame('up', $metrics[0]['trendDirection']);
+    }
+
+    /** loadPageData tests */
 
     #[Test]
     public function loadPageDataDoesNotCacheOnApiError(): void

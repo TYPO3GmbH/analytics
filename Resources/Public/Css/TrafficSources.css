@@ -1,0 +1,241 @@
+.tx-analytics-traffic-sources {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-traffic-sources-sections-container {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.tx-analytics-traffic-sources-section {
+    min-width: 0;
+}
+
+.tx-analytics-traffic-sources-section-header {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    margin: 0 0 .625rem;
+}
+
+.tx-analytics-traffic-sources-toolbar {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.tx-analytics-traffic-sources-header {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    margin-bottom: .25rem;
+}
+
+.tx-analytics-traffic-sources-loading {
+    opacity: .5;
+    pointer-events: none;
+}
+
+.tx-analytics-traffic-sources-site-select {
+    width: auto;
+    max-width: 14rem;
+}
+
+.tx-analytics-traffic-sources-period-select {
+    width: auto;
+}
+
+.tx-analytics-traffic-sources-site-label,
+.tx-analytics-traffic-sources-period-label {
+    margin: 0;
+    white-space: nowrap;
+    font-size: var(--typo3-font-size-small, .75rem);
+}
+
+.tx-analytics-traffic-sources-heading {
+    display: inline-flex;
+    gap: .5rem;
+    align-items: center;
+    margin: 0;
+    color: var(--typo3-component-color);
+    font-size: var(--typo3-font-size, 12px);
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.tx-analytics-traffic-sources-icon,
+.tx-analytics-traffic-sources-device-icon {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+    background: currentColor;
+    content: "";
+    mask: center / contain no-repeat;
+    -webkit-mask: center / contain no-repeat;
+}
+
+.tx-analytics-traffic-sources-icon-earth-europe {
+    mask-image: url("../Icons/TrafficSources/earth-europe.svg");
+    -webkit-mask-image: url("../Icons/TrafficSources/earth-europe.svg");
+}
+
+.tx-analytics-traffic-sources-icon-display {
+    mask-image: url("../Icons/TrafficSources/display.svg");
+    -webkit-mask-image: url("../Icons/TrafficSources/display.svg");
+}
+
+.tx-analytics-traffic-sources-icon-mobile {
+    mask-image: url("../Icons/TrafficSources/mobile.svg");
+    -webkit-mask-image: url("../Icons/TrafficSources/mobile.svg");
+}
+
+.tx-analytics-traffic-sources-icon-tablet {
+    mask-image: url("../Icons/TrafficSources/tablet.svg");
+    -webkit-mask-image: url("../Icons/TrafficSources/tablet.svg");
+}
+
+.tx-analytics-traffic-sources-icon-browser {
+    mask-image: url("../Icons/TrafficSources/browser.svg");
+    -webkit-mask-image: url("../Icons/TrafficSources/browser.svg");
+}
+
+.tx-analytics-traffic-sources-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tx-analytics-traffic-sources-row {
+    display: grid;
+    grid-template-columns: minmax(4rem, 1fr) minmax(3rem, 6rem) 5rem;
+    gap: .5rem;
+    align-items: center;
+    min-height: 2rem;
+    padding: .25rem 0;
+    border-bottom: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-traffic-sources-row:last-child {
+    border-bottom: 0;
+}
+
+.tx-analytics-traffic-sources-label {
+    display: inline-flex;
+    gap: .5rem;
+    align-items: center;
+    min-width: 0;
+    color: var(--typo3-component-color);
+    line-height: 1.25;
+}
+
+.tx-analytics-traffic-sources-label > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-dot {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: .5rem;
+    height: .5rem;
+    border-radius: 50%;
+    background: var(--tx-analytics-traffic-sources-tone-color, currentColor);
+}
+
+.tx-analytics-traffic-sources-device-icon {
+    width: .875rem;
+    height: .875rem;
+    color: var(--typo3-text-color-variant);
+}
+
+.tx-analytics-traffic-sources-bar {
+    display: block;
+    width: 100%;
+    --progress-bar-height: .25rem;
+    --progress-border-radius: 999px;
+    --progress-bar-color: var(--tx-analytics-traffic-sources-tone-color, currentColor);
+}
+
+.tx-analytics-traffic-sources-value {
+    justify-self: end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .1rem;
+    color: var(--typo3-component-color);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-change {
+    font-size: .75em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-change-positive {
+    color: var(--typo3-text-color-success);
+}
+
+.tx-analytics-traffic-sources-change-negative {
+    color: var(--typo3-text-color-danger, #c42b2b);
+}
+
+.tx-analytics-traffic-sources-tone-blue {
+    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-primary);
+}
+
+.tx-analytics-traffic-sources-tone-green {
+    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-success);
+}
+
+.tx-analytics-traffic-sources-tone-purple {
+    --tx-analytics-traffic-sources-tone-color: light-dark(#7b61d9, #a99bff);
+}
+
+.tx-analytics-traffic-sources-tone-orange {
+    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-warning);
+}
+
+.tx-analytics-traffic-sources-tone-gray {
+    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-variant);
+}
+
+@container (max-width: 300px) {
+    .tx-analytics-traffic-sources-section-header {
+        display: grid;
+        gap: .5rem;
+    }
+
+    .tx-analytics-traffic-sources-toolbar {
+        display: grid;
+        gap: .25rem;
+    }
+
+    .tx-analytics-traffic-sources-site-select {
+        width: 100%;
+    }
+
+    .tx-analytics-traffic-sources-row {
+        grid-template-columns: minmax(0, 1fr) 5rem;
+        gap: .5rem;
+    }
+
+    .tx-analytics-traffic-sources-bar {
+        grid-column: 1 / -1;
+        order: 3;
+    }
+}

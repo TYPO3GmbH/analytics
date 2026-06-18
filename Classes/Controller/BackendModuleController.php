@@ -133,14 +133,29 @@ final readonly class BackendModuleController
 
         $dateParams = $this->buildDateParams((int)($queryParams['days'] ?? 0));
         $pageUrl = (string)($queryParams['pageUrl'] ?? '');
+        $dashboardPath = (string)($queryParams['dashboardPath'] ?? '');
 
         return $this->renderIframeModule(
             request: $request,
             siteIdentifier: $siteIdentifier,
-            urlResolver: function (Site $site) use ($dateParams, $pageUrl): ?string {
+            urlResolver: function (Site $site) use ($dateParams, $pageUrl, $dashboardPath): ?string {
                 $url = $this->analyticsStatusService->getDashboardUrl($site);
                 if ($url === null) {
                     return null;
+                }
+                if ($dashboardPath !== '') {
+                    $parsed = parse_url($url);
+                    if ($parsed === false) {
+                        return null;
+                    }
+                    $url = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+                    if (isset($parsed['port'])) {
+                        $url .= ':' . $parsed['port'];
+                    }
+                    $url .= '/' . ltrim($dashboardPath, '/');
+                    if (!empty($parsed['query'])) {
+                        $url .= '?' . $parsed['query'];
+                    }
                 }
                 $extra = $dateParams;
                 if ($pageUrl !== '') {
@@ -336,6 +351,9 @@ final readonly class BackendModuleController
     private function buildIframeOrigin(string $url): string
     {
         $parsed = parse_url($url);
+        if ($parsed === false) {
+            return '';
+        }
         $origin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
         if (isset($parsed['port'])) {
             $origin .= ':' . $parsed['port'];
