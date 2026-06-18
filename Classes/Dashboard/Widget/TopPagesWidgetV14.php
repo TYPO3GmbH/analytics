@@ -65,6 +65,12 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.setting.limit.label',
                 enum: $this->limitOptions(),
             ),
+            new SettingDefinition(
+                key: 'title',
+                type: 'string',
+                default: '',
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.title.label',
+            ),
         ];
     }
 
@@ -73,6 +79,7 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
         $limit = max(1, (int)$context->settings->get('limit'));
+        $customTitle = trim((string)$context->settings->get('title'));
 
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
@@ -83,6 +90,7 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
 
         return new WidgetResult(
             content: $view->render('Dashboard/Widget/TopPagesV14'),
+            label: $customTitle !== '' ? $customTitle : null,
         );
     }
 

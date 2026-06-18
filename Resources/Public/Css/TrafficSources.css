@@ -115,6 +115,39 @@
     list-style: none;
 }
 
+.tx-analytics-traffic-sources-donut-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .625rem;
+}
+
+.tx-analytics-traffic-sources-donut-chart {
+    width: 130px;
+    height: 130px;
+    flex: 0 0 auto;
+}
+
+.tx-analytics-traffic-sources-donut-chart svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.tx-analytics-traffic-sources-donut-track {
+    stroke: var(--typo3-component-border-color);
+}
+
+.tx-analytics-traffic-sources-donut-segment {
+    stroke: var(--tx-analytics-traffic-sources-tone-color, currentColor);
+}
+
+.tx-analytics-traffic-sources-donut-layout > .tx-analytics-traffic-sources-list {
+    width: 100%;
+    min-width: 0;
+}
+
+
 .tx-analytics-traffic-sources-row {
     display: grid;
     grid-template-columns: minmax(4rem, 1fr) minmax(3rem, 6rem) 5rem;
@@ -123,6 +156,10 @@
     min-height: 2rem;
     padding: .25rem 0;
     border-bottom: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-traffic-sources-row--compact {
+    grid-template-columns: minmax(4rem, 1fr) 5rem;
 }
 
 .tx-analytics-traffic-sources-row:last-child {
@@ -143,6 +180,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-square {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: .5rem;
+    height: .5rem;
+    border-radius: 2px;
+    background: var(--tx-analytics-traffic-sources-tone-color, currentColor);
 }
 
 .tx-analytics-traffic-sources-dot {
@@ -208,6 +254,10 @@
 
 .tx-analytics-traffic-sources-tone-orange {
     --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-warning);
+}
+
+.tx-analytics-traffic-sources-tone-teal {
+    --tx-analytics-traffic-sources-tone-color: light-dark(#0a7c7c, #3ad5d5);
 }
 
 .tx-analytics-traffic-sources-tone-gray {

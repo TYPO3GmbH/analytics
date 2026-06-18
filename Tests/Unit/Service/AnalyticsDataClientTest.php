@@ -517,7 +517,7 @@ final class AnalyticsDataClientTest extends UnitTestCase
     #[Test]
     public function fetchAllTimeSeriesSendsThreeParallelPostRequests(): void
     {
-        $empty = '{"payload":{"datasets":[{"data":[]}]}}';
+        $empty = '{"payload":{"labels":[],"datasets":[{"data":[]}]}}';
         $this->mockHandler->append(new Response(200, [], $empty));
         $this->mockHandler->append(new Response(200, [], $empty));
         $this->mockHandler->append(new Response(200, [], $empty));
@@ -533,24 +533,25 @@ final class AnalyticsDataClientTest extends UnitTestCase
     #[Test]
     public function fetchAllTimeSeriesReturnsDataForEachSeries(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[1,2,3]}]}}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[10,20,30]}]}}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[60,90,120]}]}}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":["2026-06-01","2026-06-02","2026-06-03"],"datasets":[{"data":[1,2,3]}]}}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":["2026-06-01","2026-06-02","2026-06-03"],"datasets":[{"data":[10,20,30]}]}}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":["2026-06-01","2026-06-02","2026-06-03"],"datasets":[{"data":[60,90,120]}]}}'));
 
         $result = $this->subject->fetchAllTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 
         self::assertSame([1.0, 2.0, 3.0], $result['visits']);
         self::assertSame([10.0, 20.0, 30.0], $result['bounceRate']);
         self::assertSame([60.0, 90.0, 120.0], $result['avgDuration']);
+        self::assertSame(['2026-06-01', '2026-06-02', '2026-06-03'], $result['dates']);
         self::assertSame([], $result['failures']);
     }
 
     #[Test]
     public function fetchAllTimeSeriesReturnsEmptyArrayAndRecordsFailureForFailedSeries(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[1,2,3]}]}}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":["2026-06-01","2026-06-02","2026-06-03"],"datasets":[{"data":[1,2,3]}]}}'));
         $this->mockHandler->append(new Response(500, [], '{}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":{"datasets":[{"data":[60,90,120]}]}}'));
+        $this->mockHandler->append(new Response(200, [], '{"payload":{"labels":["2026-06-01","2026-06-02","2026-06-03"],"datasets":[{"data":[60,90,120]}]}}'));
 
         $result = $this->subject->fetchAllTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01'), $this->date('2026-06-08'));
 

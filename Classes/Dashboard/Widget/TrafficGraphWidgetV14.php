@@ -60,6 +60,12 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.period.label',
                 enum: $this->periodEnumOptions(),
             ),
+            new SettingDefinition(
+                key: 'title',
+                type: 'string',
+                default: '',
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.title.label',
+            ),
         ];
     }
 
@@ -67,6 +73,7 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
     {
         $siteIdentifier = (string) $context->settings->get('site');
         $days = max(1, (int) $context->settings->get('days'));
+        $customTitle = trim((string) $context->settings->get('title'));
 
         $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);
         $chart = $this->buildChartData($graphData);
@@ -80,6 +87,7 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
 
         return new WidgetResult(
             content: $view->render('Dashboard/Widget/TrafficGraphV14'),
+            label: $customTitle !== '' ? $customTitle : null,
         );
     }
 

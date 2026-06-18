@@ -20,7 +20,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
 /**
  * Traffic Sources dashboard widget for TYPO3 v14+.
  *
- * Site, period, and displayed section are configured via the native widget settings panel.
+ * Site, period, displayed section and chart type are configured via the native widget settings panel.
  */
 final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
 {
@@ -71,6 +71,22 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                     'countries' => 'Countries',
                 ],
             ),
+            new SettingDefinition(
+                key: 'chartType',
+                type: 'string',
+                default: 'list',
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.chartType.label',
+                enum: [
+                    'list' => 'List',
+                    'donut' => 'Donut',
+                ],
+            ),
+            new SettingDefinition(
+                key: 'title',
+                type: 'string',
+                default: '',
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.title.label',
+            ),
         ];
     }
 
@@ -79,6 +95,8 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
         $section = (string)$context->settings->get('section');
+        $isDonut = $context->settings->get('chartType') === 'donut';
+        $customTitle = trim((string)$context->settings->get('title'));
 
         $siteOptions = $this->siteProvider->siteOptions();
         if ($siteIdentifier === '' && $siteOptions !== []) {
@@ -87,40 +105,40 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
 
         $sections = match ($section) {
             'devices' => [
-                [
-                    'icon' => 'display',
-                    'title' => $this->translate('dashboardWidget.trafficSources.devices'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildDeviceItems($this->loadDevices($siteIdentifier, $days)),
-                ],
+                $this->asSectionData(
+                    'display',
+                    $this->translate('dashboardWidget.trafficSources.devices'),
+                    $this->buildDeviceItems($this->loadDevices($siteIdentifier, $days)),
+                    $isDonut,
+                ),
             ],
             'browser' => [
-                [
-                    'icon' => 'browser',
-                    'title' => $this->translate('dashboardWidget.trafficSources.browsers'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildBrowserItems($this->loadBrowsers($siteIdentifier, $days)),
-                ],
+                $this->asSectionData(
+                    'browser',
+                    $this->translate('dashboardWidget.trafficSources.browsers'),
+                    $this->buildBrowserItems($this->loadBrowsers($siteIdentifier, $days)),
+                    $isDonut,
+                ),
             ],
             'countries' => [
-                [
-                    'icon' => 'earth-europe',
-                    'title' => $this->translate('dashboardWidget.trafficSources.countries'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildCountryItems($this->loadCountries($siteIdentifier, $days)),
-                ],
+                $this->asSectionData(
+                    'earth-europe',
+                    $this->translate('dashboardWidget.trafficSources.countries'),
+                    $this->buildCountryItems($this->loadCountries($siteIdentifier, $days)),
+                    $isDonut,
+                ),
             ],
             default => [
-                [
-                    'icon' => 'earth-europe',
-                    'title' => $this->translate('dashboardWidget.trafficSources.sources'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildTrafficSourceItems(
+                $this->asSectionData(
+                    'earth-europe',
+                    $this->translate('dashboardWidget.trafficSources.sources'),
+                    $this->buildTrafficSourceItems(
                         $siteIdentifier !== ''
                             ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? [])
                             : []
                     ),
-                ],
+                    $isDonut,
+                ),
             ],
         };
 
@@ -140,6 +158,7 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
 
         return new WidgetResult(
             content: $view->render('Dashboard/Widget/TrafficSourcesV14'),
+            label: $customTitle !== '' ? $customTitle : null,
         );
     }
 

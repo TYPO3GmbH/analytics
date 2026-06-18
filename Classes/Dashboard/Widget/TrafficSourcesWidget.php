@@ -97,30 +97,10 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
             'showAllLabel' => $this->translate('dashboardWidget.trafficSources.showAll'),
             'showAllUrl' => $this->buildDashboardUrl($siteIdentifier, $days, 'traffic/share'),
             'sections' => [
-                [
-                    'icon' => 'earth-europe',
-                    'title' => $this->translate('dashboardWidget.trafficSources.sources'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildTrafficSourceItems($trafficSources),
-                ],
-                [
-                    'icon' => 'display',
-                    'title' => $this->translate('dashboardWidget.trafficSources.devices'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildDeviceItems($this->loadDevices($siteIdentifier, $days)),
-                ],
-                [
-                    'icon' => 'browser',
-                    'title' => $this->translate('dashboardWidget.trafficSources.browsers'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildBrowserItems($this->loadBrowsers($siteIdentifier, $days)),
-                ],
-                [
-                    'icon' => 'earth-europe',
-                    'title' => $this->translate('dashboardWidget.trafficSources.countries'),
-                    'showSiteSelect' => false,
-                    'items' => $this->buildCountryItems($this->loadCountries($siteIdentifier, $days)),
-                ],
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.sources'), $this->buildTrafficSourceItems($trafficSources)),
+                $this->asSectionData('display', $this->translate('dashboardWidget.trafficSources.devices'), $this->buildDeviceItems($this->loadDevices($siteIdentifier, $days))),
+                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($this->loadBrowsers($siteIdentifier, $days))),
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($this->loadCountries($siteIdentifier, $days))),
             ],
         ]);
 

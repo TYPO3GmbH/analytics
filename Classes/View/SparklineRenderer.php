@@ -21,7 +21,8 @@ final class SparklineRenderer
      *     yMin?: float,
      *     yMax?: float,
      *     gridLines?: list<int|float>,
-     *     preserveAspectRatio?: string
+     *     preserveAspectRatio?: string,
+     *     labels?: list<string>
      * } $options
      */
     public function render(array $values, array $options = []): string
@@ -47,6 +48,7 @@ final class SparklineRenderer
         $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
         $gridLines = (array)($options['gridLines'] ?? []);
         $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
+        $pointLabels = (array)($options['labels'] ?? []);
 
         $html = '<div class="' . $this->escape($class) . '" data-sparkline-tone="' . $this->escape($tone) . '">';
         $html .= '<svg class="tx-analytics-sparkline-svg" viewBox="0 0 ' . self::VIEW_BOX_WIDTH . ' ' . self::VIEW_BOX_HEIGHT . '"';
@@ -70,6 +72,15 @@ final class SparklineRenderer
             $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath) . '"></path>';
         }
         $html .= '<path class="tx-analytics-sparkline-line" d="' . $linePath . '"></path>';
+        if ($pointLabels !== []) {
+            foreach ($points as $index => [$x, $y]) {
+                $pointLabel = (string)($pointLabels[$index] ?? '');
+                if ($pointLabel === '') {
+                    continue;
+                }
+                $html .= '<circle class="tx-analytics-sparkline-point-tooltip" cx="' . $this->formatNumber($x) . '" cy="' . $this->formatNumber($y) . '" r="4" fill="transparent"><title>' . $this->escape($pointLabel) . '</title></circle>';
+            }
+        }
         if ($showLastPoint) {
             $html .= '<circle class="tx-analytics-sparkline-point" cx="' . $this->formatNumber($lastPoint[0]) . '" cy="' . $this->formatNumber($lastPoint[1]) . '" r="1.9"></circle>';
         }

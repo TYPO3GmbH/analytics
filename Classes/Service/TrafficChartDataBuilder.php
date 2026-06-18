@@ -23,7 +23,7 @@ final readonly class TrafficChartDataBuilder
         $labels = $graphData['labels'] ?? [];
 
         $formattedLabels = array_map(
-            static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('j.n.'),
+            static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('d.m.Y'),
             $labels
         );
 
@@ -37,6 +37,12 @@ final readonly class TrafficChartDataBuilder
             $ticks[] = ['value' => $value, 'label' => $this->formatScaleLabel($value)];
         }
 
+        $pointLabels = [];
+        foreach ($data as $index => $value) {
+            $date = $formattedLabels[$index] ?? '';
+            $pointLabels[] = $date !== '' ? $date . ': ' . number_format($value, 0, '.', "\u{202F}") : (string)$value;
+        }
+
         return [
             'sparkline' => $this->sparklineRenderer->render($data, [
                 'label' => $chartLabel,
@@ -46,6 +52,7 @@ final readonly class TrafficChartDataBuilder
                 'gridLines' => array_column($ticks, 'value'),
                 'showLastPoint' => false,
                 'preserveAspectRatio' => 'none',
+                'labels' => $pointLabels,
             ]),
             'yLabels' => $ticks,
             'xLabels' => $this->visibleLabels($formattedLabels),

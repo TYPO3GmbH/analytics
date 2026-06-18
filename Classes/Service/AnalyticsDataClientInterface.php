@@ -71,7 +71,7 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
-     * @return array{visits: list<int|float>, bounceRate: list<int|float>, avgDuration: list<int|float>, failures: array<string, string>}
+     * @return array{visits: list<int|float>, bounceRate: list<int|float>, avgDuration: list<int|float>, dates: list<string>, failures: array<string, string>}
      */
     public function fetchAllTimeSeries(
         string $websiteId,

@@ -3,40 +3,7 @@
 <f:section name="main">
 
     <div class="tx-analytics-top-pages" data-site="{siteIdentifier}" data-days="{selectedDays}">
-        <div class="tx-analytics-top-pages-header">
-            <f:if condition="{showSiteSelect}">
-                <div class="tx-analytics-top-pages-toolbar">
-                    <label class="form-label tx-analytics-top-pages-site-label" for="{siteSelectId}">{siteLabel}</label>
-                    <select id="{siteSelectId}" class="form-select form-select-sm tx-analytics-top-pages-site-select">
-                        <f:for each="{siteOptions}" as="siteOption">
-                            <f:if condition="{siteOption.selected}">
-                                <f:then>
-                                    <option value="{siteOption.value}" selected="selected">{siteOption.label}</option>
-                                </f:then>
-                                <f:else>
-                                    <option value="{siteOption.value}">{siteOption.label}</option>
-                                </f:else>
-                            </f:if>
-                        </f:for>
-                    </select>
-                </div>
-            </f:if>
-            <div class="tx-analytics-top-pages-toolbar">
-                <label class="form-label tx-analytics-top-pages-period-label" for="{periodSelectId}">{periodLabel}</label>
-                <select id="{periodSelectId}" class="form-select form-select-sm tx-analytics-top-pages-period-select">
-                    <f:for each="{periodOptions}" as="periodOption">
-                        <f:if condition="{periodOption.selected}">
-                            <f:then>
-                                <option value="{periodOption.value}" selected="selected">{periodOption.label}</option>
-                            </f:then>
-                            <f:else>
-                                <option value="{periodOption.value}">{periodOption.label}</option>
-                            </f:else>
-                        </f:if>
-                    </f:for>
-                </select>
-            </div>
-        </div>
+        <f:render partial="Dashboard/Widget/WidgetToolbar" arguments="{prefix: 'top-pages', showSiteSelect: showSiteSelect, siteSelectId: siteSelectId, siteLabel: siteLabel, siteOptions: siteOptions, periodSelectId: periodSelectId, periodLabel: periodLabel, periodOptions: periodOptions}" />
 
         <div class="tx-analytics-top-pages-list-container">
             <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />

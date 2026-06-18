@@ -233,6 +233,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         $visits = [];
         $bounceRate = [];
         $avgDuration = [];
+        $dates = [];
         $failures = [];
 
         foreach ($settled as $key => $result) {
@@ -244,11 +245,14 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 if (!isset($result['value'])) {
                     throw new \RuntimeException('Fulfilled without response body');
                 }
-                $data = $this->parseTimeSeriesData((string)$result['value']->getBody());
+                $parsed = $this->parseTimeSeriesData((string)$result['value']->getBody());
+                if ($dates === []) {
+                    $dates = $parsed['labels'];
+                }
                 match ($key) {
-                    'visits' => $visits = $data,
-                    'bounceRate' => $bounceRate = $data,
-                    'avgDuration' => $avgDuration = $data,
+                    'visits' => $visits = $parsed['data'],
+                    'bounceRate' => $bounceRate = $parsed['data'],
+                    'avgDuration' => $avgDuration = $parsed['data'],
                     default => null,
                 };
             } catch (\Throwable $e) {
@@ -260,6 +264,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'visits' => $visits,
             'bounceRate' => $bounceRate,
             'avgDuration' => $avgDuration,
+            'dates' => $dates,
             'failures' => $failures,
         ];
     }
@@ -298,7 +303,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                     $this->apiConfiguration->getRequestOptions()
                 )
             );
-            return $this->parseTimeSeriesData((string)$response->getBody());
+            return $this->parseTimeSeriesData((string)$response->getBody())['data'];
         } catch (AnalyticsApiException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -605,13 +610,20 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /** @return list<int|float> */
+    /**
+     * @return array{data: list<int|float>, labels: list<string>}
+     */
     private function parseTimeSeriesData(string $rawBody): array
     {
         /** @var array<string, mixed> $body */
         $body = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
         $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
         $datasets = is_array($payload['datasets'] ?? null) ? $payload['datasets'] : [];
-        $data = is_array($datasets[0]['data'] ?? null) ? $datasets[0]['data'] : [];
-        return array_values(array_map(static fn (mixed $v): int|float => is_numeric($v) ? (float)$v : 0, $data));
+        $rawData = is_array($datasets[0]['data'] ?? null) ? $datasets[0]['data'] : [];
+        $rawLabels = is_array($payload['labels'] ?? null) ? $payload['labels'] : [];
+        return [
+            'data' => array_values(array_map(static fn (mixed $v): int|float => is_numeric($v) ? (float)$v : 0, $rawData)),
+            'labels' => array_values(array_map(static fn (mixed $v): string => (string)$v, $rawLabels)),
+        ];
     }
 }

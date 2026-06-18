@@ -58,6 +58,12 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.setting.period.label',
                 enum: $this->periodEnumOptions(),
             ),
+            new SettingDefinition(
+                key: 'title',
+                type: 'string',
+                default: '',
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.title.label',
+            ),
         ];
     }
 
@@ -65,6 +71,7 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
     {
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
+        $customTitle = trim((string)$context->settings->get('title'));
 
         $data = $this->sitePerformanceService->loadPerformanceData($siteIdentifier, $days);
         $metrics = $data !== null ? $this->buildMetrics($data) : [];
@@ -78,6 +85,7 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
 
         return new WidgetResult(
             content: $view->render('Dashboard/Widget/SitePerformanceV14'),
+            label: $customTitle !== '' ? $customTitle : null,
         );
     }
 

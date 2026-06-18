@@ -275,6 +275,9 @@
             <trans-unit id="dashboardWidget.trafficSources.description" resname="dashboardWidget.trafficSources.description">
                 <source>Shows the top traffic sources and device distribution for a site.</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.setting.title.label" resname="dashboardWidget.setting.title.label">
+                <source>Title</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.setting.site.label" resname="dashboardWidget.trafficSources.setting.site.label">
                 <source>Site</source>
             </trans-unit>
@@ -287,6 +290,9 @@
             <trans-unit id="dashboardWidget.trafficSources.setting.section.label" resname="dashboardWidget.trafficSources.setting.section.label">
                 <source>Section</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.chartType.label" resname="dashboardWidget.trafficSources.setting.chartType.label">
+                <source>Chart type</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.sources" resname="dashboardWidget.trafficSources.sources">
                 <source>Channel</source>
             </trans-unit>
@@ -298,6 +304,9 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.countries" resname="dashboardWidget.trafficSources.countries">
                 <source>Countries</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.other" resname="dashboardWidget.trafficSources.other">
+                <source>Other</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
@@ -334,6 +343,12 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.device.tablet" resname="dashboardWidget.trafficSources.device.tablet">
                 <source>Tablet</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.phone" resname="dashboardWidget.trafficSources.device.phone">
+                <source>Phone</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
+                <source>Other</source>
             </trans-unit>
         </body>
     </file>
