@@ -77,7 +77,7 @@ trait SitePerformanceWidgetTrait
         return $siteIdentifier !== ''
             ? (string)$this->uriBuilder->buildUriFromRoute(
                 'site_analytics.dashboard',
-                ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => 'dashboard/pages']
+                ['siteIdentifier' => $siteIdentifier, 'days' => $days]
             )
             : '';
     }

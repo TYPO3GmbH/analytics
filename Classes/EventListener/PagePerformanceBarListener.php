@@ -138,7 +138,7 @@ final readonly class PagePerformanceBarListener
         $bounceRateSeries = $analyticsData['bounceRateSeries'];
         $avgDurationSeries = $analyticsData['avgDurationSeries'];
         $formattedDates = array_map(
-            static fn(string $d): string => (new \DateTimeImmutable($d))->format('d.m.Y'),
+            static fn (string $d): string => (new \DateTimeImmutable($d))->format('d.m.Y'),
             $analyticsData['seriesDates'],
         );
 
@@ -189,7 +189,7 @@ final readonly class PagePerformanceBarListener
                     $visitsPeak !== null ? number_format((int)$visitsPeak, 0, '.', "\u{202F}") : '-',
                 ],
                 'chart' => $visitsChart,
-                'chartLabels' => $this->buildChartLabels($visitsChart, $formattedDates, static fn(int|float $v): string => number_format((int)$v, 0, '.', "\u{202F}")),
+                'chartLabels' => $this->buildChartLabels($visitsChart, $formattedDates, static fn (int|float $v): string => number_format((int)$v, 0, '.', "\u{202F}")),
                 'chartLegend' => [
                     $visitsSeries !== [] ? number_format((int)$visitsSeries[0], 0, '.', "\u{202F}") : '-',
                     $visitsCurrent !== null ? number_format((int)$visitsCurrent, 0, '.', "\u{202F}") : '-',
@@ -210,7 +210,7 @@ final readonly class PagePerformanceBarListener
                     $bounceRatePeak !== null ? number_format($bounceRatePeak, 2) . '%' : '-',
                 ],
                 'chart' => $bounceChart,
-                'chartLabels' => $this->buildChartLabels($bounceChart, $formattedDates, static fn(int|float $v): string => number_format((float)$v, 2) . '%'),
+                'chartLabels' => $this->buildChartLabels($bounceChart, $formattedDates, static fn (int|float $v): string => number_format((float)$v, 2) . '%'),
                 'chartLegend' => [
                     $bounceRateSeries !== [] ? number_format((float)$bounceRateSeries[0], 2) . '%' : '-',
                     $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 2) . '%' : '-',
@@ -231,7 +231,7 @@ final readonly class PagePerformanceBarListener
                     $avgDurationPeak !== null ? $this->formatDuration($avgDurationPeak) : '-',
                 ],
                 'chart' => $avgDurationSeries !== [] ? $avgDurationSeries : [$avgDuration],
-                'chartLabels' => $this->buildChartLabels($avgDurationSeries !== [] ? $avgDurationSeries : [$avgDuration], $formattedDates, fn(int|float $v): string => $this->formatDuration((float)$v)),
+                'chartLabels' => $this->buildChartLabels($avgDurationSeries !== [] ? $avgDurationSeries : [$avgDuration], $formattedDates, fn (int|float $v): string => $this->formatDuration((float)$v)),
                 'chartLegend' => [
                     $avgDurationSeries !== [] ? $this->formatDuration((float)$avgDurationSeries[0]) : '-',
                     $avgDurationCurrent !== null ? $this->formatDuration($avgDurationCurrent) : '-',
@@ -252,7 +252,7 @@ final readonly class PagePerformanceBarListener
                     $continuationPeak !== null ? number_format($continuationPeak, 2) . '%' : '-',
                 ],
                 'chart' => $continuationChart,
-                'chartLabels' => $this->buildChartLabels($continuationChart, $formattedDates, static fn(int|float $v): string => number_format((float)$v, 2) . '%'),
+                'chartLabels' => $this->buildChartLabels($continuationChart, $formattedDates, static fn (int|float $v): string => number_format((float)$v, 2) . '%'),
                 'chartLegend' => [
                     $bounceRateSeries !== [] ? number_format(max(0.0, 100.0 - (float)$bounceRateSeries[0]), 2) . '%' : '-',
                     $continuationCurrent !== null ? number_format($continuationCurrent, 2) . '%' : '-',
@@ -301,7 +301,7 @@ final readonly class PagePerformanceBarListener
      * Loads page analytics and time series data from cache or API.
      * Returns null when data is unavailable.
      *
-     * @return array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null
+     * @return array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>, seriesDates: list<string>}|null
      */
     private function loadPageData(int $pageId, ?Site $site, ?SiteLanguage $language, int $days): ?array
     {
@@ -334,7 +334,7 @@ final readonly class PagePerformanceBarListener
 
         $cacheKey = 'page_' . md5($websiteId . '_' . $pageUrl . '_' . $days);
 
-        /** @var array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>}|null|false $cached */
+        /** @var array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>, seriesDates: list<string>}|null|false $cached */
         $cached = $this->pageAnalyticsCache->get($cacheKey);
         if ($cached === false) {
             try {
@@ -403,7 +403,7 @@ final readonly class PagePerformanceBarListener
 
     /**
      * @param list<int|float> $chartValues
-     * @param list<string> $dates
+     * @param array<string> $dates
      * @return list<string>
      */
     private function buildChartLabels(array $chartValues, array $dates, callable $valueFormatter): array

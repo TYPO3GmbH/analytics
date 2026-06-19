@@ -7,7 +7,7 @@ dashboardDefaultPeriod = 7
 # cat = API Configuration; type = string; label = API Base URL (leave empty for production default)
 apiBaseUrl =
 
-# cat = API Configuration; type = string; label = Analytics Data API Base URL (leave empty for production default: https://api.example.com/api)
+# cat = API Configuration; type = string; label = Analytics Data API Base URL (leave empty for production default: https://api.analytics.typo3.com/api)
 analyticsApiBaseUrl =
 
 # cat = API Configuration; type = boolean; label = Verify SSL Certificates (set to 0 only for local development with self-signed certificates)

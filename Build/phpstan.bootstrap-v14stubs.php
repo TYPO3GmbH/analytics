@@ -33,6 +33,7 @@ if (!class_exists(WidgetResult::class)) {
         public function __construct(
             public string $content,
             public bool $refreshable = false,
+            public ?string $label = null,
         ) {}
     }
 }

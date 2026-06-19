@@ -158,7 +158,7 @@ trait TrafficSourcesItemsTrait
         }
         $top = array_slice($items, 0, $limit);
         $rest = array_slice($items, $limit);
-        $restValue = array_sum(array_map(static fn(array $i): float => (float)$i['value'], $rest));
+        $restValue = array_sum(array_map(static fn (array $i): float => (float)$i['value'], $rest));
         $top[] = [
             'label' => $this->translate('dashboardWidget.trafficSources.other'),
             'value' => number_format($restValue, 2, '.', ''),
@@ -170,6 +170,9 @@ trait TrafficSourcesItemsTrait
         return $top;
     }
 
+    /**
+     * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
+     */
     private function buildDonut(array $items): string
     {
         $r = 40;
@@ -191,8 +194,11 @@ trait TrafficSourcesItemsTrait
             $rotation = -90.0 + ($cumulative / 100.0) * 360.0;
             $parts[] = sprintf(
                 '<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-segment tx-analytics-traffic-sources-tone-%s" stroke-width="%d" stroke-dasharray="%.3f %.3f" transform="rotate(%.3f 50 50)"><title>%s: %s%%</title></circle>',
-                $r, $item['tone'], $sw,
-                $segLen, $C - $segLen,
+                $r,
+                $item['tone'],
+                $sw,
+                $segLen,
+                $C - $segLen,
                 $rotation,
                 htmlspecialchars($item['label'], ENT_XML1),
                 $item['value'],

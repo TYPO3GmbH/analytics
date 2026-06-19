@@ -87,6 +87,10 @@ final readonly class TrafficSourcesAjaxController
         return new JsonResponse(['status' => 'ok', 'html' => $html, 'showAllUrl' => $showAllUrl]);
     }
 
+    /**
+     * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
+     * @return array{icon: string, title: string, showSiteSelect: bool, isDonut: bool, chartSvg: string, items: list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>}
+     */
     private function buildSection(string $icon, string $title, array $items): array
     {
         return ['icon' => $icon, 'title' => $title, 'showSiteSelect' => false, 'isDonut' => false, 'chartSvg' => '', 'items' => $items];

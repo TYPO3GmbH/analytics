@@ -192,6 +192,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
      *     visits: list<int|float>,
      *     bounceRate: list<int|float>,
      *     avgDuration: list<int|float>,
+     *     dates: list<string>,
      *     failures: array<string, string>
      * }
      */

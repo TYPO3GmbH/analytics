@@ -24,7 +24,7 @@ trait TopPagesWidgetTrait
         return $siteIdentifier !== ''
             ? (string)$this->uriBuilder->buildUriFromRoute(
                 'site_analytics.dashboard',
-                ['siteIdentifier' => $siteIdentifier, 'days' => $days]
+                ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => 'dashboard/pages']
             )
             : '';
     }

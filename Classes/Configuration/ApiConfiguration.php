@@ -8,7 +8,7 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 
 final readonly class ApiConfiguration
 {
-    private const DEFAULT_BASE_URL = 'https://api.example.com/api';
+    private const DEFAULT_BASE_URL = 'https://api.analytics.typo3.com/api';
 
     public function __construct(
         private ExtensionConfiguration $extensionConfiguration,
@@ -18,7 +18,7 @@ final readonly class ApiConfiguration
     public function getAnalyticsApiBaseUrl(): string
     {
         $configured = (string)($this->extensionConfiguration->get('analytics', 'analyticsApiBaseUrl') ?? '');
-        return $configured !== '' ? rtrim($configured, '/') : 'https://api.analytics.typo3.com/api';
+        return $configured !== '' ? rtrim($configured, '/') : 'https://middleware.analytics.typo3.com/api';
     }
 
     public function getBaseUrl(): string
