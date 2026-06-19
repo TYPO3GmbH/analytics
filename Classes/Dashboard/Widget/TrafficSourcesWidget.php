@@ -19,11 +19,11 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
 {
     use TrafficSourcesWidgetTrait;
 
-    /** @var array{site: string, days: int, refreshAvailable: bool} */
+    /** @var array{site: string, days: int} */
     private array $options;
 
     /**
-     * @param array{site?: string, days?: int, refreshAvailable?: bool} $options
+     * @param array{site?: string, days?: int} $options
      */
     public function __construct(
         /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
@@ -39,7 +39,6 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
             [
                 'site' => '',
                 'days' => 30,
-                'refreshAvailable' => true,
             ],
             $options
         );
@@ -51,7 +50,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
     }
 
     /**
-     * @return array{site: string, days: int, refreshAvailable: bool}
+     * @return array{site: string, days: int}
      */
     public function getOptions(): array
     {

@@ -71,6 +71,12 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
                 default: '',
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.title.label',
             ),
+            new SettingDefinition(
+                key: 'showMeta',
+                type: 'bool',
+                default: true,
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
+            ),
         ];
     }
 
@@ -80,6 +86,17 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
         $days = max(1, (int)$context->settings->get('days'));
         $limit = max(1, (int)$context->settings->get('limit'));
         $customTitle = trim((string)$context->settings->get('title'));
+        $showMeta = (bool)$context->settings->get('showMeta');
+
+        $siteOptions = $this->siteProvider->siteOptions();
+        $siteLabel = $siteOptions[$siteIdentifier] ?? $siteIdentifier;
+        $periodOptions = $this->periodOptions();
+        $periodLabel = $periodOptions[$days] ?? '';
+
+        $baseTitle = $customTitle !== '' ? $customTitle : $this->translate('dashboardWidget.topPages.title');
+        $label = $showMeta && $siteLabel !== ''
+            ? $baseTitle . ' (' . $siteLabel . ' · ' . $periodLabel . ')'
+            : $baseTitle;
 
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
@@ -90,7 +107,7 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
 
         return new WidgetResult(
             content: $view->render('Dashboard/Widget/TopPagesV14'),
-            label: $customTitle !== '' ? $customTitle : null,
+            label: $label,
         );
     }
 

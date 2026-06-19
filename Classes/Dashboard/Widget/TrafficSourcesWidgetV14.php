@@ -87,6 +87,12 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                 default: '',
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.title.label',
             ),
+            new SettingDefinition(
+                key: 'showMeta',
+                type: 'bool',
+                default: true,
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
+            ),
         ];
     }
 
@@ -97,11 +103,15 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         $section = (string)$context->settings->get('section');
         $isDonut = $context->settings->get('chartType') === 'donut';
         $customTitle = trim((string)$context->settings->get('title'));
+        $showMeta = (bool)$context->settings->get('showMeta');
 
         $siteOptions = $this->siteProvider->siteOptions();
         if ($siteIdentifier === '' && $siteOptions !== []) {
             $siteIdentifier = array_key_first($siteOptions);
         }
+        $siteLabel = $siteOptions[$siteIdentifier] ?? $siteIdentifier;
+        $periodOptions = $this->periodEnumOptions();
+        $periodLabel = $periodOptions[$days] ?? '';
 
         $sections = match ($section) {
             'devices' => [
@@ -148,6 +158,11 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
             default => 'traffic/share',
         };
 
+        $baseTitle = $customTitle !== '' ? $customTitle : $this->translate('dashboardWidget.trafficSources.title');
+        $label = $showMeta && $siteLabel !== ''
+            ? $baseTitle . ' (' . $siteLabel . ' · ' . $periodLabel . ')'
+            : $baseTitle;
+
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
@@ -158,7 +173,7 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
 
         return new WidgetResult(
             content: $view->render('Dashboard/Widget/TrafficSourcesV14'),
-            label: $customTitle !== '' ? $customTitle : null,
+            label: $label,
         );
     }
 

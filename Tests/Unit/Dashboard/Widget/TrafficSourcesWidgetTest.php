@@ -100,18 +100,17 @@ final class TrafficSourcesWidgetTest extends UnitTestCase
         $options = $widget->getOptions();
 
         self::assertSame('', $options['site']);
-        self::assertTrue($options['refreshAvailable']);
+        self::assertArrayNotHasKey('refreshAvailable', $options);
     }
 
     #[Test]
     public function getOptionsMergesGivenOptions(): void
     {
-        $widget = $this->makeWidget(['site' => 'my-site', 'refreshAvailable' => false]);
+        $widget = $this->makeWidget(['site' => 'my-site']);
 
         $options = $widget->getOptions();
 
         self::assertSame('my-site', $options['site']);
-        self::assertFalse($options['refreshAvailable']);
     }
 
     #[Test]

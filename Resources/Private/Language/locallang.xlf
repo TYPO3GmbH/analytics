@@ -278,6 +278,9 @@
             <trans-unit id="dashboardWidget.setting.title.label" resname="dashboardWidget.setting.title.label">
                 <source>Title</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.setting.showMeta.label" resname="dashboardWidget.setting.showMeta.label">
+                <source>Show site &amp; period in title</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.setting.site.label" resname="dashboardWidget.trafficSources.setting.site.label">
                 <source>Site</source>
             </trans-unit>

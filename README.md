@@ -97,18 +97,25 @@ The module offers per-site views for:
 
 ### Dashboard widgets
 
-The extension registers two dashboard widget types, each available in a TYPO3 v13 variant (inline dropdowns, AJAX-driven) and a TYPO3 v14+ variant (native widget settings panel).
+The extension registers four dashboard widget types, each available in a TYPO3 v13 variant (inline dropdowns, AJAX-driven) and a TYPO3 v14+ variant (native widget settings panel).
+
+All v14+ widgets share two common settings in addition to their widget-specific ones:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| **Title** | string | _(widget default)_ | Overrides the widget title shown in the dashboard header. Leave empty to use the default. |
+| **Show site & period in title** | bool | `true` | Appends the selected site name and period in parentheses to the widget title, e.g. `Traffic Sources (My Site · 7 days)`. |
 
 #### Top Pages widget
 
-Displays the top-visited pages for a configured site over a configurable time period. Results are sorted by page views; a "Show all" link leads to the full analytics dashboard filtered to the same site.
+Displays the top-visited pages for a configured site over a configurable time period. Results are sorted by page views; a "Show all" link leads to the pages view of the analytics dashboard.
 
 | Variant | Class | Widget ID | TYPO3 version |
 |---------|-------|-----------|---------------|
 | v13 | `TopPagesWidget` | `dashboard.widget.analyticsTopPages` | ^13.4 |
 | v14+ | `TopPagesWidgetV14` | `dashboard.widget.analyticsTopPagesV14` | ^14.0 |
 
-Widget settings (v14+): **Site**, **Period** (days), **Limit** (number of pages shown).
+Widget settings (v14+): **Site**, **Period** (days), **Limit** (number of pages shown), plus the common settings above.
 
 AJAX endpoint (v13): `TopPagesAjaxController` — registered as backend route `ajax_analytics_top_pages`.
 
@@ -130,9 +137,42 @@ Each metric shows the current value and a trend indicator (compared to the previ
 | v13 | `SitePerformanceWidget` | `dashboard.widget.analyticsSitePerformance` | ^13.4 |
 | v14+ | `SitePerformanceWidgetV14` | `dashboard.widget.analyticsSitePerformanceV14` | ^14.0 |
 
-Widget settings (v14+): **Site**, **Period** (days).
+Widget settings (v14+): **Site**, **Period** (days), plus the common settings above.
 
 AJAX endpoint (v13): `SitePerformanceAjaxController` — registered as backend route `ajax_analytics_site_performance`.
+
+#### Traffic Graph widget
+
+Displays a sparkline chart of daily visits for a configured site over a selectable time period. A "Show all" link opens the main analytics dashboard.
+
+| Variant | Class | Widget ID | TYPO3 version |
+|---------|-------|-----------|---------------|
+| v13 | `TrafficGraphWidget` | `dashboard.widget.analyticsTrafficGraph` | ^13.4 |
+| v14+ | `TrafficGraphWidgetV14` | `dashboard.widget.analyticsTrafficGraphV14` | ^14.0 |
+
+Widget settings (v14+): **Site**, **Period** (days), plus the common settings above.
+
+#### Traffic Sources widget
+
+Displays a breakdown of traffic by channel, device type, browser, or country for a configured site. Each entry shows its share as a percentage with a progress bar; device and channel entries include a trend compared to the previous period.
+
+| Variant | Class | Widget ID | TYPO3 version |
+|---------|-------|-----------|---------------|
+| v13 | `TrafficSourcesWidget` | `dashboard.widget.analyticsTrafficSources` | ^13.4 |
+| v14+ | `TrafficSourcesWidgetV14` | `dashboard.widget.analyticsTrafficSourcesV14` | ^14.0 |
+
+Widget settings (v14+):
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| **Site** | string | first registered site | Site to display data for. |
+| **Period** | int | `dashboardDefaultPeriod` | Time window in days. |
+| **Section** | enum | `sources` | Which breakdown to show: `sources` (channel), `devices`, `browser`, `countries`. |
+| **Chart type** | enum | `list` | Display as `list` (progress bars) or `donut` (SVG donut chart, top 5 + aggregated "Other"). |
+
+Plus the common settings above.
+
+AJAX endpoint (v13): `TrafficSourcesAjaxController` — registered as backend route `ajax_analytics_traffic_sources`.
 
 ### Page Performance Bar
 
