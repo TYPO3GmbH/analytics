@@ -241,27 +241,35 @@
 }
 
 .tx-analytics-traffic-sources-tone-blue {
-    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-primary);
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-blue-45), var(--token-color-blue-35));
 }
 
 .tx-analytics-traffic-sources-tone-green {
-    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-success);
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-green-50), var(--token-color-green-45));
+}
+
+.tx-analytics-traffic-sources-tone-magenta {
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-magenta-45), var(--token-color-magenta-40));
+}
+
+.tx-analytics-traffic-sources-tone-yellow {
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-yellow-50), var(--token-color-yellow-45));
 }
 
 .tx-analytics-traffic-sources-tone-purple {
-    --tx-analytics-traffic-sources-tone-color: light-dark(#7b61d9, #a99bff);
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-purple-45), var(--token-color-purple-40));
 }
 
 .tx-analytics-traffic-sources-tone-orange {
-    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-warning);
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-orange-45), var(--token-color-orange-40));
 }
 
 .tx-analytics-traffic-sources-tone-teal {
-    --tx-analytics-traffic-sources-tone-color: light-dark(#0a7c7c, #3ad5d5);
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-teal-50), var(--token-color-teal-45));
 }
 
-.tx-analytics-traffic-sources-tone-gray {
-    --tx-analytics-traffic-sources-tone-color: var(--typo3-text-color-variant);
+.tx-analytics-traffic-sources-tone-red {
+    --tx-analytics-traffic-sources-tone-color: light-dark(var(--token-color-red-45), var(--token-color-red-40));
 }
 
 @container (max-width: 300px) {
