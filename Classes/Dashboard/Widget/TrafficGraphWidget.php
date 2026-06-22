@@ -77,8 +77,17 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
         // widget instances are rendered on the same dashboard.
         $uniqueId = substr(sha1((string) spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8);
 
-        $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);
-        $chart = $this->buildChartData($graphData);
+        $metricData = [
+            'visits' => $this->trafficGraphService->loadGraphData($siteIdentifier, $days),
+            'sessions' => $this->trafficGraphService->loadSessionsData($siteIdentifier, $days),
+            'visitors' => $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days),
+        ];
+        $metricLabels = [
+            'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+            'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+            'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
+        ];
+        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'primary', 'sessions' => 'warning', 'visitors' => 'success']);
 
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([

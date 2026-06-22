@@ -54,7 +54,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadTrafficSourcesReturnsCachedDataOnCacheHit(): void
     {
-        $cached = ['direct' => 10, 'search' => 20];
+        $cached = ['direct' => ['current' => 10, 'previous' => 5], 'search' => ['current' => 20, 'previous' => 15]];
         $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchTrafficShareInDepth');
@@ -69,14 +69,26 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     {
         $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
         $this->cache->method('get')->willReturn(false);
-        $this->analyticsClient->method('fetchTrafficShareInDepth')->willReturn([
-            'labels' => ['2026-06-01T00:00:00+02:00'],
-            'datasets' => [
-                ['label' => 'direct', 'data' => [4], 'total' => 4],
-                ['label' => 'search', 'data' => [7], 'total' => 7],
+        $this->analyticsClient->method('fetchTrafficShareInDepth')->willReturnOnConsecutiveCalls(
+            [
+                'labels' => ['2026-06-01T00:00:00+02:00'],
+                'datasets' => [
+                    ['label' => 'direct', 'data' => [4], 'total' => 4],
+                    ['label' => 'search', 'data' => [7], 'total' => 7],
+                ],
             ],
-        ]);
-        $expected = ['direct' => 4, 'search' => 7];
+            [
+                'labels' => ['2026-05-01T00:00:00+02:00'],
+                'datasets' => [
+                    ['label' => 'direct', 'data' => [2], 'total' => 2],
+                    ['label' => 'search', 'data' => [3], 'total' => 3],
+                ],
+            ],
+        );
+        $expected = [
+            'direct' => ['current' => 4, 'previous' => 2],
+            'search' => ['current' => 7, 'previous' => 3],
+        ];
         $this->cache->expects(self::once())->method('set')->with(
             self::stringStartsWith('traffic_sources_'),
             $expected,
@@ -132,7 +144,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
         $result = $this->subject->loadTrafficSources('my-site', 7);
 
         self::assertArrayNotHasKey('', $result);
-        self::assertSame(['direct' => 3], $result);
+        self::assertSame(['direct' => ['current' => 3, 'previous' => 3]], $result);
     }
 
     #[Test]

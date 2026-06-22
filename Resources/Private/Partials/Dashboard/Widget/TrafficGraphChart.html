@@ -14,4 +14,11 @@
         </f:for>
     </div>
 </div>
+<f:if condition="{chart.legend -> f:count()} > 1">
+    <div class="tx-analytics-traffic-graph-legend" aria-hidden="true">
+        <f:for each="{chart.legend}" as="item">
+            <span class="tx-analytics-traffic-graph-legend-item" data-tone="{item.tone}">{item.label}</span>
+        </f:for>
+    </div>
+</f:if>
 </html>

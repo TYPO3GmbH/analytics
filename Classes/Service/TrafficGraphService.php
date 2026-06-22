@@ -60,4 +60,76 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
             return null;
         }
     }
+
+    public function loadSessionsData(string $siteIdentifier, int $days): ?array
+    {
+        $siteData = $this->siteProvider->resolveAnalyticsSite($siteIdentifier);
+        if ($siteData === null) {
+            return null;
+        }
+
+        $days = max(1, $days);
+        $websiteId = $siteData['websiteId'];
+        $apiKey = $siteData['apiKey'];
+
+        $cacheKey = 'traffic_sessions_' . md5($websiteId . '_' . $days);
+
+        /** @var array{labels: list<string>, data: list<int>}|false $cached */
+        $cached = $this->cache->get($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $to = new \DateTimeImmutable('today 23:59:59');
+        $from = $to->modify('-' . ($days - 1) . ' days');
+
+        try {
+            $result = $this->analyticsClient->fetchSiteSessionsGraph($websiteId, $apiKey, $from, $to);
+            $data = [
+                'labels' => $result['labels'] ?? [],
+                'data' => $result['datasets'][0]['data'] ?? [],
+            ];
+            $this->cache->set($cacheKey, $data);
+            return $data;
+        } catch (AnalyticsApiException $e) {
+            $this->logger->warning('TrafficGraphService: Failed to fetch sessions data.', ['reason' => $e->reason]);
+            return null;
+        }
+    }
+
+    public function loadVisitorsData(string $siteIdentifier, int $days): ?array
+    {
+        $siteData = $this->siteProvider->resolveAnalyticsSite($siteIdentifier);
+        if ($siteData === null) {
+            return null;
+        }
+
+        $days = max(1, $days);
+        $websiteId = $siteData['websiteId'];
+        $apiKey = $siteData['apiKey'];
+
+        $cacheKey = 'traffic_visitors_' . md5($websiteId . '_' . $days);
+
+        /** @var array{labels: list<string>, data: list<int>}|false $cached */
+        $cached = $this->cache->get($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $to = new \DateTimeImmutable('today 23:59:59');
+        $from = $to->modify('-' . ($days - 1) . ' days');
+
+        try {
+            $result = $this->analyticsClient->fetchSiteVisitorsGraph($websiteId, $apiKey, $from, $to);
+            $data = [
+                'labels' => $result['labels'] ?? [],
+                'data' => $result['datasets'][0]['data'] ?? [],
+            ];
+            $this->cache->set($cacheKey, $data);
+            return $data;
+        } catch (AnalyticsApiException $e) {
+            $this->logger->warning('TrafficGraphService: Failed to fetch visitors data.', ['reason' => $e->reason]);
+            return null;
+        }
+    }
 }

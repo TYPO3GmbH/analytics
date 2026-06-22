@@ -69,6 +69,8 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
 
         $this->trafficGraphService = $this->createMock(TrafficGraphServiceInterface::class);
         $this->trafficGraphService->method('loadGraphData')->willReturn(null);
+        $this->trafficGraphService->method('loadSessionsData')->willReturn(null);
+        $this->trafficGraphService->method('loadVisitorsData')->willReturn(null);
 
         $this->siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
 
@@ -99,7 +101,7 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
         );
     }
 
-    private function makeSettings(string $site = 'demo', int $days = 7, string $title = '', bool $showMeta = true): SettingsInterface
+    private function makeSettings(string $site = 'demo', int $days = 7, string $title = '', bool $showMeta = true, bool $showVisits = true, bool $showSessions = false, bool $showVisitors = false): SettingsInterface
     {
         $settings = $this->createMock(SettingsInterface::class);
         $settings->method('get')->willReturnMap([
@@ -107,6 +109,9 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
             ['days', $days],
             ['title', $title],
             ['showMeta', $showMeta],
+            ['showVisits', $showVisits],
+            ['showSessions', $showSessions],
+            ['showVisitors', $showVisitors],
         ]);
         return $settings;
     }
@@ -131,6 +136,9 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
         self::assertContains('days', $keys);
         self::assertContains('title', $keys);
         self::assertContains('showMeta', $keys);
+        self::assertContains('showVisits', $keys);
+        self::assertContains('showSessions', $keys);
+        self::assertContains('showVisitors', $keys);
     }
 
     #[Test]

@@ -59,7 +59,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildDeviceItemsHasNullChangeWhenNoPreviousSessionCount(): void
+    public function buildDeviceItemsShowsInfinityChangeWhenNoPreviousSessionCount(): void
     {
         $payload = [
             ['deviceType' => 'desktop', 'sessionCount' => 80, 'sessionPercentOfTotal' => 80.0],
@@ -67,7 +67,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildDeviceItems($payload);
 
-        self::assertNull($items[0]['change']);
+        self::assertSame('+∞%', $items[0]['change']);
     }
 
     /** buildDeviceItems — changeTone */
@@ -97,7 +97,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildDeviceItemsHasEmptyChangeToneWhenNoPreviousSessionCount(): void
+    public function buildDeviceItemsHasPositiveChangeToneWhenNoPreviousSessionCount(): void
     {
         $payload = [
             ['deviceType' => 'desktop', 'sessionCount' => 80, 'sessionPercentOfTotal' => 80.0],
@@ -105,7 +105,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildDeviceItems($payload);
 
-        self::assertSame('', $items[0]['changeTone']);
+        self::assertSame('positive', $items[0]['changeTone']);
     }
 
     /** buildDeviceItems — share value */
@@ -141,7 +141,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildBrowserItemsHasNullChangeWhenNoPreviousData(): void
+    public function buildBrowserItemsShowsInfinityChangeWhenNoPreviousData(): void
     {
         $payload = [
             ['browserName' => 'Firefox', 'sessionCount' => 40, 'sessionPercentOfTotal' => 40.0],
@@ -149,8 +149,8 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildBrowserItems($payload);
 
-        self::assertNull($items[0]['change']);
-        self::assertSame('', $items[0]['changeTone']);
+        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('positive', $items[0]['changeTone']);
     }
 
     /** buildCountryItems */
@@ -169,7 +169,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildCountryItemsHasNullChangeWhenNoPreviousData(): void
+    public function buildCountryItemsShowsInfinityChangeWhenNoPreviousData(): void
     {
         $payload = [
             ['countryCode' => 'de', 'sessionCount' => 100, 'sessionPercentOfTotal' => 100.0],
@@ -177,8 +177,8 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildCountryItems($payload);
 
-        self::assertNull($items[0]['change']);
-        self::assertSame('', $items[0]['changeTone']);
+        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('positive', $items[0]['changeTone']);
     }
 
     /** buildTrafficSourceItems */
@@ -186,7 +186,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     #[Test]
     public function buildTrafficSourceItemsComputesShareFromTotal(): void
     {
-        $sources = ['direct' => 70, 'search' => 30];
+        $sources = ['direct' => ['current' => 70, 'previous' => 0], 'search' => ['current' => 30, 'previous' => 0]];
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
@@ -197,7 +197,11 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     #[Test]
     public function buildTrafficSourceItemsAssignsToneByChannel(): void
     {
-        $sources = ['direct' => 60, 'search' => 30, 'social' => 10];
+        $sources = [
+            'direct' => ['current' => 60, 'previous' => 0],
+            'search' => ['current' => 30, 'previous' => 0],
+            'social' => ['current' => 10, 'previous' => 0],
+        ];
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
@@ -207,9 +211,31 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildTrafficSourceItemsAlwaysHasNullChange(): void
+    public function buildTrafficSourceItemsShowsChangeWhenPreviousDataAvailable(): void
     {
-        $sources = ['direct' => 100];
+        $sources = ['direct' => ['current' => 100, 'previous' => 50]];
+
+        $items = $this->callBuildTrafficSourceItems($sources);
+
+        self::assertSame('+100.00%', $items[0]['change']);
+        self::assertSame('positive', $items[0]['changeTone']);
+    }
+
+    #[Test]
+    public function buildTrafficSourceItemsShowsInfinityWhenPreviousIsZeroAndCurrentIsPositive(): void
+    {
+        $sources = ['direct' => ['current' => 5, 'previous' => 0]];
+
+        $items = $this->callBuildTrafficSourceItems($sources);
+
+        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('positive', $items[0]['changeTone']);
+    }
+
+    #[Test]
+    public function buildTrafficSourceItemsHasNullChangeWhenBothPeriodsAreZero(): void
+    {
+        $sources = ['direct' => ['current' => 0, 'previous' => 0]];
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
@@ -248,12 +274,12 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     /**
-     * @param array<string, int> $sources
-     * @return list<array{label: string, value: string, tone: string, icon: string, change: null, changeTone: string}>
+     * @param array<string, array{current: int, previous: int}> $sources
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
      */
     private function callBuildTrafficSourceItems(array $sources): array
     {
-        /** @var list<array{label: string, value: string, tone: string, icon: string, change: null, changeTone: string}> */
+        /** @var list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> */
         return (new \ReflectionMethod($this->subject, 'buildTrafficSourceItems'))->invoke($this->subject, $sources);
     }
 }

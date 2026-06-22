@@ -33,8 +33,17 @@ final readonly class TrafficGraphAjaxController
         // explicitly, so this fallback is only reached in direct/test requests.
         $days = max(1, (int) ($params['days'] ?? 30));
 
-        $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);
-        $chart = $this->chartDataBuilder->build($graphData, $this->translate('dashboardWidget.trafficGraph.chartLabel'));
+        $metricData = [
+            'visits' => $this->trafficGraphService->loadGraphData($siteIdentifier, $days),
+            'sessions' => $this->trafficGraphService->loadSessionsData($siteIdentifier, $days),
+            'visitors' => $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days),
+        ];
+        $metricLabels = [
+            'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+            'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+            'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
+        ];
+        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'primary', 'sessions' => 'warning', 'visitors' => 'success']);
 
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],

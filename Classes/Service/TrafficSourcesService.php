@@ -19,7 +19,7 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
     }
 
     /**
-     * @return array<string, int>|null
+     * @return array<string, array{current: int, previous: int}>|null
      */
     public function loadTrafficSources(string $siteIdentifier, int $days): ?array
     {
@@ -34,7 +34,7 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
 
         $cacheKey = 'traffic_sources_' . md5($websiteId . '_' . $days);
 
-        /** @var array<string, int>|false $cached */
+        /** @var array<string, array{current: int, previous: int}>|false $cached */
         $cached = $this->cache->get($cacheKey);
         if ($cached !== false) {
             return $cached;
@@ -42,16 +42,31 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
 
         $to = new \DateTimeImmutable('today 23:59:59');
         $from = $to->modify('-' . ($days - 1) . ' days');
+        $previousTo = $from->modify('-1 day');
+        $previousFrom = $previousTo->modify('-' . ($days - 1) . ' days');
 
         try {
-            $result = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $from, $to);
+            $currentResult = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $from, $to);
             $data = [];
-            foreach ($result['datasets'] as $dataset) {
+            foreach ($currentResult['datasets'] as $dataset) {
                 $label = (string)($dataset['label'] ?? '');
                 if ($label !== '') {
-                    $data[$label] = (int)($dataset['total'] ?? 0);
+                    $data[$label] = ['current' => (int)($dataset['total'] ?? 0), 'previous' => 0];
                 }
             }
+
+            try {
+                $previousResult = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $previousFrom, $previousTo);
+                foreach ($previousResult['datasets'] as $dataset) {
+                    $label = (string)($dataset['label'] ?? '');
+                    if ($label !== '' && isset($data[$label])) {
+                        $data[$label]['previous'] = (int)($dataset['total'] ?? 0);
+                    }
+                }
+            } catch (AnalyticsApiException $e) {
+                $this->logger->warning('TrafficSourcesService: Failed to fetch previous traffic sources.', ['reason' => $e->reason]);
+            }
+
             $this->cache->set($cacheKey, $data);
             return $data;
         } catch (AnalyticsApiException $e) {

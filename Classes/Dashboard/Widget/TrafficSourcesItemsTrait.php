@@ -7,8 +7,8 @@ namespace T3G\Analytics\Dashboard\Widget;
 trait TrafficSourcesItemsTrait
 {
     /**
-     * @param array<string, int> $sources channel label => total visits
-     * @return list<array{label: string, value: string, tone: string, icon: string, change: null, changeTone: string}>
+     * @param array<string, array{current: int, previous: int}> $sources channel label => {current, previous} visit counts
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
      */
     private function buildTrafficSourceItems(array $sources): array
     {
@@ -22,17 +22,19 @@ trait TrafficSourcesItemsTrait
             'ai_traffic' => 'purple',
         ];
 
-        $totalVisitCount = array_sum($sources);
+        $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
 
         $items = [];
-        foreach ($sources as $channel => $visitCount) {
+        foreach ($sources as $channel => $data) {
+            $current = $data['current'];
+            $previous = $data['previous'];
             $items[] = [
                 'label' => $this->translate('dashboardWidget.trafficSources.source.' . $channel),
-                'value' => $this->formatter->formatShare($visitCount, $totalVisitCount),
+                'value' => $this->formatter->formatShare($current, $totalVisitCount),
                 'tone' => $tones[$channel] ?? 'gray',
                 'icon' => '',
-                'change' => null,
-                'changeTone' => '',
+                'change' => $this->formatter->formatPercentageChange($current, $previous),
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
 
@@ -61,7 +63,7 @@ trait TrafficSourcesItemsTrait
                 'tone' => $tones[$deviceType] ?? 'gray',
                 'icon' => $icons[$deviceType] ?? '',
                 'change' => $this->formatter->formatPercentageChange($current, $previous),
-                'changeTone' => $previous > 0 ? ($current >= $previous ? 'positive' : 'negative') : '',
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
 
@@ -87,7 +89,7 @@ trait TrafficSourcesItemsTrait
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
                 'change' => $this->formatter->formatPercentageChange($current, $previous),
-                'changeTone' => $previous > 0 ? ($current >= $previous ? 'positive' : 'negative') : '',
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
 
@@ -113,7 +115,7 @@ trait TrafficSourcesItemsTrait
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
                 'change' => $this->formatter->formatPercentageChange($current, $previous),
-                'changeTone' => $previous > 0 ? ($current >= $previous ? 'positive' : 'negative') : '',
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
 

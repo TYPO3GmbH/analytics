@@ -72,6 +72,24 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
                 default: true,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
             ),
+            new SettingDefinition(
+                key: 'showVisits',
+                type: 'bool',
+                default: true,
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.showVisits.label',
+            ),
+            new SettingDefinition(
+                key: 'showSessions',
+                type: 'bool',
+                default: false,
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.showSessions.label',
+            ),
+            new SettingDefinition(
+                key: 'showVisitors',
+                type: 'bool',
+                default: false,
+                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.showVisitors.label',
+            ),
         ];
     }
 
@@ -92,8 +110,29 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
             ? $baseTitle . ' (' . $siteLabel . ' · ' . $periodLabel . ')'
             : $baseTitle;
 
-        $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);
-        $chart = $this->buildChartData($graphData);
+        $showVisits = (bool) $context->settings->get('showVisits');
+        $showSessions = (bool) $context->settings->get('showSessions');
+        $showVisitors = (bool) $context->settings->get('showVisitors');
+
+        $useMulti = $showSessions || $showVisitors || !$showVisits;
+
+        if ($useMulti) {
+            $metricData = [
+                'visits' => $showVisits ? $this->trafficGraphService->loadGraphData($siteIdentifier, $days) : null,
+                'sessions' => $showSessions ? $this->trafficGraphService->loadSessionsData($siteIdentifier, $days) : null,
+                'visitors' => $showVisitors ? $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days) : null,
+            ];
+            $metricLabels = [
+                'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+                'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+                'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
+            ];
+            $metricTones = ['visits' => 'primary', 'sessions' => 'warning', 'visitors' => 'success'];
+            $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, $metricTones);
+        } else {
+            $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);
+            $chart = $this->buildChartData($graphData);
+        }
 
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([

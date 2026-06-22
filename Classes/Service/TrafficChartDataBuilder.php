@@ -22,7 +22,11 @@ final readonly class TrafficChartDataBuilder
         $data = $graphData['data'] ?? [];
         $labels = $graphData['labels'] ?? [];
 
-        $formattedLabels = array_map(
+        $shortLabels = array_map(
+            static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('d.m.'),
+            $labels
+        );
+        $fullLabels = array_map(
             static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('d.m.Y'),
             $labels
         );
@@ -39,7 +43,7 @@ final readonly class TrafficChartDataBuilder
 
         $pointLabels = [];
         foreach ($data as $index => $value) {
-            $date = $formattedLabels[$index] ?? '';
+            $date = $fullLabels[$index] ?? '';
             $pointLabels[] = $date !== '' ? $date . ': ' . number_format($value, 0, '.', "\u{202F}") : (string)$value;
         }
 
@@ -55,7 +59,118 @@ final readonly class TrafficChartDataBuilder
                 'labels' => $pointLabels,
             ]),
             'yLabels' => $ticks,
-            'xLabels' => $this->visibleLabels($formattedLabels),
+            'xLabels' => $this->visibleLabels($shortLabels),
+        ];
+    }
+
+    /**
+     * @param array<string, array{labels: list<string>, data: list<int>}|null> $metricData
+     * @param array<string, string> $metricLabels
+     * @param array<string, string> $metricTones
+     * @return array{sparkline: string, yLabels: list<array{value: int, label: string}>, xLabels: list<string>, legend: list<array{label: string, tone: string}>}
+     */
+    public function buildMulti(array $metricData, array $metricLabels, array $metricTones): array
+    {
+        $activeData = [];
+        foreach ($metricData as $key => $dataset) {
+            if ($dataset !== null) {
+                $activeData[$key] = $dataset;
+            }
+        }
+
+        $emptyResult = ['sparkline' => '', 'yLabels' => [], 'xLabels' => [], 'legend' => []];
+
+        if ($activeData === []) {
+            return $emptyResult;
+        }
+
+        // Align all datasets to a shared date axis (union of all dates, 0-fill for missing).
+        // Each API may return a different date range or skip days, so index-based access is wrong.
+        // Normalize all labels to Y-m-d: different API endpoints may return different ISO formats
+        // (e.g. "2026-06-16" vs "2026-06-16T00:00:00.000+02:00") for the same calendar day.
+        $normalizeDate = static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('Y-m-d');
+
+        $allIsoDates = [];
+        foreach ($activeData as $dataset) {
+            foreach ($dataset['labels'] as $isoDate) {
+                $allIsoDates[$normalizeDate($isoDate)] = true;
+            }
+        }
+        ksort($allIsoDates);
+        $sortedIsoDates = array_keys($allIsoDates);
+
+        $shortLabels = array_map(
+            static fn (string $ymd): string => (new \DateTimeImmutable($ymd))->format('d.m.'),
+            $sortedIsoDates
+        );
+        $formattedLabels = array_map(
+            static fn (string $ymd): string => (new \DateTimeImmutable($ymd))->format('d.m.Y'),
+            $sortedIsoDates
+        );
+
+        $alignedValues = [];
+        $allValues = [];
+        foreach ($activeData as $key => $dataset) {
+            $lookup = [];
+            foreach ($dataset['labels'] as $i => $rawLabel) {
+                $lookup[$normalizeDate($rawLabel)] = $dataset['data'][$i];
+            }
+            $aligned = [];
+            foreach ($sortedIsoDates as $ymd) {
+                $v = $lookup[$ymd] ?? 0;
+                $aligned[] = $v;
+                $allValues[] = $v;
+            }
+            $alignedValues[$key] = $aligned;
+        }
+
+        $max = $allValues !== [] ? max($allValues) : 0;
+        $scaleMax = $this->calcScaleMax($max);
+        $step = intdiv($scaleMax, 3);
+
+        $ticks = [];
+        for ($i = 3; $i >= 0; $i--) {
+            $value = $step * $i;
+            $ticks[] = ['value' => $value, 'label' => $this->formatScaleLabel($value)];
+        }
+
+        $datasets = [];
+        $legend = [];
+        foreach ($activeData as $key => $dataset) {
+            $tone = $metricTones[$key] ?? 'primary';
+            $datasets[] = [
+                'values' => $alignedValues[$key],
+                'label' => $metricLabels[$key] ?? $key,
+                'tone' => $tone,
+            ];
+            $legend[] = ['label' => $metricLabels[$key] ?? $key, 'tone' => $tone];
+        }
+
+        $combinedPointLabels = [];
+        foreach ($sortedIsoDates as $i => $isoDate) {
+            $date = $formattedLabels[$i] ?? '';
+            $lines = $date !== '' ? [$date] : [];
+            foreach ($activeData as $key => $dataset) {
+                $value = $alignedValues[$key][$i] ?? 0;
+                $lines[] = ($metricLabels[$key] ?? $key) . ': ' . number_format($value, 0, '.', "\u{202F}");
+            }
+            $combinedPointLabels[] = implode("\n", $lines);
+        }
+
+        $sparkline = $this->sparklineRenderer->renderMultiLine($datasets, [
+            'class' => 'tx-analytics-traffic-graph-sparkline',
+            'yMin' => 0,
+            'yMax' => $scaleMax,
+            'gridLines' => array_column($ticks, 'value'),
+            'preserveAspectRatio' => 'none',
+            'combinedPointLabels' => $combinedPointLabels,
+        ]);
+
+        return [
+            'sparkline' => $sparkline,
+            'yLabels' => $ticks,
+            'xLabels' => $this->visibleLabels($shortLabels),
+            'legend' => $legend,
         ];
     }
 

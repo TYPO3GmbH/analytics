@@ -95,6 +95,32 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
+     * Fetches site-wide daily session counts as a time-series (POST, no page filter).
+     *
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchSiteSessionsGraph(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array;
+
+    /**
+     * Fetches site-wide daily unique visitor counts as a time-series (POST, no page filter).
+     *
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchSiteVisitorsGraph(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array;
+
+    /**
      * Fetches traffic share by channel for a date range.
      *
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}

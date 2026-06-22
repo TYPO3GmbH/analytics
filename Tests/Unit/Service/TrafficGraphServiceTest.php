@@ -112,4 +112,120 @@ final class TrafficGraphServiceTest extends UnitTestCase
 
         $this->subject->loadGraphData('my-site', 0);
     }
+
+    #[Test]
+    public function loadSessionsDataReturnsNullWhenSiteNotFound(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(null);
+
+        $result = $this->subject->loadSessionsData('unknown-site', 30);
+
+        self::assertNull($result);
+    }
+
+    #[Test]
+    public function loadSessionsDataReturnsCachedDataOnCacheHit(): void
+    {
+        $cached = ['labels' => ['2024-01-01'], 'data' => [5]];
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn($cached);
+        $this->analyticsClient->expects(self::never())->method('fetchSiteSessionsGraph');
+
+        $result = $this->subject->loadSessionsData('my-site', 30);
+
+        self::assertSame($cached, $result);
+    }
+
+    #[Test]
+    public function loadSessionsDataFetchesAndCachesDataOnCacheMiss(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn(false);
+        $this->analyticsClient->method('fetchSiteSessionsGraph')->willReturn([
+            'labels' => ['2024-01-01', '2024-01-02'],
+            'datasets' => [['data' => [3, 7]]],
+        ]);
+        $expected = ['labels' => ['2024-01-01', '2024-01-02'], 'data' => [3, 7]];
+        $this->cache->expects(self::once())->method('set')->with(
+            self::stringStartsWith('traffic_sessions_'),
+            $expected,
+        );
+
+        $result = $this->subject->loadSessionsData('my-site', 30);
+
+        self::assertSame($expected, $result);
+    }
+
+    #[Test]
+    public function loadSessionsDataReturnsNullAndLogsWarningOnApiException(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn(false);
+        $this->analyticsClient->method('fetchSiteSessionsGraph')->willThrowException(
+            new AnalyticsApiException('API error', 500),
+        );
+        $this->logger->expects(self::once())->method('warning');
+
+        $result = $this->subject->loadSessionsData('my-site', 30);
+
+        self::assertNull($result);
+    }
+
+    #[Test]
+    public function loadVisitorsDataReturnsNullWhenSiteNotFound(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(null);
+
+        $result = $this->subject->loadVisitorsData('unknown-site', 30);
+
+        self::assertNull($result);
+    }
+
+    #[Test]
+    public function loadVisitorsDataReturnsCachedDataOnCacheHit(): void
+    {
+        $cached = ['labels' => ['2024-01-01'], 'data' => [5]];
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn($cached);
+        $this->analyticsClient->expects(self::never())->method('fetchSiteVisitorsGraph');
+
+        $result = $this->subject->loadVisitorsData('my-site', 30);
+
+        self::assertSame($cached, $result);
+    }
+
+    #[Test]
+    public function loadVisitorsDataFetchesAndCachesDataOnCacheMiss(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn(false);
+        $this->analyticsClient->method('fetchSiteVisitorsGraph')->willReturn([
+            'labels' => ['2024-01-01', '2024-01-02'],
+            'datasets' => [['data' => [10, 20]]],
+        ]);
+        $expected = ['labels' => ['2024-01-01', '2024-01-02'], 'data' => [10, 20]];
+        $this->cache->expects(self::once())->method('set')->with(
+            self::stringStartsWith('traffic_visitors_'),
+            $expected,
+        );
+
+        $result = $this->subject->loadVisitorsData('my-site', 30);
+
+        self::assertSame($expected, $result);
+    }
+
+    #[Test]
+    public function loadVisitorsDataReturnsNullAndLogsWarningOnApiException(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn(false);
+        $this->analyticsClient->method('fetchSiteVisitorsGraph')->willThrowException(
+            new AnalyticsApiException('API error', 500),
+        );
+        $this->logger->expects(self::once())->method('warning');
+
+        $result = $this->subject->loadVisitorsData('my-site', 30);
+
+        self::assertNull($result);
+    }
 }

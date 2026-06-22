@@ -118,10 +118,10 @@ final class TrafficChartDataBuilderTest extends UnitTestCase
 
         // lastIndex=6, slots=4 → indexes 0,2,4,6
         self::assertCount(4, $result['xLabels']);
-        self::assertSame('01.01.2024', $result['xLabels'][0]);
-        self::assertSame('03.01.2024', $result['xLabels'][1]);
-        self::assertSame('05.01.2024', $result['xLabels'][2]);
-        self::assertSame('07.01.2024', $result['xLabels'][3]);
+        self::assertSame('01.01.', $result['xLabels'][0]);
+        self::assertSame('03.01.', $result['xLabels'][1]);
+        self::assertSame('05.01.', $result['xLabels'][2]);
+        self::assertSame('07.01.', $result['xLabels'][3]);
     }
 
     #[Test]
@@ -141,6 +141,6 @@ final class TrafficChartDataBuilderTest extends UnitTestCase
     {
         $result = $this->subject->build(['labels' => ['2024-03-15'], 'data' => [1]], 'label');
 
-        self::assertSame(['15.03.2024'], $result['xLabels']);
+        self::assertSame(['15.03.'], $result['xLabels']);
     }
 }

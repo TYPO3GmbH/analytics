@@ -62,8 +62,8 @@ readonly class MetricFormatter implements MetricFormatterInterface
 
     public function formatPercentageChange(int $current, int $previous): ?string
     {
-        if ($previous <= 0) {
-            return null;
+        if ($previous === 0) {
+            return $current > 0 ? '+∞%' : null;
         }
         $change = ($current - $previous) / $previous * 100;
         return ($change >= 0.0 ? '+' : '') . number_format($change, 2, '.', '') . '%';

@@ -354,6 +354,30 @@
                 <source>Show in Analytics</source>
                 <target>In Analytics anzeigen</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.setting.showVisits.label" resname="dashboardWidget.trafficGraph.setting.showVisits.label">
+                <source>Show visits</source>
+                <target>Besuche anzeigen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.setting.showSessions.label" resname="dashboardWidget.trafficGraph.setting.showSessions.label">
+                <source>Show sessions</source>
+                <target>Sitzungen anzeigen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.setting.showVisitors.label" resname="dashboardWidget.trafficGraph.setting.showVisitors.label">
+                <source>Show unique visitors</source>
+                <target>Eindeutige Besucher anzeigen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visits" resname="dashboardWidget.trafficGraph.chartLabel.visits">
+                <source>Visits</source>
+                <target>Besuche</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.sessions" resname="dashboardWidget.trafficGraph.chartLabel.sessions">
+                <source>Sessions</source>
+                <target>Sitzungen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors" resname="dashboardWidget.trafficGraph.chartLabel.visitors">
+                <source>Unique visitors</source>
+                <target>Eindeutige Besucher</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
                 <target>TYPO3 Analytics</target>
@@ -407,8 +431,8 @@
                 <target>Bezahlt</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.unknown" resname="dashboardWidget.trafficSources.source.unknown">
-                <source>Unknown</source>
-                <target>Unbekannt</target>
+                <source>Other Referrals</source>
+                <target>Andere Referrals</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.source.ai_traffic" resname="dashboardWidget.trafficSources.source.ai_traffic">
                 <source>AI traffic</source>

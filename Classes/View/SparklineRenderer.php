@@ -90,6 +90,91 @@ final class SparklineRenderer
     }
 
     /**
+     * @param list<array{values: list<int|float>, label?: string, tone?: string}> $datasets
+     * @param array{yMin?: float, yMax?: float, gridLines?: list<int|float>, preserveAspectRatio?: string, class?: string, combinedPointLabels?: list<string>} $options
+     */
+    public function renderMultiLine(array $datasets, array $options = []): string
+    {
+        $active = [];
+        foreach ($datasets as $dataset) {
+            $numeric = $this->toNumeric($dataset['values'] ?? []);
+            if ($numeric !== []) {
+                $active[] = [
+                    'numeric' => $numeric,
+                    'tone' => $this->normalizeTone((string)($dataset['tone'] ?? 'primary')),
+                ];
+            }
+        }
+
+        if ($active === []) {
+            return '';
+        }
+
+        $yMin = isset($options['yMin']) ? (float)$options['yMin'] : 0.0;
+        if (isset($options['yMax'])) {
+            $yMax = (float)$options['yMax'];
+        } else {
+            $allValues = array_merge(...array_column($active, 'numeric'));
+            $yMax = $allValues !== [] ? (float)max($allValues) : 1.0;
+        }
+
+        $class = trim('tx-analytics-sparkline ' . ($options['class'] ?? ''));
+        $gridLines = (array)($options['gridLines'] ?? []);
+        $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
+        $combinedPointLabels = (array)($options['combinedPointLabels'] ?? []);
+
+        $html = '<div class="' . $this->escape($class) . '">';
+        $html .= '<svg class="tx-analytics-sparkline-svg" viewBox="0 0 ' . self::VIEW_BOX_WIDTH . ' ' . self::VIEW_BOX_HEIGHT . '"';
+        if ($preserveAspectRatio !== '') {
+            $html .= ' preserveAspectRatio="' . $this->escape($preserveAspectRatio) . '"';
+        }
+        $html .= ' role="img" aria-hidden="true" focusable="false">';
+
+        foreach ($gridLines as $gridValue) {
+            $y = $this->valueToY((float)$gridValue, $yMin, $yMax);
+            $html .= '<line class="tx-analytics-sparkline-grid-line" x1="0" y1="' . $this->formatNumber($y) . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $this->formatNumber($y) . '"/>';
+        }
+
+        $pointSets = [];
+        foreach ($active as $ds) {
+            $points = $this->buildPoints($ds['numeric'], $yMin, $yMax);
+            $pointSets[] = ['points' => $points, 'tone' => $ds['tone']];
+        }
+
+        foreach ($pointSets as $ps) {
+            if (count($ps['points']) > 1) {
+                $linePath = $this->buildLinePath($ps['points']);
+                $html .= '<path class="tx-analytics-sparkline-fill" data-tone="' . $this->escape($ps['tone']) . '" d="' . $this->buildFillPath($ps['points'], $linePath) . '"></path>';
+            }
+        }
+
+        foreach ($pointSets as $ps) {
+            $linePath = $this->buildLinePath($ps['points']);
+            $html .= '<path class="tx-analytics-sparkline-line" data-tone="' . $this->escape($ps['tone']) . '" d="' . $linePath . '"></path>';
+        }
+
+        // One combined tooltip rect per x-position — spans the full SVG height so it is easy to hit.
+        if ($combinedPointLabels !== []) {
+            $firstPoints = $pointSets[0]['points'];
+            $count = count($firstPoints);
+            $step = $count > 1 ? self::VIEW_BOX_WIDTH / ($count - 1) : (float)self::VIEW_BOX_WIDTH;
+            foreach ($firstPoints as $index => [$x]) {
+                $combinedLabel = (string)($combinedPointLabels[$index] ?? '');
+                if ($combinedLabel === '') {
+                    continue;
+                }
+                $rectX = max(0.0, $x - $step / 2);
+                $rectW = min((float)self::VIEW_BOX_WIDTH - $rectX, $step);
+                $html .= '<rect class="tx-analytics-sparkline-point-tooltip" x="' . $this->formatNumber($rectX) . '" y="0" width="' . $this->formatNumber($rectW) . '" height="' . self::VIEW_BOX_HEIGHT . '" fill="transparent"><title>' . $this->escape($combinedLabel) . '</title></rect>';
+            }
+        }
+
+        $html .= '</svg></div>';
+
+        return $html;
+    }
+
+    /**
      * @param list<int|float|string> $values
      * @return list<float>
      */

@@ -7,7 +7,7 @@ namespace T3G\Analytics\Service;
 interface TrafficSourcesServiceInterface
 {
     /**
-     * @return array<string, int>|null keyed by channel label (direct, search, …), null on error or site not found
+     * @return array<string, array{current: int, previous: int}>|null keyed by channel label (direct, search, …), null on error or site not found
      */
     public function loadTrafficSources(string $siteIdentifier, int $days): ?array;
 
