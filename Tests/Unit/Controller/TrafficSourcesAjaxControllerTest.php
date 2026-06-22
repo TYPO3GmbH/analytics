@@ -207,7 +207,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         self::assertSame('green', $items[0]['tone']);
         self::assertSame('blue', $items[1]['tone']);
-        self::assertSame('orange', $items[2]['tone']);
+        self::assertSame('yellow', $items[2]['tone']);
     }
 
     #[Test]
