@@ -142,13 +142,6 @@ final class SparklineRenderer
         }
 
         foreach ($pointSets as $ps) {
-            if (count($ps['points']) > 1) {
-                $linePath = $this->buildLinePath($ps['points']);
-                $html .= '<path class="tx-analytics-sparkline-fill" data-tone="' . $this->escape($ps['tone']) . '" d="' . $this->buildFillPath($ps['points'], $linePath) . '"></path>';
-            }
-        }
-
-        foreach ($pointSets as $ps) {
             $linePath = $this->buildLinePath($ps['points']);
             $html .= '<path class="tx-analytics-sparkline-line" data-tone="' . $this->escape($ps['tone']) . '" d="' . $linePath . '"></path>';
         }
@@ -257,7 +250,7 @@ final class SparklineRenderer
 
     private function normalizeTone(string $tone): string
     {
-        return in_array($tone, ['primary', 'success', 'warning', 'danger', 'info'], true) ? $tone : 'primary';
+        return in_array($tone, ['primary', 'success', 'warning', 'danger', 'info', 'blue', 'orange', 'green', 'teal', 'purple', 'magenta', 'red', 'yellow'], true) ? $tone : 'primary';
     }
 
     private function formatNumber(float $value): string

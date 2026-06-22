@@ -142,6 +142,9 @@
 .tx-analytics-traffic-graph-legend-item[data-tone="success"]::before { background: var(--typo3-text-color-success); }
 .tx-analytics-traffic-graph-legend-item[data-tone="warning"]::before { background: var(--typo3-text-color-warning); }
 .tx-analytics-traffic-graph-legend-item[data-tone="danger"]::before { background: var(--typo3-text-color-danger); }
+.tx-analytics-traffic-graph-legend-item[data-tone="blue"]::before { background: light-dark(var(--token-color-blue-45), var(--token-color-blue-35)); }
+.tx-analytics-traffic-graph-legend-item[data-tone="orange"]::before { background: light-dark(var(--token-color-orange-45), var(--token-color-orange-40)); }
+.tx-analytics-traffic-graph-legend-item[data-tone="green"]::before { background: light-dark(var(--token-color-green-50), var(--token-color-green-45)); }
 
 @container (max-width: 300px) {
     .tx-analytics-traffic-graph-toolbar {

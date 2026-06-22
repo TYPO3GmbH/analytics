@@ -127,7 +127,7 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
                 'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
                 'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
             ];
-            $metricTones = ['visits' => 'primary', 'sessions' => 'warning', 'visitors' => 'success'];
+            $metricTones = ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green'];
             $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, $metricTones);
         } else {
             $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);

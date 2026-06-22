@@ -43,7 +43,7 @@ final readonly class TrafficGraphAjaxController
             'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
             'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
         ];
-        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'primary', 'sessions' => 'warning', 'visitors' => 'success']);
+        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green']);
 
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
