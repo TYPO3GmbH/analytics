@@ -37,7 +37,7 @@ services:
     alias: T3G\Analytics\Service\AnalyticsApiClient
 
   T3G\Analytics\Service\AnalyticsDataClientInterface:
-    alias: T3G\Analytics\Service\AnalyticsDataClient
+    alias: T3G\Analytics\Service\DemoAnalyticsDataClient
 
   T3G\Analytics\Service\AnalyticsStatusServiceInterface:
     alias: T3G\Analytics\Service\AnalyticsStatusService
