@@ -273,6 +273,10 @@
         grid-template-columns: repeat(2, minmax(12rem, 1fr));
     }
 
+    .tx-analytics-performance-metric:nth-child(n + 3) {
+        border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    }
+
     .tx-analytics-performance-meta {
         grid-column: 1 / -1;
         align-items: flex-start;
@@ -293,6 +297,10 @@
     .tx-analytics-performance-metric {
         border-right: 0;
         border-bottom: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    }
+
+    .tx-analytics-performance-metric:nth-child(n + 3) {
+        border-top: 0;
     }
 
 }
