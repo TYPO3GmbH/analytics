@@ -4,6 +4,9 @@ dashboardPeriods = 7,14,30
 # cat = Dashboard; type = int+; label = Default period in days for dashboard widgets (must be one of the configured period options)
 dashboardDefaultPeriod = 7
 
+# cat = Dashboard; type = boolean; label = Enable demo analytics data in Development context only
+demoData = 0
+
 # cat = API Configuration; type = string; label = API Base URL (leave empty for production default)
 apiBaseUrl =
 
