@@ -3,7 +3,9 @@
 <f:section name="main">
 
     <div class="tx-analytics-site-performance">
-        <f:render partial="Dashboard/Widget/SitePerformanceMetrics" arguments="{metrics: metrics}" />
+        <div class="tx-analytics-site-performance-metrics-container">
+            <f:render partial="Dashboard/Widget/SitePerformanceMetrics" arguments="{metrics: metrics}" />
+        </div>
     </div>
 
 </f:section>
