@@ -161,7 +161,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildMetricsBounceRateTrendIsNonNullWhenNoPreviousData(): void
+    public function buildMetricsBounceRateTrendIsNullWhenNoPreviousData(): void
     {
         $this->mockHandler->append(
             $this->pageApiResponse(21, 50.0, 0.0),
@@ -173,9 +173,8 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
 
-        // Bounce rate args are inverted: percentTrend(prevBounceRate=0, bounceRate=50) = -100.00%
-        // Shows a trend even when previous-period data is absent
-        self::assertSame('-100.00%', $metrics[1]['trend']);
+        // When there is no previous-period data, bounce rate trend must be null — not -100%.
+        self::assertNull($metrics[1]['trend']);
     }
 
     /** buildMetrics — bounce rate direction (inverted: lower bounce = better) */

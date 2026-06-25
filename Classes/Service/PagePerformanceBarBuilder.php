@@ -168,9 +168,9 @@ final readonly class PagePerformanceBarBuilder
         $continuationRate = max(0.0, 100.0 - $bounceRate);
 
         $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : 0;
-        $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : 0.0;
+        $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : null;
         $prevAvgDuration = $previousPage !== null ? (float)($previousPage['averageVisitDuration'] ?? 0.0) : null;
-        $prevContinuationRate = $previousPage !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
+        $prevContinuationRate = $prevBounceRate !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
 
         $visitsChart = $visitsSeries !== [] ? $visitsSeries : [$visitCount];
         $visitsCurrent = $this->seriesCurrent($visitsSeries);
@@ -222,8 +222,8 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'bounce-rate',
                 'value' => number_format($bounceRate, 2) . '%',
-                'trend' => $this->percentTrend($prevBounceRate, $bounceRate),
-                'trendDirection' => $this->trendDirection($prevBounceRate, $bounceRate),
+                'trend' => $this->invertedPercentTrend($bounceRate, $prevBounceRate),
+                'trendDirection' => $prevBounceRate !== null ? $this->trendDirection($prevBounceRate, $bounceRate) : null,
                 'details' => [
                     $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 2) . '%' : '-',
                     $bounceRatePrevious !== null ? number_format($bounceRatePrevious, 2) . '%' : '-',
@@ -447,6 +447,15 @@ final readonly class PagePerformanceBarBuilder
             return null;
         }
         $change = (($current - $previous) / $previous) * 100.0;
+        return ($change >= 0 ? '+' : '') . number_format($change, 2) . '%';
+    }
+
+    private function invertedPercentTrend(int|float $current, int|float|null $previous): ?string
+    {
+        if ($previous === null || $previous == 0) {
+            return null;
+        }
+        $change = (($previous - $current) / $previous) * 100.0;
         return ($change >= 0 ? '+' : '') . number_format($change, 2) . '%';
     }
 

@@ -99,7 +99,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
                 'value' => $this->formatter->formatPercentage($current['bounceRate']),
                 'tone' => 'bounce-rate',
                 'icon' => 'arrow-right-from-bracket',
-                'trend' => $this->formatter->formatRelativeTrend($previous['bounceRate'], $current['bounceRate']),
+                'trend' => $this->formatter->formatInvertedRelativeTrend($current['bounceRate'], $previous['bounceRate']),
                 'trendDirection' => $this->formatter->trendDirection($previous['bounceRate'], $current['bounceRate']),
                 'trendLabel' => $trendLabel,
             ],

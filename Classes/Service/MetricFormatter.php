@@ -44,6 +44,15 @@ readonly class MetricFormatter implements MetricFormatterInterface
         return $formatted === '±0' ? '' : $formatted . '%';
     }
 
+    public function formatInvertedRelativeTrend(float $currentValue, float $previousValue): string
+    {
+        if ($previousValue === 0.0) {
+            return '';
+        }
+        $formatted = $this->formatSignedNumber((($previousValue - $currentValue) / $previousValue) * 100);
+        return $formatted === '±0' ? '' : $formatted . '%';
+    }
+
     public function trendDirection(float $currentValue, float $previousValue): string
     {
         if ($currentValue === $previousValue) {
