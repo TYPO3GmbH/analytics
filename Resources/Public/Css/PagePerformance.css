@@ -158,11 +158,11 @@
 .tx-analytics-performance-meta-icon {
     width: 1.25rem;
     height: 1.25rem;
-    color: var(--tx-analytics-color-visits);
+    color: var(--typo3-text-color-primary);
 }
 
 .tx-analytics-performance-meta-link {
-    color: var(--tx-analytics-color-visits);
+    color: var(--typo3-text-color-primary);
     font-weight: 600;
     line-height: 1.25;
     text-decoration: none;
@@ -170,7 +170,7 @@
 }
 
 .tx-analytics-performance-meta-link:hover {
-    color: var(--tx-analytics-color-visits);
+    color: var(--typo3-text-color-primary);
     text-decoration: underline;
 }
 

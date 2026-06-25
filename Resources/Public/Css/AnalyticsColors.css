@@ -1,9 +1,9 @@
 :root {
     --tx-analytics-color-visits: light-dark(var(--token-color-blue-45), var(--token-color-blue-35));
     --tx-analytics-color-visitors: light-dark(var(--token-color-green-50), var(--token-color-green-45));
-    --tx-analytics-color-sessions: light-dark(var(--token-color-orange-45), var(--token-color-orange-40));
+    --tx-analytics-color-sessions: light-dark(var(--token-color-purple-45), var(--token-color-purple-40));
     --tx-analytics-color-bounce-rate: var(--typo3-text-color-danger);
-    --tx-analytics-color-avg-duration: var(--typo3-text-color-info);
+    --tx-analytics-color-avg-duration: var(--typo3-text-color-warning);
     --tx-analytics-color-continuation-rate: light-dark(var(--token-color-teal-50), var(--token-color-teal-45));
 
     --tx-analytics-color-source-direct: light-dark(var(--token-color-green-50), var(--token-color-green-45));
@@ -38,12 +38,12 @@
     --tx-analytics-surface-visits: light-dark(var(--typo3-surface-container-primary), var(--token-color-blue-80));
     --tx-analytics-surface-visitors: light-dark(var(--typo3-surface-container-success), var(--token-color-green-80));
     --tx-analytics-surface-bounce-rate: light-dark(var(--typo3-surface-container-danger), var(--token-color-red-80));
-    --tx-analytics-surface-avg-duration: light-dark(var(--typo3-surface-container-info), var(--token-color-teal-80));
+    --tx-analytics-surface-avg-duration: light-dark(var(--typo3-surface-container-warning, color-mix(in srgb, var(--typo3-text-color-warning), transparent 82%)), var(--token-color-yellow-80));
     --tx-analytics-surface-continuation-rate: light-dark(var(--typo3-surface-container-info), var(--token-color-teal-80));
 
     --tx-analytics-surface-visits-text: var(--typo3-surface-container-primary-text);
     --tx-analytics-surface-visitors-text: var(--typo3-surface-container-success-text);
     --tx-analytics-surface-bounce-rate-text: var(--typo3-surface-container-danger-text);
-    --tx-analytics-surface-avg-duration-text: var(--typo3-surface-container-info-text);
+    --tx-analytics-surface-avg-duration-text: var(--typo3-surface-container-warning-text, var(--typo3-text-color-warning));
     --tx-analytics-surface-continuation-rate-text: var(--typo3-surface-container-info-text);
 }
