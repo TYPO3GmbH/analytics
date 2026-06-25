@@ -49,13 +49,15 @@ final readonly class PagePerformanceBarBuilder
             $html .= '<div class="tx-analytics-performance-metric tx-analytics-performance-metric-' . $this->escape($metric['tone']) . '" tabindex="0">';
             $html .= '<div class="tx-analytics-performance-metric-body">';
             $html .= '<span class="tx-analytics-performance-icon tx-analytics-performance-icon-' . $this->escape($metric['icon']) . '" aria-hidden="true"></span>';
+            $html .= '<span class="tx-analytics-performance-value-row">';
             $html .= '<span class="tx-analytics-performance-value">' . $this->escape($metric['value']) . '</span>';
-            $html .= '<span class="tx-analytics-performance-label">' . $this->escape($metric['label']) . '</span>';
             if ($metric['trend'] !== null) {
                 $html .= '<span class="tx-analytics-performance-trend tx-analytics-performance-trend-' . $this->escape((string)$metric['trendDirection']) . '">';
                 $html .= '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-arrow-trend-' . $this->escape((string)$metric['trendDirection']) . '" aria-hidden="true"></span>';
                 $html .= $this->escape((string)$metric['trend']) . '</span>';
             }
+            $html .= '</span>';
+            $html .= '<span class="tx-analytics-performance-label">' . $this->escape($metric['label']) . '</span>';
             $html .= $this->renderTooltip($metric);
             $html .= '</div>';
             $html .= '</div>';
