@@ -1,5 +1,72 @@
+.tx-analytics-module-overview {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-module-logo {
+    display: flex;
+    margin-block-end: 1.5rem;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-module-logo svg {
+    display: block;
+    width: min(15.5rem, 100%);
+    height: auto;
+}
+
+.tx-analytics-site-card-container {
+    margin-block-start: 1rem;
+}
+
+.tx-analytics-site-card .card-title {
+    overflow-wrap: anywhere;
+}
+
+.tx-analytics-site-card > .list-group-flush {
+    border-radius: 0;
+}
+
+.tx-analytics-site-card > .list-group-flush > .list-group-item {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+}
+
+.tx-analytics-site-card > .list-group-flush > .list-group-item:first-child {
+    border-top: 0;
+}
+
+.tx-analytics-site-card > .list-group-flush > .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.tx-analytics-site-card-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: end;
+}
+
+.tx-analytics-site-card .btn-group {
+    flex-wrap: wrap;
+}
+
+.tx-analytics-site-card .btn-group > .tx-analytics-status-form {
+    display: flex;
+}
+
+.tx-analytics-site-card .btn-group > .tx-analytics-status-form > .btn {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+}
+
 .tx-analytics-registration-form {
-    min-width: min(32rem, 100%);
+    width: min(32rem, 100%);
+    max-width: 100%;
 }
 
 .tx-analytics-registration-form .form-control {
@@ -39,8 +106,13 @@ typo3-notification {
 }
 
 @media (max-width: 500px) {
+    .tx-analytics-site-card-value {
+        text-align: start;
+    }
+
     .tx-analytics-registration-form,
     .tx-analytics-registration-form .form-control {
         min-width: 0;
+        width: 100%;
     }
 }
