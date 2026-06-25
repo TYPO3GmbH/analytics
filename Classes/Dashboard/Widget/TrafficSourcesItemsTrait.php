@@ -33,7 +33,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalVisitCount),
                 'tone' => $tones[$channel] ?? 'source-other',
                 'icon' => '',
-                'change' => $this->formatter->formatPercentageChange($current, $previous),
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
@@ -62,7 +62,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalSessions),
                 'tone' => $tones[$deviceType] ?? 'device-unknown',
                 'icon' => $icons[$deviceType] ?? '',
-                'change' => $this->formatter->formatPercentageChange($current, $previous),
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
@@ -88,7 +88,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalSessions),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
-                'change' => $this->formatter->formatPercentageChange($current, $previous),
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
@@ -114,7 +114,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalSessions),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
-                'change' => $this->formatter->formatPercentageChange($current, $previous),
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
         }
@@ -126,7 +126,7 @@ trait TrafficSourcesItemsTrait
      * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
      * @return array{icon: string, title: string, showSiteSelect: bool, isDonut: bool, chartSvg: string, items: list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>}
      */
-    private function asSectionData(string $icon, string $title, array $items, bool $isDonut = false): array
+    private function asSectionData(string $icon, string $title, array $items, bool $isDonut = false, int $total = 0): array
     {
         if ($isDonut) {
             $limited = $this->limitItemsForDonut($items);
@@ -137,6 +137,7 @@ trait TrafficSourcesItemsTrait
                 'isDonut' => true,
                 'chartSvg' => $this->buildDonut($limited),
                 'items' => $limited,
+                'total' => $total,
             ];
         }
         return [
@@ -146,6 +147,7 @@ trait TrafficSourcesItemsTrait
             'isDonut' => false,
             'chartSvg' => '',
             'items' => $items,
+            'total' => $total,
         ];
     }
 

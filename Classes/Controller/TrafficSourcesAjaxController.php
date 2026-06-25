@@ -42,30 +42,37 @@ final readonly class TrafficSourcesAjaxController
             }
         }
 
-        $trafficSources = $siteIdentifier !== ''
+        $sources = $siteIdentifier !== ''
             ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? [])
             : [];
+        $devices = $this->trafficSourcesService->loadDeviceData($siteIdentifier, $days) ?? [];
+        $browsers = $this->trafficSourcesService->loadBrowserData($siteIdentifier, $days) ?? [];
+        $countries = $this->trafficSourcesService->loadCountryData($siteIdentifier, $days) ?? [];
 
         $sections = [
             $this->buildSection(
                 'earth-europe',
                 $this->translate('dashboardWidget.trafficSources.sources'),
-                $this->buildTrafficSourceItems($trafficSources),
+                $this->buildTrafficSourceItems($sources),
+                (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources)),
             ),
             $this->buildSection(
                 'display',
                 $this->translate('dashboardWidget.trafficSources.devices'),
-                $this->buildDeviceItems($this->trafficSourcesService->loadDeviceData($siteIdentifier, $days) ?? []),
+                $this->buildDeviceItems($devices),
+                (int) array_sum(array_column($devices, 'sessionCount')),
             ),
             $this->buildSection(
                 'browser',
                 $this->translate('dashboardWidget.trafficSources.browsers'),
-                $this->buildBrowserItems($this->trafficSourcesService->loadBrowserData($siteIdentifier, $days) ?? []),
+                $this->buildBrowserItems($browsers),
+                (int) array_sum(array_column($browsers, 'sessionCount')),
             ),
             $this->buildSection(
                 'earth-europe',
                 $this->translate('dashboardWidget.trafficSources.countries'),
-                $this->buildCountryItems($this->trafficSourcesService->loadCountryData($siteIdentifier, $days) ?? []),
+                $this->buildCountryItems($countries),
+                (int) array_sum(array_column($countries, 'sessionCount')),
             ),
         ];
 
@@ -74,6 +81,7 @@ final readonly class TrafficSourcesAjaxController
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
         ));
         $view->assign('sections', $sections);
+        $view->assign('total', (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources)));
         $html = $view->render('Dashboard/Widget/TrafficSourcesSections');
 
         $showAllUrl = $siteIdentifier !== ''
@@ -91,9 +99,9 @@ final readonly class TrafficSourcesAjaxController
      * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
      * @return array{icon: string, title: string, showSiteSelect: bool, isDonut: bool, chartSvg: string, items: list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>}
      */
-    private function buildSection(string $icon, string $title, array $items): array
+    private function buildSection(string $icon, string $title, array $items, int $total = 0): array
     {
-        return ['icon' => $icon, 'title' => $title, 'showSiteSelect' => false, 'isDonut' => false, 'chartSvg' => '', 'items' => $items];
+        return ['icon' => $icon, 'title' => $title, 'showSiteSelect' => false, 'isDonut' => false, 'chartSvg' => '', 'items' => $items, 'total' => $total];
     }
 
     private function translate(string $key): string

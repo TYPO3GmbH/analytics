@@ -78,9 +78,12 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
 
         $uniqueId = substr(sha1((string)spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8);
 
-        $trafficSources = $siteIdentifier !== ''
+        $sources = $siteIdentifier !== ''
             ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? [])
             : [];
+        $devices = $this->loadDevices($siteIdentifier, $days);
+        $browsers = $this->loadBrowsers($siteIdentifier, $days);
+        $countries = $this->loadCountries($siteIdentifier, $days);
 
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
@@ -95,11 +98,12 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
             'periodOptions' => $this->buildPeriodOptions($days),
             'showAllLabel' => $this->translate('dashboardWidget.trafficSources.showAll'),
             'showAllUrl' => $this->buildDashboardUrl($siteIdentifier, $days, 'traffic/share'),
+            'total' => (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources)),
             'sections' => [
-                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.sources'), $this->buildTrafficSourceItems($trafficSources)),
-                $this->asSectionData('display', $this->translate('dashboardWidget.trafficSources.devices'), $this->buildDeviceItems($this->loadDevices($siteIdentifier, $days))),
-                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($this->loadBrowsers($siteIdentifier, $days))),
-                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($this->loadCountries($siteIdentifier, $days))),
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.sources'), $this->buildTrafficSourceItems($sources), false, (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources))),
+                $this->asSectionData('display', $this->translate('dashboardWidget.trafficSources.devices'), $this->buildDeviceItems($devices), false, (int) array_sum(array_column($devices, 'sessionCount'))),
+                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), false, (int) array_sum(array_column($browsers, 'sessionCount'))),
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), false, (int) array_sum(array_column($countries, 'sessionCount'))),
             ],
         ]);
 

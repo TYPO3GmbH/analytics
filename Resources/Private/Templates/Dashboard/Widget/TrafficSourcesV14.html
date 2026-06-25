@@ -10,6 +10,9 @@
                         <span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-{section.icon}" aria-hidden="true"></span>
                         <span>{section.title}</span>
                     </h3>
+                    <f:if condition="{section.total}">
+                        <span class="tx-analytics-traffic-sources-total">{section.total} <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.totalSessions" /></span>
+                    </f:if>
                 </div>
                 <f:render partial="Dashboard/Widget/TrafficSourcesSectionItems" arguments="{section: section}" />
             </section>

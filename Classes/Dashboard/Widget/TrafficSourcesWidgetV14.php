@@ -113,44 +113,27 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         $periodOptions = $this->periodEnumOptions();
         $periodLabel = $periodOptions[$days] ?? '';
 
-        $sections = match ($section) {
-            'devices' => [
-                $this->asSectionData(
-                    'display',
-                    $this->translate('dashboardWidget.trafficSources.devices'),
-                    $this->buildDeviceItems($this->loadDevices($siteIdentifier, $days)),
-                    $isDonut,
-                ),
-            ],
-            'browser' => [
-                $this->asSectionData(
-                    'browser',
-                    $this->translate('dashboardWidget.trafficSources.browsers'),
-                    $this->buildBrowserItems($this->loadBrowsers($siteIdentifier, $days)),
-                    $isDonut,
-                ),
-            ],
-            'countries' => [
-                $this->asSectionData(
-                    'earth-europe',
-                    $this->translate('dashboardWidget.trafficSources.countries'),
-                    $this->buildCountryItems($this->loadCountries($siteIdentifier, $days)),
-                    $isDonut,
-                ),
-            ],
-            default => [
-                $this->asSectionData(
-                    'earth-europe',
-                    $this->translate('dashboardWidget.trafficSources.sources'),
-                    $this->buildTrafficSourceItems(
-                        $siteIdentifier !== ''
-                            ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? [])
-                            : []
-                    ),
-                    $isDonut,
-                ),
-            ],
-        };
+        if ($section === 'devices') {
+            $devices = $this->loadDevices($siteIdentifier, $days);
+            $sections = [
+                $this->asSectionData('display', $this->translate('dashboardWidget.trafficSources.devices'), $this->buildDeviceItems($devices), $isDonut, (int) array_sum(array_column($devices, 'sessionCount'))),
+            ];
+        } elseif ($section === 'browser') {
+            $browsers = $this->loadBrowsers($siteIdentifier, $days);
+            $sections = [
+                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), $isDonut, (int) array_sum(array_column($browsers, 'sessionCount'))),
+            ];
+        } elseif ($section === 'countries') {
+            $countries = $this->loadCountries($siteIdentifier, $days);
+            $sections = [
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), $isDonut, (int) array_sum(array_column($countries, 'sessionCount'))),
+            ];
+        } else {
+            $sources = $siteIdentifier !== '' ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? []) : [];
+            $sections = [
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.sources'), $this->buildTrafficSourceItems($sources), $isDonut, (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources))),
+            ];
+        }
 
         $ctaPath = match ($section) {
             'devices', 'browser' => 'devices',

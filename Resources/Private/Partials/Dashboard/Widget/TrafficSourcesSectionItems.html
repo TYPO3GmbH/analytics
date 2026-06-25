@@ -15,7 +15,7 @@
                         <span class="tx-analytics-traffic-sources-value">
                             <span>{item.value}%</span>
                             <f:if condition="{item.change}">
-                                <span class="tx-analytics-traffic-sources-change tx-analytics-traffic-sources-change-{item.changeTone}" aria-label="vs. previous period">{item.change}</span>
+                                <span class="tx-analytics-traffic-sources-change tx-analytics-traffic-sources-change-{item.changeTone}" aria-label="vs. previous period">{item.change} <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.sessions" /></span>
                             </f:if>
                         </span>
                     </li>
@@ -42,7 +42,7 @@
                     <span class="tx-analytics-traffic-sources-value">
                         <span>{item.value}%</span>
                         <f:if condition="{item.change}">
-                            <span class="tx-analytics-traffic-sources-change tx-analytics-traffic-sources-change-{item.changeTone}" aria-label="vs. previous period">{item.change}</span>
+                            <span class="tx-analytics-traffic-sources-change tx-analytics-traffic-sources-change-{item.changeTone}" aria-label="vs. previous period">{item.change} <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.sessions" /></span>
                         </f:if>
                     </span>
                 </li>

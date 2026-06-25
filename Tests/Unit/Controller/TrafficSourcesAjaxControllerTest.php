@@ -43,7 +43,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildDeviceItems($payload);
 
-        self::assertSame('+100.00%', $items[0]['change']);
+        self::assertSame('+40', $items[0]['change']);
     }
 
     #[Test]
@@ -55,11 +55,11 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildDeviceItems($payload);
 
-        self::assertSame('-66.67%', $items[0]['change']);
+        self::assertSame('-40', $items[0]['change']);
     }
 
     #[Test]
-    public function buildDeviceItemsShowsInfinityChangeWhenNoPreviousSessionCount(): void
+    public function buildDeviceItemsShowsAbsoluteChangeWhenNoPreviousSessionCount(): void
     {
         $payload = [
             ['deviceType' => 'desktop', 'sessionCount' => 80, 'sessionPercentOfTotal' => 80.0],
@@ -67,7 +67,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildDeviceItems($payload);
 
-        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('+80', $items[0]['change']);
     }
 
     /** buildDeviceItems — changeTone */
@@ -136,12 +136,12 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
         $items = $this->callBuildBrowserItems($payload);
 
         self::assertSame('Chrome', $items[0]['label']);
-        self::assertSame('+20.00%', $items[0]['change']);
+        self::assertSame('+10', $items[0]['change']);
         self::assertSame('positive', $items[0]['changeTone']);
     }
 
     #[Test]
-    public function buildBrowserItemsShowsInfinityChangeWhenNoPreviousData(): void
+    public function buildBrowserItemsShowsAbsoluteChangeWhenNoPreviousData(): void
     {
         $payload = [
             ['browserName' => 'Firefox', 'sessionCount' => 40, 'sessionPercentOfTotal' => 40.0],
@@ -149,7 +149,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildBrowserItems($payload);
 
-        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('+40', $items[0]['change']);
         self::assertSame('positive', $items[0]['changeTone']);
     }
 
@@ -164,12 +164,12 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildCountryItems($payload);
 
-        self::assertSame('+100.00%', $items[0]['change']);
+        self::assertSame('+50', $items[0]['change']);
         self::assertSame('positive', $items[0]['changeTone']);
     }
 
     #[Test]
-    public function buildCountryItemsShowsInfinityChangeWhenNoPreviousData(): void
+    public function buildCountryItemsShowsAbsoluteChangeWhenNoPreviousData(): void
     {
         $payload = [
             ['countryCode' => 'de', 'sessionCount' => 100, 'sessionPercentOfTotal' => 100.0],
@@ -177,7 +177,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildCountryItems($payload);
 
-        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('+100', $items[0]['change']);
         self::assertSame('positive', $items[0]['changeTone']);
     }
 
@@ -217,18 +217,18 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
-        self::assertSame('+100.00%', $items[0]['change']);
+        self::assertSame('+50', $items[0]['change']);
         self::assertSame('positive', $items[0]['changeTone']);
     }
 
     #[Test]
-    public function buildTrafficSourceItemsShowsInfinityWhenPreviousIsZeroAndCurrentIsPositive(): void
+    public function buildTrafficSourceItemsShowsAbsoluteChangeWhenPreviousIsZeroAndCurrentIsPositive(): void
     {
         $sources = ['direct' => ['current' => 5, 'previous' => 0]];
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
-        self::assertSame('+∞%', $items[0]['change']);
+        self::assertSame('+5', $items[0]['change']);
         self::assertSame('positive', $items[0]['changeTone']);
     }
 

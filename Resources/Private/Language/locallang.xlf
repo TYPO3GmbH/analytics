@@ -326,6 +326,12 @@
             <trans-unit id="dashboardWidget.trafficSources.countries" resname="dashboardWidget.trafficSources.countries">
                 <source>Countries</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.sessions" resname="dashboardWidget.trafficSources.sessions">
+                <source>Sessions</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.totalSessions" resname="dashboardWidget.trafficSources.totalSessions">
+                <source>Total Sessions</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.other" resname="dashboardWidget.trafficSources.other">
                 <source>Other</source>
             </trans-unit>

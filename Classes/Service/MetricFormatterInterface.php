@@ -25,4 +25,6 @@ interface MetricFormatterInterface
     public function formatShare(int $value, int $total): string;
 
     public function formatPercentageChange(int $current, int $previous): ?string;
+
+    public function formatAbsoluteChange(int $current, int $previous): ?string;
 }

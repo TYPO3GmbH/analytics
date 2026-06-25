@@ -77,4 +77,13 @@ readonly class MetricFormatter implements MetricFormatterInterface
         $change = ($current - $previous) / $previous * 100;
         return ($change >= 0.0 ? '+' : '') . number_format($change, 2, '.', '') . '%';
     }
+
+    public function formatAbsoluteChange(int $current, int $previous): ?string
+    {
+        $diff = $current - $previous;
+        if ($diff === 0) {
+            return null;
+        }
+        return ($diff > 0 ? '+' : '') . $diff;
+    }
 }

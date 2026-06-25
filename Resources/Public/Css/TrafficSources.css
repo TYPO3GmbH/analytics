@@ -71,6 +71,42 @@
     line-height: 1.25;
 }
 
+.tx-analytics-traffic-sources-total {
+    display: inline-flex;
+    align-items: center;
+    padding: .125rem .5rem;
+    border-radius: .25rem;
+    background: var(--typo3-component-bg-tertiary, rgba(0 0 0 / .07));
+    font-size: var(--typo3-font-size-small, .75rem);
+    color: var(--typo3-component-color-muted, #6c757d);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.tx-analytics-traffic-sources-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .1rem;
+    padding-bottom: .625rem;
+    margin-bottom: .625rem;
+    border-bottom: 1px solid var(--typo3-component-border-color, rgba(0 0 0 / .1));
+}
+
+.tx-analytics-traffic-sources-summary-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--typo3-component-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.tx-analytics-traffic-sources-summary-label {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--typo3-component-color);
+}
+
 .tx-analytics-traffic-sources-icon,
 .tx-analytics-traffic-sources-device-icon {
     display: inline-block;
