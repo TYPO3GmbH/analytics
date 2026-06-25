@@ -7,6 +7,10 @@
     container-type: inline-size;
 }
 
+.tx-analytics-site-performance:has(> :only-child) {
+    grid-template-rows: minmax(0, 1fr);
+}
+
 .tx-analytics-site-performance-header {
     display: flex;
     flex-wrap: wrap;
