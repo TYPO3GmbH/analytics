@@ -11,14 +11,46 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class ApiConfigurationTest extends UnitTestCase
 {
-    private function buildSubject(string $apiBaseUrl = '', string $verifySsl = '1'): ApiConfiguration
+    private function buildSubject(string $apiBaseUrl = '', string $verifySsl = '1', string $intpId = '', string $analyticsApiBaseUrl = ''): ApiConfiguration
     {
         $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
         $extensionConfiguration->method('get')->willReturnMap([
             ['analytics', 'apiBaseUrl', $apiBaseUrl],
             ['analytics', 'verifySsl', $verifySsl],
+            ['analytics', 'intpId', $intpId],
+            ['analytics', 'analyticsApiBaseUrl', $analyticsApiBaseUrl],
         ]);
         return new ApiConfiguration($extensionConfiguration);
+    }
+
+    #[Test]
+    public function getIntpIdReturnsDefaultWhenNotConfigured(): void
+    {
+        self::assertSame('cad26303-1c79-415e-8b39-45d8aadfb7f3', $this->buildSubject()->getIntpId());
+    }
+
+    #[Test]
+    public function getIntpIdReturnsConfiguredValue(): void
+    {
+        self::assertSame('custom-intp-id', $this->buildSubject(intpId: 'custom-intp-id')->getIntpId());
+    }
+
+    #[Test]
+    public function getAnalyticsApiBaseUrlReturnsDefaultWhenNotConfigured(): void
+    {
+        self::assertSame('https://api.analytics.typo3.com/api', $this->buildSubject()->getAnalyticsApiBaseUrl());
+    }
+
+    #[Test]
+    public function getAnalyticsApiBaseUrlReturnsConfiguredValue(): void
+    {
+        self::assertSame('https://custom.example.com/api', $this->buildSubject(analyticsApiBaseUrl: 'https://custom.example.com/api')->getAnalyticsApiBaseUrl());
+    }
+
+    #[Test]
+    public function getAnalyticsApiBaseUrlStripsTrailingSlash(): void
+    {
+        self::assertSame('https://custom.example.com/api', $this->buildSubject(analyticsApiBaseUrl: 'https://custom.example.com/api/')->getAnalyticsApiBaseUrl());
     }
 
     #[Test]

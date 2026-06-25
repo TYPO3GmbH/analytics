@@ -9,16 +9,24 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 final readonly class ApiConfiguration
 {
     private const DEFAULT_BASE_URL = 'https://middleware.analytics.typo3.com/api';
+    private const DEFAULT_INTP_ID = 'cad26303-1c79-415e-8b39-45d8aadfb7f3';
+    private const DEFAULT_ANALYTICS_API_BASE_URL = 'https://api.analytics.typo3.com/api';
 
     public function __construct(
         private ExtensionConfiguration $extensionConfiguration,
     ) {
     }
 
+    public function getIntpId(): string
+    {
+        $configured = (string)($this->extensionConfiguration->get('analytics', 'intpId') ?? '');
+        return $configured !== '' ? $configured : self::DEFAULT_INTP_ID;
+    }
+
     public function getAnalyticsApiBaseUrl(): string
     {
         $configured = (string)($this->extensionConfiguration->get('analytics', 'analyticsApiBaseUrl') ?? '');
-        return $configured !== '' ? rtrim($configured, '/') : 'https://api.analytics.typo3.com/api';
+        return $configured !== '' ? rtrim($configured, '/') : self::DEFAULT_ANALYTICS_API_BASE_URL;
     }
 
     public function getBaseUrl(): string

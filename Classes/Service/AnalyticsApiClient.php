@@ -11,8 +11,6 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 
 readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
 {
-    private const INTP_ID = 'cad26303-1c79-415e-8b39-45d8aadfb7f3';
-
     public function __construct(
         private RequestFactory $requestFactory,
         private ApiConfiguration $apiConfiguration,
@@ -33,7 +31,7 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
                 'POST',
                 array_merge($this->apiConfiguration->getRequestOptions(), $this->apiConfiguration->getAuthOptions(), [
                     'json' => [
-                        'intpId' => self::INTP_ID,
+                        'intpId' => $this->apiConfiguration->getIntpId(),
                         'domain' => rtrim($site->getBase()->__toString(), '/'),
                         'email' => $email,
                     ],
