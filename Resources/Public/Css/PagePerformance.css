@@ -40,13 +40,17 @@
 }
 
 .tx-analytics-performance-icon {
+    --tx-analytics-performance-icon-color: var(--typo3-text-color-primary);
     display: inline-flex;
     grid-area: icon;
     align-items: center;
     justify-content: center;
     width: 3.75rem;
     height: 3.75rem;
+    border: var(--typo3-component-border-width) solid color-mix(in srgb, var(--tx-analytics-performance-icon-color), transparent 75%);
     border-radius: var(--typo3-component-border-radius);
+    background: color-mix(in srgb, var(--tx-analytics-performance-icon-color), transparent 97%);
+    color: var(--tx-analytics-performance-icon-color);
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -70,28 +74,23 @@
 }
 
 .tx-analytics-performance-metric-visits .tx-analytics-performance-icon {
-    color: var(--tx-analytics-surface-visits-text);
-    background: var(--tx-analytics-surface-visits);
+    --tx-analytics-performance-icon-color: var(--tx-analytics-color-visits);
 }
 
 .tx-analytics-performance-metric-bounce-rate .tx-analytics-performance-icon {
-    color: var(--tx-analytics-surface-bounce-rate-text);
-    background: var(--tx-analytics-surface-bounce-rate);
+    --tx-analytics-performance-icon-color: var(--tx-analytics-color-bounce-rate);
 }
 
 .tx-analytics-performance-metric-visitors .tx-analytics-performance-icon {
-    color: var(--tx-analytics-surface-visitors-text);
-    background: var(--tx-analytics-surface-visitors);
+    --tx-analytics-performance-icon-color: var(--tx-analytics-color-visitors);
 }
 
 .tx-analytics-performance-metric-avg-duration .tx-analytics-performance-icon {
-    color: var(--tx-analytics-surface-avg-duration-text);
-    background: var(--tx-analytics-surface-avg-duration);
+    --tx-analytics-performance-icon-color: var(--tx-analytics-color-avg-duration);
 }
 
 .tx-analytics-performance-metric-continuation-rate .tx-analytics-performance-icon {
-    color: var(--tx-analytics-surface-continuation-rate-text);
-    background: var(--tx-analytics-surface-continuation-rate);
+    --tx-analytics-performance-icon-color: var(--tx-analytics-color-continuation-rate);
 }
 
 .tx-analytics-performance-value {

@@ -54,7 +54,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-auto-rows: minmax(0, 1fr);
     flex: 1 1 auto;
-    gap: .5rem;
+    gap: 0;
     height: 100%;
     padding: 0;
     margin: 0;
@@ -63,56 +63,67 @@
 
 .tx-analytics-site-performance-metric {
     display: grid;
+    container-type: inline-size;
     grid-template-areas:
-        "icon"
-        "label"
-        "value"
-        "trend";
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto;
-    align-content: center;
-    justify-items: start;
-    gap: .125rem;
+        "icon value trend"
+        "icon label trend";
+    grid-template-columns: 3.75rem minmax(0, 1fr) max-content;
+    grid-template-rows: 1fr 1fr;
+    align-items: center;
+    column-gap: 1rem;
     min-width: 0;
     min-height: 0;
-    padding: .5rem .625rem;
-    border-radius: var(--typo3-component-border-radius);
-    background: var(--tx-analytics-site-performance-bg);
+    padding: .75rem 1.25rem;
+    background: var(--typo3-component-bg);
+}
+
+.tx-analytics-site-performance-metric:nth-child(even) {
+    border-left: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-site-performance-metric:nth-child(n + 3) {
+    border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
 }
 
 .tx-analytics-site-performance-metric-visits {
-    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-visits);
-    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-visits-text);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-color-visits);
 }
 
 .tx-analytics-site-performance-metric-visitors {
-    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-visitors);
-    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-visitors-text);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-color-visitors);
 }
 
 .tx-analytics-site-performance-metric-bounce-rate {
-    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-bounce-rate);
-    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-bounce-rate-text);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-color-bounce-rate);
 }
 
 .tx-analytics-site-performance-metric-avg-duration {
-    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-avg-duration);
-    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-avg-duration-text);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-color-avg-duration);
 }
 
 .tx-analytics-site-performance-metric-continuation-rate {
-    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-continuation-rate);
-    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-continuation-rate-text);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-color-continuation-rate);
 }
 
 .tx-analytics-site-performance-icon {
-    display: inline-block;
+    display: inline-flex;
     grid-area: icon;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-block-end: .125rem;
+    align-items: center;
+    justify-content: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border: var(--typo3-component-border-width) solid color-mix(in srgb, var(--tx-analytics-site-performance-value-color), transparent 75%);
+    border-radius: var(--typo3-component-border-radius);
+    background: color-mix(in srgb, var(--tx-analytics-site-performance-value-color), transparent 97%);
     color: var(--tx-analytics-site-performance-value-color);
+}
+
+.tx-analytics-site-performance-icon::before {
+    display: inline-block;
+    width: 1.875rem;
+    height: 1.875rem;
     background: currentColor;
+    content: "";
     mask: var(--tx-analytics-site-performance-icon) center / contain no-repeat;
     -webkit-mask: var(--tx-analytics-site-performance-icon) center / contain no-repeat;
 }
@@ -129,27 +140,32 @@
     --tx-analytics-site-performance-icon: url("../Icons/PagePerformance/arrow-right-from-bracket.svg");
 }
 
+.tx-analytics-site-performance-icon-right-to-bracket {
+    --tx-analytics-site-performance-icon: url("../Icons/PagePerformance/right-to-bracket.svg");
+}
+
 .tx-analytics-site-performance-icon-clock {
     --tx-analytics-site-performance-icon: url("../Icons/PagePerformance/clock.svg");
 }
 
 .tx-analytics-site-performance-label {
     grid-area: label;
+    align-self: start;
     min-width: 0;
-    color: color-mix(in srgb, var(--tx-analytics-site-performance-value-color), transparent 25%);
-    font-size: var(--typo3-font-size-small);
-    line-height: 1.25;
+    color: var(--typo3-text-color-variant);
+    font-size: clamp(var(--typo3-font-size, 12px), .6cqw + .75rem, 1rem);
+    line-height: 1.35;
     overflow-wrap: anywhere;
 }
 
 .tx-analytics-site-performance-value {
     grid-area: value;
+    align-self: end;
     min-width: 0;
-    margin-block-start: .125rem;
-    color: var(--tx-analytics-site-performance-value-color);
-    font-size: 1.25rem;
+    color: var(--typo3-component-color);
+    font-size: clamp(var(--typo3-font-size, 12px), 1cqw + .85rem, 1.5rem);
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1;
     overflow-wrap: anywhere;
 }
 
@@ -158,10 +174,9 @@
     grid-area: trend;
     gap: .25rem;
     align-items: center;
+    align-self: center;
     justify-self: start;
-    margin-block-start: .25rem;
-    font-size: var(--typo3-font-size-small);
-    line-height: 1.2;
+    font-size: clamp(var(--typo3-font-size, 12px), .55cqw + .75rem, 1rem);
     white-space: nowrap;
 }
 
@@ -215,11 +230,41 @@
         width: 100%;
         max-width: none;
     }
+
+    .tx-analytics-site-performance-metric {
+        grid-template-areas:
+            "icon value"
+            "icon trend"
+            "icon label";
+        grid-template-columns: 3.25rem minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        row-gap: .25rem;
+        column-gap: .75rem;
+        padding: .75rem;
+    }
+
+    .tx-analytics-site-performance-icon {
+        width: 3.25rem;
+        height: 3.25rem;
+    }
+
+    .tx-analytics-site-performance-value,
+    .tx-analytics-site-performance-label {
+        align-self: center;
+    }
 }
 
 @container (max-width: 210px) {
     .tx-analytics-site-performance-list {
         grid-template-columns: 1fr;
         grid-template-rows: repeat(4, minmax(0, 1fr));
+    }
+
+    .tx-analytics-site-performance-metric:nth-child(even) {
+        border-left: 0;
+    }
+
+    .tx-analytics-site-performance-metric:nth-child(n + 2) {
+        border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
     }
 }
