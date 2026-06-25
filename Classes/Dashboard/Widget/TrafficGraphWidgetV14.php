@@ -9,9 +9,11 @@ use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
+use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
@@ -26,7 +28,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
  * All three metrics (visits, sessions, visitors) are always rendered; the legend provides
  * interactive per-metric toggle controls.
  */
-final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
+final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface, JavaScriptInterface
 {
     use TrafficGraphWidgetTrait;
 
@@ -39,6 +41,16 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
         private TrafficChartDataBuilder $chartDataBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
+    }
+
+    /**
+     * @return list<JavaScriptModuleInstruction>
+     */
+    public function getJavaScriptModuleInstructions(): array
+    {
+        return [
+            JavaScriptModuleInstruction::create('@t3g/analytics/traffic-graph-widget.js'),
+        ];
     }
 
     /**
