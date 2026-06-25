@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace T3G\Analytics\Tests\Unit\EventListener;
+namespace T3G\Analytics\Tests\Unit\Service;
 
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -11,10 +11,10 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Configuration\ApiConfiguration;
-use T3G\Analytics\EventListener\PagePerformanceBarListener;
 use T3G\Analytics\Service\AnalyticsDataClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\PagePerformanceBarBuilder;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
@@ -22,17 +22,15 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
-use TYPO3\CMS\Core\Page\AssetCollector;
-use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Routing\RouterInterface;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
-use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-final class PagePerformanceBarListenerTest extends UnitTestCase
+final class PagePerformanceBarBuilderTest extends UnitTestCase
 {
     protected bool $resetSingletonInstances = true;
 
@@ -73,11 +71,9 @@ final class PagePerformanceBarListenerTest extends UnitTestCase
         );
     }
 
-    private function buildSubject(SiteFinder $siteFinder): PagePerformanceBarListener
+    private function buildSubject(SiteFinder $siteFinder): PagePerformanceBarBuilder
     {
-        return new PagePerformanceBarListener(
-            $this->createMock(PageRenderer::class),
-            $this->createMock(AssetCollector::class),
+        return new PagePerformanceBarBuilder(
             new SparklineRenderer(),
             $siteFinder,
             $this->createMock(UriBuilder::class),
@@ -104,18 +100,18 @@ final class PagePerformanceBarListenerTest extends UnitTestCase
         return $site;
     }
 
-    private function callLoadPageData(PagePerformanceBarListener $subject, int $pageId = 1, int $days = 7): mixed
+    private function callLoadPageData(PagePerformanceBarBuilder $subject, int $pageId = 1, int $days = 7): mixed
     {
-        $site = (new \ReflectionMethod($subject, 'trySite'))->invoke($subject, $pageId);
+        $site = $subject->trySite($pageId);
         return (new \ReflectionMethod($subject, 'loadPageData'))->invoke($subject, $pageId, $site, null, $days);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    private function callBuildMetrics(PagePerformanceBarListener $subject, int $pageId = 1, int $days = 7): array
+    private function callBuildMetrics(PagePerformanceBarBuilder $subject, int $pageId = 1, int $days = 7): array
     {
-        $site = (new \ReflectionMethod($subject, 'trySite'))->invoke($subject, $pageId);
+        $site = $subject->trySite($pageId);
         return (new \ReflectionMethod($subject, 'buildMetrics'))->invoke($subject, $pageId, $site, null, $days);
     }
 

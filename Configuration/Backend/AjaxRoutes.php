@@ -23,4 +23,9 @@ return [
         'target' => \T3G\Analytics\Controller\TrafficSourcesAjaxController::class . '::handle',
         'access' => 'user',
     ],
+    'analytics_page_performance_content' => [
+        'path' => '/analytics/page-performance/content',
+        'target' => \T3G\Analytics\Controller\PagePerformanceAjaxController::class . '::handle',
+        'access' => 'user',
+    ],
 ];
