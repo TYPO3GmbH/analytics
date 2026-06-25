@@ -87,7 +87,7 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
             'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
             'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
         ];
-        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green']);
+        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green'], ['visits' => 0, 'sessions' => 1, 'visitors' => 1]);
 
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([

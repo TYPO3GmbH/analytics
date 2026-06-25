@@ -22,6 +22,9 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
  *
  * Site and period are configured via the native widget settings panel (WidgetRendererInterface)
  * rather than inline dropdowns. Requires TYPO3 >= 14 (WidgetRendererInterface).
+ *
+ * All three metrics (visits, sessions, visitors) are always rendered; the legend provides
+ * interactive per-metric toggle controls.
  */
 final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
 {
@@ -72,24 +75,6 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
                 default: true,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
             ),
-            new SettingDefinition(
-                key: 'showVisits',
-                type: 'bool',
-                default: true,
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.showVisits.label',
-            ),
-            new SettingDefinition(
-                key: 'showSessions',
-                type: 'bool',
-                default: false,
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.showSessions.label',
-            ),
-            new SettingDefinition(
-                key: 'showVisitors',
-                type: 'bool',
-                default: false,
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.setting.showVisitors.label',
-            ),
         ];
     }
 
@@ -110,29 +95,22 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
             ? $baseTitle . ' (' . $siteLabel . ' · ' . $periodLabel . ')'
             : $baseTitle;
 
-        $showVisits = (bool) $context->settings->get('showVisits');
-        $showSessions = (bool) $context->settings->get('showSessions');
-        $showVisitors = (bool) $context->settings->get('showVisitors');
-
-        $useMulti = $showSessions || $showVisitors || !$showVisits;
-
-        if ($useMulti) {
-            $metricData = [
-                'visits' => $showVisits ? $this->trafficGraphService->loadGraphData($siteIdentifier, $days) : null,
-                'sessions' => $showSessions ? $this->trafficGraphService->loadSessionsData($siteIdentifier, $days) : null,
-                'visitors' => $showVisitors ? $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days) : null,
-            ];
-            $metricLabels = [
-                'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
-                'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
-                'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
-            ];
-            $metricTones = ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green'];
-            $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, $metricTones);
-        } else {
-            $graphData = $this->trafficGraphService->loadGraphData($siteIdentifier, $days);
-            $chart = $this->buildChartData($graphData);
-        }
+        $metricData = [
+            'visits' => $this->trafficGraphService->loadGraphData($siteIdentifier, $days),
+            'sessions' => $this->trafficGraphService->loadSessionsData($siteIdentifier, $days),
+            'visitors' => $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days),
+        ];
+        $metricLabels = [
+            'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+            'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+            'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
+        ];
+        $chart = $this->chartDataBuilder->buildMulti(
+            $metricData,
+            $metricLabels,
+            ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green'],
+            ['visits' => 0, 'sessions' => 1, 'visitors' => 1],
+        );
 
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([

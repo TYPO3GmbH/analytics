@@ -1,5 +1,12 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
-<div class="tx-analytics-traffic-graph-chart-wrap">
+<f:if condition="{chart.legend -> f:count()} > 0">
+    <div class="tx-analytics-traffic-graph-legend">
+        <f:for each="{chart.legend}" as="item">
+            <button class="tx-analytics-traffic-graph-legend-item" data-tone="{item.tone}" data-dataset-key="{item.key}" type="button" aria-pressed="true">{item.label}</button>
+        </f:for>
+    </div>
+</f:if>
+<div class="{f:if(condition: chart.hasRightAxis, then: 'tx-analytics-traffic-graph-chart-wrap tx-analytics-traffic-graph-chart-wrap--dual-axis', else: 'tx-analytics-traffic-graph-chart-wrap')}">
     <div class="tx-analytics-traffic-graph-y-axis" aria-hidden="true">
         <f:for each="{chart.yLabels}" as="label">
             <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
@@ -8,17 +15,17 @@
     <div class="tx-analytics-traffic-graph-chart-area">
         <f:format.raw>{chart.sparkline}</f:format.raw>
     </div>
+    <f:if condition="{chart.hasRightAxis}">
+        <div class="tx-analytics-traffic-graph-y-axis tx-analytics-traffic-graph-y-axis--right" aria-hidden="true">
+            <f:for each="{chart.yLabelsRight}" as="label">
+                <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
+            </f:for>
+        </div>
+    </f:if>
     <div class="tx-analytics-traffic-graph-x-axis" aria-hidden="true">
         <f:for each="{chart.xLabels}" as="label">
             <span>{label}</span>
         </f:for>
     </div>
 </div>
-<f:if condition="{chart.legend -> f:count()} > 1">
-    <div class="tx-analytics-traffic-graph-legend" aria-hidden="true">
-        <f:for each="{chart.legend}" as="item">
-            <span class="tx-analytics-traffic-graph-legend-item" data-tone="{item.tone}">{item.label}</span>
-        </f:for>
-    </div>
-</f:if>
 </html>

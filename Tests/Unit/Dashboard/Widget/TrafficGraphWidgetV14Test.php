@@ -101,7 +101,7 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
         );
     }
 
-    private function makeSettings(string $site = 'demo', int $days = 7, string $title = '', bool $showMeta = true, bool $showVisits = true, bool $showSessions = false, bool $showVisitors = false): SettingsInterface
+    private function makeSettings(string $site = 'demo', int $days = 7, string $title = '', bool $showMeta = true): SettingsInterface
     {
         $settings = $this->createMock(SettingsInterface::class);
         $settings->method('get')->willReturnMap([
@@ -109,9 +109,6 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
             ['days', $days],
             ['title', $title],
             ['showMeta', $showMeta],
-            ['showVisits', $showVisits],
-            ['showSessions', $showSessions],
-            ['showVisitors', $showVisitors],
         ]);
         return $settings;
     }
@@ -136,9 +133,10 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
         self::assertContains('days', $keys);
         self::assertContains('title', $keys);
         self::assertContains('showMeta', $keys);
-        self::assertContains('showVisits', $keys);
-        self::assertContains('showSessions', $keys);
-        self::assertContains('showVisitors', $keys);
+        // showVisits/showSessions/showVisitors removed — interactive legend toggle handles visibility
+        self::assertNotContains('showVisits', $keys);
+        self::assertNotContains('showSessions', $keys);
+        self::assertNotContains('showVisitors', $keys);
     }
 
     #[Test]

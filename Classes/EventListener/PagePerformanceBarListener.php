@@ -517,11 +517,8 @@ final readonly class PagePerformanceBarListener
                 'class' => 'tx-analytics-performance-sparkline',
                 'tone' => $metric['tone'],
                 'labels' => $metric['chartLabels'] ?? [],
+                'smooth' => true,
             ]);
-            $html .= '<div class="tx-analytics-performance-tooltip-chart-legend">';
-            $html .= '<span><span>' . $this->escape($this->translate('pagePerformance.tooltip.start')) . '</span><strong>' . $this->escape($metric['chartLegend'][0]) . '</strong></span>';
-            $html .= '<span><span>' . $this->escape($this->translate('pagePerformance.tooltip.now')) . '</span><strong>' . $this->escape($metric['chartLegend'][1]) . '</strong></span>';
-            $html .= '</div>';
             $html .= '</div>';
         }
         $html .= '</div>';

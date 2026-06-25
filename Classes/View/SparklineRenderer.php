@@ -10,6 +10,8 @@ final class SparklineRenderer
     private const VIEW_BOX_HEIGHT = 32;
     private const PADDING = 2;
 
+    private static int $clipIdCounter = 0;
+
     /**
      * @param list<int|float|string> $values
      * @param array{
@@ -22,7 +24,8 @@ final class SparklineRenderer
      *     yMax?: float,
      *     gridLines?: list<int|float>,
      *     preserveAspectRatio?: string,
-     *     labels?: list<string>
+     *     labels?: list<string>,
+     *     smooth?: bool
      * } $options
      */
     public function render(array $values, array $options = []): string
@@ -42,7 +45,8 @@ final class SparklineRenderer
         $label = trim((string)($options['label'] ?? ''));
         $class = trim('tx-analytics-sparkline ' . ($options['class'] ?? ''));
         $tone = $this->normalizeTone((string)($options['tone'] ?? 'primary'));
-        $linePath = $this->buildLinePath($points);
+        $smooth = (bool)($options['smooth'] ?? false);
+        $linePath = $smooth ? $this->buildSmoothLinePath($points) : $this->buildLinePath($points);
         $lastPoint = $points[array_key_last($points)];
         $showLastPoint = (bool)($options['showLastPoint'] ?? true);
         $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
@@ -90,8 +94,17 @@ final class SparklineRenderer
     }
 
     /**
-     * @param list<array{values: list<int|float>, label?: string, tone?: string}> $datasets
-     * @param array{yMin?: float, yMax?: float, gridLines?: list<int|float>, preserveAspectRatio?: string, class?: string, combinedPointLabels?: list<string>} $options
+     * @param list<array{values: list<int|float>, label?: string, tone?: string, axis?: int, key?: string}> $datasets
+     * @param array{
+     *     yMin?: float,
+     *     yMax?: float,
+     *     yMaxRight?: float,
+     *     gridLines?: list<int|float>,
+     *     preserveAspectRatio?: string,
+     *     class?: string,
+     *     pointTooltips?: list<string>,
+     *     smooth?: bool
+     * } $options
      */
     public function renderMultiLine(array $datasets, array $options = []): string
     {
@@ -102,6 +115,8 @@ final class SparklineRenderer
                 $active[] = [
                     'numeric' => $numeric,
                     'tone' => $this->normalizeTone((string)($dataset['tone'] ?? 'primary')),
+                    'axis' => (int)($dataset['axis'] ?? 0),
+                    'key' => (string)($dataset['key'] ?? ''),
                 ];
             }
         }
@@ -112,53 +127,104 @@ final class SparklineRenderer
 
         $yMin = isset($options['yMin']) ? (float)$options['yMin'] : 0.0;
         if (isset($options['yMax'])) {
-            $yMax = (float)$options['yMax'];
+            $yMaxLeft = (float)$options['yMax'];
         } else {
             $allValues = array_merge(...array_column($active, 'numeric'));
-            $yMax = $allValues !== [] ? (float)max($allValues) : 1.0;
+            $yMaxLeft = $allValues !== [] ? (float)max($allValues) : 1.0;
         }
+        $yMaxRight = isset($options['yMaxRight']) ? (float)$options['yMaxRight'] : $yMaxLeft;
 
         $class = trim('tx-analytics-sparkline ' . ($options['class'] ?? ''));
         $gridLines = (array)($options['gridLines'] ?? []);
         $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
-        $combinedPointLabels = (array)($options['combinedPointLabels'] ?? []);
+        $pointTooltips = (array)($options['pointTooltips'] ?? []);
+        $smooth = (bool)($options['smooth'] ?? false);
 
+        // Unique clip-path ID to prevent fills/lines from rendering below the 0-baseline.
+        $clipId = 'tgc-' . (++self::$clipIdCounter);
+        $baseline = self::VIEW_BOX_HEIGHT - self::PADDING;
+
+        // Build all point sets first so tones are known when emitting the SVG opening tag.
+        $pointSets = [];
+        foreach ($active as $ds) {
+            $dsYMax = $ds['axis'] === 1 ? $yMaxRight : $yMaxLeft;
+            $points = $this->buildPoints($ds['numeric'], $yMin, $dsYMax);
+            if ($points === []) {
+                continue;
+            }
+            $linePath = $smooth ? $this->buildSmoothLinePath($points) : $this->buildLinePath($points);
+            $pointSets[] = [
+                'points' => $points,
+                'tone' => $ds['tone'],
+                'key' => $ds['key'],
+                'linePath' => $linePath,
+                'fillPath' => $this->buildFillPath($points, $linePath),
+            ];
+        }
+
+        // data-tones lets JS create correctly coloured HTML hover-dots without SVG coordinate distortion.
+        $tones = implode(',', array_column($pointSets, 'tone'));
         $html = '<div class="' . $this->escape($class) . '">';
         $html .= '<svg class="tx-analytics-sparkline-svg" viewBox="0 0 ' . self::VIEW_BOX_WIDTH . ' ' . self::VIEW_BOX_HEIGHT . '"';
         if ($preserveAspectRatio !== '') {
             $html .= ' preserveAspectRatio="' . $this->escape($preserveAspectRatio) . '"';
         }
-        $html .= ' role="img" aria-hidden="true" focusable="false">';
+        $html .= ' role="img" aria-hidden="true" focusable="false" data-tones="' . $this->escape($tones) . '">';
+
+        // Clip path: prevent fills/lines from going below the 0-axis (y > baseline).
+        $html .= '<defs><clipPath id="' . $clipId . '">';
+        $html .= '<rect x="0" y="0" width="' . self::VIEW_BOX_WIDTH . '" height="' . $baseline . '"/>';
+        $html .= '</clipPath></defs>';
 
         foreach ($gridLines as $gridValue) {
-            $y = $this->valueToY((float)$gridValue, $yMin, $yMax);
+            $y = $this->valueToY((float)$gridValue, $yMin, $yMaxLeft);
             $html .= '<line class="tx-analytics-sparkline-grid-line" x1="0" y1="' . $this->formatNumber($y) . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $this->formatNumber($y) . '"/>';
         }
 
-        $pointSets = [];
-        foreach ($active as $ds) {
-            $points = $this->buildPoints($ds['numeric'], $yMin, $yMax);
-            $pointSets[] = ['points' => $points, 'tone' => $ds['tone']];
+        // Fills and lines wrapped in clip group so smooth curves cannot dip below the 0-axis.
+        $html .= '<g clip-path="url(#' . $clipId . ')">';
+
+        foreach ($pointSets as $ps) {
+            $attrs = ' class="tx-analytics-sparkline-fill" data-tone="' . $this->escape($ps['tone']) . '"';
+            if ($ps['key'] !== '') {
+                $attrs .= ' data-dataset-key="' . $this->escape($ps['key']) . '"';
+            }
+            $html .= '<path' . $attrs . ' d="' . $ps['fillPath'] . '"/>';
         }
 
         foreach ($pointSets as $ps) {
-            $linePath = $this->buildLinePath($ps['points']);
-            $html .= '<path class="tx-analytics-sparkline-line" data-tone="' . $this->escape($ps['tone']) . '" d="' . $linePath . '"></path>';
+            $attrs = ' class="tx-analytics-sparkline-line" data-tone="' . $this->escape($ps['tone']) . '"';
+            if ($ps['key'] !== '') {
+                $attrs .= ' data-dataset-key="' . $this->escape($ps['key']) . '"';
+            }
+            $html .= '<path' . $attrs . ' d="' . $ps['linePath'] . '"/>';
         }
 
-        // One combined tooltip rect per x-position — spans the full SVG height so it is easy to hit.
-        if ($combinedPointLabels !== []) {
+        // Hover indicator: vertical line only. Dots are rendered as HTML elements by JS
+        // (SVG circles distort to ellipses under preserveAspectRatio="none").
+        $html .= '<line class="tx-analytics-sparkline-hover-line" x1="-1" y1="' . self::PADDING . '" x2="-1" y2="' . $baseline . '" visibility="hidden" pointer-events="none"/>';
+
+        $html .= '</g>';
+
+        // Tooltip rects outside the clip group — span full SVG height so they are easy to hover
+        // even when data values are near zero. No <title> to avoid the native browser tooltip.
+        if ($pointTooltips !== []) {
             $firstPoints = $pointSets[0]['points'];
             $count = count($firstPoints);
             $step = $count > 1 ? self::VIEW_BOX_WIDTH / ($count - 1) : (float)self::VIEW_BOX_WIDTH;
             foreach ($firstPoints as $index => [$x]) {
-                $combinedLabel = (string)($combinedPointLabels[$index] ?? '');
-                if ($combinedLabel === '') {
+                $tooltipJson = (string)($pointTooltips[$index] ?? '');
+                if ($tooltipJson === '') {
                     continue;
                 }
                 $rectX = max(0.0, $x - $step / 2);
                 $rectW = min((float)self::VIEW_BOX_WIDTH - $rectX, $step);
-                $html .= '<rect class="tx-analytics-sparkline-point-tooltip" x="' . $this->formatNumber($rectX) . '" y="0" width="' . $this->formatNumber($rectW) . '" height="' . self::VIEW_BOX_HEIGHT . '" fill="transparent"><title>' . $this->escape($combinedLabel) . '</title></rect>';
+                // Collect per-dataset y values for the hover dots, e.g. data-y-0="11.33" data-y-1="20.67"
+                $yAttrs = '';
+                foreach ($pointSets as $psIdx => $ps) {
+                    $yAttrs .= ' data-y-' . $psIdx . '="' . $this->formatNumber($ps['points'][$index][1]) . '"';
+                }
+                $html .= '<rect class="tx-analytics-sparkline-point-tooltip" x="' . $this->formatNumber($rectX) . '" y="0" width="' . $this->formatNumber($rectW) . '" height="' . self::VIEW_BOX_HEIGHT . '" fill="transparent" data-tooltip="' . $this->escape($tooltipJson) . '"' . $yAttrs . '/>';
             }
         }
 
@@ -231,6 +297,46 @@ final class SparklineRenderer
             $path[] = ($index === 0 ? 'M' : 'L') . $this->formatNumber($x) . ' ' . $this->formatNumber($y);
         }
         return implode(' ', $path);
+    }
+
+    /**
+     * Builds a smooth cubic bezier path through all points using Catmull-Rom → bezier conversion.
+     *
+     * @param list<array{0: float, 1: float}> $points
+     */
+    private function buildSmoothLinePath(array $points): string
+    {
+        $count = count($points);
+        if ($count < 3) {
+            return $this->buildLinePath($points);
+        }
+
+        $path = 'M' . $this->formatNumber($points[0][0]) . ' ' . $this->formatNumber($points[0][1]);
+
+        for ($i = 0; $i < $count - 1; $i++) {
+            $p0 = $i > 0 ? $points[$i - 1] : $points[0];
+            $p1 = $points[$i];
+            $p2 = $points[$i + 1];
+            $p3 = $i + 2 < $count ? $points[$i + 2] : $points[$count - 1];
+
+            $cp1x = $p1[0] + ($p2[0] - $p0[0]) / 6;
+            $cp1y = $p1[1] + ($p2[1] - $p0[1]) / 6;
+            $cp2x = $p2[0] - ($p3[0] - $p1[0]) / 6;
+            $cp2y = $p2[1] - ($p3[1] - $p1[1]) / 6;
+
+            // Clamp control-point y to the drawable area so the bezier never visually
+            // overshoots the top (y < PADDING) or the zero-baseline (y > HEIGHT - PADDING).
+            $yLow = (float)self::PADDING;
+            $yHigh = (float)(self::VIEW_BOX_HEIGHT - self::PADDING);
+            $cp1y = max($yLow, min($yHigh, $cp1y));
+            $cp2y = max($yLow, min($yHigh, $cp2y));
+
+            $path .= ' C' . $this->formatNumber($cp1x) . ' ' . $this->formatNumber($cp1y)
+                   . ',' . $this->formatNumber($cp2x) . ' ' . $this->formatNumber($cp2y)
+                   . ',' . $this->formatNumber($p2[0]) . ' ' . $this->formatNumber($p2[1]);
+        }
+
+        return $path;
     }
 
     /**

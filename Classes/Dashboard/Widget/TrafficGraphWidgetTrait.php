@@ -66,18 +66,6 @@ trait TrafficGraphWidgetTrait
             : '';
     }
 
-    /**
-     * @param array{labels: list<string>, data: list<int>}|null $graphData
-     * @return array{sparkline: string, yLabels: list<array{value: int, label: string}>, xLabels: list<string>}
-     */
-    private function buildChartData(?array $graphData): array
-    {
-        return $this->chartDataBuilder->build(
-            $graphData,
-            $this->translate('dashboardWidget.trafficGraph.chartLabel')
-        );
-    }
-
     private function createViewFactoryData(?ServerRequestInterface $request = null): ViewFactoryData
     {
         return new ViewFactoryData(
