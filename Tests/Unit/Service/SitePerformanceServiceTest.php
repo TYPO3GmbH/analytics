@@ -58,10 +58,10 @@ final class SitePerformanceServiceTest extends UnitTestCase
     {
         $result = $this->subject->buildMetricItems($this->data(), '', '', '', '', '');
 
-        self::assertSame('primary', $result[0]['tone']);
-        self::assertSame('success', $result[1]['tone']);
-        self::assertSame('danger', $result[2]['tone']);
-        self::assertSame('info', $result[3]['tone']);
+        self::assertSame('visits', $result[0]['tone']);
+        self::assertSame('visitors', $result[1]['tone']);
+        self::assertSame('bounce-rate', $result[2]['tone']);
+        self::assertSame('avg-duration', $result[3]['tone']);
     }
 
     /** buildMetricItems — value formatting */

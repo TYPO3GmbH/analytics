@@ -205,9 +205,9 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
-        self::assertSame('green', $items[0]['tone']);
-        self::assertSame('blue', $items[1]['tone']);
-        self::assertSame('yellow', $items[2]['tone']);
+        self::assertSame('source-direct', $items[0]['tone']);
+        self::assertSame('source-search', $items[1]['tone']);
+        self::assertSame('source-social', $items[2]['tone']);
     }
 
     #[Test]

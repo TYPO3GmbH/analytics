@@ -69,24 +69,29 @@
     height: 1.875rem;
 }
 
-.tx-analytics-performance-metric-primary .tx-analytics-performance-icon {
-    color: var(--typo3-surface-container-primary-text);
-    background: light-dark(var(--typo3-surface-container-primary), var(--token-color-blue-80));
+.tx-analytics-performance-metric-visits .tx-analytics-performance-icon {
+    color: var(--tx-analytics-surface-visits-text);
+    background: var(--tx-analytics-surface-visits);
 }
 
-.tx-analytics-performance-metric-danger .tx-analytics-performance-icon {
-    color: var(--typo3-surface-container-danger-text);
-    background: light-dark(var(--typo3-surface-container-danger), var(--token-color-red-80));
+.tx-analytics-performance-metric-bounce-rate .tx-analytics-performance-icon {
+    color: var(--tx-analytics-surface-bounce-rate-text);
+    background: var(--tx-analytics-surface-bounce-rate);
 }
 
-.tx-analytics-performance-metric-success .tx-analytics-performance-icon {
-    color: var(--typo3-surface-container-success-text);
-    background: light-dark(var(--typo3-surface-container-success), var(--token-color-green-80));
+.tx-analytics-performance-metric-visitors .tx-analytics-performance-icon {
+    color: var(--tx-analytics-surface-visitors-text);
+    background: var(--tx-analytics-surface-visitors);
 }
 
-.tx-analytics-performance-metric-info .tx-analytics-performance-icon {
-    color: var(--typo3-surface-container-info-text);
-    background: light-dark(var(--typo3-surface-container-info), var(--token-color-teal-80));
+.tx-analytics-performance-metric-avg-duration .tx-analytics-performance-icon {
+    color: var(--tx-analytics-surface-avg-duration-text);
+    background: var(--tx-analytics-surface-avg-duration);
+}
+
+.tx-analytics-performance-metric-continuation-rate .tx-analytics-performance-icon {
+    color: var(--tx-analytics-surface-continuation-rate-text);
+    background: var(--tx-analytics-surface-continuation-rate);
 }
 
 .tx-analytics-performance-value {
@@ -126,11 +131,11 @@
 }
 
 .tx-analytics-performance-trend-up {
-    color: var(--typo3-text-color-success);
+    color: var(--tx-analytics-color-trend-positive);
 }
 
 .tx-analytics-performance-trend-down {
-    color: var(--typo3-text-color-danger);
+    color: var(--tx-analytics-color-trend-negative);
 }
 
 .tx-analytics-performance-meta {
@@ -153,11 +158,11 @@
 .tx-analytics-performance-meta-icon {
     width: 1.25rem;
     height: 1.25rem;
-    color: var(--typo3-text-color-primary);
+    color: var(--tx-analytics-color-visits);
 }
 
 .tx-analytics-performance-meta-link {
-    color: var(--typo3-text-color-primary);
+    color: var(--tx-analytics-color-visits);
     font-weight: 600;
     line-height: 1.25;
     text-decoration: none;
@@ -165,7 +170,7 @@
 }
 
 .tx-analytics-performance-meta-link:hover {
-    color: var(--typo3-text-color-primary);
+    color: var(--tx-analytics-color-visits);
     text-decoration: underline;
 }
 

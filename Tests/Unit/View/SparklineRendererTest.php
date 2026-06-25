@@ -112,11 +112,12 @@ final class SparklineRendererTest extends UnitTestCase
     public static function toneProvider(): array
     {
         return [
-            'primary' => ['primary'],
-            'success' => ['success'],
-            'warning' => ['warning'],
-            'danger' => ['danger'],
-            'info' => ['info'],
+            'visits' => ['visits'],
+            'visitors' => ['visitors'],
+            'sessions' => ['sessions'],
+            'bounce-rate' => ['bounce-rate'],
+            'avg-duration' => ['avg-duration'],
+            'continuation-rate' => ['continuation-rate'],
         ];
     }
 
@@ -138,7 +139,7 @@ final class SparklineRendererTest extends UnitTestCase
 
         $html = $subject->render([1], ['tone' => 'unknown']);
 
-        self::assertStringContainsString('data-sparkline-tone="primary"', $html);
+        self::assertStringContainsString('data-sparkline-tone="series-1"', $html);
     }
 
     #[Test]
@@ -154,6 +155,6 @@ final class SparklineRendererTest extends UnitTestCase
 
         self::assertStringContainsString('aria-label="Visitors &quot;today&quot;"', $html);
         self::assertStringContainsString('class="tx-analytics-sparkline custom-class&quot; onclick=&quot;alert(1)"', $html);
-        self::assertStringContainsString('data-sparkline-tone="primary"', $html);
+        self::assertStringContainsString('data-sparkline-tone="series-1"', $html);
     }
 }

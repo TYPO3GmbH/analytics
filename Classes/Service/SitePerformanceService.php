@@ -79,7 +79,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
             [
                 'label' => $visitsLabel,
                 'value' => $this->formatter->formatNumber($current['visitCount']),
-                'tone' => 'primary',
+                'tone' => 'visits',
                 'icon' => 'eye',
                 'trend' => $this->formatter->formatRelativeTrend((float)$current['visitCount'], (float)$previous['visitCount']),
                 'trendDirection' => $this->formatter->trendDirection((float)$current['visitCount'], (float)$previous['visitCount']),
@@ -88,7 +88,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
             [
                 'label' => $visitorsLabel,
                 'value' => $this->formatter->formatNumber($current['visitorCount']),
-                'tone' => 'success',
+                'tone' => 'visitors',
                 'icon' => 'circle-plus',
                 'trend' => $this->formatter->formatRelativeTrend((float)$current['visitorCount'], (float)$previous['visitorCount']),
                 'trendDirection' => $this->formatter->trendDirection((float)$current['visitorCount'], (float)$previous['visitorCount']),
@@ -97,7 +97,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
             [
                 'label' => $bounceRateLabel,
                 'value' => $this->formatter->formatPercentage($current['bounceRate']),
-                'tone' => 'danger',
+                'tone' => 'bounce-rate',
                 'icon' => 'arrow-right-from-bracket',
                 'trend' => $this->formatter->formatRelativeTrend($previous['bounceRate'], $current['bounceRate']),
                 'trendDirection' => $this->formatter->trendDirection($previous['bounceRate'], $current['bounceRate']),
@@ -106,7 +106,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
             [
                 'label' => $avgDurationLabel,
                 'value' => $this->formatter->formatDuration($current['avgDuration']),
-                'tone' => 'info',
+                'tone' => 'avg-duration',
                 'icon' => 'clock',
                 'trend' => $this->formatter->formatRelativeTrend((float)$current['avgDuration'], (float)$previous['avgDuration']),
                 'trendDirection' => $this->formatter->trendDirection((float)$current['avgDuration'], (float)$previous['avgDuration']),

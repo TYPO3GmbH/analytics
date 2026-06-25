@@ -120,7 +120,7 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
         $chart = $this->chartDataBuilder->buildMulti(
             $metricData,
             $metricLabels,
-            ['visits' => 'blue', 'sessions' => 'orange', 'visitors' => 'green'],
+            ['visits' => 'visits', 'sessions' => 'sessions', 'visitors' => 'visitors'],
             ['visits' => 0, 'sessions' => 1, 'visitors' => 1],
         );
 

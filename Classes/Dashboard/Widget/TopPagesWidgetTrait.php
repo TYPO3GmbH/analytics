@@ -16,7 +16,10 @@ trait TopPagesWidgetTrait
      */
     public function getCssFiles(): array
     {
-        return ['EXT:analytics/Resources/Public/Css/TopPages.css'];
+        return [
+            'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
+            'EXT:analytics/Resources/Public/Css/TopPages.css',
+        ];
     }
 
     private function buildShowAllUrl(string $siteIdentifier, int $days): string

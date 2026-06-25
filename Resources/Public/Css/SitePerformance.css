@@ -73,24 +73,29 @@
     background: var(--tx-analytics-site-performance-bg);
 }
 
-.tx-analytics-site-performance-metric-primary {
-    --tx-analytics-site-performance-bg: light-dark(var(--typo3-surface-container-primary), var(--token-color-blue-80));
-    --tx-analytics-site-performance-value-color: var(--typo3-surface-container-primary-text);
+.tx-analytics-site-performance-metric-visits {
+    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-visits);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-visits-text);
 }
 
-.tx-analytics-site-performance-metric-success {
-    --tx-analytics-site-performance-bg: light-dark(var(--typo3-surface-container-success), var(--token-color-green-80));
-    --tx-analytics-site-performance-value-color: var(--typo3-surface-container-success-text);
+.tx-analytics-site-performance-metric-visitors {
+    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-visitors);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-visitors-text);
 }
 
-.tx-analytics-site-performance-metric-danger {
-    --tx-analytics-site-performance-bg: light-dark(var(--typo3-surface-container-danger), var(--token-color-red-80));
-    --tx-analytics-site-performance-value-color: var(--typo3-surface-container-danger-text);
+.tx-analytics-site-performance-metric-bounce-rate {
+    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-bounce-rate);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-bounce-rate-text);
 }
 
-.tx-analytics-site-performance-metric-info {
-    --tx-analytics-site-performance-bg: light-dark(var(--typo3-surface-container-info), var(--token-color-teal-80));
-    --tx-analytics-site-performance-value-color: var(--typo3-surface-container-info-text);
+.tx-analytics-site-performance-metric-avg-duration {
+    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-avg-duration);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-avg-duration-text);
+}
+
+.tx-analytics-site-performance-metric-continuation-rate {
+    --tx-analytics-site-performance-bg: var(--tx-analytics-surface-continuation-rate);
+    --tx-analytics-site-performance-value-color: var(--tx-analytics-surface-continuation-rate-text);
 }
 
 .tx-analytics-site-performance-icon {
@@ -164,15 +169,15 @@
 }
 
 .tx-analytics-site-performance-trend-up {
-    color: var(--typo3-text-color-success);
+    color: var(--tx-analytics-color-trend-positive);
 }
 
 .tx-analytics-site-performance-trend-down {
-    color: var(--typo3-text-color-danger);
+    color: var(--tx-analytics-color-trend-negative);
 }
 
 .tx-analytics-site-performance-trend-neutral {
-    color: var(--typo3-text-color-variant);
+    color: var(--tx-analytics-color-trend-neutral);
 }
 
 .tx-analytics-site-performance-icon-arrow-trend-up {

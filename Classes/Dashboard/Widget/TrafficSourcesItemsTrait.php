@@ -13,13 +13,13 @@ trait TrafficSourcesItemsTrait
     private function buildTrafficSourceItems(array $sources): array
     {
         $tones = [
-            'direct' => 'green',
-            'search' => 'blue',
-            'social' => 'yellow',
-            'email' => 'magenta',
-            'paid' => 'purple',
-            'unknown' => 'orange',
-            'ai_traffic' => 'teal',
+            'direct' => 'source-direct',
+            'search' => 'source-search',
+            'social' => 'source-social',
+            'email' => 'source-email',
+            'paid' => 'source-paid',
+            'unknown' => 'source-unknown',
+            'ai_traffic' => 'source-ai',
         ];
 
         $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
@@ -31,7 +31,7 @@ trait TrafficSourcesItemsTrait
             $items[] = [
                 'label' => $this->translate('dashboardWidget.trafficSources.source.' . $channel),
                 'value' => $this->formatter->formatShare($current, $totalVisitCount),
-                'tone' => $tones[$channel] ?? 'red',
+                'tone' => $tones[$channel] ?? 'source-other',
                 'icon' => '',
                 'change' => $this->formatter->formatPercentageChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
@@ -47,7 +47,7 @@ trait TrafficSourcesItemsTrait
      */
     private function buildDeviceItems(array $payload): array
     {
-        $tones = ['desktop' => 'blue', 'mobile' => 'green', 'tablet' => 'yellow', 'phone' => 'magenta', 'undefined' => 'orange'];
+        $tones = ['desktop' => 'device-desktop', 'mobile' => 'device-mobile', 'tablet' => 'device-tablet', 'phone' => 'device-phone', 'undefined' => 'device-unknown'];
         $icons = ['desktop' => 'display', 'mobile' => 'mobile', 'tablet' => 'tablet', 'phone' => 'mobile', 'undefined' => ''];
 
         $totalSessions = array_sum(array_column($payload, 'sessionCount'));
@@ -60,7 +60,7 @@ trait TrafficSourcesItemsTrait
             $items[] = [
                 'label' => $this->translate('dashboardWidget.trafficSources.device.' . $deviceType),
                 'value' => $this->formatter->formatShare($current, $totalSessions),
-                'tone' => $tones[$deviceType] ?? 'red',
+                'tone' => $tones[$deviceType] ?? 'device-unknown',
                 'icon' => $icons[$deviceType] ?? '',
                 'change' => $this->formatter->formatPercentageChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
@@ -76,7 +76,7 @@ trait TrafficSourcesItemsTrait
      */
     private function buildBrowserItems(array $payload): array
     {
-        $palette = ['blue', 'magenta', 'yellow', 'green', 'purple', 'orange', 'teal', 'red'];
+        $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
         $totalSessions = array_sum(array_column($payload, 'sessionCount'));
 
         $items = [];
@@ -102,7 +102,7 @@ trait TrafficSourcesItemsTrait
      */
     private function buildCountryItems(array $payload): array
     {
-        $palette = ['blue', 'magenta', 'yellow', 'green', 'purple', 'orange', 'teal', 'red'];
+        $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
         $totalSessions = array_sum(array_column($payload, 'sessionCount'));
 
         $items = [];
@@ -164,7 +164,7 @@ trait TrafficSourcesItemsTrait
         $top[] = [
             'label' => $this->translate('dashboardWidget.trafficSources.other'),
             'value' => number_format($restValue, 2, '.', ''),
-            'tone' => 'red',
+            'tone' => 'series-other',
             'icon' => '',
             'change' => null,
             'changeTone' => '',

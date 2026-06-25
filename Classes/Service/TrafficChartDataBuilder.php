@@ -167,7 +167,7 @@ final readonly class TrafficChartDataBuilder
         $datasets = [];
         $legend = [];
         foreach ($activeData as $key => $dataset) {
-            $tone = $metricTones[$key] ?? 'primary';
+            $tone = $metricTones[$key] ?? 'series-1';
             $axis = $metricAxes[$key] ?? 0;
             // When there is no right axis, treat everything as axis 0.
             $effectiveAxis = $hasRightAxis ? $axis : 0;
@@ -189,7 +189,7 @@ final readonly class TrafficChartDataBuilder
                 $metrics[] = [
                     'label' => $metricLabels[$key] ?? $key,
                     'value' => number_format($value, 0, '.', "\u{202F}"),
-                    'tone' => $metricTones[$key] ?? 'primary',
+                    'tone' => $metricTones[$key] ?? 'series-1',
                 ];
             }
             $pointTooltips[] = (string)json_encode([

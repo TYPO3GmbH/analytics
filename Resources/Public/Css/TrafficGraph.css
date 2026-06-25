@@ -81,7 +81,7 @@
     width: .75em;
     height: .75em;
     border-radius: 50%;
-    background: var(--typo3-text-color-primary);
+    background: var(--tx-analytics-color-visits);
     flex-shrink: 0;
     transition: background .15s;
 }
@@ -94,14 +94,9 @@
     opacity: .35;
 }
 
-.tx-analytics-traffic-graph-legend-item[data-tone="primary"]::before { background: var(--typo3-text-color-primary); }
-.tx-analytics-traffic-graph-legend-item[data-tone="info"]::before { background: var(--typo3-text-color-info); }
-.tx-analytics-traffic-graph-legend-item[data-tone="success"]::before { background: var(--typo3-text-color-success); }
-.tx-analytics-traffic-graph-legend-item[data-tone="warning"]::before { background: var(--typo3-text-color-warning); }
-.tx-analytics-traffic-graph-legend-item[data-tone="danger"]::before { background: var(--typo3-text-color-danger); }
-.tx-analytics-traffic-graph-legend-item[data-tone="blue"]::before { background: light-dark(var(--token-color-blue-45), var(--token-color-blue-35)); }
-.tx-analytics-traffic-graph-legend-item[data-tone="orange"]::before { background: light-dark(var(--token-color-orange-45), var(--token-color-orange-40)); }
-.tx-analytics-traffic-graph-legend-item[data-tone="green"]::before { background: light-dark(var(--token-color-green-50), var(--token-color-green-45)); }
+.tx-analytics-traffic-graph-legend-item[data-tone="visits"]::before { background: var(--tx-analytics-color-visits); }
+.tx-analytics-traffic-graph-legend-item[data-tone="sessions"]::before { background: var(--tx-analytics-color-sessions); }
+.tx-analytics-traffic-graph-legend-item[data-tone="visitors"]::before { background: var(--tx-analytics-color-visitors); }
 
 /* Chart layout: [y-axis | sparkline] / [x-axis below sparkline] */
 .tx-analytics-traffic-graph-chart-wrap {
@@ -170,14 +165,14 @@
 }
 
 /* More opaque fills for the dedicated chart area so colors are clearly visible. */
-.tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="blue"] {
-    fill: color-mix(in srgb, light-dark(var(--token-color-blue-45), var(--token-color-blue-35)), transparent 62%);
+.tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="visits"] {
+    fill: color-mix(in srgb, var(--tx-analytics-color-visits), transparent 62%);
 }
-.tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="orange"] {
-    fill: color-mix(in srgb, light-dark(var(--token-color-orange-45), var(--token-color-orange-40)), transparent 62%);
+.tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="sessions"] {
+    fill: color-mix(in srgb, var(--tx-analytics-color-sessions), transparent 62%);
 }
-.tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="green"] {
-    fill: color-mix(in srgb, light-dark(var(--token-color-green-50), var(--token-color-green-45)), transparent 62%);
+.tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="visitors"] {
+    fill: color-mix(in srgb, var(--tx-analytics-color-visitors), transparent 62%);
 }
 
 .tx-analytics-traffic-graph-x-axis {
@@ -193,7 +188,7 @@
 
 /* Hover indicator: dashed vertical line */
 .tx-analytics-sparkline-hover-line {
-    stroke: var(--typo3-text-color-variant, currentColor);
+    stroke: var(--typo3-text-color-variant);
     stroke-width: 0.3;
     stroke-dasharray: 1.5 2;
     opacity: 0.35;
@@ -220,25 +215,22 @@
     background: currentColor;
 }
 
-.tx-analytics-sparkline-hover-dot[data-tone="blue"] { color: light-dark(var(--token-color-blue-45), var(--token-color-blue-35)); }
-.tx-analytics-sparkline-hover-dot[data-tone="orange"] { color: light-dark(var(--token-color-orange-45), var(--token-color-orange-40)); }
-.tx-analytics-sparkline-hover-dot[data-tone="green"] { color: light-dark(var(--token-color-green-50), var(--token-color-green-45)); }
-.tx-analytics-sparkline-hover-dot[data-tone="primary"] { color: var(--typo3-text-color-primary); }
-.tx-analytics-sparkline-hover-dot[data-tone="info"] { color: var(--typo3-text-color-info); }
-.tx-analytics-sparkline-hover-dot[data-tone="success"] { color: var(--typo3-text-color-success); }
+.tx-analytics-sparkline-hover-dot[data-tone="visits"] { color: var(--tx-analytics-color-visits); }
+.tx-analytics-sparkline-hover-dot[data-tone="sessions"] { color: var(--tx-analytics-color-sessions); }
+.tx-analytics-sparkline-hover-dot[data-tone="visitors"] { color: var(--tx-analytics-color-visitors); }
 
 /* Hover tooltip */
 .tx-analytics-traffic-graph-tooltip {
     position: fixed;
     z-index: 9999;
-    background: var(--typo3-component-bg, #1e1e1e);
-    border: 1px solid var(--typo3-component-border-color, rgba(255,255,255,.12));
-    border-radius: var(--typo3-component-border-radius, 4px);
+    background: var(--typo3-component-bg);
+    border: 1px solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
     padding: .5rem .75rem;
     font-size: var(--typo3-font-size-small, 11px);
     pointer-events: none;
     white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .4);
+    box-shadow: var(--typo3-component-box-shadow);
     min-width: 8rem;
 }
 
@@ -261,15 +253,12 @@
     height: .65em;
     border-radius: 50%;
     flex-shrink: 0;
-    background: var(--typo3-text-color-primary);
+    background: var(--tx-analytics-color-visits);
 }
 
-.tx-analytics-traffic-graph-tooltip-dot[data-tone="blue"] { background: light-dark(var(--token-color-blue-45), var(--token-color-blue-35)); }
-.tx-analytics-traffic-graph-tooltip-dot[data-tone="orange"] { background: light-dark(var(--token-color-orange-45), var(--token-color-orange-40)); }
-.tx-analytics-traffic-graph-tooltip-dot[data-tone="green"] { background: light-dark(var(--token-color-green-50), var(--token-color-green-45)); }
-.tx-analytics-traffic-graph-tooltip-dot[data-tone="primary"] { background: var(--typo3-text-color-primary); }
-.tx-analytics-traffic-graph-tooltip-dot[data-tone="info"] { background: var(--typo3-text-color-info); }
-.tx-analytics-traffic-graph-tooltip-dot[data-tone="success"] { background: var(--typo3-text-color-success); }
+.tx-analytics-traffic-graph-tooltip-dot[data-tone="visits"] { background: var(--tx-analytics-color-visits); }
+.tx-analytics-traffic-graph-tooltip-dot[data-tone="sessions"] { background: var(--tx-analytics-color-sessions); }
+.tx-analytics-traffic-graph-tooltip-dot[data-tone="visitors"] { background: var(--tx-analytics-color-visitors); }
 
 .tx-analytics-traffic-graph-tooltip-label {
     flex: 1;

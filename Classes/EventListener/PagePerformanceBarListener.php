@@ -57,6 +57,7 @@ final readonly class PagePerformanceBarListener
 
         $days = $this->normalizeDays((int)($queryParams['tx_analytics_period'] ?? 7));
 
+        $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/AnalyticsColors.css');
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/PagePerformance.css');
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/Components/Sparkline.css');
         $this->pageRenderer->addJsFooterFile('EXT:analytics/Resources/Public/JavaScript/page-performance.js');
@@ -179,7 +180,7 @@ final readonly class PagePerformanceBarListener
                 'label' => $this->translate('pagePerformance.views'),
                 'description' => $this->translate('pagePerformance.tooltip.description.views'),
                 'icon' => 'eye',
-                'tone' => 'primary',
+                'tone' => 'visits',
                 'value' => number_format($visitCount, 0, '.', "\u{202F}"),
                 'trend' => $this->percentTrend($visitCount, $prevVisitCount),
                 'trendDirection' => $this->trendDirection($visitCount, $prevVisitCount),
@@ -200,7 +201,7 @@ final readonly class PagePerformanceBarListener
                 'label' => $this->translate('pagePerformance.bounceRate'),
                 'description' => $this->translate('pagePerformance.tooltip.description.bounceRate'),
                 'icon' => 'arrow-right-from-bracket',
-                'tone' => 'danger',
+                'tone' => 'bounce-rate',
                 'value' => number_format($bounceRate, 2) . '%',
                 'trend' => $this->percentTrend($prevBounceRate, $bounceRate),
                 'trendDirection' => $this->trendDirection($prevBounceRate, $bounceRate),
@@ -221,7 +222,7 @@ final readonly class PagePerformanceBarListener
                 'label' => $this->translate('pagePerformance.averageTimeOnPage'),
                 'description' => $this->translate('pagePerformance.tooltip.description.averageTimeOnPage'),
                 'icon' => 'clock',
-                'tone' => 'success',
+                'tone' => 'avg-duration',
                 'value' => $this->formatDuration($avgDuration),
                 'trend' => $this->durationTrend($avgDuration, $prevAvgDuration),
                 'trendDirection' => $this->trendDirection($avgDuration, $prevAvgDuration),
@@ -242,7 +243,7 @@ final readonly class PagePerformanceBarListener
                 'label' => $this->translate('pagePerformance.continuationRate'),
                 'description' => $this->translate('pagePerformance.tooltip.description.continuationRate'),
                 'icon' => 'right-to-bracket',
-                'tone' => 'info',
+                'tone' => 'continuation-rate',
                 'value' => number_format($continuationRate, 2) . '%',
                 'trend' => $this->percentTrend($continuationRate, $prevContinuationRate),
                 'trendDirection' => $this->trendDirection($continuationRate, $prevContinuationRate),
@@ -267,10 +268,10 @@ final readonly class PagePerformanceBarListener
     private function buildPlaceholderMetrics(): array
     {
         $placeholders = [
-            ['visitCount', $this->translate('pagePerformance.views'), 'eye', 'primary'],
-            ['bounceRate', $this->translate('pagePerformance.bounceRate'), 'arrow-right-from-bracket', 'danger'],
-            ['averageVisitDuration', $this->translate('pagePerformance.averageTimeOnPage'), 'clock', 'success'],
-            ['continuationRate', $this->translate('pagePerformance.continuationRate'), 'right-to-bracket', 'info'],
+            ['visitCount', $this->translate('pagePerformance.views'), 'eye', 'visits'],
+            ['bounceRate', $this->translate('pagePerformance.bounceRate'), 'arrow-right-from-bracket', 'bounce-rate'],
+            ['averageVisitDuration', $this->translate('pagePerformance.averageTimeOnPage'), 'clock', 'avg-duration'],
+            ['continuationRate', $this->translate('pagePerformance.continuationRate'), 'right-to-bracket', 'continuation-rate'],
         ];
 
         $metrics = [];

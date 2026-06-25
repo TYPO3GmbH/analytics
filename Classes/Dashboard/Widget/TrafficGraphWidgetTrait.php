@@ -18,6 +18,7 @@ trait TrafficGraphWidgetTrait
     public function getCssFiles(): array
     {
         return [
+            'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
             'EXT:analytics/Resources/Public/Css/Components/Sparkline.css',
             'EXT:analytics/Resources/Public/Css/TrafficGraph.css',
         ];

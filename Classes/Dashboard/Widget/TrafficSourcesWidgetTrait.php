@@ -18,7 +18,10 @@ trait TrafficSourcesWidgetTrait
      */
     public function getCssFiles(): array
     {
-        return ['EXT:analytics/Resources/Public/Css/TrafficSources.css'];
+        return [
+            'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
+            'EXT:analytics/Resources/Public/Css/TrafficSources.css',
+        ];
     }
 
     /**

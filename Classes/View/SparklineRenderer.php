@@ -44,7 +44,7 @@ final class SparklineRenderer
 
         $label = trim((string)($options['label'] ?? ''));
         $class = trim('tx-analytics-sparkline ' . ($options['class'] ?? ''));
-        $tone = $this->normalizeTone((string)($options['tone'] ?? 'primary'));
+        $tone = $this->normalizeTone((string)($options['tone'] ?? 'series-1'));
         $smooth = (bool)($options['smooth'] ?? false);
         $linePath = $smooth ? $this->buildSmoothLinePath($points) : $this->buildLinePath($points);
         $lastPoint = $points[array_key_last($points)];
@@ -114,7 +114,7 @@ final class SparklineRenderer
             if ($numeric !== []) {
                 $active[] = [
                     'numeric' => $numeric,
-                    'tone' => $this->normalizeTone((string)($dataset['tone'] ?? 'primary')),
+                    'tone' => $this->normalizeTone((string)($dataset['tone'] ?? 'series-1')),
                     'axis' => (int)($dataset['axis'] ?? 0),
                     'key' => (string)($dataset['key'] ?? ''),
                 ];
@@ -356,7 +356,36 @@ final class SparklineRenderer
 
     private function normalizeTone(string $tone): string
     {
-        return in_array($tone, ['primary', 'success', 'warning', 'danger', 'info', 'blue', 'orange', 'green', 'teal', 'purple', 'magenta', 'red', 'yellow'], true) ? $tone : 'primary';
+        return in_array($tone, [
+            'visits',
+            'visitors',
+            'sessions',
+            'bounce-rate',
+            'avg-duration',
+            'continuation-rate',
+            'source-direct',
+            'source-search',
+            'source-social',
+            'source-email',
+            'source-paid',
+            'source-ai',
+            'source-unknown',
+            'source-other',
+            'device-desktop',
+            'device-mobile',
+            'device-tablet',
+            'device-phone',
+            'device-unknown',
+            'series-1',
+            'series-2',
+            'series-3',
+            'series-4',
+            'series-5',
+            'series-6',
+            'series-7',
+            'series-8',
+            'series-other',
+        ], true) ? $tone : 'series-1';
     }
 
     private function formatNumber(float $value): string
