@@ -140,13 +140,14 @@ final class SparklineRenderer
         $pointTooltips = (array)($options['pointTooltips'] ?? []);
         $smooth = (bool)($options['smooth'] ?? false);
 
-        // Unique clip-path ID to prevent fills/lines from rendering below the 0-baseline.
-        $clipId = 'tgc-' . (++self::$clipIdCounter);
+        // Unique IDs prevent collisions when multiple dashboard widgets render on the same page.
+        $idSuffix = (string)(++self::$clipIdCounter);
+        $clipId = 'tgc-' . $idSuffix;
         $baseline = self::VIEW_BOX_HEIGHT - self::PADDING;
 
         // Build all point sets first so tones are known when emitting the SVG opening tag.
         $pointSets = [];
-        foreach ($active as $ds) {
+        foreach ($active as $index => $ds) {
             $dsYMax = $ds['axis'] === 1 ? $yMaxRight : $yMaxLeft;
             $points = $this->buildPoints($ds['numeric'], $yMin, $dsYMax);
             if ($points === []) {
@@ -159,6 +160,7 @@ final class SparklineRenderer
                 'key' => $ds['key'],
                 'linePath' => $linePath,
                 'fillPath' => $this->buildFillPath($points, $linePath),
+                'gradientId' => 'tgc-fill-' . $idSuffix . '-' . $index . '-' . $ds['tone'],
             ];
         }
 
@@ -175,7 +177,15 @@ final class SparklineRenderer
         // Clip path: prevent fills/lines from going below the 0-axis (y > baseline).
         $html .= '<defs><clipPath id="' . $clipId . '">';
         $html .= '<rect x="0" y="0" width="' . self::VIEW_BOX_WIDTH . '" height="' . $baseline . '"/>';
-        $html .= '</clipPath></defs>';
+        $html .= '</clipPath>';
+        foreach ($pointSets as $ps) {
+            $html .= '<linearGradient id="' . $this->escape($ps['gradientId']) . '" x1="0" y1="' . self::PADDING . '" x2="0" y2="' . $baseline . '" gradientUnits="userSpaceOnUse">';
+            $html .= '<stop offset="0%" style="stop-color:color-mix(in srgb, var(' . $this->toneToCssVariable($ps['tone']) . '), white 38%);stop-opacity:.68"/>';
+            $html .= '<stop offset="24%" style="stop-color:color-mix(in srgb, var(' . $this->toneToCssVariable($ps['tone']) . '), white 58%);stop-opacity:.26"/>';
+            $html .= '<stop offset="100%" style="stop-color:var(' . $this->toneToCssVariable($ps['tone']) . ');stop-opacity:0"/>';
+            $html .= '</linearGradient>';
+        }
+        $html .= '</defs>';
 
         foreach ($gridLines as $gridValue) {
             $y = $this->valueToY((float)$gridValue, $yMin, $yMaxLeft);
@@ -186,7 +196,7 @@ final class SparklineRenderer
         $html .= '<g clip-path="url(#' . $clipId . ')">';
 
         foreach ($pointSets as $ps) {
-            $attrs = ' class="tx-analytics-sparkline-fill" data-tone="' . $this->escape($ps['tone']) . '"';
+            $attrs = ' class="tx-analytics-sparkline-fill" data-tone="' . $this->escape($ps['tone']) . '" style="fill:url(#' . $this->escape($ps['gradientId']) . ')"';
             if ($ps['key'] !== '') {
                 $attrs .= ' data-dataset-key="' . $this->escape($ps['key']) . '"';
             }
@@ -387,6 +397,11 @@ final class SparklineRenderer
             'series-8',
             'series-other',
         ], true) ? $tone : 'series-1';
+    }
+
+    private function toneToCssVariable(string $tone): string
+    {
+        return '--tx-analytics-color-' . $this->normalizeTone($tone);
     }
 
     private function formatNumber(float $value): string

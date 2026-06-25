@@ -164,15 +164,15 @@
     height: 100%;
 }
 
-/* More opaque fills for the dedicated chart area so colors are clearly visible. */
+/* Lightweight fallback fill; multi-line graphs use SVG gradients from SparklineRenderer. */
 .tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="visits"] {
-    fill: color-mix(in srgb, var(--tx-analytics-color-visits), transparent 62%);
+    fill: color-mix(in srgb, var(--tx-analytics-color-visits), transparent 82%);
 }
 .tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="sessions"] {
-    fill: color-mix(in srgb, var(--tx-analytics-color-sessions), transparent 62%);
+    fill: color-mix(in srgb, var(--tx-analytics-color-sessions), transparent 82%);
 }
 .tx-analytics-traffic-graph .tx-analytics-sparkline-fill[data-tone="visitors"] {
-    fill: color-mix(in srgb, var(--tx-analytics-color-visitors), transparent 62%);
+    fill: color-mix(in srgb, var(--tx-analytics-color-visitors), transparent 82%);
 }
 
 .tx-analytics-traffic-graph-x-axis {
