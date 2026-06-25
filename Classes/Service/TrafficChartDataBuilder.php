@@ -187,6 +187,7 @@ final readonly class TrafficChartDataBuilder
             foreach ($activeData as $key => $dataset) {
                 $value = $alignedValues[$key][$i] ?? 0;
                 $metrics[] = [
+                    'key' => $key,
                     'label' => $metricLabels[$key] ?? $key,
                     'value' => number_format($value, 0, '.', "\u{202F}"),
                     'tone' => $metricTones[$key] ?? 'series-1',

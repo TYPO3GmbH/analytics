@@ -46,10 +46,11 @@ function getOrCreateGlobalTooltip() {
   return el;
 }
 
-function renderTooltipContent(tooltip, data) {
+function renderTooltipContent(tooltip, data, hiddenDatasets) {
   const { date, metrics } = data;
   let html = `<div class="tx-analytics-traffic-graph-tooltip-date">${escapeHtml(date)}</div>`;
   for (const m of (metrics || [])) {
+    if (m.key && hiddenDatasets?.has(m.key)) continue;
     html += `<div class="tx-analytics-traffic-graph-tooltip-row">`
           + `<span class="tx-analytics-traffic-graph-tooltip-dot" data-tone="${escapeHtml(m.tone || '')}"></span>`
           + `<span class="tx-analytics-traffic-graph-tooltip-label">${escapeHtml(m.label || '')}</span>`
@@ -81,7 +82,7 @@ function positionTooltip(tooltip, clientX, clientY) {
   tooltip.style.top = y + 'px';
 }
 
-function showHoverIndicator(tooltipRect) {
+function showHoverIndicator(tooltipRect, hiddenDatasets) {
   const svg = tooltipRect.closest('svg');
   if (!svg) return;
 
@@ -100,6 +101,7 @@ function showHoverIndicator(tooltipRect) {
   // HTML dots — rendered outside the SVG so they stay circular (SVG circles distort
   // to ellipses under preserveAspectRatio="none").
   const tones = (svg.dataset.tones ?? '').split(',').filter(Boolean);
+  const keys  = (svg.dataset.keys  ?? '').split(',');
   const svgBB = svg.getBoundingClientRect();
   const scaleX = svgBB.width / 100;   // viewBox width = 100
   const scaleY = svgBB.height / 32;   // viewBox height = 32
@@ -128,13 +130,17 @@ function showHoverIndicator(tooltipRect) {
     const yAttr = tooltipRect.getAttribute(`data-y-${i}`);
     const dot = dotContainer.children[i];
     if (!dot || yAttr === null) return;
+    const key = keys[i] ?? '';
+    if (key && hiddenDatasets?.has(key)) {
+      dot.style.display = 'none';
+      return;
+    }
+    dot.style.display = '';
     dot.className = 'tx-analytics-sparkline-hover-dot';
     dot.setAttribute('data-tone', tone);
     // Convert SVG user units to px offsets within chartArea.
-    const dotX = cx * scaleX;
-    const dotY = parseFloat(yAttr) * scaleY;
-    dot.style.left = dotX + 'px';
-    dot.style.top = dotY + 'px';
+    dot.style.left = (cx * scaleX) + 'px';
+    dot.style.top  = (parseFloat(yAttr) * scaleY) + 'px';
   });
 }
 
@@ -176,12 +182,12 @@ function initChartTooltips(widget) {
     try {
       const data = JSON.parse(rect.dataset.tooltip);
       const tooltip = getOrCreateGlobalTooltip();
-      renderTooltipContent(tooltip, data);
+      renderTooltipContent(tooltip, data, widget._hiddenDatasets);
       positionTooltip(tooltip, e.clientX, e.clientY);
     } catch {
       hideGlobalTooltip();
     }
-    showHoverIndicator(rect);
+    showHoverIndicator(rect, widget._hiddenDatasets);
   });
 
   widget.addEventListener('mouseleave', () => {

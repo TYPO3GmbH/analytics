@@ -162,14 +162,15 @@ final class SparklineRenderer
             ];
         }
 
-        // data-tones lets JS create correctly coloured HTML hover-dots without SVG coordinate distortion.
+        // data-tones / data-keys let JS create correctly coloured HTML hover-dots and respect toggle state.
         $tones = implode(',', array_column($pointSets, 'tone'));
+        $keys = implode(',', array_column($pointSets, 'key'));
         $html = '<div class="' . $this->escape($class) . '">';
         $html .= '<svg class="tx-analytics-sparkline-svg" viewBox="0 0 ' . self::VIEW_BOX_WIDTH . ' ' . self::VIEW_BOX_HEIGHT . '"';
         if ($preserveAspectRatio !== '') {
             $html .= ' preserveAspectRatio="' . $this->escape($preserveAspectRatio) . '"';
         }
-        $html .= ' role="img" aria-hidden="true" focusable="false" data-tones="' . $this->escape($tones) . '">';
+        $html .= ' role="img" aria-hidden="true" focusable="false" data-tones="' . $this->escape($tones) . '" data-keys="' . $this->escape($keys) . '">';
 
         // Clip path: prevent fills/lines from going below the 0-axis (y > baseline).
         $html .= '<defs><clipPath id="' . $clipId . '">';
