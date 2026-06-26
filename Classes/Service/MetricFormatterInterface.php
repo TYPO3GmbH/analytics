@@ -16,9 +16,11 @@ interface MetricFormatterInterface
 
     public function formatDuration(int $seconds): string;
 
-    public function formatRelativeTrend(float $currentValue, float $previousValue): string;
+    public function formatAbsoluteCountTrend(int $current, int $previous): string;
 
-    public function formatInvertedRelativeTrend(float $currentValue, float $previousValue): string;
+    public function formatAbsolutePercentPointTrend(float $current, float $previous): string;
+
+    public function formatAbsoluteDurationTrend(int $current, int $previous): string;
 
     public function trendDirection(float $currentValue, float $previousValue): string;
 

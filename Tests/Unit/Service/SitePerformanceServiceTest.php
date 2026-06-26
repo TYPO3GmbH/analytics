@@ -114,7 +114,7 @@ final class SitePerformanceServiceTest extends UnitTestCase
         $result = $this->subject->buildMetricItems($this->data(visitCount: 20, prevVisitCount: 10), '', '', '', '', '');
 
         self::assertSame('up', $result[0]['trendDirection']);
-        self::assertSame('+100.00%', $result[0]['trend']);
+        self::assertSame('+10', $result[0]['trend']);
     }
 
     #[Test]
@@ -123,7 +123,7 @@ final class SitePerformanceServiceTest extends UnitTestCase
         $result = $this->subject->buildMetricItems($this->data(visitCount: 5, prevVisitCount: 10), '', '', '', '', '');
 
         self::assertSame('down', $result[0]['trendDirection']);
-        self::assertSame('-50.00%', $result[0]['trend']);
+        self::assertSame('-5', $result[0]['trend']);
     }
 
     #[Test]

@@ -35,22 +35,41 @@ readonly class MetricFormatter implements MetricFormatterInterface
         return sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
     }
 
-    public function formatRelativeTrend(float $currentValue, float $previousValue): string
+    public function formatAbsoluteCountTrend(int $current, int $previous): string
     {
-        if ($previousValue === 0.0) {
+        if ($previous === 0) {
             return '';
         }
-        $formatted = $this->formatSignedNumber((($currentValue - $previousValue) / $previousValue) * 100);
-        return $formatted === '±0' ? '' : $formatted . '%';
+        $diff = $current - $previous;
+        if ($diff === 0) {
+            return '';
+        }
+        return ($diff > 0 ? '+' : '') . number_format($diff, 0, '.', '.');
     }
 
-    public function formatInvertedRelativeTrend(float $currentValue, float $previousValue): string
+    public function formatAbsolutePercentPointTrend(float $current, float $previous): string
     {
-        if ($previousValue === 0.0) {
+        if ($previous === 0.0) {
             return '';
         }
-        $formatted = $this->formatSignedNumber((($previousValue - $currentValue) / $previousValue) * 100);
-        return $formatted === '±0' ? '' : $formatted . '%';
+        $diff = $current - $previous;
+        if (round($diff, 2) === 0.0) {
+            return '';
+        }
+        return ($diff > 0 ? '+' : '') . number_format($diff, 2) . '%';
+    }
+
+    public function formatAbsoluteDurationTrend(int $current, int $previous): string
+    {
+        $diff = $current - $previous;
+        if ($diff === 0) {
+            return '';
+        }
+        $abs = abs($diff);
+        $sign = $diff > 0 ? '+' : '-';
+        return $abs < 60
+            ? $sign . $abs . 's'
+            : $sign . intdiv($abs, 60) . ':' . str_pad((string)($abs % 60), 2, '0', STR_PAD_LEFT);
     }
 
     public function trendDirection(float $currentValue, float $previousValue): string
