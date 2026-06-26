@@ -167,7 +167,7 @@ final readonly class PagePerformanceBarBuilder
         $avgDuration = (float)($pageData['averageVisitDuration'] ?? 0.0);
         $continuationRate = max(0.0, 100.0 - $bounceRate);
 
-        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : 0;
+        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : null;
         $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : null;
         $prevAvgDuration = $previousPage !== null ? (float)($previousPage['averageVisitDuration'] ?? 0.0) : null;
         $prevContinuationRate = $prevBounceRate !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
@@ -201,7 +201,7 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'eye',
                 'tone' => 'visits',
                 'value' => number_format($visitCount, 0, '.', "\u{202F}"),
-                'trend' => $this->percentTrend($visitCount, $prevVisitCount),
+                'trend' => $this->absoluteCountTrend($visitCount, $prevVisitCount),
                 'trendDirection' => $this->trendDirection($visitCount, $prevVisitCount),
                 'details' => [
                     $visitsCurrent !== null ? number_format((int)$visitsCurrent, 0, '.', "\u{202F}") : '-',
@@ -222,7 +222,7 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'bounce-rate',
                 'value' => number_format($bounceRate, 2) . '%',
-                'trend' => $this->invertedPercentTrend($bounceRate, $prevBounceRate),
+                'trend' => $this->absolutePercentPointTrend($bounceRate, $prevBounceRate),
                 'trendDirection' => $prevBounceRate !== null ? $this->trendDirection($prevBounceRate, $bounceRate) : null,
                 'details' => [
                     $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 2) . '%' : '-',
@@ -264,7 +264,7 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'right-to-bracket',
                 'tone' => 'continuation-rate',
                 'value' => number_format($continuationRate, 2) . '%',
-                'trend' => $this->percentTrend($continuationRate, $prevContinuationRate),
+                'trend' => $this->absolutePercentPointTrend($continuationRate, $prevContinuationRate),
                 'trendDirection' => $this->trendDirection($continuationRate, $prevContinuationRate),
                 'details' => [
                     $continuationCurrent !== null ? number_format($continuationCurrent, 2) . '%' : '-',
@@ -444,22 +444,28 @@ final readonly class PagePerformanceBarBuilder
         return $series !== [] ? max($series) : null;
     }
 
-    private function percentTrend(int|float $current, int|float|null $previous): ?string
+    private function absoluteCountTrend(int|float $current, int|float|null $previous): ?string
     {
-        if ($previous === null || $previous == 0) {
+        if ($previous === null) {
             return null;
         }
-        $change = (($current - $previous) / $previous) * 100.0;
-        return ($change >= 0 ? '+' : '') . number_format($change, 2) . '%';
+        $diff = (int)round($current) - (int)round($previous);
+        if ($diff === 0) {
+            return null;
+        }
+        return ($diff > 0 ? '+' : '') . number_format($diff, 0, '.', "\u{202F}");
     }
 
-    private function invertedPercentTrend(int|float $current, int|float|null $previous): ?string
+    private function absolutePercentPointTrend(float $current, float|null $previous): ?string
     {
-        if ($previous === null || $previous == 0) {
+        if ($previous === null) {
             return null;
         }
-        $change = (($previous - $current) / $previous) * 100.0;
-        return ($change >= 0 ? '+' : '') . number_format($change, 2) . '%';
+        $diff = $current - $previous;
+        if (round($diff, 2) === 0.0) {
+            return null;
+        }
+        return ($diff > 0 ? '+' : '') . number_format($diff, 2) . '%';
     }
 
     private function durationTrend(float $current, float|null $previous): ?string

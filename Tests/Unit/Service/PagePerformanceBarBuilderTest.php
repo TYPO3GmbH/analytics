@@ -156,7 +156,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
 
-        // percentTrend(visitCount=21, prevVisitCount=0) → null (division by zero guarded)
+        // previousPage = null → prevVisitCount = null → absoluteCountTrend returns null
         self::assertNull($metrics[0]['trend']);
     }
 
@@ -226,7 +226,8 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
 
-        self::assertSame('+100.00%', $metrics[0]['trend']);
+        // visitCount=20, prev=10 → absolute diff = +10
+        self::assertSame('+10', $metrics[0]['trend']);
         self::assertSame('up', $metrics[0]['trendDirection']);
     }
 
