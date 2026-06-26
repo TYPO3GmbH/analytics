@@ -34,6 +34,8 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         private MetricFormatterInterface $formatter,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
+        /** @var array<string, string> */
+        private array $options = [],
     ) {
     }
 
@@ -43,8 +45,9 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
     public function getSettingsDefinitions(): array
     {
         $siteOptions = $this->siteProvider->siteOptions();
+        $sectionLocked = isset($this->options['section']);
 
-        return [
+        $definitions = [
             new SettingDefinition(
                 key: 'site',
                 type: 'string',
@@ -59,7 +62,7 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.period.label',
                 enum: $this->periodEnumOptions(),
             ),
-            new SettingDefinition(
+            ...($sectionLocked ? [] : [new SettingDefinition(
                 key: 'section',
                 type: 'string',
                 default: 'sources',
@@ -70,7 +73,7 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                     'browser' => 'Browser',
                     'countries' => 'Countries',
                 ],
-            ),
+            )]),
             new SettingDefinition(
                 key: 'chartType',
                 type: 'string',
@@ -94,13 +97,15 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
             ),
         ];
+
+        return $definitions;
     }
 
     public function renderWidget(WidgetContext $context): WidgetResult
     {
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
-        $section = (string)$context->settings->get('section');
+        $section = $this->options['section'] ?? (string)$context->settings->get('section');
         $isDonut = $context->settings->get('chartType') === 'donut';
         $customTitle = trim((string)$context->settings->get('title'));
         $showMeta = (bool)$context->settings->get('showMeta');

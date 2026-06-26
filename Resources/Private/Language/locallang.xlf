@@ -377,6 +377,30 @@
             <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
                 <source>Other</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesDevices.title" resname="dashboardWidget.trafficSourcesDevices.title">
+                <source>Traffic Sources: Devices</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesDevices.description" resname="dashboardWidget.trafficSourcesDevices.description">
+                <source>Shows the device distribution of your website visitors.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesBrowser.title" resname="dashboardWidget.trafficSourcesBrowser.title">
+                <source>Traffic Sources: Browser</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesBrowser.description" resname="dashboardWidget.trafficSourcesBrowser.description">
+                <source>Shows the browser distribution of your website visitors.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesCountries.title" resname="dashboardWidget.trafficSourcesCountries.title">
+                <source>Traffic Sources: Countries</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesCountries.description" resname="dashboardWidget.trafficSourcesCountries.description">
+                <source>Shows the geographic distribution of your website visitors.</source>
+            </trans-unit>
+            <trans-unit id="dashboard.analyticsOverview.title" resname="dashboard.analyticsOverview.title">
+                <source>Analytics Overview</source>
+            </trans-unit>
+            <trans-unit id="dashboard.analyticsOverview.description" resname="dashboard.analyticsOverview.description">
+                <source>Site performance, top pages, traffic graph and traffic sources (channel, devices, browser, countries).</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
