@@ -381,12 +381,15 @@ final readonly class PagePerformanceBarBuilder
         $prevFrom = $prevTo->modify('-' . ($days - 1) . ' days');
 
         $page = $this->analyticsClient->fetchPageAnalytics($websiteId, $apiKey, $pageUrl, $from, $to);
+        $previousPage = $this->analyticsClient->fetchPageAnalytics($websiteId, $apiKey, $pageUrl, $prevFrom, $prevTo);
 
-        if ($page === null) {
+        if ($page === null && $previousPage === null) {
             return null;
         }
 
-        $previousPage = $this->analyticsClient->fetchPageAnalytics($websiteId, $apiKey, $pageUrl, $prevFrom, $prevTo);
+        if ($page === null) {
+            $page = ['visitCount' => 0, 'bounceRate' => 0.0, 'averageVisitDuration' => 0.0];
+        }
 
         $seriesResult = $this->analyticsClient->fetchAllTimeSeries($websiteId, $apiKey, $pageUrl, $from, $to);
         foreach ($seriesResult['failures'] as $key => $reason) {

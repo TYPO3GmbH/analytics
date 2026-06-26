@@ -246,7 +246,10 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
     #[Test]
     public function loadPageDataCachesNullWhenPageHasNoData(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->mockHandler->append(
+            $this->emptyPageApiResponse(),
+            $this->emptyPageApiResponse(),
+        );
 
         $this->cache->method('get')->willReturn(false);
         $this->cache->expects(self::once())->method('set')->with(
@@ -255,6 +258,27 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         );
 
         self::assertNull($this->callLoadPageData($this->buildSubject($this->siteFinder())));
+    }
+
+    #[Test]
+    public function loadPageDataReturnsZeroedCurrentWhenOnlyPreviousPeriodHasData(): void
+    {
+        $this->mockHandler->append(
+            $this->emptyPageApiResponse(),
+            $this->pageApiResponse(10, 50.0, 60.0),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+
+        $this->cache->method('get')->willReturn(false);
+
+        $result = $this->callLoadPageData($this->buildSubject($this->siteFinder()));
+
+        self::assertIsArray($result);
+        self::assertSame(0, $result['page']['visitCount']);
+        self::assertSame(0.0, $result['page']['bounceRate']);
+        self::assertSame(0.0, $result['page']['averageVisitDuration']);
+        self::assertSame(10, $result['previousPage']['visitCount']);
     }
 
     #[Test]
