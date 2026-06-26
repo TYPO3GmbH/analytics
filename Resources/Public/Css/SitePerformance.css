@@ -13,9 +13,11 @@
 
 .tx-analytics-site-performance-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: .75rem;
     align-items: center;
+    justify-content: space-between;
     align-self: start;
     min-width: 0;
 }

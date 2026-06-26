@@ -141,7 +141,7 @@ final class TrafficSourcesWidgetV14Test extends UnitTestCase
 
         self::assertContains('site', $keys);
         self::assertContains('days', $keys);
-        self::assertContains('section', $keys);
+        self::assertNotContains('section', $keys);
         self::assertContains('chartType', $keys);
         self::assertContains('title', $keys);
         self::assertContains('showMeta', $keys);

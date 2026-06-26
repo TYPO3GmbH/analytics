@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
+use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
@@ -38,7 +39,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         $this->options = array_replace(
             [
                 'site' => '',
-                'days' => 30,
+                'days' => DashboardPeriods::defaultPeriod(),
             ],
             $options
         );

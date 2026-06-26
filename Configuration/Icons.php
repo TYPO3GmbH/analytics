@@ -28,4 +28,20 @@ return [
         'provider' => SvgIconProvider::class,
         'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/widget.svg',
     ],
+    'analytics-traffic-sources-channel-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/display.svg',
+    ],
+    'analytics-traffic-sources-devices-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/mobile.svg',
+    ],
+    'analytics-traffic-sources-browser-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/browser.svg',
+    ],
+    'analytics-traffic-sources-countries-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/earth-europe.svg',
+    ],
 ];

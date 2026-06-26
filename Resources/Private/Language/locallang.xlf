@@ -377,6 +377,12 @@
             <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
                 <source>Other</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesChannel.title" resname="dashboardWidget.trafficSourcesChannel.title">
+                <source>Traffic Sources: Channel</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesChannel.description" resname="dashboardWidget.trafficSourcesChannel.description">
+                <source>Shows the traffic channel distribution of your website visitors.</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSourcesDevices.title" resname="dashboardWidget.trafficSourcesDevices.title">
                 <source>Traffic Sources: Devices</source>
             </trans-unit>

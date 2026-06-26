@@ -8,10 +8,11 @@ return [
         'description' => 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboard.analyticsOverview.description',
         'iconIdentifier' => 'analytics-site-performance-widget-icon',
         'defaultWidgets' => [
+            'analyticsTrafficGraph',
             'analyticsSitePerformance',
             'analyticsTopPages',
-            'analyticsTrafficGraph',
             'analyticsTrafficSources',
+            'analyticsTrafficSourcesChannel',
             'analyticsTrafficSourcesDevices',
             'analyticsTrafficSourcesBrowser',
             'analyticsTrafficSourcesCountries',

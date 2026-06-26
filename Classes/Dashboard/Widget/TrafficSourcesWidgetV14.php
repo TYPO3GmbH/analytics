@@ -34,8 +34,8 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         private MetricFormatterInterface $formatter,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
-        /** @var array<string, string> */
-        private array $options = [],
+        private string $section = 'sources',
+        private string $chartType = 'list',
     ) {
     }
 
@@ -45,9 +45,8 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
     public function getSettingsDefinitions(): array
     {
         $siteOptions = $this->siteProvider->siteOptions();
-        $sectionLocked = isset($this->options['section']);
 
-        $definitions = [
+        return [
             new SettingDefinition(
                 key: 'site',
                 type: 'string',
@@ -62,22 +61,10 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.period.label',
                 enum: $this->periodEnumOptions(),
             ),
-            ...($sectionLocked ? [] : [new SettingDefinition(
-                key: 'section',
-                type: 'string',
-                default: 'sources',
-                label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.section.label',
-                enum: [
-                    'sources' => 'Channel',
-                    'devices' => 'Devices',
-                    'browser' => 'Browser',
-                    'countries' => 'Countries',
-                ],
-            )]),
             new SettingDefinition(
                 key: 'chartType',
                 type: 'string',
-                default: 'list',
+                default: $this->chartType,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.setting.chartType.label',
                 enum: [
                     'list' => 'List',
@@ -97,15 +84,13 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
             ),
         ];
-
-        return $definitions;
     }
 
     public function renderWidget(WidgetContext $context): WidgetResult
     {
         $siteIdentifier = (string)$context->settings->get('site');
         $days = max(1, (int)$context->settings->get('days'));
-        $section = $this->options['section'] ?? (string)$context->settings->get('section');
+        $section = $this->section;
         $isDonut = $context->settings->get('chartType') === 'donut';
         $customTitle = trim((string)$context->settings->get('title'));
         $showMeta = (bool)$context->settings->get('showMeta');

@@ -6,6 +6,7 @@ namespace T3G\Analytics\Tests\Unit\Dashboard\Widget;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Dashboard\Widget\TrafficSourcesWidget;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
@@ -133,9 +134,9 @@ final class TrafficSourcesWidgetTest extends UnitTestCase
     {
         $this->siteProvider->method('siteOptions')->willReturn(['demo' => 'Demo Site', 'other' => 'Other']);
         $this->trafficSourcesService->expects(self::once())
-            ->method('loadTrafficSources')->with('demo', 30)->willReturn([]);
+            ->method('loadTrafficSources')->with('demo', DashboardPeriods::defaultPeriod())->willReturn([]);
         $this->trafficSourcesService->expects(self::once())
-            ->method('loadDeviceData')->with('demo', 30)->willReturn([]);
+            ->method('loadDeviceData')->with('demo', DashboardPeriods::defaultPeriod())->willReturn([]);
 
         $this->makeWidget()->renderWidgetContent();
     }
@@ -145,7 +146,7 @@ final class TrafficSourcesWidgetTest extends UnitTestCase
     {
         $this->siteProvider->method('siteOptions')->willReturn(['demo' => 'Demo', 'other' => 'Other']);
         $this->trafficSourcesService->expects(self::once())
-            ->method('loadTrafficSources')->with('other', 30)->willReturn([]);
+            ->method('loadTrafficSources')->with('other', DashboardPeriods::defaultPeriod())->willReturn([]);
 
         $this->makeWidget(['site' => 'other'])->renderWidgetContent();
     }
