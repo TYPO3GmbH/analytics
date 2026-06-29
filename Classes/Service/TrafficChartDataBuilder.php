@@ -21,7 +21,7 @@ final readonly class TrafficChartDataBuilder
      * @param array{visits: string, sessions: string, visitors_new: string, visitors_returning: string, visitors_overall: string} $labels
      * @return array{
      *     metricData: array<string, array{labels: list<string>, data: list<int>}|null>,
-     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<string>, legend: list<array{label: string, tone: string, key: string}>}
+     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<array{label: string, pct: float}>, legend: list<array{label: string, tone: string, key: string}>}
      * }
      */
     public function buildForTrafficGraph(
@@ -112,7 +112,7 @@ final readonly class TrafficChartDataBuilder
      *     yLabels: list<array{value: int, label: string}>,
      *     yLabelsRight: list<array{value: int, label: string}>,
      *     hasRightAxis: bool,
-     *     xLabels: list<string>,
+     *     xLabels: list<array{label: string, pct: float}>,
      *     legend: list<array{label: string, tone: string, key: string}>
      * }
      */
@@ -254,7 +254,7 @@ final readonly class TrafficChartDataBuilder
             'yLabels' => $ticks0,
             'yLabelsRight' => $ticks1,
             'hasRightAxis' => $hasRightAxis,
-            'xLabels' => $this->visibleLabels($shortLabels),
+            'xLabels' => $this->visibleLabelPositions($shortLabels),
             'legend' => $legend,
         ];
     }
@@ -328,5 +328,38 @@ final readonly class TrafficChartDataBuilder
             $visibleIndexes[] = (int) round($i * $lastIndex / ($slots - 1));
         }
         return array_values(array_intersect_key($labels, array_flip(array_unique($visibleIndexes))));
+    }
+
+    /**
+     * Like visibleLabels(), but also returns the percentage position of each label along
+     * the x-axis so the template can place them at the exact data-point location instead
+     * of distributing them evenly with CSS space-between.
+     *
+     * @param list<string> $labels
+     * @return list<array{label: string, pct: float}>
+     */
+    private function visibleLabelPositions(array $labels): array
+    {
+        if ($labels === []) {
+            return [];
+        }
+        $lastIndex = count($labels) - 1;
+        $targetCount = $lastIndex >= 10 ? 5 : 4;
+        $slots = min($targetCount, $lastIndex + 1);
+        if ($slots <= 1) {
+            return [['label' => $labels[0], 'pct' => 0.0]];
+        }
+        $visibleIndexes = [];
+        for ($i = 0; $i < $slots; $i++) {
+            $visibleIndexes[] = (int) round($i * $lastIndex / ($slots - 1));
+        }
+        $visibleIndexes = array_values(array_unique($visibleIndexes));
+        return array_values(array_map(
+            fn (int $idx): array => [
+                'label' => $labels[$idx],
+                'pct' => round($idx / $lastIndex * 100, 2),
+            ],
+            $visibleIndexes,
+        ));
     }
 }

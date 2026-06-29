@@ -15,7 +15,7 @@ trait TrafficGraphWidgetTrait
     /**
      * @return array{
      *     metricData: array<string, array{labels: list<string>, data: list<int>}|null>,
-     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<string>, legend: list<array{label: string, tone: string, key: string}>}
+     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<array{label: string, pct: float}>, legend: list<array{label: string, tone: string, key: string}>}
      * }
      */
     private function buildTrafficChart(string $siteIdentifier, int $days): array

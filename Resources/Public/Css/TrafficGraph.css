@@ -180,12 +180,27 @@
 .tx-analytics-traffic-graph-x-axis {
     grid-column: 2;
     grid-row: 2;
-    display: flex;
-    justify-content: space-between;
-    padding-top: .375rem;
+    position: relative;
+    height: calc(.375rem + 1em);
     color: var(--typo3-text-color-variant);
     font-size: var(--typo3-font-size-small, 11px);
     line-height: 1;
+}
+
+.tx-analytics-traffic-graph-x-axis span {
+    position: absolute;
+    top: .375rem;
+    left: var(--x-pct);
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.tx-analytics-traffic-graph-x-axis span:first-child {
+    transform: translateX(0%);
+}
+
+.tx-analytics-traffic-graph-x-axis span:last-child {
+    transform: translateX(-100%);
 }
 
 /* Hover indicator: dashed vertical line */

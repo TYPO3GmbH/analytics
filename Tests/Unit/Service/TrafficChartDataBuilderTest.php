@@ -146,6 +146,64 @@ final class TrafficChartDataBuilderTest extends UnitTestCase
         self::assertSame(['15.03.'], $result['xLabels']);
     }
 
+    /** buildForTrafficGraph — xLabels with positions */
+
+    #[Test]
+    public function buildForTrafficGraphXLabelsHaveLabelAndPctKeys(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08'];
+        $data = ['labels' => $labels, 'data' => array_fill(0, 8, 1)];
+        $service = $this->makeService(visitsData: $data, sessionsData: $data, visitorsBreakdown: [
+            'new' => $data, 'returning' => $data, 'overall' => $data,
+        ]);
+
+        $result = $this->subject->buildForTrafficGraph($service, 'site', 7, $this->defaultLabels());
+
+        self::assertCount(4, $result['chart']['xLabels']);
+        foreach ($result['chart']['xLabels'] as $item) {
+            self::assertArrayHasKey('label', $item);
+            self::assertArrayHasKey('pct', $item);
+        }
+    }
+
+    #[Test]
+    public function buildForTrafficGraphXLabelsFirstIsAtZeroAndLastIsAt100(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08'];
+        $data = ['labels' => $labels, 'data' => array_fill(0, 8, 1)];
+        $service = $this->makeService(visitsData: $data, sessionsData: $data, visitorsBreakdown: [
+            'new' => $data, 'returning' => $data, 'overall' => $data,
+        ]);
+
+        $result = $this->subject->buildForTrafficGraph($service, 'site', 7, $this->defaultLabels());
+        $xLabels = $result['chart']['xLabels'];
+
+        self::assertSame(0.0, $xLabels[0]['pct'], 'First label must be at 0%');
+        self::assertSame(100.0, $xLabels[array_key_last($xLabels)]['pct'], 'Last label must be at 100%');
+    }
+
+    #[Test]
+    public function buildForTrafficGraphXLabelsMiddleLabelsMatchDataPointPositions(): void
+    {
+        // 8 data points → lastIndex=7 → visible indexes: 0, 2, 5, 7
+        // Positions: 0/7=0%, 2/7≈28.57%, 5/7≈71.43%, 7/7=100%
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08'];
+        $data = ['labels' => $labels, 'data' => array_fill(0, 8, 1)];
+        $service = $this->makeService(visitsData: $data, sessionsData: $data, visitorsBreakdown: [
+            'new' => $data, 'returning' => $data, 'overall' => $data,
+        ]);
+
+        $result = $this->subject->buildForTrafficGraph($service, 'site', 7, $this->defaultLabels());
+        $xLabels = $result['chart']['xLabels'];
+
+        self::assertSame('01.01.', $xLabels[0]['label']);
+        self::assertSame('03.01.', $xLabels[1]['label']);
+        self::assertSame(round(2 / 7 * 100, 2), $xLabels[1]['pct']);
+        self::assertSame('06.01.', $xLabels[2]['label']);
+        self::assertSame(round(5 / 7 * 100, 2), $xLabels[2]['pct']);
+        self::assertSame('08.01.', $xLabels[3]['label']);
+    }
+
     /** buildForTrafficGraph */
 
     private function makeService(

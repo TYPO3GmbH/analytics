@@ -24,7 +24,7 @@
     </f:if>
     <div class="tx-analytics-traffic-graph-x-axis" aria-hidden="true">
         <f:for each="{chart.xLabels}" as="label">
-            <span>{label}</span>
+            <span style="--x-pct:{label.pct}%">{label.label}</span>
         </f:for>
     </div>
 </div>

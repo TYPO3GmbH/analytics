@@ -235,7 +235,7 @@ final class SparklineRenderer
                 foreach ($pointSets as $psIdx => $ps) {
                     $yAttrs .= ' data-y-' . $psIdx . '="' . $this->formatNumber($ps['points'][$index][1]) . '"';
                 }
-                $html .= '<rect class="tx-analytics-sparkline-point-tooltip" x="' . $this->formatNumber($rectX) . '" y="0" width="' . $this->formatNumber($rectW) . '" height="' . self::VIEW_BOX_HEIGHT . '" fill="transparent" data-tooltip="' . $this->escape($tooltipJson) . '"' . $yAttrs . '/>';
+                $html .= '<rect class="tx-analytics-sparkline-point-tooltip" x="' . $this->formatNumber($rectX) . '" y="0" width="' . $this->formatNumber($rectW) . '" height="' . self::VIEW_BOX_HEIGHT . '" fill="transparent" data-tooltip="' . $this->escape($tooltipJson) . '" data-x="' . $this->formatNumber($x) . '"' . $yAttrs . '/>';
             }
         }
 

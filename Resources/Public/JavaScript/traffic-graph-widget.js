@@ -86,9 +86,7 @@ function showHoverIndicator(tooltipRect, hiddenDatasets) {
   const svg = tooltipRect.closest('svg');
   if (!svg) return;
 
-  const rx = parseFloat(tooltipRect.getAttribute('x') ?? '0');
-  const rw = parseFloat(tooltipRect.getAttribute('width') ?? '0');
-  const cx = rx + rw / 2; // SVG user-unit x of the data point
+  const cx = parseFloat(tooltipRect.dataset.x ?? '0');
 
   // Update hover line in SVG coordinates.
   const line = svg.querySelector('.tx-analytics-sparkline-hover-line');
