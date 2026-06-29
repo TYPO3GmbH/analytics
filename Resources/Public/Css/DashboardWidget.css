@@ -5,3 +5,11 @@
     padding: 1rem;
     text-align: center;
 }
+
+/* v14: widget-content-main is display:block; :has() turns it into a flex
+   container so margin:auto on the child centers it vertically. */
+.widget-content-main:has(> .tx-analytics-widget-no-data) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
