@@ -68,6 +68,10 @@
 .tx-analytics-sparkline-fill[data-tone="visits"] { fill: color-mix(in srgb, var(--tx-analytics-color-visits), transparent 82%); }
 .tx-analytics-sparkline-line[data-tone="visitors"] { stroke: var(--tx-analytics-color-visitors); }
 .tx-analytics-sparkline-fill[data-tone="visitors"] { fill: color-mix(in srgb, var(--tx-analytics-color-visitors), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="visitors-new"] { stroke: var(--tx-analytics-color-visitors-new); }
+.tx-analytics-sparkline-fill[data-tone="visitors-new"] { fill: color-mix(in srgb, var(--tx-analytics-color-visitors-new), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="visitors-returning"] { stroke: var(--tx-analytics-color-visitors-returning); }
+.tx-analytics-sparkline-fill[data-tone="visitors-returning"] { fill: color-mix(in srgb, var(--tx-analytics-color-visitors-returning), transparent 82%); }
 .tx-analytics-sparkline-line[data-tone="sessions"] { stroke: var(--tx-analytics-color-sessions); }
 .tx-analytics-sparkline-fill[data-tone="sessions"] { fill: color-mix(in srgb, var(--tx-analytics-color-sessions), transparent 82%); }
 .tx-analytics-sparkline-line[data-tone="bounce-rate"] { stroke: var(--tx-analytics-color-bounce-rate); }

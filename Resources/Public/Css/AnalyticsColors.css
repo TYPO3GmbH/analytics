@@ -1,6 +1,8 @@
 :root {
     --tx-analytics-color-visits: light-dark(var(--token-color-blue-45), var(--token-color-blue-35));
     --tx-analytics-color-visitors: light-dark(var(--token-color-green-50), var(--token-color-green-45));
+    --tx-analytics-color-visitors-new: light-dark(var(--token-color-magenta-45), var(--token-color-magenta-40));
+    --tx-analytics-color-visitors-returning: light-dark(var(--token-color-orange-45), var(--token-color-orange-40));
     --tx-analytics-color-sessions: light-dark(var(--token-color-purple-45), var(--token-color-purple-40));
     --tx-analytics-color-bounce-rate: var(--typo3-text-color-danger);
     --tx-analytics-color-avg-duration: var(--typo3-text-color-warning);

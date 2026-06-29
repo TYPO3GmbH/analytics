@@ -370,6 +370,8 @@ final class SparklineRenderer
         return in_array($tone, [
             'visits',
             'visitors',
+            'visitors-new',
+            'visitors-returning',
             'sessions',
             'bounce-rate',
             'avg-duration',

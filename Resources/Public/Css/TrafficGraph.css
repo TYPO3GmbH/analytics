@@ -97,6 +97,8 @@
 .tx-analytics-traffic-graph-legend-item[data-tone="visits"]::before { background: var(--tx-analytics-color-visits); }
 .tx-analytics-traffic-graph-legend-item[data-tone="sessions"]::before { background: var(--tx-analytics-color-sessions); }
 .tx-analytics-traffic-graph-legend-item[data-tone="visitors"]::before { background: var(--tx-analytics-color-visitors); }
+.tx-analytics-traffic-graph-legend-item[data-tone="visitors-new"]::before { background: var(--tx-analytics-color-visitors-new); }
+.tx-analytics-traffic-graph-legend-item[data-tone="visitors-returning"]::before { background: var(--tx-analytics-color-visitors-returning); }
 
 /* Chart layout: [y-axis | sparkline] / [x-axis below sparkline] */
 .tx-analytics-traffic-graph-chart-wrap {
@@ -218,6 +220,8 @@
 .tx-analytics-sparkline-hover-dot[data-tone="visits"] { color: var(--tx-analytics-color-visits); }
 .tx-analytics-sparkline-hover-dot[data-tone="sessions"] { color: var(--tx-analytics-color-sessions); }
 .tx-analytics-sparkline-hover-dot[data-tone="visitors"] { color: var(--tx-analytics-color-visitors); }
+.tx-analytics-sparkline-hover-dot[data-tone="visitors-new"] { color: var(--tx-analytics-color-visitors-new); }
+.tx-analytics-sparkline-hover-dot[data-tone="visitors-returning"] { color: var(--tx-analytics-color-visitors-returning); }
 
 /* Hover tooltip */
 .tx-analytics-traffic-graph-tooltip {
@@ -259,6 +263,8 @@
 .tx-analytics-traffic-graph-tooltip-dot[data-tone="visits"] { background: var(--tx-analytics-color-visits); }
 .tx-analytics-traffic-graph-tooltip-dot[data-tone="sessions"] { background: var(--tx-analytics-color-sessions); }
 .tx-analytics-traffic-graph-tooltip-dot[data-tone="visitors"] { background: var(--tx-analytics-color-visitors); }
+.tx-analytics-traffic-graph-tooltip-dot[data-tone="visitors-new"] { background: var(--tx-analytics-color-visitors-new); }
+.tx-analytics-traffic-graph-tooltip-dot[data-tone="visitors-returning"] { background: var(--tx-analytics-color-visitors-returning); }
 
 .tx-analytics-traffic-graph-tooltip-label {
     flex: 1;

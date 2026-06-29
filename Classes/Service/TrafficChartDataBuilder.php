@@ -14,6 +14,45 @@ final readonly class TrafficChartDataBuilder
     }
 
     /**
+     * Builds the Traffic Graph chart data from the service in one call.
+     * Used by both widget classes (via the trait) and the AJAX controller
+     * so that tones, axes, and metric composition are defined in one place.
+     *
+     * @param array{visits: string, sessions: string, visitors_new: string, visitors_returning: string, visitors_overall: string} $labels
+     * @return array{
+     *     metricData: array<string, array{labels: list<string>, data: list<int>}|null>,
+     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<string>, legend: list<array{label: string, tone: string, key: string}>}
+     * }
+     */
+    public function buildForTrafficGraph(
+        TrafficGraphServiceInterface $service,
+        string $siteIdentifier,
+        int $days,
+        array $labels,
+    ): array {
+        $visitorsBreakdown = $service->loadVisitorsBreakdownData($siteIdentifier, $days);
+        $metricData = [
+            'visits' => $service->loadGraphData($siteIdentifier, $days),
+            'sessions' => $service->loadSessionsData($siteIdentifier, $days),
+            'visitors_new' => $visitorsBreakdown !== null ? $visitorsBreakdown['new'] : null,
+            'visitors_returning' => $visitorsBreakdown !== null ? $visitorsBreakdown['returning'] : null,
+            'visitors_overall' => $visitorsBreakdown !== null ? $visitorsBreakdown['overall'] : null,
+        ];
+        $chart = $this->buildMulti(
+            $metricData,
+            $labels,
+            // Semantic tones: visits=blue, sessions=purple, visitors=green.
+            // visitors-new (magenta) and visitors-returning (orange) are defined in AnalyticsColors.css
+            // so all five lines are visually distinct and named for their meaning.
+            ['visits' => 'visits', 'sessions' => 'sessions', 'visitors_new' => 'visitors-new', 'visitors_returning' => 'visitors-returning', 'visitors_overall' => 'visitors'],
+            // visits on the left axis (page-view scale); all session/visitor counts on the right.
+            ['visits' => 0, 'sessions' => 1, 'visitors_new' => 1, 'visitors_returning' => 1, 'visitors_overall' => 1],
+        );
+
+        return ['metricData' => $metricData, 'chart' => $chart];
+    }
+
+    /**
      * @param array{labels: list<string>, data: list<int>}|null $graphData
      * @return array{sparkline: string, yLabels: list<array{value: int, label: string}>, xLabels: list<string>}
      */

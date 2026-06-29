@@ -99,6 +99,12 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
 
     public function loadVisitorsData(string $siteIdentifier, int $days): ?array
     {
+        $breakdown = $this->loadVisitorsBreakdownData($siteIdentifier, $days);
+        return $breakdown !== null ? $breakdown['overall'] : null;
+    }
+
+    public function loadVisitorsBreakdownData(string $siteIdentifier, int $days): ?array
+    {
         $siteData = $this->siteProvider->resolveAnalyticsSite($siteIdentifier);
         if ($siteData === null) {
             return null;
@@ -108,9 +114,9 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
 
-        $cacheKey = 'traffic_visitors_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'traffic_visitors_breakdown_' . md5($websiteId . '_' . $days);
 
-        /** @var array{labels: list<string>, data: list<int>}|false $cached */
+        /** @var array{new: array{labels: list<string>, data: list<int>}, returning: array{labels: list<string>, data: list<int>}, overall: array{labels: list<string>, data: list<int>}}|false $cached */
         $cached = $this->cache->get($cacheKey);
         if ($cached !== false) {
             return $cached;
@@ -121,14 +127,17 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
 
         try {
             $result = $this->analyticsClient->fetchSiteVisitorsGraph($websiteId, $apiKey, $from, $to);
+            $labels = $result['labels'] ?? [];
+            $datasets = $result['datasets'] ?? [];
             $data = [
-                'labels' => $result['labels'] ?? [],
-                'data' => $result['datasets'][0]['data'] ?? [],
+                'new' => ['labels' => $labels, 'data' => $datasets[0]['data'] ?? []],
+                'returning' => ['labels' => $labels, 'data' => $datasets[1]['data'] ?? []],
+                'overall' => ['labels' => $labels, 'data' => $datasets[2]['data'] ?? []],
             ];
             $this->cache->set($cacheKey, $data);
             return $data;
         } catch (AnalyticsApiException $e) {
-            $this->logger->warning('TrafficGraphService: Failed to fetch visitors data.', ['reason' => $e->reason]);
+            $this->logger->warning('TrafficGraphService: Failed to fetch visitors breakdown data.', ['reason' => $e->reason]);
             return null;
         }
     }

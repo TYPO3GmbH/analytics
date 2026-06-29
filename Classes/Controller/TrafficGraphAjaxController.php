@@ -33,17 +33,18 @@ final readonly class TrafficGraphAjaxController
         // explicitly, so this fallback is only reached in direct/test requests.
         $days = max(1, (int) ($params['days'] ?? 30));
 
-        $metricData = [
-            'visits' => $this->trafficGraphService->loadGraphData($siteIdentifier, $days),
-            'sessions' => $this->trafficGraphService->loadSessionsData($siteIdentifier, $days),
-            'visitors' => $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days),
-        ];
-        $metricLabels = [
-            'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
-            'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
-            'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
-        ];
-        $chart = $this->chartDataBuilder->buildMulti($metricData, $metricLabels, ['visits' => 'visits', 'sessions' => 'sessions', 'visitors' => 'visitors'], ['visits' => 0, 'sessions' => 1, 'visitors' => 1]);
+        ['metricData' => $metricData, 'chart' => $chart] = $this->chartDataBuilder->buildForTrafficGraph(
+            $this->trafficGraphService,
+            $siteIdentifier,
+            $days,
+            [
+                'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+                'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+                'visitors_new' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.new'),
+                'visitors_returning' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.returning'),
+                'visitors_overall' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.overall'),
+            ],
+        );
 
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],

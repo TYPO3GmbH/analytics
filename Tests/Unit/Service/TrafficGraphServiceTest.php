@@ -184,34 +184,49 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadVisitorsDataReturnsCachedDataOnCacheHit(): void
     {
-        $cached = ['labels' => ['2024-01-01'], 'data' => [5]];
+        $labels = ['2024-01-01'];
+        $overall = ['labels' => $labels, 'data' => [5]];
+        $cached = [
+            'new' => ['labels' => $labels, 'data' => [3]],
+            'returning' => ['labels' => $labels, 'data' => [2]],
+            'overall' => $overall,
+        ];
         $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchSiteVisitorsGraph');
 
         $result = $this->subject->loadVisitorsData('my-site', 30);
 
-        self::assertSame($cached, $result);
+        self::assertSame($overall, $result);
     }
 
     #[Test]
     public function loadVisitorsDataFetchesAndCachesDataOnCacheMiss(): void
     {
+        $labels = ['2024-01-01', '2024-01-02'];
         $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitorsGraph')->willReturn([
-            'labels' => ['2024-01-01', '2024-01-02'],
-            'datasets' => [['data' => [10, 20]]],
+            'labels' => $labels,
+            'datasets' => [
+                ['data' => [3, 5]],
+                ['data' => [2, 4]],
+                ['data' => [5, 9]],
+            ],
         ]);
-        $expected = ['labels' => ['2024-01-01', '2024-01-02'], 'data' => [10, 20]];
+        $expectedBreakdown = [
+            'new' => ['labels' => $labels, 'data' => [3, 5]],
+            'returning' => ['labels' => $labels, 'data' => [2, 4]],
+            'overall' => ['labels' => $labels, 'data' => [5, 9]],
+        ];
         $this->cache->expects(self::once())->method('set')->with(
-            self::stringStartsWith('traffic_visitors_'),
-            $expected,
+            self::stringStartsWith('traffic_visitors_breakdown_'),
+            $expectedBreakdown,
         );
 
         $result = $this->subject->loadVisitorsData('my-site', 30);
 
-        self::assertSame($expected, $result);
+        self::assertSame($expectedBreakdown['overall'], $result);
     }
 
     #[Test]
@@ -225,6 +240,78 @@ final class TrafficGraphServiceTest extends UnitTestCase
         $this->logger->expects(self::once())->method('warning');
 
         $result = $this->subject->loadVisitorsData('my-site', 30);
+
+        self::assertNull($result);
+    }
+
+    #[Test]
+    public function loadVisitorsBreakdownDataReturnsNullWhenSiteNotFound(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(null);
+
+        $result = $this->subject->loadVisitorsBreakdownData('unknown-site', 30);
+
+        self::assertNull($result);
+    }
+
+    #[Test]
+    public function loadVisitorsBreakdownDataReturnsCachedDataOnCacheHit(): void
+    {
+        $labels = ['2024-01-01'];
+        $cached = [
+            'new' => ['labels' => $labels, 'data' => [3]],
+            'returning' => ['labels' => $labels, 'data' => [2]],
+            'overall' => ['labels' => $labels, 'data' => [5]],
+        ];
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn($cached);
+        $this->analyticsClient->expects(self::never())->method('fetchSiteVisitorsGraph');
+
+        $result = $this->subject->loadVisitorsBreakdownData('my-site', 30);
+
+        self::assertSame($cached, $result);
+    }
+
+    #[Test]
+    public function loadVisitorsBreakdownDataFetchesAndCachesAllThreeDatasets(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02'];
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn(false);
+        $this->analyticsClient->method('fetchSiteVisitorsGraph')->willReturn([
+            'labels' => $labels,
+            'datasets' => [
+                ['data' => [3, 5]],
+                ['data' => [2, 4]],
+                ['data' => [5, 9]],
+            ],
+        ]);
+        $expected = [
+            'new' => ['labels' => $labels, 'data' => [3, 5]],
+            'returning' => ['labels' => $labels, 'data' => [2, 4]],
+            'overall' => ['labels' => $labels, 'data' => [5, 9]],
+        ];
+        $this->cache->expects(self::once())->method('set')->with(
+            self::stringStartsWith('traffic_visitors_breakdown_'),
+            $expected,
+        );
+
+        $result = $this->subject->loadVisitorsBreakdownData('my-site', 30);
+
+        self::assertSame($expected, $result);
+    }
+
+    #[Test]
+    public function loadVisitorsBreakdownDataReturnsNullAndLogsWarningOnApiException(): void
+    {
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->cache->method('get')->willReturn(false);
+        $this->analyticsClient->method('fetchSiteVisitorsGraph')->willThrowException(
+            new AnalyticsApiException('API error', 500),
+        );
+        $this->logger->expects(self::once())->method('warning');
+
+        $result = $this->subject->loadVisitorsBreakdownData('my-site', 30);
 
         self::assertNull($result);
     }

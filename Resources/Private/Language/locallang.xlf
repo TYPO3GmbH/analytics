@@ -287,6 +287,15 @@
             <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors" resname="dashboardWidget.trafficGraph.chartLabel.visitors">
                 <source>Unique visitors</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.new" resname="dashboardWidget.trafficGraph.chartLabel.visitors.new">
+                <source>New visitors</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.returning" resname="dashboardWidget.trafficGraph.chartLabel.visitors.returning">
+                <source>Returning visitors</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.overall" resname="dashboardWidget.trafficGraph.chartLabel.visitors.overall">
+                <source>Total visitors</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
             </trans-unit>

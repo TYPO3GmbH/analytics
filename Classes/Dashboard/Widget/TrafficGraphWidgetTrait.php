@@ -13,6 +13,28 @@ use TYPO3\CMS\Core\View\ViewFactoryData;
 trait TrafficGraphWidgetTrait
 {
     /**
+     * @return array{
+     *     metricData: array<string, array{labels: list<string>, data: list<int>}|null>,
+     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<string>, legend: list<array{label: string, tone: string, key: string}>}
+     * }
+     */
+    private function buildTrafficChart(string $siteIdentifier, int $days): array
+    {
+        return $this->chartDataBuilder->buildForTrafficGraph(
+            $this->trafficGraphService,
+            $siteIdentifier,
+            $days,
+            [
+                'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+                'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+                'visitors_new' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.new'),
+                'visitors_returning' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.returning'),
+                'visitors_overall' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.overall'),
+            ],
+        );
+    }
+
+    /**
      * @return list<string>
      */
     public function getCssFiles(): array

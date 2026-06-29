@@ -6,7 +6,9 @@ namespace T3G\Analytics\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
+use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -142,5 +144,139 @@ final class TrafficChartDataBuilderTest extends UnitTestCase
         $result = $this->subject->build(['labels' => ['2024-03-15'], 'data' => [1]], 'label');
 
         self::assertSame(['15.03.'], $result['xLabels']);
+    }
+
+    /** buildForTrafficGraph */
+
+    private function makeService(
+        ?array $visitsData = null,
+        ?array $sessionsData = null,
+        ?array $visitorsBreakdown = null,
+    ): TrafficGraphServiceInterface&MockObject {
+        $service = $this->createMock(TrafficGraphServiceInterface::class);
+        $service->method('loadGraphData')->willReturn($visitsData);
+        $service->method('loadSessionsData')->willReturn($sessionsData);
+        $service->method('loadVisitorsBreakdownData')->willReturn($visitorsBreakdown);
+        return $service;
+    }
+
+    private function defaultLabels(): array
+    {
+        return [
+            'visits' => 'Visits',
+            'sessions' => 'Sessions',
+            'visitors_new' => 'New visitors',
+            'visitors_returning' => 'Returning visitors',
+            'visitors_overall' => 'Total visitors',
+        ];
+    }
+
+    #[Test]
+    public function buildForTrafficGraphReturnsMetricDataAndChart(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02'];
+        $service = $this->makeService(
+            visitsData: ['labels' => $labels, 'data' => [10, 20]],
+            sessionsData: ['labels' => $labels, 'data' => [8, 15]],
+            visitorsBreakdown: [
+                'new' => ['labels' => $labels, 'data' => [3, 5]],
+                'returning' => ['labels' => $labels, 'data' => [2, 4]],
+                'overall' => ['labels' => $labels, 'data' => [5, 9]],
+            ],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 30, $this->defaultLabels());
+
+        self::assertArrayHasKey('metricData', $result);
+        self::assertArrayHasKey('chart', $result);
+        self::assertArrayHasKey('visits', $result['metricData']);
+        self::assertArrayHasKey('sessions', $result['metricData']);
+        self::assertArrayHasKey('visitors_new', $result['metricData']);
+        self::assertArrayHasKey('visitors_returning', $result['metricData']);
+        self::assertArrayHasKey('visitors_overall', $result['metricData']);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphSetsVisitorsBreakdownFromService(): void
+    {
+        $labels = ['2024-01-01'];
+        $newData = ['labels' => $labels, 'data' => [3]];
+        $returningData = ['labels' => $labels, 'data' => [2]];
+        $overallData = ['labels' => $labels, 'data' => [5]];
+        $service = $this->makeService(
+            visitsData: ['labels' => $labels, 'data' => [10]],
+            sessionsData: ['labels' => $labels, 'data' => [8]],
+            visitorsBreakdown: ['new' => $newData, 'returning' => $returningData, 'overall' => $overallData],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        self::assertSame($newData, $result['metricData']['visitors_new']);
+        self::assertSame($returningData, $result['metricData']['visitors_returning']);
+        self::assertSame($overallData, $result['metricData']['visitors_overall']);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphSetsNullMetricsWhenBreakdownUnavailable(): void
+    {
+        $labels = ['2024-01-01'];
+        $service = $this->makeService(
+            visitsData: ['labels' => $labels, 'data' => [10]],
+            sessionsData: null,
+            visitorsBreakdown: null,
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        self::assertNull($result['metricData']['visitors_new']);
+        self::assertNull($result['metricData']['visitors_returning']);
+        self::assertNull($result['metricData']['visitors_overall']);
+        self::assertNull($result['metricData']['sessions']);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphChartLegendContainsAllFiveMetrics(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02'];
+        $twoPoints = ['labels' => $labels, 'data' => [5, 10]];
+        $service = $this->makeService(
+            visitsData: $twoPoints,
+            sessionsData: $twoPoints,
+            visitorsBreakdown: [
+                'new' => $twoPoints,
+                'returning' => $twoPoints,
+                'overall' => $twoPoints,
+            ],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        $legendKeys = array_column($result['chart']['legend'], 'key');
+        self::assertContains('visits', $legendKeys);
+        self::assertContains('sessions', $legendKeys);
+        self::assertContains('visitors_new', $legendKeys);
+        self::assertContains('visitors_returning', $legendKeys);
+        self::assertContains('visitors_overall', $legendKeys);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphUsesCorrectTonesForVisitorBreakdown(): void
+    {
+        $labels = ['2024-01-01'];
+        $onePoint = ['labels' => $labels, 'data' => [1]];
+        $service = $this->makeService(
+            visitsData: $onePoint,
+            sessionsData: $onePoint,
+            visitorsBreakdown: ['new' => $onePoint, 'returning' => $onePoint, 'overall' => $onePoint],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        $legendByKey = array_column($result['chart']['legend'], null, 'key');
+        self::assertSame('visits', $legendByKey['visits']['tone']);
+        self::assertSame('sessions', $legendByKey['sessions']['tone']);
+        self::assertSame('visitors-new', $legendByKey['visitors_new']['tone']);
+        self::assertSame('visitors-returning', $legendByKey['visitors_returning']['tone']);
+        self::assertSame('visitors', $legendByKey['visitors_overall']['tone']);
     }
 }

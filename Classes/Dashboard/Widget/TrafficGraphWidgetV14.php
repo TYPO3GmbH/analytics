@@ -107,22 +107,7 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
             ? $baseTitle . ' (' . $siteLabel . ' · ' . $periodLabel . ')'
             : $baseTitle;
 
-        $metricData = [
-            'visits' => $this->trafficGraphService->loadGraphData($siteIdentifier, $days),
-            'sessions' => $this->trafficGraphService->loadSessionsData($siteIdentifier, $days),
-            'visitors' => $this->trafficGraphService->loadVisitorsData($siteIdentifier, $days),
-        ];
-        $metricLabels = [
-            'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
-            'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
-            'visitors' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors'),
-        ];
-        $chart = $this->chartDataBuilder->buildMulti(
-            $metricData,
-            $metricLabels,
-            ['visits' => 'visits', 'sessions' => 'sessions', 'visitors' => 'visitors'],
-            ['visits' => 0, 'sessions' => 1, 'visitors' => 1],
-        );
+        ['metricData' => $metricData, 'chart' => $chart] = $this->buildTrafficChart($siteIdentifier, $days);
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
             'chart' => $chart,
