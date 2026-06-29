@@ -11,6 +11,9 @@
         <f:for each="{chart.yLabels}" as="label">
             <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
         </f:for>
+        <f:if condition="{chart.hasRightAxis}">
+            <span class="tx-analytics-traffic-graph-axis-title"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.visits" default="Visits" /></span>
+        </f:if>
     </div>
     <div class="tx-analytics-traffic-graph-chart-area">
         <f:format.raw>{chart.sparkline}</f:format.raw>
@@ -20,6 +23,7 @@
             <f:for each="{chart.yLabelsRight}" as="label">
                 <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
             </f:for>
+            <span class="tx-analytics-traffic-graph-axis-title"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" default="Sessions / Visitors" /></span>
         </div>
     </f:if>
     <div class="tx-analytics-traffic-graph-x-axis" aria-hidden="true">

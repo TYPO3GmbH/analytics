@@ -112,7 +112,7 @@
 }
 
 .tx-analytics-traffic-graph-chart-wrap--dual-axis {
-    grid-template-columns: 2.25rem 1fr 2.25rem;
+    grid-template-columns: 3rem 1fr 3rem;
 }
 
 .tx-analytics-traffic-graph-y-axis {
@@ -120,6 +120,19 @@
     grid-row: 1;
     position: relative;
     min-height: 0;
+}
+
+/* Rotated axis title — sits at the outer edge of each y-axis column */
+.tx-analytics-traffic-graph-axis-title {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    font-size: var(--typo3-font-size-small, 11px);
+    line-height: 1;
+    color: var(--typo3-text-color-variant);
+    white-space: nowrap;
 }
 
 /* Right Y-axis column */
@@ -131,6 +144,13 @@
 .tx-analytics-traffic-graph-y-axis--right .tx-analytics-traffic-graph-y-label {
     left: 0;
     right: auto;
+}
+
+.tx-analytics-traffic-graph-y-axis--right .tx-analytics-traffic-graph-axis-title {
+    left: auto;
+    right: 0;
+    writing-mode: vertical-lr;
+    transform: translateY(-50%);
 }
 
 /* Y labels: absolutely positioned to align with SVG grid lines.

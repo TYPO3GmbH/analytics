@@ -296,6 +296,12 @@
             <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.overall" resname="dashboardWidget.trafficGraph.chartLabel.visitors.overall">
                 <source>Total visitors</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visits" resname="dashboardWidget.trafficGraph.yAxisTitle.visits">
+                <source>Visits</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" resname="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors">
+                <source>Sessions / Visitors</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
             </trans-unit>
