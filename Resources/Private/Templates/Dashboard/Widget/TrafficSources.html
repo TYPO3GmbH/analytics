@@ -6,23 +6,30 @@
         <f:render partial="Dashboard/Widget/WidgetToolbar" arguments="{prefix: 'traffic-sources', showSiteSelect: showSiteSelect, siteSelectId: siteSelectId, siteLabel: siteLabel, siteOptions: siteOptions, periodSelectId: periodSelectId, periodLabel: periodLabel, periodOptions: periodOptions}" />
 
         <div class="tx-analytics-traffic-sources-sections-container">
-            <f:if condition="{total}">
-                <div class="tx-analytics-traffic-sources-summary">
-                    <span class="tx-analytics-traffic-sources-summary-value">{total}</span>
-                    <span class="tx-analytics-traffic-sources-summary-label"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.totalSessions" /></span>
-                </div>
+            <f:if condition="{noData}">
+                <f:then>
+                    <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: currentPeriodLabel}" /></p>
+                </f:then>
+                <f:else>
+                    <f:if condition="{total}">
+                        <div class="tx-analytics-traffic-sources-summary">
+                            <span class="tx-analytics-traffic-sources-summary-value">{total}</span>
+                            <span class="tx-analytics-traffic-sources-summary-label"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.totalSessions" /></span>
+                        </div>
+                    </f:if>
+                    <f:for each="{sections}" as="section">
+                        <section class="tx-analytics-traffic-sources-section" aria-label="{section.title}">
+                            <div class="tx-analytics-traffic-sources-section-header">
+                                <h3 class="tx-analytics-traffic-sources-heading">
+                                    <span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-{section.icon}" aria-hidden="true"></span>
+                                    <span>{section.title}</span>
+                                </h3>
+                            </div>
+                            <f:render partial="Dashboard/Widget/TrafficSourcesSectionItems" arguments="{section: section}" />
+                        </section>
+                    </f:for>
+                </f:else>
             </f:if>
-            <f:for each="{sections}" as="section">
-                <section class="tx-analytics-traffic-sources-section" aria-label="{section.title}">
-                    <div class="tx-analytics-traffic-sources-section-header">
-                        <h3 class="tx-analytics-traffic-sources-heading">
-                            <span class="tx-analytics-traffic-sources-icon tx-analytics-traffic-sources-icon-{section.icon}" aria-hidden="true"></span>
-                            <span>{section.title}</span>
-                        </h3>
-                    </div>
-                    <f:render partial="Dashboard/Widget/TrafficSourcesSectionItems" arguments="{section: section}" />
-                </section>
-            </f:for>
         </div>
     </div>
 

@@ -41,7 +41,11 @@ final readonly class TopPagesAjaxController
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
         ));
-        $view->assign('pages', $pages);
+        $view->assignMultiple([
+            'pages' => $pages,
+            'noData' => $pages === [],
+            'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
+        ]);
         $html = $view->render('Dashboard/Widget/TopPagesList');
 
         return new JsonResponse(['status' => 'ok', 'html' => $html, 'showAllUrl' => $showAllUrl]);

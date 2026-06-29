@@ -74,6 +74,8 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
 
         $uniqueId = substr(sha1((string)spl_object_id($this) . $siteIdentifier . implode('', array_keys($siteOptions))), 0, 8);
 
+        $pages = $this->buildPages($siteIdentifier, $days, 10);
+
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
@@ -87,7 +89,9 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
             'periodOptions' => $this->buildPeriodOptions($days),
             'showAllLabel' => $this->translate('dashboardWidget.topPages.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
-            'pages' => $this->buildPages($siteIdentifier, $days, 10),
+            'pages' => $pages,
+            'noData' => $pages === [],
+            'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
         ]);
 
         return $view->render('Dashboard/Widget/TopPages');

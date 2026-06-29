@@ -96,6 +96,8 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
             'metrics' => $metrics,
+            'noData' => $metrics === [],
+            'periodLabel' => $periodLabel,
             'showAllLabel' => $this->translate('dashboardWidget.sitePerformance.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
         ]);

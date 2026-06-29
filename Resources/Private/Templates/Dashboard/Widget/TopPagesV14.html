@@ -2,9 +2,16 @@
 <f:layout name="Widget/Widget" />
 <f:section name="main">
 
-    <div class="tx-analytics-top-pages">
-        <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
-    </div>
+    <f:if condition="{noData}">
+        <f:then>
+            <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: periodLabel}" /></p>
+        </f:then>
+        <f:else>
+            <div class="tx-analytics-top-pages">
+                <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
+            </div>
+        </f:else>
+    </f:if>
 
 </f:section>
 <f:section name="footer">

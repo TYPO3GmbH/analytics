@@ -76,12 +76,17 @@ final readonly class TrafficSourcesAjaxController
             ),
         ];
 
+        $noData = $sources === [] && $devices === [] && $browsers === [] && $countries === [];
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
         ));
-        $view->assign('sections', $sections);
-        $view->assign('total', (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources)));
+        $view->assignMultiple([
+            'sections' => $sections,
+            'total' => (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources)),
+            'noData' => $noData,
+            'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
+        ]);
         $html = $view->render('Dashboard/Widget/TrafficSourcesSections');
 
         $showAllUrl = $siteIdentifier !== ''

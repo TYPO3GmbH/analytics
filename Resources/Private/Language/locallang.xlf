@@ -410,6 +410,9 @@
             <trans-unit id="dashboard.analyticsOverview.description" resname="dashboard.analyticsOverview.description">
                 <source>Site performance, top pages, traffic graph and traffic sources (channel, devices, browser, countries).</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.noDataForPeriod" resname="dashboardWidget.noDataForPeriod">
+                <source>No data available for the period: %s.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

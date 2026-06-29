@@ -86,6 +86,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         $browsers = $this->loadBrowsers($siteIdentifier, $days);
         $countries = $this->loadCountries($siteIdentifier, $days);
 
+        $noData = $sources === [] && $devices === [] && $browsers === [] && $countries === [];
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
@@ -97,6 +98,8 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
             'periodSelectId' => 'tx-analytics-traffic-sources-period-' . $uniqueId,
             'periodLabel' => $this->translate('dashboardWidget.trafficSources.setting.period.label'),
             'periodOptions' => $this->buildPeriodOptions($days),
+            'noData' => $noData,
+            'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
             'showAllLabel' => $this->translate('dashboardWidget.trafficSources.showAll'),
             'showAllUrl' => $this->buildDashboardUrl($siteIdentifier, $days, 'traffic/share'),
             'total' => (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources)),

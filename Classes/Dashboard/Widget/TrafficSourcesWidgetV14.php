@@ -139,6 +139,8 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
+            'noData' => ($sections[0]['items'] ?? []) === [],
+            'periodLabel' => $periodLabel,
             'showAllLabel' => $this->translate('dashboardWidget.trafficSources.showAll'),
             'showAllUrl' => $this->buildDashboardUrl($siteIdentifier, $days, $ctaPath),
             'sections' => $sections,

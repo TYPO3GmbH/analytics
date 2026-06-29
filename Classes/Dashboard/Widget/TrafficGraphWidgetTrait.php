@@ -19,6 +19,7 @@ trait TrafficGraphWidgetTrait
     {
         return [
             'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
+            'EXT:analytics/Resources/Public/Css/DashboardWidget.css',
             'EXT:analytics/Resources/Public/Css/Components/Sparkline.css',
             'EXT:analytics/Resources/Public/Css/TrafficGraph.css',
         ];

@@ -123,10 +123,11 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
             ['visits' => 'visits', 'sessions' => 'sessions', 'visitors' => 'visitors'],
             ['visits' => 0, 'sessions' => 1, 'visitors' => 1],
         );
-
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
             'chart' => $chart,
+            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data'] ?? []) > 0) === [],
+            'periodLabel' => $periodLabel,
             'showAllLabel' => $this->translate('dashboardWidget.trafficGraph.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
         ]);

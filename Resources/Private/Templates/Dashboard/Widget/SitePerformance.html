@@ -6,7 +6,14 @@
         <f:render partial="Dashboard/Widget/WidgetToolbar" arguments="{prefix: 'site-performance', showSiteSelect: showSiteSelect, siteSelectId: siteSelectId, siteLabel: siteLabel, siteOptions: siteOptions, periodSelectId: periodSelectId, periodLabel: periodLabel, periodOptions: periodOptions}" />
 
         <div class="tx-analytics-site-performance-metrics-container">
-            <f:render partial="Dashboard/Widget/SitePerformanceMetrics" arguments="{metrics: metrics}" />
+            <f:if condition="{noData}">
+                <f:then>
+                    <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: currentPeriodLabel}" /></p>
+                </f:then>
+                <f:else>
+                    <f:render partial="Dashboard/Widget/SitePerformanceMetrics" arguments="{metrics: metrics}" />
+                </f:else>
+            </f:if>
         </div>
     </div>
 

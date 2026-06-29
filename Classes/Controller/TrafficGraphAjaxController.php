@@ -49,7 +49,11 @@ final readonly class TrafficGraphAjaxController
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
         ));
-        $view->assign('chart', $chart);
+        $view->assignMultiple([
+            'chart' => $chart,
+            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data'] ?? []) > 0) === [],
+            'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
+        ]);
         $html = $view->render('Dashboard/Widget/TrafficGraphChart');
 
         $showAllUrl = $siteIdentifier !== ''

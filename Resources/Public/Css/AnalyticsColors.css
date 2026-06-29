@@ -47,3 +47,4 @@
     --tx-analytics-surface-avg-duration-text: var(--typo3-surface-container-warning-text, var(--typo3-text-color-warning));
     --tx-analytics-surface-continuation-rate-text: var(--typo3-surface-container-info-text);
 }
+

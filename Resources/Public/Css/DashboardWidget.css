@@ -1,0 +1,7 @@
+.tx-analytics-widget-no-data {
+    color: var(--typo3-text-color-variant);
+    font-style: italic;
+    margin: auto;
+    padding: 1rem;
+    text-align: center;
+}

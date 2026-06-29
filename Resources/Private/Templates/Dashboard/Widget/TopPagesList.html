@@ -1,3 +1,10 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
-<f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
+<f:if condition="{noData}">
+    <f:then>
+        <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: currentPeriodLabel}" /></p>
+    </f:then>
+    <f:else>
+        <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
+    </f:else>
+</f:if>
 </html>

@@ -43,7 +43,11 @@ final readonly class SitePerformanceAjaxController
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
         ));
-        $view->assign('metrics', $metrics);
+        $view->assignMultiple([
+            'metrics' => $metrics,
+            'noData' => $metrics === [],
+            'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
+        ]);
         $html = $view->render('Dashboard/Widget/SitePerformanceMetrics');
 
         $showAllUrl = $siteIdentifier !== ''

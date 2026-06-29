@@ -454,6 +454,10 @@
                 <source>Tablet</source>
                 <target>Tablet</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.noDataForPeriod" resname="dashboardWidget.noDataForPeriod">
+                <source>No data available for the period: %s.</source>
+                <target>Keine Daten für den Zeitraum: %s verfügbar.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

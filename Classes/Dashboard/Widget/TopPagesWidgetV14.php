@@ -98,9 +98,13 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
             ? $baseTitle . ' (' . $siteLabel . ' · ' . $periodLabel . ')'
             : $baseTitle;
 
+        $pages = $this->buildPages($siteIdentifier, $days, $limit);
+
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
-            'pages' => $this->buildPages($siteIdentifier, $days, $limit),
+            'pages' => $pages,
+            'noData' => $pages === [],
+            'periodLabel' => $periodLabel,
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
             'showAllLabel' => $this->translate('dashboardWidget.topPages.showAll'),
         ]);

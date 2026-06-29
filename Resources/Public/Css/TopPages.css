@@ -1,8 +1,17 @@
 .tx-analytics-top-pages {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: .75rem;
+    height: 100%;
     min-width: 0;
     color: var(--typo3-component-color);
+}
+
+.tx-analytics-top-pages-list-container {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .tx-analytics-top-pages-header {

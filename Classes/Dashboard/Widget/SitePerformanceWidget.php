@@ -74,6 +74,7 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
 
         $data = $this->sitePerformanceService->loadPerformanceData($siteIdentifier, $days);
         $metrics = $data !== null ? $this->buildMetrics($data) : [];
+        $currentPeriodLabel = sprintf($this->translate('pagePerformance.days'), $days);
 
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
@@ -87,6 +88,8 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
             'periodLabel' => $this->translate('dashboardWidget.sitePerformance.setting.period.label'),
             'periodOptions' => $this->buildPeriodOptions($days),
             'metrics' => $metrics,
+            'noData' => $metrics === [],
+            'currentPeriodLabel' => $currentPeriodLabel,
             'showAllLabel' => $this->translate('dashboardWidget.sitePerformance.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
         ]);
