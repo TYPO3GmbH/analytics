@@ -143,6 +143,9 @@
             <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
                 <source>%d days</source>
             </trans-unit>
+            <trans-unit id="pagePerformance.loading" resname="pagePerformance.loading">
+                <source>Loading data...</source>
+            </trans-unit>
             <trans-unit id="pagePerformance.noData" resname="pagePerformance.noData">
                 <source>No data available yet.</source>
             </trans-unit>

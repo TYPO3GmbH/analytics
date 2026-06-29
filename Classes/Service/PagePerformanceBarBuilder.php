@@ -63,6 +63,11 @@ final readonly class PagePerformanceBarBuilder
             $html .= '</div>';
         }
 
+        $html .= '<div class="tx-analytics-performance-loading-overlay" aria-live="polite" aria-hidden="true">';
+        $html .= '<span class="tx-analytics-performance-loading-spinner" aria-hidden="true"></span>';
+        $html .= '<span>' . $this->escape($this->translate('pagePerformance.loading')) . '</span>';
+        $html .= '</div>';
+
         $html .= '<div class="tx-analytics-performance-meta">';
         $html .= '<div class="tx-analytics-performance-meta-item tx-analytics-performance-period">';
         $html .= '<span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-calendar-days" aria-hidden="true"></span>';

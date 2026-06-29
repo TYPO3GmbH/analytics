@@ -6,8 +6,11 @@ async function reloadPerformanceBar(section, days) {
 
     const pageId = section.dataset.pageId;
     const languageId = section.dataset.languageId ?? '0';
+    const loadingOverlay = section.querySelector('.tx-analytics-performance-loading-overlay');
 
     section.classList.add('tx-analytics-performance-bar--loading');
+    section.setAttribute('aria-busy', 'true');
+    loadingOverlay?.removeAttribute('aria-hidden');
 
     try {
         const url = new URL(ajaxUrl, window.location.origin);
@@ -21,6 +24,8 @@ async function reloadPerformanceBar(section, days) {
 
         if (!response.ok) {
             section.classList.remove('tx-analytics-performance-bar--loading');
+            section.removeAttribute('aria-busy');
+            loadingOverlay?.setAttribute('aria-hidden', 'true');
             return;
         }
 
@@ -35,6 +40,8 @@ async function reloadPerformanceBar(section, days) {
         }
     } catch {
         section.classList.remove('tx-analytics-performance-bar--loading');
+        section.removeAttribute('aria-busy');
+        loadingOverlay?.setAttribute('aria-hidden', 'true');
     }
 }
 

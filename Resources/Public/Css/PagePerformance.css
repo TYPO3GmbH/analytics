@@ -1,4 +1,5 @@
 .tx-analytics-performance-bar {
+    position: relative;
     display: grid;
     container-type: inline-size;
     grid-template-columns: repeat(4, minmax(12rem, 1fr)) minmax(12rem, auto);
@@ -14,6 +15,50 @@
 .tx-analytics-performance-meta {
     min-height: 4.5rem;
     border-right: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+    transition: filter .18s ease-in-out, opacity .18s ease-in-out;
+}
+
+.tx-analytics-performance-bar--loading .tx-analytics-performance-metric,
+.tx-analytics-performance-bar--loading .tx-analytics-performance-meta {
+    filter: blur(3px);
+    opacity: .55;
+    pointer-events: none;
+    user-select: none;
+}
+
+.tx-analytics-performance-loading-overlay {
+    position: absolute;
+    z-index: 20;
+    inset: 0;
+    display: none;
+    gap: .75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: color-mix(in srgb, var(--typo3-component-bg), transparent 18%);
+    color: var(--typo3-component-color);
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.tx-analytics-performance-bar--loading .tx-analytics-performance-loading-overlay {
+    display: flex;
+}
+
+.tx-analytics-performance-loading-spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid color-mix(in srgb, var(--typo3-component-color), transparent 75%);
+    border-top-color: var(--typo3-component-color);
+    border-radius: 50%;
+    animation: tx-analytics-performance-loading-spin .8s linear infinite;
+}
+
+@keyframes tx-analytics-performance-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .tx-analytics-performance-metric {

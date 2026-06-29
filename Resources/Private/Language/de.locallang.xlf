@@ -190,6 +190,10 @@
                 <source>%d days</source>
                 <target>%d Tage</target>
             </trans-unit>
+            <trans-unit id="pagePerformance.loading" resname="pagePerformance.loading">
+                <source>Loading data...</source>
+                <target>Daten werden geladen...</target>
+            </trans-unit>
             <trans-unit id="pagePerformance.noData" resname="pagePerformance.noData">
                 <source>No data available yet.</source>
                 <target>Noch keine Daten verfügbar.</target>
