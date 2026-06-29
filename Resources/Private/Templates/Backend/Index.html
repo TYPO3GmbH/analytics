@@ -189,46 +189,50 @@
                                             <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.dashboard" />
                                         </a>
                                     </div>
-                                    <div class="btn-group">
-                                        <f:if condition="{site.status.status} == 'active'">
-                                            <f:then>
-                                                <a href="{site.managePlanUri}" class="btn btn-default">
-                                                    <core:icon identifier="actions-credit-card" size="small" />
-                                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
-                                                </a>
-                                            </f:then>
-                                            <f:else>
-                                                <a href="{site.managePlanUri}" class="btn btn-primary">
-                                                    <core:icon identifier="actions-credit-card" size="small" />
-                                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.subscribePlan" />
-                                                </a>
-                                            </f:else>
-                                        </f:if>
-                                        <form method="post" action="{statusUri}" class="tx-analytics-status-form">
-                                            <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
-                                            <button type="submit" class="btn btn-default" title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.refreshStatus')}">
-                                                <core:icon identifier="actions-refresh" size="small" />
-                                            </button>
-                                        </form>
-                                    </div>
+                                    <f:if condition="{isManager}">
+                                        <div class="btn-group">
+                                            <f:if condition="{site.status.status} == 'active'">
+                                                <f:then>
+                                                    <a href="{site.managePlanUri}" class="btn btn-default">
+                                                        <core:icon identifier="actions-credit-card" size="small" />
+                                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
+                                                    </a>
+                                                </f:then>
+                                                <f:else>
+                                                    <a href="{site.managePlanUri}" class="btn btn-primary">
+                                                        <core:icon identifier="actions-credit-card" size="small" />
+                                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.subscribePlan" />
+                                                    </a>
+                                                </f:else>
+                                            </f:if>
+                                            <form method="post" action="{statusUri}" class="tx-analytics-status-form">
+                                                <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                                                <button type="submit" class="btn btn-default" title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.refreshStatus')}">
+                                                    <core:icon identifier="actions-refresh" size="small" />
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </f:if>
                                 </div>
                             </f:then>
                             <f:else>
-                                <form method="post" action="{registerUri}" class="tx-analytics-registration-form">
-                                    <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
-                                    <div class="input-group">
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            class="form-control"
-                                            placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
-                                            required
-                                        />
-                                        <button type="submit" class="btn btn-primary">
-                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
-                                        </button>
-                                    </div>
-                                </form>
+                                <f:if condition="{isManager}">
+                                    <form method="post" action="{registerUri}" class="tx-analytics-registration-form">
+                                        <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                                        <div class="input-group">
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                class="form-control"
+                                                placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
+                                                required
+                                            />
+                                            <button type="submit" class="btn btn-primary">
+                                                <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
+                                            </button>
+                                        </div>
+                                    </form>
+                                </f:if>
                             </f:else>
                         </f:if>
                     </div>

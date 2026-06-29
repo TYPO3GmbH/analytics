@@ -296,6 +296,15 @@
             <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.overall" resname="dashboardWidget.trafficGraph.chartLabel.visitors.overall">
                 <source>Total visitors</source>
             </trans-unit>
+            <trans-unit id="be_groups.custom_options.analytics" resname="be_groups.custom_options.analytics">
+                <source>TYPO3 Analytics</source>
+            </trans-unit>
+            <trans-unit id="be_groups.custom_options.analytics.manager" resname="be_groups.custom_options.analytics.manager">
+                <source>Analytics Manager (full access: registration, status, plan management)</source>
+            </trans-unit>
+            <trans-unit id="flash.accessDenied" resname="flash.accessDenied">
+                <source>Access denied. You do not have the Analytics Manager permission.</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visits" resname="dashboardWidget.trafficGraph.yAxisTitle.visits">
                 <source>Visits</source>
             </trans-unit>

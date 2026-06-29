@@ -59,6 +59,7 @@ final readonly class BackendModuleController
             'sites' => $this->siteDataProvider->fetchSites(),
             'registerUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.register'),
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
+            'isManager' => $this->isAnalyticsManager(),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Index');
@@ -69,6 +70,10 @@ final readonly class BackendModuleController
      */
     public function registerAction(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->isAnalyticsManager()) {
+            return new JsonResponse($this->errorPayload('flash.accessDenied'), 403);
+        }
+
         $body = $request->getParsedBody();
         if (!is_array($body)) {
             $this->logger->warning('Register action called with invalid request body.');
@@ -191,6 +196,11 @@ final readonly class BackendModuleController
      */
     public function managePlanAction(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->isAnalyticsManager()) {
+            $this->addFlashMessage('flash.accessDenied', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
+            return new RedirectResponse($this->indexUri());
+        }
+
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
 
         if ($siteIdentifier === '') {
@@ -215,6 +225,10 @@ final readonly class BackendModuleController
 
     public function statusAction(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->isAnalyticsManager()) {
+            return new JsonResponse($this->errorPayload('flash.accessDenied'), 403);
+        }
+
         $body = $request->getParsedBody();
         $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
 
@@ -247,6 +261,10 @@ final readonly class BackendModuleController
 
     public function invalidateStatusCacheAction(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->isAnalyticsManager()) {
+            return new JsonResponse($this->errorPayload('flash.accessDenied'), 403);
+        }
+
         $siteIdentifier = (string)($request->getQueryParams()['siteIdentifier'] ?? '');
 
         if ($siteIdentifier === '') {
@@ -399,6 +417,15 @@ final readonly class BackendModuleController
             true,
         );
         $this->flashMessageService->getMessageQueueByIdentifier()->addMessage($message);
+    }
+
+    private function isAnalyticsManager(): bool
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if ($backendUser === null) {
+            return false;
+        }
+        return $backendUser->isAdmin() || (bool)$backendUser->check('custom_options', 'tx_analytics:manager');
     }
 
     /**
