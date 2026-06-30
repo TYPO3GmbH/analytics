@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="es" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Páginas vistas</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Porcentaje de rebote</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Ø Tiempo en página</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.views" resname="pagePerformance.tooltip.description.views">
+                <source>The number of page views for this page in the selected period.</source>
+                <target>El número de páginas vistas.</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>El porcentaje de visitantes que abandonaron su sitio web después de ver sólo una página, independientemente de la duración de su sesión/visita o de cómo salieron. Nos referimos a esto como &quot;rebote&quot;.
+
+[u][b]Glosario:[/b][/u] Para más información y definiciones sobre este tema, [url={supportCenterDomain}/es/glosario/b/bounce-rate/]haga clic aquí[/url].
+
+[u][b]Centro de soporte:[/b][/u] Todo lo relacionado con la funcionalidad correspondiente de la app, y mucho más, se puede encontrar en nuestro [url={supportCenterDomain}/es/support/all-about-features/main-dashboards]Centro de soporte[/url].</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.averageTimeOnPage" resname="pagePerformance.tooltip.description.averageTimeOnPage">
+                <source>How long visitors typically engage with this page. Higher values generally indicate more engaging content.</source>
+                <target>El tiempo que los visitantes suelen interactuar con esta página. Los valores más altos suelen indicar un contenido más atractivo.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

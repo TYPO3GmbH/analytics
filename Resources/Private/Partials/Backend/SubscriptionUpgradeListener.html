@@ -1,0 +1,19 @@
+<script nonce="{f:security.nonce(directive: 'script-src')}">
+(function() {
+    var invalidateCacheUri = {invalidateStatusCacheUri -> f:format.json() -> f:format.raw()};
+    var iframeOrigin = {iframeOrigin -> f:format.json() -> f:format.raw()};
+    var notificationTitle = {f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:notification.subscriptionUpgraded.title') -> f:format.json() -> f:format.raw()};
+    var notificationMessage = {f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:notification.subscriptionUpgraded.message') -> f:format.json() -> f:format.raw()};
+    var handled = false;
+    window.addEventListener('message', function(event) {
+        if (event.origin !== iframeOrigin) return;
+        if (!event.data || event.data.type !== 'SUBSCRIPTION_UPGRADED') return;
+        if (handled) return;
+        handled = true;
+        fetch(invalidateCacheUri, { method: 'POST' });
+        import('@typo3/backend/notification.js').then(function(module) {
+            module.default.success(notificationTitle, notificationMessage, 5);
+        });
+    });
+})();
+</script>

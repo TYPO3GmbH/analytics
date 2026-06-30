@@ -3,46 +3,72 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
 
 jobs:
-  build:
-    name: Build
+  lint:
+    name: Lint (PHP 8.4)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
           php-version: 8.4
+          coverage: none
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: install
+        run: composer install --no-progress --no-interaction --ansi
+
+      - name: cgl
+        run: composer t3g:cgl
+
+      - name: phpstan
+        run: composer t3g:phpstan
+
+  test:
+    name: Tests (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3', '8.4', '8.5']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
           coverage: pcov
 
       - name: Get Composer Cache Directory
         id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-${{ matrix.php-version }}-
 
       - name: install
-        run: |
-          composer install --no-progress --no-interaction --ansi
-      - name: cgl
-        run: |
-          composer t3g:cgl
-      - name: phpstan
-        run: |
-          composer t3g:phpstan
-      - name: test
-        run: |
-          composer t3g:test
-      - name: rector
-        run: |
-          composer t3:rector
+        run: composer install --no-progress --no-interaction --ansi
+
+      - name: unit test
+        run: composer t3g:test:unit
+
+      - name: functional test
+        run: composer t3g:test:functional

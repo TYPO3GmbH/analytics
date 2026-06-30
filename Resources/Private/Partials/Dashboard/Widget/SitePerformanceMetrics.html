@@ -1,0 +1,19 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<ul class="tx-analytics-site-performance-list">
+    <f:for each="{metrics}" as="metric">
+        <li class="tx-analytics-site-performance-metric tx-analytics-site-performance-metric-{metric.tone}">
+            <span class="tx-analytics-site-performance-icon tx-analytics-site-performance-icon-{metric.icon}" aria-hidden="true"></span>
+            <span class="tx-analytics-site-performance-value-row">
+                <strong class="tx-analytics-site-performance-value">{metric.value}</strong>
+                <f:if condition="{metric.trend}">
+                    <span class="tx-analytics-site-performance-trend tx-analytics-site-performance-trend-{metric.trendDirection}" title="{metric.trendLabel}">
+                        <span class="tx-analytics-site-performance-trend-icon tx-analytics-site-performance-icon-arrow-trend-{metric.trendDirection}" aria-hidden="true"></span>
+                        {metric.trend}
+                    </span>
+                </f:if>
+            </span>
+            <span class="tx-analytics-site-performance-label">{metric.label}</span>
+        </li>
+    </f:for>
+</ul>
+</html>

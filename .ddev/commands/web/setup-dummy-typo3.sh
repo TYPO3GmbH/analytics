@@ -8,39 +8,83 @@ if [ -n "$DDEV_PRIMARY_URL" ]; then
   DDEV_HOST="${DDEV_PRIMARY_URL#*://}"
   DDEV_HOST="${DDEV_HOST%%/*}"
 else
-  DDEV_HOST="ext-analytics.ddev.site"
+  DDEV_HOST="analytics.ddev.site"
 fi
 
-TRUSTED_HOSTS_PATTERN="^${DDEV_HOST//./\\.}$"
+echo "Project root:        $PROJECT_ROOT"
+echo "Dummy TYPO3 dir:     $DUMMY_DIR"
+echo "Detected DDEV host:  $DDEV_HOST"
 
-echo "Project root: $PROJECT_ROOT"
-echo "Dummy TYPO3 directory: $DUMMY_DIR"
-echo "Detected DDEV host: $DDEV_HOST"
-echo "Trusted hosts pattern: $TRUSTED_HOSTS_PATTERN"
-
+# ---------------------------------------------------------------------------
+# 1. Create Composer project (once)
+# ---------------------------------------------------------------------------
 mkdir -p "$PROJECT_ROOT/.Build"
 
 if [ ! -f "$DUMMY_DIR/composer.json" ]; then
-  echo "Dummy TYPO3 is missing or incomplete."
+  echo "--- Creating TYPO3 base distribution ---"
 
   if [ -d "$DUMMY_DIR" ]; then
-    echo "Please remove the broken directory on the host machine first:"
+    echo "ERROR: Broken directory found. Remove it on the host first:"
     echo "  rm -rf .Build/dummy-typo3"
     exit 1
   fi
 
-  echo "Creating TYPO3 dummy project ..."
-  composer create-project typo3/cms-base-distribution:^13.4 "$DUMMY_DIR" --no-interaction --no-install
+  # Ask which TYPO3 major version to install
+  read -rp "TYPO3 version to install (13/14) [13]: " TYPO3_VERSION_INPUT
+  TYPO3_VERSION="${TYPO3_VERSION_INPUT:-13}"
+  if [[ "$TYPO3_VERSION" != "13" && "$TYPO3_VERSION" != "14" ]]; then
+    echo "Invalid version '$TYPO3_VERSION'. Must be 13 or 14. Defaulting to 13."
+    TYPO3_VERSION="13"
+  fi
+  echo "Installing TYPO3 v${TYPO3_VERSION}…"
+
+  # Wipe the database so TYPO3 setup starts on a clean slate
+  echo "--- Clearing database ---"
+  mysql --host=db --user=db --password=db -e "DROP DATABASE IF EXISTS db; CREATE DATABASE db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+  echo "Database cleared."
+
+  composer create-project "typo3/cms-base-distribution:^${TYPO3_VERSION}.0" "$DUMMY_DIR" --no-interaction --no-install
 else
-  echo "TYPO3 dummy project already exists and looks valid, skipping creation."
+  echo "TYPO3 base distribution already exists, skipping creation."
+  TYPO3_VERSION="$(php -r '
+    $composer = json_decode(file_get_contents($argv[1]), true);
+    $constraint = $composer["require"]["typo3/cms-core"] ?? "";
+    echo preg_match("/\\b(13|14)\\b/", $constraint, $matches) ? $matches[1] : "13";
+  ' "$DUMMY_DIR/composer.json" 2>/dev/null)"
+  echo "Detected TYPO3 v${TYPO3_VERSION}."
 fi
 
 cd "$DUMMY_DIR"
 
-echo "Setting Composer PHP platform to 8.4 ..."
+# ---------------------------------------------------------------------------
+# 2. Configure Composer & install
+# ---------------------------------------------------------------------------
+echo "--- Configuring Composer ---"
 composer config platform.php 8.4.0
+composer config --json repositories.analytics '{"type":"path","url":"/var/www/html","options":{"symlink":true}}'
 
-echo "Writing .env file ..."
+# Use '*@dev' so the constraint matches regardless of whether the extension's
+# composer.json carries an explicit "version" field (e.g. "1.0.0-alpha") or
+# only exposes a branch name (e.g. "dev-develop"). Path repositories always
+# carry dev stability, so '*@dev' resolves correctly in both cases.
+echo "Requiring extensions..."
+composer require \
+  "t3g/analytics:*@dev" \
+  "typo3/cms-styleguide:^${TYPO3_VERSION}.0" \
+  --no-interaction \
+  --no-update
+
+echo "--- Installing Composer dependencies ---"
+if [ -f composer.lock ] && ! grep -q '"name": "typo3/cms-styleguide"' composer.lock; then
+  composer update "t3g/analytics" "typo3/cms-styleguide" --with-all-dependencies --no-interaction
+else
+  composer install --no-interaction
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Write .env
+# ---------------------------------------------------------------------------
+echo "--- Writing .env ---"
 cat > "$DUMMY_DIR/.env" <<EOF
 TYPO3_CONTEXT=Development/DDEV
 TYPO3_PATH_APP_ROOT=$DUMMY_DIR
@@ -50,56 +94,73 @@ TYPO3_DB_PASSWORD=db
 TYPO3_DB_NAME=db
 EOF
 
-echo "Configuring local path repository for the extension ..."
-composer config --json repositories.analytics '{"type":"path","url":"/var/www/html","options":{"symlink":true}}'
+# ---------------------------------------------------------------------------
+# 4. Run TYPO3 CLI setup (skip if already installed)
+# ---------------------------------------------------------------------------
+TYPO3_INSTALLED=$(mysql --host=db --user=db --password=db db \
+  --skip-column-names --silent \
+  -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='db' AND table_name='be_users';" \
+  2>/dev/null || echo "0")
 
-echo "Requiring local extension package ..."
-composer require t3g/analytics:dev-main@dev --no-interaction --no-update
-
-echo "Installing Composer dependencies ..."
-composer install --no-interaction
-
-echo "Creating FIRST_INSTALL marker ..."
-mkdir -p "$DUMMY_DIR/public"
-if [ ! -e "$DUMMY_DIR/public/FIRST_INSTALL" ]; then
-  touch "$DUMMY_DIR/public/FIRST_INSTALL"
-  echo "FIRST_INSTALL marker created."
+if [ "$TYPO3_INSTALLED" = "1" ]; then
+  echo "TYPO3 already installed, skipping setup."
 else
-  echo "FIRST_INSTALL marker already exists, skipping."
+  echo "--- Running TYPO3 non-interactive setup ---"
+  php "$DUMMY_DIR/vendor/bin/typo3" setup \
+    --driver=mysqli \
+    --host=db \
+    --port=3306 \
+    --dbname=db \
+    --username=db \
+    --password=db \
+    --admin-username=admin \
+    --admin-user-password='Admin1234!' \
+    --admin-email='admin@local.test' \
+    --project-name='Analytics Demo' \
+    --server-type=apache \
+    --no-interaction
+
+  # -------------------------------------------------------------------------
+  # 5. Create 5 root pages (one per site)
+  # -------------------------------------------------------------------------
+  echo "--- Creating 5 root pages ---"
+  mysql --host=db --user=db --password=db db <<'SQL'
+INSERT INTO pages
+  (uid, pid, title, doktype, is_siteroot, slug, sorting,
+   perms_userid, perms_user, perms_group, perms_everybody,
+   hidden, deleted, tstamp, crdate)
+VALUES
+  (1, 0, 'Site 1', 1, 1, '/', 256, 1, 31, 23, 0, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (2, 0, 'Site 2', 1, 1, '/', 512, 1, 31, 23, 0, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (3, 0, 'Site 3', 1, 1, '/', 768, 1, 31, 23, 0, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (4, 0, 'Site 4', 1, 1, '/', 1024, 1, 31, 23, 0, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (5, 0, 'Site 5', 1, 1, '/', 1280, 1, 31, 23, 0, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())
+ON DUPLICATE KEY UPDATE title = VALUES(title);
+
+ALTER TABLE pages AUTO_INCREMENT = 6;
+
+INSERT INTO sys_template
+  (pid, title, root, clear, config, hidden, deleted, tstamp, crdate)
+VALUES
+  (1, 'Site 1 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 1', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (2, 'Site 2 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 2', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (3, 'Site 3 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 3', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (4, 'Site 4 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 4', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+  (5, 'Site 5 Template', 1, 3, 'page = PAGE\npage.10 = TEXT\npage.10.value = Site 5', 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())
+ON DUPLICATE KEY UPDATE title = VALUES(title);
+SQL
 fi
 
-echo "Writing TYPO3 system configuration ..."
-mkdir -p "$DUMMY_DIR/config/system"
-
-cat > "$DUMMY_DIR/config/system/additional.php" <<'PHP'
-<?php
-
-defined('TYPO3') or die();
-
-$databaseHost = getenv('TYPO3_DB_HOST') ?: 'db';
-$databaseUser = getenv('TYPO3_DB_USER') ?: 'db';
-$databasePassword = getenv('TYPO3_DB_PASSWORD') ?: 'db';
-$databaseName = getenv('TYPO3_DB_NAME') ?: 'db';
-
-$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = [
-    'driver' => 'mysqli',
-    'host' => $databaseHost,
-    'port' => 3306,
-    'dbname' => $databaseName,
-    'user' => $databaseUser,
-    'password' => $databasePassword,
-    'charset' => 'utf8mb4',
-];
-
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '^analytics\.ddev\.site$';
-PHP
-
-echo "Writing site configuration for a blank start page ..."
-mkdir -p "$DUMMY_DIR/config/sites/main"
-
-cat > "$DUMMY_DIR/config/sites/main/config.yaml" <<'YAML'
-base: /
-errorHandling: { }
+# ---------------------------------------------------------------------------
+# 6. Create site configurations (always refreshed)
+# ---------------------------------------------------------------------------
+echo "--- Writing site configurations ---"
+for i in 1 2 3 4 5; do
+  SITE_DIR="$DUMMY_DIR/config/sites/site${i}"
+  mkdir -p "$SITE_DIR"
+  cat > "$SITE_DIR/config.yaml" <<YAML
+base: https://site${i}.${DDEV_HOST}/
+rootPageId: ${i}
 languages:
   - title: English
     enabled: true
@@ -111,14 +172,61 @@ languages:
   - title: Deutsch
     enabled: true
     languageId: 1
-    base: /de
+    base: /de/
     locale: de_DE.UTF-8
-    navigationTitle: German
+    navigationTitle: Deutsch
     flag: de
-rootPageId: 1
-routes: { }
+routes: {}
+errorHandling: {}
 YAML
+  echo "  site${i} → https://site${i}.${DDEV_HOST}/ (rootPageId: ${i})"
+done
 
-echo "Dummy TYPO3 is ready."
-echo "Open the DDEV URL in your browser on the host machine and complete the TYPO3 installer."
-echo "If needed, run: ddev launch"
+# Remove any leftover default site config from the CLI setup
+rm -rf "$DUMMY_DIR/config/sites/main" 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
+# 7. Write system config
+# ---------------------------------------------------------------------------
+echo "--- Writing system configuration ---"
+mkdir -p "$DUMMY_DIR/config/system"
+cat > "$DUMMY_DIR/config/system/additional.php" <<PHP
+<?php
+
+defined('TYPO3') or die();
+
+\$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = [
+    'driver'   => 'mysqli',
+    'host'     => getenv('TYPO3_DB_HOST') ?: 'db',
+    'port'     => 3306,
+    'dbname'   => getenv('TYPO3_DB_NAME') ?: 'db',
+    'user'     => getenv('TYPO3_DB_USER') ?: 'db',
+    'password' => getenv('TYPO3_DB_PASSWORD') ?: 'db',
+    'charset'  => 'utf8mb4',
+];
+
+// Allow all *.${DDEV_HOST} subdomains
+\$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern']
+    = '^([a-z0-9-]+\\.)?${DDEV_HOST}$';
+PHP
+
+# ---------------------------------------------------------------------------
+# 8. Set up extensions
+# ---------------------------------------------------------------------------
+echo "--- Setting up extensions ---"
+php "$DUMMY_DIR/vendor/bin/typo3" extension:setup
+
+# ---------------------------------------------------------------------------
+# 9. Remove FIRST_INSTALL so TYPO3 does not redirect to the installer
+# ---------------------------------------------------------------------------
+rm -f "$DUMMY_DIR/public/FIRST_INSTALL"
+
+echo ""
+echo "✓ Dummy TYPO3 is ready."
+echo ""
+echo "  Sites:"
+for i in 1 2 3 4 5; do
+  echo "    https://site${i}.${DDEV_HOST}/"
+done
+echo ""
+echo "  Backend: https://${DDEV_HOST}/typo3  (admin / Admin1234!)"

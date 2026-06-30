@@ -1,0 +1,12 @@
+<f:layout name="Module" />
+
+<f:section name="Content">
+    <f:asset.css identifier="analytics-backend" href="EXT:analytics/Resources/Public/Css/Backend.css" />
+
+    <iframe
+        src="{managePlanUrl}"
+        class="tx-analytics-iframe"
+        allowfullscreen="true"
+    ></iframe>
+    <f:render partial="Backend/SubscriptionUpgradeListener" arguments="{invalidateStatusCacheUri: invalidateStatusCacheUri, iframeOrigin: iframeOrigin}" />
+</f:section>

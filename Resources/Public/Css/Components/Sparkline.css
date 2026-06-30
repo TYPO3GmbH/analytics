@@ -1,0 +1,82 @@
+.tx-analytics-sparkline {
+    --tx-analytics-sparkline-line: var(--tx-analytics-color-visits);
+    --tx-analytics-sparkline-fill: color-mix(in srgb, var(--tx-analytics-sparkline-line), transparent 82%);
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="visitors"] {
+    --tx-analytics-sparkline-line: var(--tx-analytics-color-visitors);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="sessions"] {
+    --tx-analytics-sparkline-line: var(--tx-analytics-color-sessions);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="bounce-rate"] {
+    --tx-analytics-sparkline-line: var(--tx-analytics-color-bounce-rate);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="avg-duration"] {
+    --tx-analytics-sparkline-line: var(--tx-analytics-color-avg-duration);
+}
+
+.tx-analytics-sparkline[data-sparkline-tone="continuation-rate"] {
+    --tx-analytics-sparkline-line: var(--tx-analytics-color-continuation-rate);
+}
+
+.tx-analytics-sparkline-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.tx-analytics-sparkline-line,
+.tx-analytics-sparkline-fill,
+.tx-analytics-sparkline-point {
+    vector-effect: non-scaling-stroke;
+}
+
+.tx-analytics-sparkline-line {
+    fill: none;
+    stroke: var(--tx-analytics-sparkline-line);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.tx-analytics-sparkline-fill {
+    fill: var(--tx-analytics-sparkline-fill);
+    stroke: none;
+}
+
+.tx-analytics-sparkline-point {
+    fill: var(--typo3-component-bg);
+    stroke: var(--tx-analytics-sparkline-line);
+    stroke-width: 1.5;
+}
+
+.tx-analytics-sparkline-grid-line {
+    stroke: var(--typo3-component-border-color);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.tx-analytics-sparkline-line[data-tone="visits"] { stroke: var(--tx-analytics-color-visits); }
+.tx-analytics-sparkline-fill[data-tone="visits"] { fill: color-mix(in srgb, var(--tx-analytics-color-visits), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="visitors"] { stroke: var(--tx-analytics-color-visitors); }
+.tx-analytics-sparkline-fill[data-tone="visitors"] { fill: color-mix(in srgb, var(--tx-analytics-color-visitors), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="visitors-new"] { stroke: var(--tx-analytics-color-visitors-new); }
+.tx-analytics-sparkline-fill[data-tone="visitors-new"] { fill: color-mix(in srgb, var(--tx-analytics-color-visitors-new), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="visitors-returning"] { stroke: var(--tx-analytics-color-visitors-returning); }
+.tx-analytics-sparkline-fill[data-tone="visitors-returning"] { fill: color-mix(in srgb, var(--tx-analytics-color-visitors-returning), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="sessions"] { stroke: var(--tx-analytics-color-sessions); }
+.tx-analytics-sparkline-fill[data-tone="sessions"] { fill: color-mix(in srgb, var(--tx-analytics-color-sessions), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="bounce-rate"] { stroke: var(--tx-analytics-color-bounce-rate); }
+.tx-analytics-sparkline-fill[data-tone="bounce-rate"] { fill: color-mix(in srgb, var(--tx-analytics-color-bounce-rate), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="avg-duration"] { stroke: var(--tx-analytics-color-avg-duration); }
+.tx-analytics-sparkline-fill[data-tone="avg-duration"] { fill: color-mix(in srgb, var(--tx-analytics-color-avg-duration), transparent 82%); }
+.tx-analytics-sparkline-line[data-tone="continuation-rate"] { stroke: var(--tx-analytics-color-continuation-rate); }
+.tx-analytics-sparkline-fill[data-tone="continuation-rate"] { fill: color-mix(in srgb, var(--tx-analytics-color-continuation-rate), transparent 82%); }

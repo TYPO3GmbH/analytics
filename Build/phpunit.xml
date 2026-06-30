@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    bootstrap="UnitTestsBootstrap.php"
+    colors="true"
+    cacheDirectory="../var/phpunit-cache"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>../Tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <ini name="display_errors" value="1"/>
+    </php>
+</phpunit>

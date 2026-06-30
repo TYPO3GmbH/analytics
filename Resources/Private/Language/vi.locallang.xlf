@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="vi" datatype="plaintext" original="EXT:analytics/Resources/Private/Language/locallang.xlf" product-name="analytics">
+        <body>
+            <trans-unit id="pagePerformance.views" resname="pagePerformance.views">
+                <source>Views</source>
+                <target>Lượt xem trang</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.bounceRate" resname="pagePerformance.bounceRate">
+                <source>Bounce rate</source>
+                <target>Tỷ lệ thoát của trang</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.averageTimeOnPage" resname="pagePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Thời lượng phiên trung bình của trang</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.tooltip.description.bounceRate" resname="pagePerformance.tooltip.description.bounceRate">
+                <source>The percentage of visitors who left your website after viewing only one page, regardless of the duration of their visit or how they exited.</source>
+                <target>Phần trăm lượt truy cập đã rời khỏi trang web của bạn một lần nữa chỉ sau khi xem một trang. Không quan trọng khách truy cập đã ở trên trang bao lâu hoặc họ rời đi như thế nào. Chúng tôi gọi nó là &quot;một trả lại&quot; nếu nó là một lần chỉ với một tương tác với website.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

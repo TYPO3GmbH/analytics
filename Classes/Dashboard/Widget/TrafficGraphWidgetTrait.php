@@ -1,0 +1,118 @@
+<?php
+
+declare(strict_types=1);
+
+namespace T3G\Analytics\Dashboard\Widget;
+
+use Psr\Http\Message\ServerRequestInterface;
+use T3G\Analytics\Dashboard\DashboardPeriods;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\View\ViewFactoryData;
+
+trait TrafficGraphWidgetTrait
+{
+    /**
+     * @return array{
+     *     metricData: array<string, array{labels: list<string>, data: list<int>}|null>,
+     *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<array{label: string, pct: float}>, legend: list<array{label: string, tone: string, key: string}>}
+     * }
+     */
+    private function buildTrafficChart(string $siteIdentifier, int $days): array
+    {
+        return $this->chartDataBuilder->buildForTrafficGraph(
+            $this->trafficGraphService,
+            $siteIdentifier,
+            $days,
+            [
+                'visits' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visits'),
+                'sessions' => $this->translate('dashboardWidget.trafficGraph.chartLabel.sessions'),
+                'visitors_new' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.new'),
+                'visitors_returning' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.returning'),
+                'visitors_overall' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.overall'),
+            ],
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getCssFiles(): array
+    {
+        return [
+            'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
+            'EXT:analytics/Resources/Public/Css/DashboardWidget.css',
+            'EXT:analytics/Resources/Public/Css/Components/Sparkline.css',
+            'EXT:analytics/Resources/Public/Css/TrafficGraph.css',
+        ];
+    }
+
+    /**
+     * @param array<string, string> $siteOptions
+     * @return list<array{value: string, label: string, selected: bool}>
+     */
+    private function buildSiteOptions(array $siteOptions, string $siteIdentifier): array
+    {
+        $options = [];
+        foreach ($siteOptions as $identifier => $label) {
+            $options[] = [
+                'value' => $identifier,
+                'label' => $label,
+                'selected' => $identifier === $siteIdentifier,
+            ];
+        }
+        return $options;
+    }
+
+    /**
+     * @return list<array{value: int, label: string, selected: bool}>
+     */
+    private function buildPeriodOptions(int $selectedDays): array
+    {
+        $options = [];
+        foreach (DashboardPeriods::periods() as $period) {
+            $options[] = [
+                'value' => $period,
+                'label' => sprintf($this->translate('pagePerformance.days'), $period),
+                'selected' => $period === $selectedDays,
+            ];
+        }
+        return $options;
+    }
+
+    private function buildShowAllUrl(string $siteIdentifier, int $days): string
+    {
+        return $siteIdentifier !== ''
+            ? (string) $this->uriBuilder->buildUriFromRoute(
+                'site_analytics.dashboard',
+                ['siteIdentifier' => $siteIdentifier, 'days' => $days]
+            )
+            : '';
+    }
+
+    private function createViewFactoryData(?ServerRequestInterface $request = null): ViewFactoryData
+    {
+        return new ViewFactoryData(
+            templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
+            partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
+            layoutRootPaths: [
+                GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Layouts'),
+                // TYPO3 v14 may relocate dashboard layouts; update path if Widget/Widget.html is not found.
+                GeneralUtility::getFileAbsFileName('EXT:dashboard/Resources/Private/Layouts'),
+            ],
+            request: $request,
+        );
+    }
+
+    private function translate(string $key): string
+    {
+        $languageService = $GLOBALS['LANG'] ?? null;
+        if (!$languageService instanceof LanguageService) {
+            return $key;
+        }
+        $label = $languageService->sL(
+            'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:' . $key
+        );
+        return $label !== '' ? $label : $key;
+    }
+}

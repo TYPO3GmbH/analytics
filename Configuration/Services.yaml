@@ -6,6 +6,182 @@ services:
 
   T3G\Analytics\:
     resource: '../Classes/*'
+    exclude:
+      - '../Classes/Dashboard/Widget/TopPagesWidgetV14.php'
+      - '../Classes/Dashboard/Widget/SitePerformanceWidgetV14.php'
+      - '../Classes/Dashboard/Widget/TrafficGraphWidgetV14.php'
+      - '../Classes/Dashboard/Widget/TrafficSourcesWidgetV14.php'
+
+  T3G\Analytics\Service\TopPagesServiceInterface:
+    alias: T3G\Analytics\Service\TopPagesService
+
+  T3G\Analytics\Service\SitePerformanceServiceInterface:
+    alias: T3G\Analytics\Service\SitePerformanceService
 
   T3G\Analytics\Controller\BackendModuleController:
     public: true
+
+  T3G\Analytics\Controller\TopPagesAjaxController:
+    public: true
+
+  T3G\Analytics\Controller\SitePerformanceAjaxController:
+    public: true
+
+  T3G\Analytics\Controller\TrafficGraphAjaxController:
+    public: true
+
+  T3G\Analytics\Controller\TrafficSourcesAjaxController:
+    public: true
+
+  T3G\Analytics\Controller\PagePerformanceAjaxController:
+    public: true
+
+  T3G\Analytics\Service\AnalyticsApiClientInterface:
+    alias: T3G\Analytics\Service\AnalyticsApiClient
+
+  T3G\Analytics\Service\AnalyticsDataClientInterface:
+    alias: T3G\Analytics\Service\AnalyticsDataClient
+
+  T3G\Analytics\Service\AnalyticsStatusServiceInterface:
+    alias: T3G\Analytics\Service\AnalyticsStatusService
+
+  T3G\Analytics\Service\ApiExceptionExtractorInterface:
+    alias: T3G\Analytics\Service\ApiExceptionExtractor
+
+  T3G\Analytics\Service\ApiKeyServiceInterface:
+    alias: T3G\Analytics\Service\ApiKeyService
+
+  T3G\Analytics\Service\CipherServiceInterface:
+    alias: T3G\Analytics\Service\CipherService
+
+  T3G\Analytics\Service\AnalyticsSiteProviderInterface:
+    alias: T3G\Analytics\Service\AnalyticsSiteProvider
+
+  T3G\Analytics\Service\BackendPageAccessCheckerInterface:
+    alias: T3G\Analytics\Service\BackendPageAccessChecker
+
+  T3G\Analytics\Service\HmacSignerInterface:
+    alias: T3G\Analytics\Service\HmacSigner
+
+  T3G\Analytics\Service\MetricFormatterInterface:
+    alias: T3G\Analytics\Service\MetricFormatter
+
+  T3G\Analytics\Service\InstanceRegistrationServiceInterface:
+    alias: T3G\Analytics\Service\InstanceRegistrationService
+
+  T3G\Analytics\Service\SiteDataProviderInterface:
+    alias: T3G\Analytics\Service\SiteDataProvider
+
+  T3G\Analytics\Service\TrafficGraphServiceInterface:
+    alias: T3G\Analytics\Service\TrafficGraphService
+
+  T3G\Analytics\Service\TrafficSourcesServiceInterface:
+    alias: T3G\Analytics\Service\TrafficSourcesService
+
+  cache.tx_analytics_status:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_status']
+
+  cache.tx_analytics_pages:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_pages']
+
+  cache.tx_analytics_top_pages:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_top_pages']
+
+  cache.tx_analytics_site_performance:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_site_performance']
+
+  cache.tx_analytics_traffic_graph:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_traffic_graph']
+
+  cache.tx_analytics_traffic_sources:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_traffic_sources']
+
+  T3G\Analytics\Service\AnalyticsStatusService:
+    arguments:
+      $cache: '@cache.tx_analytics_status'
+
+  T3G\Analytics\Service\TopPagesService:
+    arguments:
+      $cache: '@cache.tx_analytics_top_pages'
+
+  T3G\Analytics\Service\SitePerformanceService:
+    arguments:
+      $cache: '@cache.tx_analytics_site_performance'
+
+  T3G\Analytics\Service\TrafficGraphService:
+    arguments:
+      $cache: '@cache.tx_analytics_traffic_graph'
+
+  T3G\Analytics\Service\TrafficSourcesService:
+    arguments:
+      $cache: '@cache.tx_analytics_traffic_sources'
+
+  T3G\Analytics\Service\PagePerformanceBarBuilder:
+    arguments:
+      $pageAnalyticsCache: '@cache.tx_analytics_pages'
+
+  T3G\Analytics\EventListener\PagePerformanceBarListener:
+    tags:
+      - name: event.listener
+        identifier: 'analytics/page-performance-bar'
+
+  dashboard.widget.analyticsSitePerformance:
+    class: T3G\Analytics\Dashboard\Widget\SitePerformanceWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsSitePerformance'
+        groupNames: 'analytics'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.description'
+        iconIdentifier: 'analytics-site-performance-widget-icon'
+        height: 'medium'
+        width: 'medium'
+
+  dashboard.widget.analyticsTopPages:
+    class: T3G\Analytics\Dashboard\Widget\TopPagesWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsTopPages'
+        groupNames: 'analytics'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.description'
+        iconIdentifier: 'analytics-top-pages-widget-icon'
+        height: 'medium'
+        width: 'medium'
+
+  dashboard.widget.analyticsTrafficGraph:
+    class: T3G\Analytics\Dashboard\Widget\TrafficGraphWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsTrafficGraph'
+        groupNames: 'analytics'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.description'
+        iconIdentifier: 'analytics-traffic-graph-widget-icon'
+        height: 'medium'
+        width: 'large'
+
+
+  dashboard.widget.analyticsTrafficSources:
+    class: T3G\Analytics\Dashboard\Widget\TrafficSourcesWidget
+    tags:
+      - name: dashboard.widget
+        identifier: 'analyticsTrafficSources'
+        groupNames: 'analytics'
+        title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.title'
+        description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.description'
+        iconIdentifier: 'analytics-traffic-sources-widget-icon'
+        height: 'large'
+        width: 'medium'

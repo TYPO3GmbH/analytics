@@ -5,17 +5,37 @@ declare(strict_types=1);
 use T3G\Analytics\Controller\BackendModuleController;
 
 return [
-    'web_analytics' => [
-        'parent' => 'web',
-        'position' => ['after' => 'web_info'],
-        'access' => 'user,group',
+    'site_analytics' => [
+        'parent' => 'site',
+        'position' => ['after' => 'site_settings'],
+        'access' => 'user',
         'workspaces' => 'live',
-        'path' => '/module/web/analytics',
+        'path' => '/module/site/analytics',
         'labels' => 'LLL:EXT:analytics/Resources/Private/Language/locallang_mod.xlf',
         'iconIdentifier' => 'analytics-module',
         'routes' => [
             '_default' => [
                 'target' => BackendModuleController::class . '::indexAction',
+            ],
+            'register' => [
+                'target' => BackendModuleController::class . '::registerAction',
+                'methods' => ['POST'],
+            ],
+            'status' => [
+                'target' => BackendModuleController::class . '::statusAction',
+                'methods' => ['POST'],
+            ],
+            'dashboard' => [
+                'target' => BackendModuleController::class . '::dashboardAction',
+                'methods' => ['GET'],
+            ],
+            'manage_plan' => [
+                'target' => BackendModuleController::class . '::managePlanAction',
+                'methods' => ['GET'],
+            ],
+            'invalidate_status_cache' => [
+                'target' => BackendModuleController::class . '::invalidateStatusCacheAction',
+                'methods' => ['POST'],
             ],
         ],
     ],

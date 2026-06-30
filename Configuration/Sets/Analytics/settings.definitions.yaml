@@ -1,0 +1,63 @@
+# EXT:analytics/Configuration/Sets/Analytics/settings.definitions.yaml
+
+categories:
+  typo3_analytics:
+    label: 'TYPO3 Analytics'
+
+settings:
+  websiteId:
+    label: 'Website ID'
+    description: 'Unique website identifier set automatically via the API on registration.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  instanceId:
+    label: 'Instance ID'
+    description: 'Unique identifier for this TYPO3 instance.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  instanceSecret:
+    label: 'Instance Secret'
+    description: 'Encrypted secret used for HMAC authentication. Set automatically.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  trackingCode:
+    label: 'Tracking Code'
+    description: 'Tracking ID injected into the frontend as the TYPO3 Analytics tracking script. Updated automatically on status refresh.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  status:
+    label: 'Status'
+    description: 'Current registration status. Possible values: pending | active | inactive | cancelled. Tracking code is only injected when active.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  apiKeyId:
+    label: 'API Key ID'
+    description: 'UUID of the provisioned analytics API key. Set automatically when the site becomes active.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  apiKey:
+    label: 'API Key'
+    description: 'Encrypted analytics API key. Set automatically when the site becomes active.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  externalWebsiteId:
+    label: 'External Website ID'
+    description: 'External analytics website ID used for data API calls. Synced automatically on status refresh.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true

@@ -1,0 +1,340 @@
+<?php
+
+declare(strict_types=1);
+
+namespace T3G\Analytics\Tests\Unit\Service;
+
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
+use T3G\Analytics\Service\TrafficChartDataBuilder;
+use T3G\Analytics\Service\TrafficGraphServiceInterface;
+use T3G\Analytics\View\SparklineRenderer;
+use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
+
+final class TrafficChartDataBuilderTest extends UnitTestCase
+{
+    private TrafficChartDataBuilder $subject;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->subject = new TrafficChartDataBuilder(new SparklineRenderer());
+    }
+
+    /** calcScaleMax */
+
+    /** @return array<string, array{int, int}> */
+    public static function calcScaleMaxProvider(): array
+    {
+        return [
+            'zero returns 9' => [0, 9],
+            'negative returns 9' => [-5, 9],
+            'one returns 3 (regression: was 0 before)' => [1, 3],
+            'two returns 3' => [2, 3],
+            'three returns 6' => [3, 6],
+            'six returns 9' => [6, 9],
+            'seven returns 15' => [7, 15],
+            'ten returns 15' => [10, 15],
+            'eleven rolls over to 30' => [11, 30],
+            'hundred returns 150' => [100, 150],
+            'thousand returns 1500' => [1000, 1500],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('calcScaleMaxProvider')]
+    public function calcScaleMaxReturnsExpectedValue(int $max, int $expected): void
+    {
+        self::assertSame($expected, $this->subject->calcScaleMax($max));
+    }
+
+    #[Test]
+    public function calcScaleMaxResultIsAlwaysDivisibleByThree(): void
+    {
+        foreach ([0, 1, 3, 7, 11, 50, 100, 999, 1000, 9999] as $max) {
+            self::assertSame(0, $this->subject->calcScaleMax($max) % 3, "calcScaleMax($max) not divisible by 3");
+        }
+    }
+
+    /** build — structure */
+
+    #[Test]
+    public function buildReturnsRequiredKeys(): void
+    {
+        $result = $this->subject->build(null, 'label');
+
+        self::assertArrayHasKey('sparkline', $result);
+        self::assertArrayHasKey('yLabels', $result);
+        self::assertArrayHasKey('xLabels', $result);
+    }
+
+    #[Test]
+    public function buildProducesFourYLabels(): void
+    {
+        $result = $this->subject->build(['labels' => ['2024-01-01'], 'data' => [6]], 'label');
+
+        self::assertCount(4, $result['yLabels']);
+    }
+
+    #[Test]
+    public function buildYLabelsDescendFromScaleMaxToZero(): void
+    {
+        // max=6 → calcScaleMax=9 → step=3 → labels top-to-bottom: 9, 6, 3, 0
+        $result = $this->subject->build(['labels' => ['2024-01-01'], 'data' => [6]], 'label');
+
+        self::assertSame(9, $result['yLabels'][0]['value']);
+        self::assertSame(6, $result['yLabels'][1]['value']);
+        self::assertSame(3, $result['yLabels'][2]['value']);
+        self::assertSame(0, $result['yLabels'][3]['value']);
+    }
+
+    #[Test]
+    public function buildFormatsLargeYLabelWithKSuffix(): void
+    {
+        // max=1000 → calcScaleMax=1500 → step=500 → top label: 1500 → "1.5k"
+        $result = $this->subject->build(['labels' => ['2024-01-01'], 'data' => [1000]], 'label');
+
+        self::assertSame('1.5k', $result['yLabels'][0]['label']);
+        self::assertSame('1.0k', $result['yLabels'][1]['label']);
+        self::assertSame('500', $result['yLabels'][2]['label']);
+        self::assertSame('0', $result['yLabels'][3]['label']);
+    }
+
+    #[Test]
+    public function buildUsesNineAsScaleMaxForEmptyData(): void
+    {
+        $result = $this->subject->build(['labels' => [], 'data' => []], 'label');
+
+        self::assertSame(9, $result['yLabels'][0]['value']);
+        self::assertSame(0, $result['yLabels'][3]['value']);
+    }
+
+    /** build — x-labels / visibleLabels */
+
+    #[Test]
+    public function buildReturnsFourEvenlySpacedXLabelsForSevenDayWindow(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07'];
+        $result = $this->subject->build(['labels' => $labels, 'data' => array_fill(0, 7, 1)], 'label');
+
+        // lastIndex=6, slots=4 → indexes 0,2,4,6
+        self::assertCount(4, $result['xLabels']);
+        self::assertSame('01.01.', $result['xLabels'][0]);
+        self::assertSame('03.01.', $result['xLabels'][1]);
+        self::assertSame('05.01.', $result['xLabels'][2]);
+        self::assertSame('07.01.', $result['xLabels'][3]);
+    }
+
+    #[Test]
+    public function buildReturnsFiveXLabelsForThirtyDayWindow(): void
+    {
+        $labels = array_map(
+            static fn (int $d): string => (new \DateTimeImmutable('2024-01-01'))->modify("+$d days")->format('Y-m-d'),
+            range(0, 29)
+        );
+        $result = $this->subject->build(['labels' => $labels, 'data' => array_fill(0, 30, 1)], 'label');
+
+        self::assertCount(5, $result['xLabels']);
+    }
+
+    #[Test]
+    public function buildFormatsXLabelsAsDayAndMonth(): void
+    {
+        $result = $this->subject->build(['labels' => ['2024-03-15'], 'data' => [1]], 'label');
+
+        self::assertSame(['15.03.'], $result['xLabels']);
+    }
+
+    /** buildForTrafficGraph — xLabels with positions */
+
+    #[Test]
+    public function buildForTrafficGraphXLabelsHaveLabelAndPctKeys(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08'];
+        $data = ['labels' => $labels, 'data' => array_fill(0, 8, 1)];
+        $service = $this->makeService(visitsData: $data, sessionsData: $data, visitorsBreakdown: [
+            'new' => $data, 'returning' => $data, 'overall' => $data,
+        ]);
+
+        $result = $this->subject->buildForTrafficGraph($service, 'site', 7, $this->defaultLabels());
+
+        self::assertCount(4, $result['chart']['xLabels']);
+        foreach ($result['chart']['xLabels'] as $item) {
+            self::assertArrayHasKey('label', $item);
+            self::assertArrayHasKey('pct', $item);
+        }
+    }
+
+    #[Test]
+    public function buildForTrafficGraphXLabelsFirstIsAtZeroAndLastIsAt100(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08'];
+        $data = ['labels' => $labels, 'data' => array_fill(0, 8, 1)];
+        $service = $this->makeService(visitsData: $data, sessionsData: $data, visitorsBreakdown: [
+            'new' => $data, 'returning' => $data, 'overall' => $data,
+        ]);
+
+        $result = $this->subject->buildForTrafficGraph($service, 'site', 7, $this->defaultLabels());
+        $xLabels = $result['chart']['xLabels'];
+
+        self::assertSame(0.0, $xLabels[0]['pct'], 'First label must be at 0%');
+        self::assertSame(100.0, $xLabels[array_key_last($xLabels)]['pct'], 'Last label must be at 100%');
+    }
+
+    #[Test]
+    public function buildForTrafficGraphXLabelsMiddleLabelsMatchDataPointPositions(): void
+    {
+        // 8 data points → lastIndex=7 → visible indexes: 0, 2, 5, 7
+        // Positions: 0/7=0%, 2/7≈28.57%, 5/7≈71.43%, 7/7=100%
+        $labels = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08'];
+        $data = ['labels' => $labels, 'data' => array_fill(0, 8, 1)];
+        $service = $this->makeService(visitsData: $data, sessionsData: $data, visitorsBreakdown: [
+            'new' => $data, 'returning' => $data, 'overall' => $data,
+        ]);
+
+        $result = $this->subject->buildForTrafficGraph($service, 'site', 7, $this->defaultLabels());
+        $xLabels = $result['chart']['xLabels'];
+
+        self::assertSame('01.01.', $xLabels[0]['label']);
+        self::assertSame('03.01.', $xLabels[1]['label']);
+        self::assertSame(round(2 / 7 * 100, 2), $xLabels[1]['pct']);
+        self::assertSame('06.01.', $xLabels[2]['label']);
+        self::assertSame(round(5 / 7 * 100, 2), $xLabels[2]['pct']);
+        self::assertSame('08.01.', $xLabels[3]['label']);
+    }
+
+    /** buildForTrafficGraph */
+
+    private function makeService(
+        ?array $visitsData = null,
+        ?array $sessionsData = null,
+        ?array $visitorsBreakdown = null,
+    ): TrafficGraphServiceInterface&MockObject {
+        $service = $this->createMock(TrafficGraphServiceInterface::class);
+        $service->method('loadGraphData')->willReturn($visitsData);
+        $service->method('loadSessionsData')->willReturn($sessionsData);
+        $service->method('loadVisitorsBreakdownData')->willReturn($visitorsBreakdown);
+        return $service;
+    }
+
+    private function defaultLabels(): array
+    {
+        return [
+            'visits' => 'Visits',
+            'sessions' => 'Sessions',
+            'visitors_new' => 'New visitors',
+            'visitors_returning' => 'Returning visitors',
+            'visitors_overall' => 'Total visitors',
+        ];
+    }
+
+    #[Test]
+    public function buildForTrafficGraphReturnsMetricDataAndChart(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02'];
+        $service = $this->makeService(
+            visitsData: ['labels' => $labels, 'data' => [10, 20]],
+            sessionsData: ['labels' => $labels, 'data' => [8, 15]],
+            visitorsBreakdown: [
+                'new' => ['labels' => $labels, 'data' => [3, 5]],
+                'returning' => ['labels' => $labels, 'data' => [2, 4]],
+                'overall' => ['labels' => $labels, 'data' => [5, 9]],
+            ],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 30, $this->defaultLabels());
+
+        self::assertArrayHasKey('metricData', $result);
+        self::assertArrayHasKey('chart', $result);
+        self::assertArrayHasKey('visits', $result['metricData']);
+        self::assertArrayHasKey('sessions', $result['metricData']);
+        self::assertArrayHasKey('visitors_new', $result['metricData']);
+        self::assertArrayHasKey('visitors_returning', $result['metricData']);
+        self::assertArrayHasKey('visitors_overall', $result['metricData']);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphSetsVisitorsBreakdownFromService(): void
+    {
+        $labels = ['2024-01-01'];
+        $newData = ['labels' => $labels, 'data' => [3]];
+        $returningData = ['labels' => $labels, 'data' => [2]];
+        $overallData = ['labels' => $labels, 'data' => [5]];
+        $service = $this->makeService(
+            visitsData: ['labels' => $labels, 'data' => [10]],
+            sessionsData: ['labels' => $labels, 'data' => [8]],
+            visitorsBreakdown: ['new' => $newData, 'returning' => $returningData, 'overall' => $overallData],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        self::assertSame($newData, $result['metricData']['visitors_new']);
+        self::assertSame($returningData, $result['metricData']['visitors_returning']);
+        self::assertSame($overallData, $result['metricData']['visitors_overall']);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphSetsNullMetricsWhenBreakdownUnavailable(): void
+    {
+        $labels = ['2024-01-01'];
+        $service = $this->makeService(
+            visitsData: ['labels' => $labels, 'data' => [10]],
+            sessionsData: null,
+            visitorsBreakdown: null,
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        self::assertNull($result['metricData']['visitors_new']);
+        self::assertNull($result['metricData']['visitors_returning']);
+        self::assertNull($result['metricData']['visitors_overall']);
+        self::assertNull($result['metricData']['sessions']);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphChartLegendContainsAllFiveMetrics(): void
+    {
+        $labels = ['2024-01-01', '2024-01-02'];
+        $twoPoints = ['labels' => $labels, 'data' => [5, 10]];
+        $service = $this->makeService(
+            visitsData: $twoPoints,
+            sessionsData: $twoPoints,
+            visitorsBreakdown: [
+                'new' => $twoPoints,
+                'returning' => $twoPoints,
+                'overall' => $twoPoints,
+            ],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        $legendKeys = array_column($result['chart']['legend'], 'key');
+        self::assertContains('visits', $legendKeys);
+        self::assertContains('sessions', $legendKeys);
+        self::assertContains('visitors_new', $legendKeys);
+        self::assertContains('visitors_returning', $legendKeys);
+        self::assertContains('visitors_overall', $legendKeys);
+    }
+
+    #[Test]
+    public function buildForTrafficGraphUsesCorrectTonesForVisitorBreakdown(): void
+    {
+        $labels = ['2024-01-01'];
+        $onePoint = ['labels' => $labels, 'data' => [1]];
+        $service = $this->makeService(
+            visitsData: $onePoint,
+            sessionsData: $onePoint,
+            visitorsBreakdown: ['new' => $onePoint, 'returning' => $onePoint, 'overall' => $onePoint],
+        );
+
+        $result = $this->subject->buildForTrafficGraph($service, 'my-site', 7, $this->defaultLabels());
+
+        $legendByKey = array_column($result['chart']['legend'], null, 'key');
+        self::assertSame('visits', $legendByKey['visits']['tone']);
+        self::assertSame('sessions', $legendByKey['sessions']['tone']);
+        self::assertSame('visitors-new', $legendByKey['visitors_new']['tone']);
+        self::assertSame('visitors-returning', $legendByKey['visitors_returning']['tone']);
+        self::assertSame('visitors', $legendByKey['visitors_overall']['tone']);
+    }
+}

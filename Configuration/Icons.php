@@ -3,10 +3,45 @@
 declare(strict_types=1);
 
 use TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider;
+use TYPO3\CMS\Core\Information\Typo3Version;
 
 return [
     'analytics-module' => [
         'provider' => SvgIconProvider::class,
-        'source' => 'EXT:analytics/Resources/Public/Icons/Extension.svg',
+        'source' => (new Typo3Version())->getMajorVersion() >= 14
+            ? 'EXT:analytics/Resources/Public/Icons/Extension.svg'
+            : 'EXT:analytics/Resources/Public/Icons/Extension-v13.svg',
+    ],
+    'analytics-site-performance-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/SitePerformance/widget.svg',
+    ],
+    'analytics-top-pages-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TopPages/widget.svg',
+    ],
+    'analytics-traffic-graph-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficGraph/widget.svg',
+    ],
+    'analytics-traffic-sources-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/widget.svg',
+    ],
+    'analytics-traffic-sources-channel-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/display.svg',
+    ],
+    'analytics-traffic-sources-devices-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/mobile.svg',
+    ],
+    'analytics-traffic-sources-browser-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/browser.svg',
+    ],
+    'analytics-traffic-sources-countries-widget-icon' => [
+        'provider' => SvgIconProvider::class,
+        'source' => 'EXT:analytics/Resources/Public/Icons/TrafficSources/earth-europe.svg',
     ],
 ];

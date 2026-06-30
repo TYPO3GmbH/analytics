@@ -1,0 +1,13 @@
+includes:
+    - phpstan-baseline.neon
+    - %currentWorkingDirectory%/vendor/saschaegerer/phpstan-typo3/extension.neon
+
+parameters:
+    level: 8
+    treatPhpDocTypesAsCertain: false
+
+    paths:
+        - %currentWorkingDirectory%/Classes/
+
+    bootstrapFiles:
+        - phpstan.bootstrap-dashboard.php

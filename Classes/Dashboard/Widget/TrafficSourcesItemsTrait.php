@@ -1,0 +1,228 @@
+<?php
+
+declare(strict_types=1);
+
+namespace T3G\Analytics\Dashboard\Widget;
+
+trait TrafficSourcesItemsTrait
+{
+    /**
+     * @param array<string, array{current: int, previous: int}> $sources channel label => {current, previous} visit counts
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
+     */
+    private function buildTrafficSourceItems(array $sources): array
+    {
+        $tones = [
+            'direct' => 'source-direct',
+            'search' => 'source-search',
+            'social' => 'source-social',
+            'email' => 'source-email',
+            'paid' => 'source-paid',
+            'unknown' => 'source-unknown',
+            'ai_traffic' => 'source-ai',
+        ];
+
+        $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+
+        $items = [];
+        foreach ($sources as $channel => $data) {
+            $current = $data['current'];
+            $previous = $data['previous'];
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.source.' . $channel),
+                'value' => $this->formatter->formatShare($current, $totalVisitCount),
+                'tone' => $tones[$channel] ?? 'source-other',
+                'icon' => '',
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}> $payload
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
+     */
+    private function buildDeviceItems(array $payload): array
+    {
+        $tones = ['desktop' => 'device-desktop', 'mobile' => 'device-mobile', 'tablet' => 'device-tablet', 'phone' => 'device-phone', 'undefined' => 'device-unknown'];
+        $icons = ['desktop' => 'display', 'mobile' => 'mobile', 'tablet' => 'tablet', 'phone' => 'mobile', 'undefined' => ''];
+
+        $totalSessions = array_sum(array_column($payload, 'sessionCount'));
+
+        $items = [];
+        foreach ($payload as $item) {
+            $deviceType = $item['deviceType'];
+            $current = $item['sessionCount'];
+            $previous = $item['previousSessionCount'] ?? 0;
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.device.' . $deviceType),
+                'value' => $this->formatter->formatShare($current, $totalSessions),
+                'tone' => $tones[$deviceType] ?? 'device-unknown',
+                'icon' => $icons[$deviceType] ?? '',
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}> $payload
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
+     */
+    private function buildBrowserItems(array $payload): array
+    {
+        $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
+        $totalSessions = array_sum(array_column($payload, 'sessionCount'));
+
+        $items = [];
+        foreach ($payload as $index => $item) {
+            $current = $item['sessionCount'];
+            $previous = $item['previousSessionCount'] ?? 0;
+            $items[] = [
+                'label' => (string)($item['browserName'] ?? ''),
+                'value' => $this->formatter->formatShare($current, $totalSessions),
+                'tone' => $palette[$index % count($palette)],
+                'icon' => '',
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}> $payload
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
+     */
+    private function buildCountryItems(array $payload): array
+    {
+        $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
+        $totalSessions = array_sum(array_column($payload, 'sessionCount'));
+
+        $items = [];
+        foreach ($payload as $index => $item) {
+            $current = $item['sessionCount'];
+            $previous = $item['previousSessionCount'] ?? 0;
+            $items[] = [
+                'label' => $this->countryName((string)($item['countryCode'] ?? '')),
+                'value' => $this->formatter->formatShare($current, $totalSessions),
+                'tone' => $palette[$index % count($palette)],
+                'icon' => '',
+                'change' => $this->formatter->formatAbsoluteChange($current, $previous),
+                'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
+     * @return array{icon: string, title: string, showSiteSelect: bool, isDonut: bool, chartSvg: string, items: list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>}
+     */
+    private function asSectionData(string $icon, string $title, array $items, bool $isDonut = false, int $total = 0): array
+    {
+        if ($isDonut) {
+            $limited = $this->limitItemsForDonut($items);
+            return [
+                'icon' => $icon,
+                'title' => $title,
+                'showSiteSelect' => false,
+                'isDonut' => true,
+                'chartSvg' => $this->buildDonut($limited),
+                'items' => $limited,
+                'total' => $total,
+            ];
+        }
+        return [
+            'icon' => $icon,
+            'title' => $title,
+            'showSiteSelect' => false,
+            'isDonut' => false,
+            'chartSvg' => '',
+            'items' => $items,
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
+     * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
+     */
+    private function limitItemsForDonut(array $items, int $limit = 5): array
+    {
+        if (count($items) <= $limit) {
+            return $items;
+        }
+        $top = array_slice($items, 0, $limit);
+        $rest = array_slice($items, $limit);
+        $restValue = array_sum(array_map(static fn (array $i): float => (float)$i['value'], $rest));
+        $top[] = [
+            'label' => $this->translate('dashboardWidget.trafficSources.other'),
+            'value' => number_format($restValue, 2, '.', ''),
+            'tone' => 'series-other',
+            'icon' => '',
+            'change' => null,
+            'changeTone' => '',
+        ];
+        return $top;
+    }
+
+    /**
+     * @param list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}> $items
+     */
+    private function buildDonut(array $items): string
+    {
+        $r = 40;
+        $sw = 18;
+        $C = 2.0 * M_PI * $r;
+
+        $parts = [
+            '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">',
+            sprintf('<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-track" stroke-width="%d"/>', $r, $sw),
+        ];
+
+        $cumulative = 0.0;
+        foreach ($items as $item) {
+            $value = (float)$item['value'];
+            if ($value <= 0.0) {
+                continue;
+            }
+            $segLen = ($value / 100.0) * $C;
+            $rotation = -90.0 + ($cumulative / 100.0) * 360.0;
+            $parts[] = sprintf(
+                '<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-segment tx-analytics-traffic-sources-tone-%s" stroke-width="%d" stroke-dasharray="%.3f %.3f" transform="rotate(%.3f 50 50)"><title>%s: %s%%</title></circle>',
+                $r,
+                $item['tone'],
+                $sw,
+                $segLen,
+                $C - $segLen,
+                $rotation,
+                htmlspecialchars($item['label'], ENT_XML1),
+                $item['value'],
+            );
+            $cumulative += $value;
+        }
+
+        $parts[] = '</svg>';
+        return implode('', $parts);
+    }
+
+    private function countryName(string $countryCode): string
+    {
+        $code = strtoupper($countryCode);
+        if (extension_loaded('intl')) {
+            $name = \Locale::getDisplayRegion('und_' . $code, 'en');
+            if ($name !== false && $name !== '' && $name !== $code) {
+                return $name;
+            }
+        }
+        return $code;
+    }
+}
