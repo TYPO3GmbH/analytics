@@ -45,6 +45,13 @@ async function reloadPerformanceBar(section, days) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tx-analytics-performance-bar[data-page-id]').forEach((section) => {
+        if (!(section instanceof HTMLElement)) return;
+        reloadPerformanceBar(section, parseInt(section.dataset.days ?? '7', 10));
+    });
+});
+
 // Event delegation on document survives section replacement after AJAX updates.
 document.addEventListener('change', (e) => {
     const select = e.target;

@@ -4,6 +4,7 @@
     container-type: inline-size;
     grid-template-columns: repeat(4, minmax(12rem, 1fr)) minmax(12rem, auto);
     align-items: stretch;
+    min-height: 4.5rem;
     margin: 0 0 1rem;
     border: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
     border-radius: var(--typo3-component-border-radius);
