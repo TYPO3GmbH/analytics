@@ -29,7 +29,7 @@
       "T3G\\Analytics\\Tests\\": "Tests/"
     }
   },
-  "version": "0.9.0",
+  "version": "0.9.1",
   "extra": {
     "typo3/cms": {
       "extension-key": "analytics",
