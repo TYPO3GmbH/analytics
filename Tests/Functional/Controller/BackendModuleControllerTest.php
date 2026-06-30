@@ -79,11 +79,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
 
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
 
-        $backendUser = $this->getMockBuilder(BackendUserAuthentication::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $backendUser->method('getModuleData')->willReturn([]);
-        $GLOBALS['BE_USER'] = $backendUser;
+        $GLOBALS['BE_USER'] = $this->buildManagerUser();
     }
 
     protected function tearDown(): void
@@ -228,6 +224,173 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         self::assertTrue($data['success']);
     }
 
+    /** Access control: non-manager users are denied protected actions */
+
+    #[Test]
+    public function registerActionReturnsForbiddenForNonManagerUser(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonManagerUser();
+
+        $controller = $this->buildController();
+        $request = (new ServerRequest(new Uri('https://example.com/module/site/analytics/register'), 'POST'))
+            ->withParsedBody(['siteIdentifier' => 'main', 'email' => 'test@example.com']);
+
+        $response = $controller->registerAction($request);
+
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function statusActionReturnsForbiddenForNonManagerUser(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonManagerUser();
+
+        $controller = $this->buildController();
+        $request = (new ServerRequest(new Uri('https://example.com/module/site/analytics'), 'POST'))
+            ->withParsedBody(['siteIdentifier' => 'main']);
+
+        $response = $controller->statusAction($request);
+
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function managePlanActionRedirectsForNonManagerUser(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonManagerUser();
+
+        $controller = $this->buildController();
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/manage-plan')
+            ->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->managePlanAction($request);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function invalidateStatusCacheActionReturnsForbiddenForNonManagerUser(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonManagerUser();
+
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main'));
+
+        $controller = $this->buildController(siteFinder: $siteFinder);
+        $request = (new ServerRequest(
+            new Uri('https://example.com/module/site/analytics/invalidate-status-cache'),
+            'POST',
+        ))->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->invalidateStatusCacheAction($request);
+
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function indexActionRendersIsManagerTrueForAdminUser(): void
+    {
+        $controller = $this->buildController();
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics');
+
+        $response = $controller->indexAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function indexActionRendersSuccessfullyForNonManagerUser(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonManagerUser();
+
+        $controller = $this->buildController();
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics');
+
+        $response = $controller->indexAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    /** Access control: non-admin users with Analytics Manager permission get full access */
+
+    #[Test]
+    public function statusActionAllowsNonAdminWithManagerPermission(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonAdminManagerUser();
+
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","consumption":{}}'));
+        $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"key-uuid","apiKey":"key-value"}'));
+
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+
+        $controller = $this->buildController(siteFinder: $siteFinder);
+        $request = (new ServerRequest(new Uri('https://example.com/module/site/analytics'), 'POST'))
+            ->withParsedBody(['siteIdentifier' => 'main']);
+
+        $response = $controller->statusAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        $data = json_decode((string)$response->getBody(), true);
+        self::assertTrue($data['success']);
+    }
+
+    #[Test]
+    public function managePlanActionAllowsNonAdminWithManagerPermission(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonAdminManagerUser();
+
+        $managePlanUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
+        $this->mockHandler->append(new Response(200, [], json_encode(['checkoutUrl' => $managePlanUrl])));
+
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+
+        $controller = $this->buildController(siteFinder: $siteFinder);
+        $request = $this->buildModuleRequest('GET', '/module/site/analytics/manage-plan')
+            ->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->managePlanAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function invalidateStatusCacheActionAllowsNonAdminWithManagerPermission(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonAdminManagerUser();
+
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main'));
+
+        $controller = $this->buildController(siteFinder: $siteFinder);
+        $request = (new ServerRequest(
+            new Uri('https://example.com/module/site/analytics/invalidate-status-cache'),
+            'POST',
+        ))->withQueryParams(['siteIdentifier' => 'main']);
+
+        $response = $controller->invalidateStatusCacheAction($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        $data = json_decode((string)$response->getBody(), true);
+        self::assertTrue($data['success']);
+    }
+
+    #[Test]
+    public function registerActionAllowsNonAdminWithManagerPermission(): void
+    {
+        $GLOBALS['BE_USER'] = $this->buildNonAdminManagerUser();
+
+        $controller = $this->buildController();
+        $request = (new ServerRequest(new Uri('https://example.com/module/site/analytics/register'), 'POST'))
+            ->withParsedBody(['siteIdentifier' => '', 'email' => 'test@example.com']);
+
+        $response = $controller->registerAction($request);
+
+        // Reaches the action logic (not blocked by 403) — missing siteIdentifier yields 400
+        self::assertSame(400, $response->getStatusCode());
+    }
+
     /** Helpers */
 
     private function buildController(
@@ -308,6 +471,40 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         return (new ServerRequest(new Uri('https://example.com' . $path), $method))
             ->withAttribute('route', $route)
             ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
+    }
+
+    private function buildManagerUser(): BackendUserAuthentication
+    {
+        $user = $this->getMockBuilder(BackendUserAuthentication::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $user->method('getModuleData')->willReturn([]);
+        $user->method('isAdmin')->willReturn(true);
+        return $user;
+    }
+
+    private function buildNonManagerUser(): BackendUserAuthentication
+    {
+        $user = $this->getMockBuilder(BackendUserAuthentication::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $user->method('getModuleData')->willReturn([]);
+        $user->method('isAdmin')->willReturn(false);
+        $user->method('check')->willReturn(false);
+        return $user;
+    }
+
+    private function buildNonAdminManagerUser(): BackendUserAuthentication
+    {
+        $user = $this->getMockBuilder(BackendUserAuthentication::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $user->method('getModuleData')->willReturn([]);
+        $user->method('isAdmin')->willReturn(false);
+        $user->method('check')
+            ->with('custom_options', 'tx_analytics:manager')
+            ->willReturn(true);
+        return $user;
     }
 
     private function buildRegisteredSiteMock(string $identifier, string $websiteId, string $instanceId): Site
