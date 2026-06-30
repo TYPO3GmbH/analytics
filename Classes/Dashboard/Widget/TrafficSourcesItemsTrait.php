@@ -74,18 +74,22 @@ trait TrafficSourcesItemsTrait
      * @param list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}> $payload
      * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
      */
-    private function buildBrowserItems(array $payload): array
+    private function buildBrowserItems(array $payload, int $limit = 6): array
     {
         $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
-        $totalSessions = array_sum(array_column($payload, 'sessionCount'));
 
+        $top = array_slice($payload, 0, $limit);
         $items = [];
-        foreach ($payload as $index => $item) {
-            $current = $item['sessionCount'];
-            $previous = $item['previousSessionCount'] ?? 0;
+        $shownPercent = 0.0;
+
+        foreach ($top as $index => $item) {
+            $current = (int)($item['sessionCount'] ?? 0);
+            $previous = (int)($item['previousSessionCount'] ?? 0);
+            $pct = (float)($item['sessionPercentOfTotal'] ?? 0.0);
+            $shownPercent += $pct;
             $items[] = [
                 'label' => (string)($item['browserName'] ?? ''),
-                'value' => $this->formatter->formatShare($current, $totalSessions),
+                'value' => number_format($pct, 2, '.', ''),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
@@ -93,7 +97,37 @@ trait TrafficSourcesItemsTrait
             ];
         }
 
+        $othersPercent = max(0.0, 100.0 - $shownPercent);
+        if ($othersPercent > 0.05) {
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.other'),
+                'value' => number_format($othersPercent, 2, '.', ''),
+                'tone' => 'series-other',
+                'icon' => '',
+                'change' => null,
+                'changeTone' => '',
+            ];
+        }
+
         return $items;
+    }
+
+    /**
+     * Back-calculates the true site session total from the API's sessionPercentOfTotal field.
+     * The largest entry is used as it has the least rounding error.
+     *
+     * @param list<array{sessionCount: int, sessionPercentOfTotal: int|float, ...}> $payload
+     */
+    private function trueSessionTotal(array $payload): int
+    {
+        foreach ($payload as $item) {
+            $pct = (float)($item['sessionPercentOfTotal'] ?? 0.0);
+            $count = (int)($item['sessionCount'] ?? 0);
+            if ($pct > 0.0 && $count > 0) {
+                return (int)round($count / ($pct / 100.0));
+            }
+        }
+        return (int)array_sum(array_column($payload, 'sessionCount'));
     }
 
     /**

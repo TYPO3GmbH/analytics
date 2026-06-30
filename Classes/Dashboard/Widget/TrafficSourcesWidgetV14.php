@@ -111,12 +111,12 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         } elseif ($section === 'browser') {
             $browsers = $this->loadBrowsers($siteIdentifier, $days);
             $sections = [
-                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), $isDonut, (int) array_sum(array_column($browsers, 'sessionCount'))),
+                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), $isDonut, $this->trueSessionTotal($browsers)),
             ];
         } elseif ($section === 'countries') {
             $countries = $this->loadCountries($siteIdentifier, $days);
             $sections = [
-                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), $isDonut, (int) array_sum(array_column($countries, 'sessionCount'))),
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), $isDonut, $this->trueSessionTotal($countries)),
             ];
         } else {
             $sources = $siteIdentifier !== '' ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? []) : [];
