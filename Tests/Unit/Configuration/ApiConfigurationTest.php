@@ -26,7 +26,7 @@ final class ApiConfigurationTest extends UnitTestCase
     #[Test]
     public function getIntpIdReturnsDefaultWhenNotConfigured(): void
     {
-        self::assertSame('cad26303-1c79-415e-8b39-45d8aadfb7f3', $this->buildSubject()->getIntpId());
+        self::assertSame('e2da84c1-af2a-49e7-8bc8-40d692f20909', $this->buildSubject()->getIntpId());
     }
 
     #[Test]
