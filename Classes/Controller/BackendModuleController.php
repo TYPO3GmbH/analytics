@@ -19,6 +19,7 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
@@ -60,6 +61,7 @@ final readonly class BackendModuleController
             'registerUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.register'),
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
             'isManager' => $this->isAnalyticsManager(),
+            'logoSvg' => $this->readLogoSvg(),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Index');
@@ -417,6 +419,19 @@ final readonly class BackendModuleController
             true,
         );
         $this->flashMessageService->getMessageQueueByIdentifier()->addMessage($message);
+    }
+
+    private function readLogoSvg(): string
+    {
+        $configured = (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['logoPath'] ?? '');
+        $path = $configured !== ''
+            ? GeneralUtility::getFileAbsFileName($configured)
+            : GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Public/Images/analytics-logo.svg');
+
+        if ($path === '' || !is_file($path)) {
+            return '';
+        }
+        return (string)file_get_contents($path);
     }
 
     private function isAnalyticsManager(): bool

@@ -16,6 +16,15 @@ analyticsApiBaseUrl =
 # cat = API Configuration; type = string; label = Integration Partner ID (leave empty for default)
 intpId =
 
+# cat = Appearance; type = string; label = Custom module page logo path (EXT: path or absolute path to an SVG file, leave empty to use the default TYPO3 Analytics wordmark)
+logoPath =
+
+# cat = Appearance; type = string; label = Custom module navigation icon path (EXT: path or absolute path to an SVG file, leave empty to use the built-in icon)
+moduleIconPath =
+
+# cat = API Configuration; type = string; label = Additional frame-src origins for the backend Content Security Policy (comma-separated URLs, e.g. https://stage.dashboard.analytics.typo3.com)
+additionalFrameSrc =
+
 # cat = API Configuration; type = boolean; label = Verify SSL Certificates (set to 0 only for local development with self-signed certificates)
 verifySsl = 1
 

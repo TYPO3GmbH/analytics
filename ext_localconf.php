@@ -3,6 +3,18 @@
 defined('TYPO3') || die();
 
 call_user_func(static function (): void {
+    $moduleIconPath = (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['moduleIconPath'] ?? '');
+    if ($moduleIconPath !== '') {
+        $resolvedPath = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($moduleIconPath);
+        if ($resolvedPath !== '' && is_file($resolvedPath)) {
+            \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class)
+                ->registerIcon(
+                    'analytics-module',
+                    \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+                    ['source' => $moduleIconPath]
+                );
+        }
+    }
 
     $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_analytics_status'] ??= [
         'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,

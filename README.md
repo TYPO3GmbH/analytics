@@ -25,12 +25,13 @@ Credentials are encrypted using XChaCha20-Poly1305 via libsodium. On TYPO3 v14+ 
 
 ### Content Security Policy
 
-The extension automatically extends the backend CSP (`frame-src`) to allow the analytics dashboard to be embedded as an iframe inside the TYPO3 backend. The following origins are whitelisted (configured in `Configuration/ContentSecurityPolicies.php`):
+The extension automatically extends the backend CSP (`frame-src`) to allow the analytics dashboard to be embedded as an iframe inside the TYPO3 backend. The production dashboard origin is always included:
 
 | Origin | Purpose |
 |--------|---------|
 | `https://dashboard.analytics.typo3.com` | Production dashboard |
-| `https://stage.dashboard.analytics.typo3.com` | Staging dashboard |
+
+Additional origins (e.g. a staging dashboard) can be added via the `additionalFrameSrc` extension setting without touching the code — see [API settings](#api-settings).
 
 ### Module icon
 
@@ -65,10 +66,25 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['settingName'] = 'value';
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `apiBaseUrl` | string | _(production)_ | Base URL for the analytics management API. Leave empty to use the production default. |
-| `analyticsApiBaseUrl` | string | _(production)_ | Base URL for the analytics data API. Leave empty to use the production default. |
+| `apiBaseUrl` | string | _(empty)_ | Base URL for the analytics management API. Leave empty to use the production default (`https://middleware.analytics.typo3.com/api`). |
+| `analyticsApiBaseUrl` | string | _(empty)_ | Base URL for the analytics data API. Leave empty to use the production default (`https://api.analytics.typo3.com/api`). |
+| `intpId` | string | _(empty)_ | Integration Partner ID. Leave empty to use the production default. |
+| `additionalFrameSrc` | string | _(empty)_ | Comma-separated list of additional origins added to the backend CSP `frame-src` directive (e.g. `https://stage.dashboard.analytics.typo3.com`). Leave empty if no extra origins are needed. |
 | `verifySsl` | bool | `1` | Whether to verify SSL certificates on API requests. Disable (`0`) only for local development with self-signed certificates. |
 | `pageAnalyticsCacheTtl` | int | `3600` | Lifetime in seconds for cached page analytics data. |
+
+### Appearance settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `logoPath` | string | _(empty)_ | EXT: path or absolute path to an SVG file used as the wordmark in the module page header. Leave empty to use the built-in TYPO3 Analytics logo. The SVG is inlined so `currentColor` follows the backend theme. |
+| `moduleIconPath` | string | _(empty)_ | EXT: path or absolute path to an SVG file used as the module icon in the backend navigation sidebar. Leave empty to use the built-in icon (adaptive on v14+, Material Design on v13). |
+
+### Development settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `demoData` | bool | `0` | When enabled, replaces all analytics API calls with static demo data. Only takes effect in the TYPO3 `Development` application context. |
 
 ### Dashboard settings
 
@@ -95,6 +111,8 @@ The module offers per-site views for:
 - **Status** — shows registration status, website ID and API key, with a manual refresh button.
 - **Dashboard** — embeds the TYPO3 Analytics web dashboard as an iframe.
 
+The registration form, plan management button, and status refresh button are only visible to backend administrators and users who hold the **Analytics Manager** custom option (see [Access control](#access-control) below).
+
 ### Dashboard widgets
 
 The extension registers four dashboard widget types, each available in a TYPO3 v13 variant (inline dropdowns, AJAX-driven) and a TYPO3 v14+ variant (native widget settings panel).
@@ -108,7 +126,9 @@ All v14+ widgets share two common settings in addition to their widget-specific 
 
 #### Top Pages widget
 
-Displays the top-visited pages for a configured site over a configurable time period. Results are sorted by page views; a "Show all" link leads to the pages view of the analytics dashboard.
+![Top Pages widget](Resources/Public/Images/Docs/widget-top-pages.png)
+
+Displays a ranked list of the most-visited pages for a configured site. Each row shows the page title, URL, and view count. Results are sorted by page views descending; a configurable limit controls how many rows are shown. A "Show all" link leads to the pages view of the analytics dashboard.
 
 | Variant | Class | Widget ID | TYPO3 version |
 |---------|-------|-----------|---------------|
@@ -117,20 +137,13 @@ Displays the top-visited pages for a configured site over a configurable time pe
 
 Widget settings (v14+): **Site**, **Period** (days), **Limit** (number of pages shown), plus the common settings above.
 
-AJAX endpoint (v13): `TopPagesAjaxController` — registered as backend route `ajax_analytics_top_pages`.
+AJAX endpoint (v13): `TopPagesAjaxController` — registered as backend route `analytics_top_pages_content`.
 
 #### Site Performance widget
 
-Displays aggregate performance metrics for a configured site over a configurable time period:
+![Site Performance widget](Resources/Public/Images/Docs/widget-site-performance.png)
 
-| Metric | Tone |
-|--------|------|
-| Visits | primary |
-| Visitors | success |
-| Bounce rate | danger |
-| Avg. visit duration | info |
-
-Each metric shows the current value and a trend indicator (compared to the previous period of equal length).
+Displays four colored metric tiles for a configured site — **Visits**, **Visitors**, **Bounce rate**, and **Avg. visit duration** — each showing the current value and a trend arrow compared to the previous period of equal length.
 
 | Variant | Class | Widget ID | TYPO3 version |
 |---------|-------|-----------|---------------|
@@ -139,11 +152,13 @@ Each metric shows the current value and a trend indicator (compared to the previ
 
 Widget settings (v14+): **Site**, **Period** (days), plus the common settings above.
 
-AJAX endpoint (v13): `SitePerformanceAjaxController` — registered as backend route `ajax_analytics_site_performance`.
+AJAX endpoint (v13): `SitePerformanceAjaxController` — registered as backend route `analytics_site_performance_content`.
 
 #### Traffic Graph widget
 
-Displays a sparkline chart of daily visits for a configured site over a selectable time period. A "Show all" link opens the main analytics dashboard.
+![Traffic Graph widget](Resources/Public/Images/Docs/widget-traffic-graph.png)
+
+Displays a full-width line chart of daily visit counts for a configured site over the selected period. The chart makes traffic trends immediately visible — spikes, dips, and patterns across the chosen date range. A "Show all" link opens the main analytics dashboard.
 
 | Variant | Class | Widget ID | TYPO3 version |
 |---------|-------|-----------|---------------|
@@ -152,14 +167,34 @@ Displays a sparkline chart of daily visits for a configured site over a selectab
 
 Widget settings (v14+): **Site**, **Period** (days), plus the common settings above.
 
+AJAX endpoint (v13): `TrafficGraphAjaxController` — registered as backend route `analytics_traffic_graph_content`.
+
 #### Traffic Sources widget
 
-Displays a breakdown of traffic by channel, device type, browser, or country for a configured site. Each entry shows its share as a percentage with a progress bar; device and channel entries include a trend compared to the previous period.
+Displays a breakdown of incoming traffic by **channel**, **browser**, **device type**, or **country**. Each entry shows a label, share as a percentage, and a horizontal progress bar. Channel and channel entries also display a trend indicator compared to the previous period. Entries outside the top results are aggregated into an "Others" row.
 
-| Variant | Class | Widget ID | TYPO3 version |
-|---------|-------|-----------|---------------|
-| v13 | `TrafficSourcesWidget` | `dashboard.widget.analyticsTrafficSources` | ^13.4 |
-| v14+ | `TrafficSourcesWidgetV14` | `dashboard.widget.analyticsTrafficSourcesV14` | ^14.0 |
+The two TYPO3 version variants differ significantly in how sections are displayed:
+
+**v13** — `TrafficSourcesWidget` / `dashboard.widget.analyticsTrafficSources` / ^13.4
+
+All four sections (Channel, Devices, Browser, Countries) are rendered inside a single widget, stacked vertically. Site and period are selected via inline dropdowns; the chart is always a progress-bar list. No chart-type configuration is available.
+
+AJAX endpoint: `TrafficSourcesAjaxController` — registered as backend route `analytics_traffic_sources_content`.
+
+**v14+** — `TrafficSourcesWidgetV14` / ^14.0
+
+A DI compiler pass registers **four separate widget types**, one per section, each with a fixed section and a pre-configured default chart type. The section cannot be changed by the user at runtime.
+
+| Widget ID | Section | Default chart type |
+|-----------|---------|-------------------|
+| `dashboard.widget.analyticsTrafficSourcesChannel` | Channel | list |
+| `dashboard.widget.analyticsTrafficSourcesDevices` | Devices | donut |
+| `dashboard.widget.analyticsTrafficSourcesBrowser` | Browser | donut |
+| `dashboard.widget.analyticsTrafficSourcesCountries` | Countries | list |
+
+| Channel | Browser | Devices | Countries |
+|---------|---------|---------|-----------|
+| ![Channel](Resources/Public/Images/Docs/widget-traffic-sources-channel.png) | ![Browser](Resources/Public/Images/Docs/widget-traffic-sources-browser.png) | ![Devices](Resources/Public/Images/Docs/widget-traffic-sources-devices.png) | ![Countries](Resources/Public/Images/Docs/widget-traffic-sources-countries.png) |
 
 Widget settings (v14+):
 
@@ -167,16 +202,17 @@ Widget settings (v14+):
 |---------|------|---------|-------------|
 | **Site** | string | first registered site | Site to display data for. |
 | **Period** | int | `dashboardDefaultPeriod` | Time window in days. |
-| **Section** | enum | `sources` | Which breakdown to show: `sources` (channel), `devices`, `browser`, `countries`. |
-| **Chart type** | enum | `list` | Display as `list` (progress bars) or `donut` (SVG donut chart, top 5 + aggregated "Other"). |
+| **Chart type** | enum | _(per widget)_ | Display as `list` (progress bars) or `donut` (SVG donut chart, top 5 + aggregated "Other"). |
 
 Plus the common settings above.
 
-AJAX endpoint (v13): `TrafficSourcesAjaxController` — registered as backend route `ajax_analytics_traffic_sources`.
-
 ### Page Performance Bar
 
-An event listener (`PagePerformanceBarListener`) on `ModifyPageLayoutContentEvent` that injects an analytics bar above the page content in the **Page** module. The bar shows per-page metrics for the currently viewed page:
+An event listener (`PagePerformanceBarListener`) on `ModifyPageLayoutContentEvent` that injects an analytics bar above the page content in the **Page** module.
+
+The bar loads **asynchronously**: on page render, only a lightweight skeleton with a loading spinner is injected into the page header. The JavaScript in `page-performance.js` then fetches the actual analytics data via AJAX (`PagePerformanceAjaxController`, route `analytics_page_performance_content`) and replaces the skeleton with the fully rendered bar.
+
+The bar shows per-page metrics for the currently viewed page:
 
 - Page views with sparkline and trend
 - Bounce rate with sparkline and trend
@@ -184,6 +220,29 @@ An event listener (`PagePerformanceBarListener`) on `ModifyPageLayoutContentEven
 - Continuation rate (100 − bounce rate) with sparkline and trend
 
 A period selector (values from `dashboardPeriods`) and a link to the full site analytics dashboard are included. The bar is hidden in language-comparison mode (viewMode = 2).
+
+![Page Performance Bar](Resources/Public/Images/Docs/page-performance-bar.png)
+
+### Dashboard preset
+
+The extension ships a ready-made **Analytics Overview** dashboard preset (`analyticsOverview`) that can be selected when creating a new TYPO3 dashboard. It pre-populates the dashboard with all four widget types:
+
+- Traffic Graph
+- Site Performance
+- Top Pages
+- Traffic Sources (channel, devices, browser, countries — one widget per section)
+
+The preset is registered in `Configuration/Backend/DashboardPresets.php` and shown in the dashboard creation wizard (`showInWizard: true`).
+
+### Access control
+
+The Sites → Analytics module is accessible to all backend users. However, the following actions are restricted to **administrators** and users who hold the `tx_analytics:manager` custom option:
+
+- Registering a new site with the Analytics API
+- Subscribing to or managing a plan
+- Manually refreshing the registration status
+
+The custom option is configured via **Backend Groups → Custom Options → Analytics → Analytics Manager** (TCA value: `tx_analytics:manager`).
 
 ## Local development with DDEV
 
