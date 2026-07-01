@@ -2,6 +2,25 @@
 
 A TYPO3 backend extension that integrates **TYPO3 Analytics** into the TYPO3 site management panel. It lets editors register TYPO3 sites with the TYPO3 Analytics API, monitor registration status, and open the analytics dashboard — all without leaving the TYPO3 backend.
 
+## Contents
+
+- [Requirements](#requirements)
+- [What the extension does](#what-the-extension-does)
+- [Installation](#installation)
+- [Configuration reference](#configuration-reference)
+  - [API settings](#api-settings)
+  - [Appearance settings](#appearance-settings)
+  - [Development settings](#development-settings)
+  - [Dashboard settings](#dashboard-settings)
+- [Modules and widgets](#modules-and-widgets)
+  - [Backend module — Sites → Analytics](#backend-module--sites--analytics)
+  - [Dashboard widgets](#dashboard-widgets)
+  - [Page Performance Bar](#page-performance-bar)
+  - [Dashboard preset](#dashboard-preset)
+  - [Access control](#access-control)
+- [Local development with DDEV](#local-development-with-ddev)
+- [Compatibility notes](#compatibility-notes)
+
 ## Requirements
 
 | Component | Version |
@@ -31,7 +50,7 @@ The extension automatically extends the backend CSP (`frame-src`) to allow the a
 |--------|---------|
 | `https://dashboard.analytics.typo3.com` | Production dashboard |
 
-Additional origins (e.g. a staging dashboard) can be added via the `additionalFrameSrc` extension setting without touching the code — see [API settings](#api-settings).
+Additional origins can be added via the `additionalFrameSrc` extension setting without touching the code — see [API settings](#api-settings).
 
 ### Module icon
 
@@ -69,7 +88,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['settingName'] = 'value';
 | `apiBaseUrl` | string | _(empty)_ | Base URL for the analytics management API. Leave empty to use the production default (`https://middleware.analytics.typo3.com/api`). |
 | `analyticsApiBaseUrl` | string | _(empty)_ | Base URL for the analytics data API. Leave empty to use the production default (`https://api.analytics.typo3.com/api`). |
 | `intpId` | string | _(empty)_ | Integration Partner ID. Leave empty to use the production default. |
-| `additionalFrameSrc` | string | _(empty)_ | Comma-separated list of additional origins added to the backend CSP `frame-src` directive (e.g. `https://stage.dashboard.analytics.typo3.com`). Leave empty if no extra origins are needed. |
+| `additionalFrameSrc` | string | _(empty)_ | Comma-separated list of additional origins added to the backend CSP `frame-src` directive (e.g. `https://dashboard.example.com`). Leave empty if no extra origins are needed. |
 | `verifySsl` | bool | `1` | Whether to verify SSL certificates on API requests. Disable (`0`) only for local development with self-signed certificates. |
 | `pageAnalyticsCacheTtl` | int | `3600` | Lifetime in seconds for cached page analytics data. |
 
