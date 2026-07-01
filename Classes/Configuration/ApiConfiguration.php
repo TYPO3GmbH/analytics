@@ -9,7 +9,7 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 final readonly class ApiConfiguration
 {
     private const DEFAULT_BASE_URL = 'https://middleware.analytics.typo3.com/api';
-    private const DEFAULT_INTP_ID = 'e2da84c1-af2a-49e7-8bc8-40d692f20909';
+    private const DEFAULT_INTP_ID = '28096317-d75a-43b7-af39-f0862b66afa3';
     private const DEFAULT_ANALYTICS_API_BASE_URL = 'https://api.analytics.typo3.com/api';
 
     public function __construct(
