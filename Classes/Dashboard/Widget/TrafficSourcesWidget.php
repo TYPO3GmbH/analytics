@@ -86,7 +86,8 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         $browsers = $this->loadBrowsers($siteIdentifier, $days);
         $countries = $this->loadCountries($siteIdentifier, $days);
 
-        $noData = $sources === [] && $devices === [] && $browsers === [] && $countries === [];
+        $sourcesTotal = (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+        $noData = $sourcesTotal === 0 && $devices === [] && $browsers === [] && $countries === [];
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,

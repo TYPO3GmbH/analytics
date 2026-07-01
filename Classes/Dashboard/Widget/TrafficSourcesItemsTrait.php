@@ -12,6 +12,10 @@ trait TrafficSourcesItemsTrait
      */
     private function buildTrafficSourceItems(array $sources): array
     {
+        $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+        if ($totalVisitCount === 0) {
+            return [];
+        }
         $tones = [
             'direct' => 'source-direct',
             'search' => 'source-search',
@@ -21,8 +25,6 @@ trait TrafficSourcesItemsTrait
             'unknown' => 'source-unknown',
             'ai_traffic' => 'source-ai',
         ];
-
-        $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
 
         $items = [];
         foreach ($sources as $channel => $data) {
@@ -76,6 +78,9 @@ trait TrafficSourcesItemsTrait
      */
     private function buildBrowserItems(array $payload, int $limit = 6): array
     {
+        if ($payload === []) {
+            return [];
+        }
         $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
 
         $top = array_slice($payload, 0, $limit);
@@ -136,6 +141,9 @@ trait TrafficSourcesItemsTrait
      */
     private function buildCountryItems(array $payload, int $limit = 6): array
     {
+        if ($payload === []) {
+            return [];
+        }
         $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
 
         $top = array_slice($payload, 0, $limit);

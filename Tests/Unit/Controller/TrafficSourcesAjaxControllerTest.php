@@ -233,14 +233,13 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
-    public function buildTrafficSourceItemsHasNullChangeWhenBothPeriodsAreZero(): void
+    public function buildTrafficSourceItemsReturnsEmptyWhenCurrentTotalIsZero(): void
     {
         $sources = ['direct' => ['current' => 0, 'previous' => 0]];
 
         $items = $this->callBuildTrafficSourceItems($sources);
 
-        self::assertNull($items[0]['change']);
-        self::assertSame('', $items[0]['changeTone']);
+        self::assertSame([], $items);
     }
 
     /**

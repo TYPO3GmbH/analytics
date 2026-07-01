@@ -76,7 +76,8 @@ final readonly class TrafficSourcesAjaxController
             ),
         ];
 
-        $noData = $sources === [] && $devices === [] && $browsers === [] && $countries === [];
+        $sourcesTotal = (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+        $noData = $sourcesTotal === 0 && $devices === [] && $browsers === [] && $countries === [];
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
             partialRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Partials')],
