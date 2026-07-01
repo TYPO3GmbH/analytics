@@ -4,7 +4,7 @@
 
     <f:if condition="{noData}">
         <f:then>
-            <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: periodLabel}" /></p>
+            <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: periodLabel}" />
         </f:then>
         <f:else>
             <div class="tx-analytics-traffic-sources" data-site="{siteIdentifier}">

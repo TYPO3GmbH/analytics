@@ -8,7 +8,7 @@
         <div class="tx-analytics-traffic-sources-sections-container">
             <f:if condition="{noData}">
                 <f:then>
-                    <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: currentPeriodLabel}" /></p>
+                    <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: currentPeriodLabel}" />
                 </f:then>
                 <f:else>
                     <f:if condition="{total}">
