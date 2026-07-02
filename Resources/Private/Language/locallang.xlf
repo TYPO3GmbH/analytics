@@ -404,6 +404,9 @@
             <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
                 <source>Other</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.unknown" resname="dashboardWidget.trafficSources.device.unknown">
+                <source>Unknown</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSourcesChannel.title" resname="dashboardWidget.trafficSourcesChannel.title">
                 <source>Traffic Sources: Channel</source>
             </trans-unit>

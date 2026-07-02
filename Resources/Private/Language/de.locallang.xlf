@@ -454,6 +454,10 @@
                 <source>Tablet</source>
                 <target>Tablet</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.unknown" resname="dashboardWidget.trafficSources.device.unknown">
+                <source>Unknown</source>
+                <target>Unbekannt</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.noDataForPeriod" resname="dashboardWidget.noDataForPeriod">
                 <source>No data available for the period: %s.</source>
                 <target>Keine Daten für den Zeitraum: %s verfügbar.</target>
