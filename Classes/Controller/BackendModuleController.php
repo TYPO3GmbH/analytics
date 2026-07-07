@@ -149,7 +149,7 @@ final readonly class BackendModuleController
             request: $request,
             siteIdentifier: $siteIdentifier,
             urlResolver: function (Site $site) use ($dateParams, $pageUrl, $dashboardPath): ?string {
-                $url = $this->analyticsStatusService->getDashboardUrl($site);
+                $url = $this->analyticsStatusService->getDashboardUrl($site, !$this->isAnalyticsManager());
                 if ($url === null) {
                     return null;
                 }

@@ -139,7 +139,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
      * Fetches a fresh dashboard iframe URL from the API.
      * The returned JWT is short-lived (~300 s), so this is never cached.
      */
-    public function getDashboardUrl(Site $site): ?string
+    public function getDashboardUrl(Site $site, bool $watcher = false): ?string
     {
         $credentials = $this->resolveCredentials($site);
         if ($credentials === null) {
@@ -147,7 +147,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         }
         [$websiteId, $instanceId, $instanceSecret] = $credentials;
         try {
-            return $this->apiClient->fetchDashboardUrl($websiteId, $instanceId, $instanceSecret);
+            return $this->apiClient->fetchDashboardUrl($websiteId, $instanceId, $instanceSecret, $watcher);
         } catch (AnalyticsApiException $e) {
             $this->logger->error('getDashboardUrl: API request failed.', ['websiteId' => $websiteId, 'reason' => $e->reason]);
             return null;

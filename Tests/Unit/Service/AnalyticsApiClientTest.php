@@ -123,4 +123,49 @@ final class AnalyticsApiClientTest extends UnitTestCase
         self::assertSame('', $result['apiKeyId']);
         self::assertSame('', $result['apiKey']);
     }
+
+    #[Test]
+    public function fetchDashboardUrlSendsGetWithoutRoleParamByDefault(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com"}'));
+
+        $this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret');
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('/dashboard-url/w-123', $uri);
+        self::assertStringNotContainsString('role=', $uri);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlAppendsRoleWatcherWhenWatcherIsTrue(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com"}'));
+
+        $this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret', watcher: true);
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('role=watcher', $uri);
+
+        // HMAC must be signed including the query string so middleware validation passes
+        $authHeader = $this->httpHistory[0]['request']->getHeaderLine('Authorization');
+        self::assertNotEmpty($authHeader);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlReturnsUrlFromResponse(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?token=abc"}'));
+
+        $result = $this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret');
+
+        self::assertSame('https://dashboard.example.com?token=abc', $result);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlReturnsNullWhenResponseHasNoDashboardUrl(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{}'));
+
+        self::assertNull($this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret'));
+    }
 }

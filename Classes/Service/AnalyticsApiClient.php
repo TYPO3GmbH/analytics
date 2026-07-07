@@ -75,12 +75,13 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string
+    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string
     {
-        $path = '/api/dashboard-url/' . $websiteId;
+        $path = '/api/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
+        $url = $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
         try {
             $response = $this->requestFactory->request(
-                $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $websiteId,
+                $url,
                 'GET',
                 array_merge($this->apiConfiguration->getRequestOptions(), [
                     'headers' => $this->hmacSigner->buildHeaders('GET', $path, $instanceId, $instanceSecret),

@@ -129,6 +129,45 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         self::assertEmpty($this->httpHistory);
     }
 
+    /** getDashboardUrl */
+
+    #[Test]
+    public function getDashboardUrlReturnsUrlFromApiResponse(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?intpc_token=jwt"}'));
+
+        self::assertSame('https://dashboard.example.com?intpc_token=jwt', $this->subject->getDashboardUrl($site));
+    }
+
+    #[Test]
+    public function getDashboardUrlPassesWatcherFlagToApiClient(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?intpc_token=watcher-jwt"}'));
+
+        $this->subject->getDashboardUrl($site, watcher: true);
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('role=watcher', $uri);
+    }
+
+    #[Test]
+    public function getDashboardUrlReturnsNullWhenSiteHasNoCredentials(): void
+    {
+        self::assertNull($this->subject->getDashboardUrl($this->buildSite('main', '', '')));
+        self::assertEmpty($this->httpHistory);
+    }
+
+    #[Test]
+    public function getDashboardUrlReturnsNullWhenApiCallFails(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new \RuntimeException('connection refused'));
+
+        self::assertNull($this->subject->getDashboardUrl($site));
+    }
+
     /** getStatus */
 
     #[Test]

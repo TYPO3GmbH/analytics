@@ -24,7 +24,7 @@ interface AnalyticsApiClientInterface
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string;
+    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string;
 
     /**
      * @return array{apiKeyId: string, apiKey: string}
