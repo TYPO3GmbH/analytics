@@ -23,6 +23,14 @@
     margin-block-start: 1rem;
 }
 
+.tx-analytics-site-group {
+    margin-block-start: 2rem;
+}
+
+.tx-analytics-site-group-title {
+    margin-block: 0;
+}
+
 .tx-analytics-site-card {
     display: flex;
     flex-direction: column;

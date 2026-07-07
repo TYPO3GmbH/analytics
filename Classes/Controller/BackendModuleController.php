@@ -56,8 +56,11 @@ final readonly class BackendModuleController
             moduleClass: 'module-layout-normal'
         );
 
+        $sites = $this->siteDataProvider->fetchSites();
+
         $moduleTemplate->assignMultiple([
-            'sites' => $this->siteDataProvider->fetchSites(),
+            'sites' => $sites,
+            'siteGroups' => $this->groupSitesByAnalyticsStatus($sites),
             'registerUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.register'),
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
             'isManager' => $this->isAnalyticsManager(),
@@ -403,6 +406,37 @@ final readonly class BackendModuleController
     private function shortcutLabel(string $headline, string $actionLabel, string $siteLabel): string
     {
         return $headline . ' - ' . $actionLabel . ': ' . $siteLabel;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $sites
+     * @return list<array{title: string, sites: list<array<string, mixed>>}>
+     */
+    private function groupSitesByAnalyticsStatus(array $sites): array
+    {
+        $activeSites = [];
+        $inactiveSites = [];
+
+        foreach ($sites as $site) {
+            $status = is_array($site['status'] ?? null) ? $site['status'] : [];
+            if (($status['status'] ?? '') === 'active') {
+                $activeSites[] = $site;
+                continue;
+            }
+
+            $inactiveSites[] = $site;
+        }
+
+        return [
+            [
+                'title' => $this->translate('label.activeSites'),
+                'sites' => $activeSites,
+            ],
+            [
+                'title' => $this->translate('label.inactiveSites'),
+                'sites' => $inactiveSites,
+            ],
+        ];
     }
 
     /** @param list<mixed> $arguments */

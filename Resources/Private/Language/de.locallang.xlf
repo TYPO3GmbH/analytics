@@ -70,6 +70,14 @@
                 <source>Registered sites</source>
                 <target>Registrierte Sites</target>
             </trans-unit>
+            <trans-unit id="label.activeSites" resname="label.activeSites">
+                <source>Active sites</source>
+                <target>Aktive Sites</target>
+            </trans-unit>
+            <trans-unit id="label.inactiveSites" resname="label.inactiveSites">
+                <source>Inactive sites</source>
+                <target>Inaktive Sites</target>
+            </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
                 <target>Website ID</target>

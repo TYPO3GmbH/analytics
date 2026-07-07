@@ -53,6 +53,12 @@
             <trans-unit id="label.registeredSites" resname="label.registeredSites">
                 <source>Registered sites</source>
             </trans-unit>
+            <trans-unit id="label.activeSites" resname="label.activeSites">
+                <source>Active sites</source>
+            </trans-unit>
+            <trans-unit id="label.inactiveSites" resname="label.inactiveSites">
+                <source>Inactive sites</source>
+            </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
             </trans-unit>
