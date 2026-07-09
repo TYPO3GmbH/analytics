@@ -27,14 +27,16 @@
         </div>
 
         <f:for each="{siteGroups}" as="siteGroup">
-            <section class="tx-analytics-site-group">
-                <h2 class="tx-analytics-site-group-title">{siteGroup.title}</h2>
-                <div class="card-container tx-analytics-site-card-container">
-                    <f:for each="{siteGroup.sites}" as="site">
-                        <f:render partial="Backend/SiteCard" arguments="{site: site, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
-                    </f:for>
-                </div>
-            </section>
+            <f:if condition="{siteGroup.sites}">
+                <section class="tx-analytics-site-group">
+                    <h2 class="tx-analytics-site-group-title">{siteGroup.title}</h2>
+                    <div class="card-container tx-analytics-site-card-container">
+                        <f:for each="{siteGroup.sites}" as="site">
+                            <f:render partial="Backend/SiteCard" arguments="{site: site, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
+                        </f:for>
+                    </div>
+                </section>
+            </f:if>
         </f:for>
     </div>
 </f:section>
