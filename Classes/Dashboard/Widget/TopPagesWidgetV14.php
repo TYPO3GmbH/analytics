@@ -8,9 +8,11 @@ use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
+use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
@@ -22,7 +24,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
  * Site, period and limit are configured via the native widget settings panel (WidgetRendererInterface)
  * rather than inline dropdowns. Requires TYPO3 >= 14 (WidgetRendererInterface).
  */
-final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
+final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface, JavaScriptInterface
 {
     use TopPagesWidgetTrait;
 
@@ -34,6 +36,20 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
+    }
+
+    /**
+     * @return list<SettingDefinition>
+     */
+    /**
+     * @return list<JavaScriptModuleInstruction>
+     */
+    public function getJavaScriptModuleInstructions(): array
+    {
+        return [
+            JavaScriptModuleInstruction::create('@typo3/backend/element/progress-bar-element.js'),
+            JavaScriptModuleInstruction::create('@t3g/analytics/top-pages-widget.js'),
+        ];
     }
 
     /**
