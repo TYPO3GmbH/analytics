@@ -9,9 +9,11 @@ use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
+use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
@@ -22,7 +24,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
  *
  * Site, period, displayed section and chart type are configured via the native widget settings panel.
  */
-final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
+final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface, JavaScriptInterface
 {
     use TrafficSourcesWidgetTrait;
 
@@ -83,6 +85,17 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
                 default: true,
                 label: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.setting.showMeta.label',
             ),
+        ];
+    }
+
+    /**
+     * @return list<JavaScriptModuleInstruction>
+     */
+    public function getJavaScriptModuleInstructions(): array
+    {
+        return [
+            JavaScriptModuleInstruction::create('@typo3/backend/element/progress-bar-element.js'),
+            JavaScriptModuleInstruction::create('@t3g/analytics/traffic-sources-widget.js'),
         ];
     }
 

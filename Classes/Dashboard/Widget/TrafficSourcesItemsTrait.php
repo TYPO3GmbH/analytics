@@ -26,6 +26,8 @@ trait TrafficSourcesItemsTrait
             'ai_traffic' => 'source-ai',
         ];
 
+        uasort($sources, static fn (array $a, array $b): int => $b['current'] <=> $a['current']);
+
         $items = [];
         foreach ($sources as $channel => $data) {
             $current = $data['current'];
@@ -35,6 +37,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalVisitCount),
                 'tone' => $tones[$channel] ?? 'source-other',
                 'icon' => '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
@@ -64,6 +67,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalSessions),
                 'tone' => $tones[$deviceType] ?? 'device-unknown',
                 'icon' => $icons[$deviceType] ?? '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
@@ -97,6 +101,7 @@ trait TrafficSourcesItemsTrait
                 'value' => number_format($pct, 2, '.', ''),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
@@ -160,6 +165,7 @@ trait TrafficSourcesItemsTrait
                 'value' => number_format($pct, 2, '.', ''),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
@@ -257,15 +263,21 @@ trait TrafficSourcesItemsTrait
             $segLen = ($value / 100.0) * $C;
             $rotation = -90.0 + ($cumulative / 100.0) * 360.0;
             $parts[] = sprintf(
-                '<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-segment tx-analytics-traffic-sources-tone-%s" stroke-width="%d" stroke-dasharray="%.3f %.3f" transform="rotate(%.3f 50 50)"><title>%s: %s%%</title></circle>',
+                '<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-segment tx-analytics-traffic-sources-tone-%s" stroke-width="%d" stroke-dasharray="%.3f %.3f" transform="rotate(%.3f 50 50)" data-ts-label="%s" data-ts-value="%s" data-ts-tone="%s" data-ts-count="%d" data-ts-change="%s" data-ts-change-tone="%s" aria-label="%s: %s%%"/>',
                 $r,
                 $item['tone'],
                 $sw,
                 $segLen,
                 $C - $segLen,
                 $rotation,
-                htmlspecialchars($item['label'], ENT_XML1),
-                $item['value'],
+                htmlspecialchars($item['label'], ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['value'], ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['tone'], ENT_XML1 | ENT_QUOTES),
+                (int)($item['count'] ?? 0),
+                htmlspecialchars((string)($item['change'] ?? ''), ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars((string)($item['changeTone'] ?? ''), ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['label'], ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['value'], ENT_XML1 | ENT_QUOTES),
             );
             $cumulative += $value;
         }

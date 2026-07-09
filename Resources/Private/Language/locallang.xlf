@@ -212,6 +212,9 @@
             <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.tooltip.views" resname="dashboardWidget.topPages.tooltip.views">
+                <source>Views</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>Analytics</source>
             </trans-unit>
@@ -370,6 +373,12 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.tooltip.share" resname="dashboardWidget.trafficSources.tooltip.share">
+                <source>% from all</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.tooltip.change" resname="dashboardWidget.trafficSources.tooltip.change">
+                <source>Change</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.showAll" resname="dashboardWidget.trafficSources.showAll">
                 <source>Show in Analytics</source>

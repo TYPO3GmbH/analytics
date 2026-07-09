@@ -282,6 +282,10 @@
                 <source>Compared to previous period</source>
                 <target>Verglichen mit dem vorherigen Zeitraum</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.tooltip.views" resname="dashboardWidget.topPages.tooltip.views">
+                <source>Views</source>
+                <target>Aufrufe</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>Analytics</source>
                 <target>Analytics</target>
@@ -465,6 +469,14 @@
             <trans-unit id="dashboardWidget.trafficSources.device.unknown" resname="dashboardWidget.trafficSources.device.unknown">
                 <source>Unknown</source>
                 <target>Unbekannt</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.tooltip.share" resname="dashboardWidget.trafficSources.tooltip.share">
+                <source>% from all</source>
+                <target>% von allen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.tooltip.change" resname="dashboardWidget.trafficSources.tooltip.change">
+                <source>Change</source>
+                <target>Änderung</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.noDataForPeriod" resname="dashboardWidget.noDataForPeriod">
                 <source>No data available for the period: %s.</source>

@@ -161,6 +161,50 @@
     color: var(--typo3-text-color-variant);
 }
 
+/* Hover tooltip */
+.tx-analytics-top-pages-tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: var(--typo3-component-bg);
+    border: 1px solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
+    padding: .5rem .75rem;
+    font-size: var(--typo3-font-size-small, 11px);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: var(--typo3-component-box-shadow);
+    min-width: 8rem;
+}
+
+.tx-analytics-top-pages-tooltip-header {
+    font-weight: 600;
+    margin-bottom: .25rem;
+    color: var(--typo3-component-color);
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tx-analytics-top-pages-tooltip-row {
+    display: flex;
+    gap: .75rem;
+    align-items: baseline;
+    padding: .1rem 0;
+    color: var(--typo3-text-color-variant);
+}
+
+.tx-analytics-top-pages-tooltip-row-label {
+    flex: 1;
+    min-width: 3.5rem;
+}
+
+.tx-analytics-top-pages-tooltip-row-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--typo3-component-color);
+    white-space: nowrap;
+}
+
 @container (max-width: 300px) {
     .tx-analytics-top-pages-toolbar {
         display: grid;

@@ -1,4 +1,86 @@
+import { escHtml, positionTooltip, readStorage, writeStorage } from '@t3g/analytics/widget-utils.js';
+
 const storagePrefix = 'tx-analytics-traffic-sources';
+
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+
+function getOrCreateTooltip() {
+  const id = 'tx-analytics-traffic-sources-tooltip-global';
+  let tooltip = document.getElementById(id);
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = id;
+    tooltip.className = 'tx-analytics-traffic-sources-tooltip';
+    tooltip.style.display = 'none';
+    document.body.appendChild(tooltip);
+  }
+  return tooltip;
+}
+
+function getLabels(element) {
+  const widget = element.closest('.tx-analytics-traffic-sources');
+  return {
+    share: widget?.dataset.tsLabelShare || '% from all',
+    change: widget?.dataset.tsLabelChange || 'Change',
+    sessions: widget?.dataset.tsLabelSessions || 'Sessions',
+  };
+}
+
+function renderTooltip(element, label, value, tone, count, change, changeTone) {
+  const tooltip = getOrCreateTooltip();
+  const labels = getLabels(element);
+  let html = `<div class="tx-analytics-traffic-sources-tooltip-header">`
+    + `<span class="tx-analytics-traffic-sources-tooltip-dot tx-analytics-traffic-sources-tone-${escHtml(tone)}"></span>`
+    + `<span class="tx-analytics-traffic-sources-tooltip-name">${escHtml(label)}</span>`
+    + `</div>`;
+  if (count) {
+    html += `<div class="tx-analytics-traffic-sources-tooltip-row">`
+      + `<span class="tx-analytics-traffic-sources-tooltip-row-label">${escHtml(labels.sessions)}</span>`
+      + `<span class="tx-analytics-traffic-sources-tooltip-row-value">${Number(count).toLocaleString()}</span>`
+      + `</div>`;
+  }
+  html += `<div class="tx-analytics-traffic-sources-tooltip-row">`
+    + `<span class="tx-analytics-traffic-sources-tooltip-row-label">${escHtml(labels.share)}</span>`
+    + `<span class="tx-analytics-traffic-sources-tooltip-row-value">${escHtml(value)}%</span>`
+    + `</div>`;
+  if (change) {
+    html += `<div class="tx-analytics-traffic-sources-tooltip-row tx-analytics-traffic-sources-change-${escHtml(changeTone)}">`
+      + `<span class="tx-analytics-traffic-sources-tooltip-row-label">${escHtml(labels.change)}</span>`
+      + `<span class="tx-analytics-traffic-sources-tooltip-row-value">${escHtml(change)} ${escHtml(labels.sessions)}</span>`
+      + `</div>`;
+  }
+  tooltip.innerHTML = html;
+  return tooltip;
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById('tx-analytics-traffic-sources-tooltip-global');
+  if (tooltip) tooltip.style.display = 'none';
+}
+
+function initTooltips(container) {
+  const targets = container.querySelectorAll(
+    '.tx-analytics-traffic-sources-donut-segment[data-ts-label], .tx-analytics-traffic-sources-row[data-ts-label]'
+  );
+  targets.forEach((target) => {
+    if (target.dataset.tsTooltipInit) return;
+    target.dataset.tsTooltipInit = '1';
+    target.addEventListener('mouseenter', (e) => {
+      const tooltip = renderTooltip(
+        target,
+        target.dataset.tsLabel ?? '',
+        target.dataset.tsValue ?? '',
+        target.dataset.tsTone ?? '',
+        target.dataset.tsCount ?? '',
+        target.dataset.tsChange ?? '',
+        target.dataset.tsChangeTone ?? ''
+      );
+      positionTooltip(tooltip, e.clientX, e.clientY);
+    });
+    target.addEventListener('mousemove', (e) => positionTooltip(getOrCreateTooltip(), e.clientX, e.clientY));
+    target.addEventListener('mouseleave', hideTooltip);
+  });
+}
 
 function resolveWidgetIdentifier(widget) {
   return widget.closest('.dashboard-item')?.dataset.widgetIdentifier
@@ -12,22 +94,6 @@ function siteKey(widget) {
 
 function daysKey(widget) {
   return `${storagePrefix}:days:${resolveWidgetIdentifier(widget)}`;
-}
-
-function readStorage(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeStorage(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // ignore (e.g. Safari private mode)
-  }
 }
 
 async function loadContent(widget) {
@@ -62,6 +128,7 @@ async function loadContent(widget) {
     const data = await response.json();
     if (data.status === 'ok') {
       container.innerHTML = data.html;
+      initTooltips(container);
       const link = widget.closest('.widget-content')?.querySelector('.widget-content-footer a');
       if (link instanceof HTMLAnchorElement && typeof data.showAllUrl === 'string') {
         link.href = data.showAllUrl || '#';
@@ -105,6 +172,8 @@ function initializeWidget(widget) {
 
   if (needsReload) {
     loadContent(widget);
+  } else {
+    initTooltips(widget);
   }
 
   siteSelect?.addEventListener('change', () => {
