@@ -9,8 +9,10 @@ function showPendingNotification() {
     sessionStorage.removeItem(STORAGE_KEY);
     try {
         const { title, message, dashboardUri } = JSON.parse(pending);
-        const actions = dashboardUri
-            ? [{ label: 'Dashboard', action: new ImmediateAction(() => { window.location.href = dashboardUri; }) }]
+        // Only follow same-origin relative backend paths, never absolute/protocol-relative/javascript: URLs.
+        const safeUri = typeof dashboardUri === 'string' && /^\/(?!\/)/.test(dashboardUri) ? dashboardUri : null;
+        const actions = safeUri
+            ? [{ label: 'Dashboard', action: new ImmediateAction(() => { window.location.href = safeUri; }) }]
             : [];
         Notification.success(title, message, 5, actions);
     } catch {

@@ -43,7 +43,8 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         $instanceSecret = (string)($data['instanceSecret'] ?? '');
 
         if ($websiteId === '' || $instanceId === '') {
-            $this->logger->error('Registration: API response incomplete.', ['siteIdentifier' => $siteIdentifier, 'data' => $data]);
+            // Log only the response shape, never the values — $data may still hold the plaintext instanceSecret.
+            $this->logger->error('Registration: API response incomplete.', ['siteIdentifier' => $siteIdentifier, 'receivedKeys' => array_keys($data)]);
             throw new AnalyticsApiException('API response is missing websiteId or instanceId.', 0);
         }
 

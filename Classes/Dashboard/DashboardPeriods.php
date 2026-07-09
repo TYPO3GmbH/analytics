@@ -26,6 +26,11 @@ final class DashboardPeriods
         return self::FALLBACK_PERIODS;
     }
 
+    public static function sanitizePeriod(int $days): int
+    {
+        return in_array($days, self::periods(), true) ? $days : self::defaultPeriod();
+    }
+
     public static function defaultPeriod(): int
     {
         $configured = (int)(($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics'] ?? [])['dashboardDefaultPeriod'] ?? 0);

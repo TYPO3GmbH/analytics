@@ -6,6 +6,7 @@ namespace T3G\Analytics\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\TopPagesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -27,7 +28,8 @@ final readonly class TopPagesAjaxController
     {
         $params = $request->getQueryParams();
         $siteIdentifier = (string)($params['site'] ?? '');
-        $days = max(1, (int)($params['days'] ?? 7));
+        $requestedDays = (int)($params['days'] ?? 7);
+        $days = DashboardPeriods::sanitizePeriod($requestedDays);
 
         $pages = $this->topPagesService->loadTopPagesData($siteIdentifier, $days);
         $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');

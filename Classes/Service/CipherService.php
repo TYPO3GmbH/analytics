@@ -164,9 +164,13 @@ class CipherService implements CipherServiceInterface
      */
     private function deriveKey(): string
     {
-        $encryptionKey = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '';
+        $encryptionKey = (string)($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '');
+        if ($encryptionKey === '') {
+            // Refuse to derive a deterministic, installation-independent key from an empty seed.
+            throw new \RuntimeException('Cannot derive cipher key: TYPO3_CONF_VARS[SYS][encryptionKey] is not configured.', 1783604615);
+        }
 
-        $masterKey = sodium_crypto_generichash((string) $encryptionKey, '', SODIUM_CRYPTO_GENERICHASH_KEYBYTES);
+        $masterKey = sodium_crypto_generichash($encryptionKey, '', SODIUM_CRYPTO_GENERICHASH_KEYBYTES);
 
         return sodium_crypto_generichash(
             self::KEY_SEED,

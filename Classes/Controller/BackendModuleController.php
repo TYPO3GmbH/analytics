@@ -23,12 +23,19 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Resource\Security\SvgSanitizer;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 
 final readonly class BackendModuleController
 {
+    /**
+     * Sub-paths that may be appended to the dashboard iframe URL via the
+     * `dashboardPath` request parameter. Anything else is ignored.
+     */
+    private const ALLOWED_DASHBOARD_PATHS = ['', 'dashboard/pages', 'traffic/share'];
+
     public function __construct(
         private ModuleTemplateFactory $moduleTemplateFactory,
         private UriBuilder $uriBuilder,
@@ -144,6 +151,9 @@ final readonly class BackendModuleController
         $dateParams = $this->buildDateParams((int)($queryParams['days'] ?? 0));
         $pageUrl = (string)($queryParams['pageUrl'] ?? '');
         $dashboardPath = (string)($queryParams['dashboardPath'] ?? '');
+        if (!in_array($dashboardPath, self::ALLOWED_DASHBOARD_PATHS, true)) {
+            $dashboardPath = '';
+        }
 
         return $this->renderIframeModule(
             request: $request,
@@ -465,7 +475,13 @@ final readonly class BackendModuleController
         if ($path === '' || !is_file($path)) {
             return '';
         }
-        return (string)file_get_contents($path);
+        $svg = (string)file_get_contents($path);
+        // A custom, admin-configured logo is inlined via <f:format.raw>; sanitize it to
+        // strip scripts/event handlers. The shipped default logo is trusted as-is.
+        if ($configured !== '') {
+            $svg = (new SvgSanitizer())->sanitizeContent($svg);
+        }
+        return $svg;
     }
 
     private function isAnalyticsManager(): bool
