@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
+use TYPO3\CMS\Core\Site\SiteFinder;
+
 final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInterface
 {
+    public function __construct(private SiteFinder $siteFinder)
+    {
+    }
+
     public function fetchPageAnalytics(
         string $websiteId,
         string $apiKey,
@@ -60,14 +66,25 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $previousTo,
         int $limit = 10,
     ): array {
+        $base = $this->siteBaseForWebsiteId($websiteId);
         return array_slice([
-            ['pageUrl' => '/', 'pageTitle' => 'Home', 'visitCount' => 1840, 'previousVisitCount' => 1510, 'visitPercentOfTotal' => 38.5, 'visitCountPercentageChange' => 21.85],
-            ['pageUrl' => '/products', 'pageTitle' => 'Products', 'visitCount' => 980, 'previousVisitCount' => 1120, 'visitPercentOfTotal' => 20.5, 'visitCountPercentageChange' => -12.50],
-            ['pageUrl' => '/pricing', 'pageTitle' => 'Pricing', 'visitCount' => 740, 'previousVisitCount' => 540, 'visitPercentOfTotal' => 15.5, 'visitCountPercentageChange' => 37.04],
-            ['pageUrl' => '/blog', 'pageTitle' => 'Blog', 'visitCount' => 520, 'previousVisitCount' => 510, 'visitPercentOfTotal' => 10.9, 'visitCountPercentageChange' => 1.96],
-            ['pageUrl' => '/contact', 'pageTitle' => 'Contact', 'visitCount' => 310, 'previousVisitCount' => 420, 'visitPercentOfTotal' => 6.5, 'visitCountPercentageChange' => -26.19],
-            ['pageUrl' => '/docs', 'pageTitle' => 'Docs', 'visitCount' => 260, 'previousVisitCount' => 120, 'visitPercentOfTotal' => 5.4, 'visitCountPercentageChange' => 116.67],
+            ['pageUrl' => $base . '/', 'pageTitle' => 'Home', 'visitCount' => 1840, 'previousVisitCount' => 1510, 'visitPercentOfTotal' => 38.5, 'visitCountPercentageChange' => 21.85],
+            ['pageUrl' => $base . '/products', 'pageTitle' => 'Products', 'visitCount' => 980, 'previousVisitCount' => 1120, 'visitPercentOfTotal' => 20.5, 'visitCountPercentageChange' => -12.50],
+            ['pageUrl' => $base . '/pricing', 'pageTitle' => 'Pricing', 'visitCount' => 740, 'previousVisitCount' => 540, 'visitPercentOfTotal' => 15.5, 'visitCountPercentageChange' => 37.04],
+            ['pageUrl' => $base . '/blog', 'pageTitle' => 'Blog', 'visitCount' => 520, 'previousVisitCount' => 510, 'visitPercentOfTotal' => 10.9, 'visitCountPercentageChange' => 1.96],
+            ['pageUrl' => $base . '/contact', 'pageTitle' => 'Contact', 'visitCount' => 310, 'previousVisitCount' => 420, 'visitPercentOfTotal' => 6.5, 'visitCountPercentageChange' => -26.19],
+            ['pageUrl' => $base . '/docs', 'pageTitle' => 'Docs', 'visitCount' => 260, 'previousVisitCount' => 120, 'visitPercentOfTotal' => 5.4, 'visitCountPercentageChange' => 116.67],
         ], 0, max(1, $limit));
+    }
+
+    private function siteBaseForWebsiteId(string $websiteId): string
+    {
+        foreach ($this->siteFinder->getAllSites() as $site) {
+            if ((string)$site->getSettings()->get('externalWebsiteId', '') === $websiteId) {
+                return rtrim((string)$site->getBase(), '/');
+            }
+        }
+        return '';
     }
 
     public function fetchAllTimeSeries(
@@ -111,7 +128,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $to,
     ): array {
         $newVisitors = $this->series($from, $to, 160, 22);
-        $returningVisitors = $this->series($from, $to, 100, 12);
+        $returningVisitors = $this->series($from, $to, 42, 18, 5);
         $overall = array_map(static fn (int $n, int $r): int => $n + $r, $newVisitors, $returningVisitors);
         $labels = $this->labels($from, $to);
         return [
