@@ -215,6 +215,12 @@
             <trans-unit id="dashboardWidget.topPages.tooltip.views" resname="dashboardWidget.topPages.tooltip.views">
                 <source>Views</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.openInBrowser" resname="dashboardWidget.topPages.openInBrowser">
+                <source>Open page in browser</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.openInPageModule" resname="dashboardWidget.topPages.openInPageModule">
+                <source>Open in page module</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>Analytics</source>
             </trans-unit>

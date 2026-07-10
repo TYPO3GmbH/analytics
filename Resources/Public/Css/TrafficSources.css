@@ -359,6 +359,14 @@
     white-space: nowrap;
 }
 
+.tx-analytics-traffic-sources-change-positive .tx-analytics-traffic-sources-tooltip-row-value {
+    color: var(--tx-analytics-color-trend-positive);
+}
+
+.tx-analytics-traffic-sources-change-negative .tx-analytics-traffic-sources-tooltip-row-value {
+    color: var(--tx-analytics-color-trend-negative);
+}
+
 .tx-analytics-traffic-sources-tone-source-direct {
     --tx-analytics-traffic-sources-tone-color: var(--tx-analytics-color-source-direct);
 }

@@ -286,6 +286,14 @@
                 <source>Views</source>
                 <target>Aufrufe</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.openInBrowser" resname="dashboardWidget.topPages.openInBrowser">
+                <source>Open page in browser</source>
+                <target>Seite im Browser öffnen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.openInPageModule" resname="dashboardWidget.topPages.openInPageModule">
+                <source>Open in page module</source>
+                <target>Im Seitenmodul öffnen</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>Analytics</source>
                 <target>Analytics</target>

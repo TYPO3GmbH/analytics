@@ -46,4 +46,32 @@ final class BackendPageAccessCheckerTest extends UnitTestCase
 
         self::assertFalse($this->subject->userCanAccessPage(1));
     }
+
+    #[Test]
+    public function userCanAccessLanguageReturnsFalseWhenNoBackendUserIsSet(): void
+    {
+        unset($GLOBALS['BE_USER']);
+
+        self::assertFalse($this->subject->userCanAccessLanguage(0));
+    }
+
+    #[Test]
+    public function userCanAccessLanguageReturnsTrueWhenBackendUserAllowsLanguage(): void
+    {
+        $backendUser = $this->createMock(BackendUserAuthentication::class);
+        $backendUser->method('checkLanguageAccess')->with(1)->willReturn(true);
+        $GLOBALS['BE_USER'] = $backendUser;
+
+        self::assertTrue($this->subject->userCanAccessLanguage(1));
+    }
+
+    #[Test]
+    public function userCanAccessLanguageReturnsFalseWhenBackendUserDeniesLanguage(): void
+    {
+        $backendUser = $this->createMock(BackendUserAuthentication::class);
+        $backendUser->method('checkLanguageAccess')->with(2)->willReturn(false);
+        $GLOBALS['BE_USER'] = $backendUser;
+
+        self::assertFalse($this->subject->userCanAccessLanguage(2));
+    }
 }

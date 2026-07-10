@@ -22,4 +22,13 @@ readonly class BackendPageAccessChecker implements BackendPageAccessCheckerInter
             $backendUser->getPagePermsClause(Permission::PAGE_SHOW)
         ) !== false;
     }
+
+    public function userCanAccessLanguage(int $languageId): bool
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$backendUser instanceof BackendUserAuthentication) {
+            return false;
+        }
+        return $backendUser->checkLanguageAccess($languageId);
+    }
 }

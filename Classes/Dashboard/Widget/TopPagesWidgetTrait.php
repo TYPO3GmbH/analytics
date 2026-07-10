@@ -34,7 +34,7 @@ trait TopPagesWidgetTrait
     }
 
     /**
-     * @return list<array{position: int, url: string, title: string, visitCount: string, visitPercentOfTotal: string, trend: string, trendDirection: string, trendLabel: string}>
+     * @return list<array{position: int, url: string, title: string, visitCount: string, visitPercentOfTotal: string, trend: string, trendDirection: string, trendLabel: string, pageId: int|null, languageId: int|null, flagIdentifier: string, slug: string, pageModuleUri: string|null}>
      */
     private function buildPages(string $siteIdentifier, int $days, int $limit): array
     {
