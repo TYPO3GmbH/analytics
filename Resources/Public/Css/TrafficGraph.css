@@ -40,6 +40,7 @@
 }
 
 .tx-analytics-traffic-graph-chart-container {
+    position: relative;
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
@@ -50,6 +51,25 @@
 .tx-analytics-traffic-graph-loading {
     opacity: 0.4;
     pointer-events: none;
+}
+
+.tx-analytics-traffic-graph-loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--typo3-component-border-color, rgba(0 0 0 / .15));
+    border-top-color: var(--typo3-component-color, #333);
+    border-radius: 50%;
+    animation: tx-analytics-chart-spin .65s linear infinite;
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes tx-analytics-chart-spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Legend (above chart) */

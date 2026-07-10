@@ -152,47 +152,27 @@ function initChartTooltips(widget) {
 
 // ─── Legend toggle ─────────────────────────────────────────────────────────────
 
-function setDatasetVisible(chartArea, key, visible) {
-  if (!chartArea) return;
-  chartArea.querySelectorAll(`[data-dataset-key="${CSS.escape(key)}"]`).forEach((el) => {
-    el.style.display = visible ? '' : 'none';
-  });
-}
-
 function initLegendToggles(widget) {
   const legend = widget.querySelector('.tx-analytics-traffic-graph-legend');
   if (!legend) return;
-
-  const chartArea = widget.querySelector('.tx-analytics-traffic-graph-chart-area');
 
   if (!widget._hiddenDatasets) {
     widget._hiddenDatasets = new Set();
   }
 
+  // The server renders all legend items and marks hidden ones with --disabled.
+  // Clicking toggles visibility and triggers a chart reload so the Y-axis rescales.
   legend.querySelectorAll('.tx-analytics-traffic-graph-legend-item[data-dataset-key]').forEach((item) => {
     const key = item.dataset.datasetKey;
     if (!key) return;
 
-    // Re-apply hidden state after chart reload.
-    if (widget._hiddenDatasets.has(key)) {
-      item.classList.add('tx-analytics-traffic-graph-legend-item--disabled');
-      item.setAttribute('aria-pressed', 'false');
-      setDatasetVisible(chartArea, key, false);
-    }
-
     item.addEventListener('click', () => {
-      const isHidden = widget._hiddenDatasets.has(key);
-      if (isHidden) {
+      if (widget._hiddenDatasets.has(key)) {
         widget._hiddenDatasets.delete(key);
-        item.classList.remove('tx-analytics-traffic-graph-legend-item--disabled');
-        item.setAttribute('aria-pressed', 'true');
-        setDatasetVisible(chartArea, key, true);
       } else {
         widget._hiddenDatasets.add(key);
-        item.classList.add('tx-analytics-traffic-graph-legend-item--disabled');
-        item.setAttribute('aria-pressed', 'false');
-        setDatasetVisible(chartArea, key, false);
       }
+      loadChart(widget);
     });
   });
 }
@@ -219,6 +199,11 @@ async function loadChart(widget) {
     const url = new URL(ajaxUrl, window.location.origin);
     url.searchParams.set('site', site);
     url.searchParams.set('days', days);
+    if (widget._hiddenDatasets) {
+      for (const key of widget._hiddenDatasets) {
+        url.searchParams.append('hidden[]', key);
+      }
+    }
 
     const response = await fetch(url.toString(), {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -283,12 +268,14 @@ function initializeWidget(widget) {
   siteSelect?.addEventListener('change', () => {
     writeStorage(siteKey(widget), siteSelect.value);
     widget.dataset.site = siteSelect.value;
+    widget._hiddenDatasets?.clear();
     loadChart(widget);
   });
 
   periodSelect?.addEventListener('change', () => {
     writeStorage(daysKey(widget), periodSelect.value);
     widget.dataset.days = periodSelect.value;
+    widget._hiddenDatasets?.clear();
     loadChart(widget);
   });
 

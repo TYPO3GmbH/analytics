@@ -34,6 +34,7 @@ final readonly class TrafficGraphAjaxController
         // explicitly, so this fallback is only reached in direct/test requests.
         $requestedDays = (int) ($params['days'] ?? 30);
         $days = DashboardPeriods::sanitizePeriod($requestedDays);
+        $hiddenKeys = array_values(array_filter(array_map('strval', (array)($params['hidden'] ?? []))));
 
         ['metricData' => $metricData, 'chart' => $chart] = $this->chartDataBuilder->buildForTrafficGraph(
             $this->trafficGraphService,
@@ -46,6 +47,7 @@ final readonly class TrafficGraphAjaxController
                 'visitors_returning' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.returning'),
                 'visitors_overall' => $this->translate('dashboardWidget.trafficGraph.chartLabel.visitors.overall'),
             ],
+            $hiddenKeys,
         );
 
         $view = $this->viewFactory->create(new ViewFactoryData(

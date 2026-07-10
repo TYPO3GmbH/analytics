@@ -19,6 +19,7 @@ final readonly class TrafficChartDataBuilder
      * so that tones, axes, and metric composition are defined in one place.
      *
      * @param array{visits: string, sessions: string, visitors_new: string, visitors_returning: string, visitors_overall: string} $labels
+     * @param list<string> $hiddenKeys Dataset keys to exclude from Y-axis and sparkline (but kept in legend/tooltips).
      * @return array{
      *     metricData: array<string, array{labels: list<string>, data: list<int>}|null>,
      *     chart: array{sparkline: string, yLabels: list<array{value: int, label: string}>, yLabelsRight: list<array{value: int, label: string}>, hasRightAxis: bool, xLabels: list<array{label: string, pct: float}>, legend: list<array{label: string, tone: string, key: string}>}
@@ -29,6 +30,7 @@ final readonly class TrafficChartDataBuilder
         string $siteIdentifier,
         int $days,
         array $labels,
+        array $hiddenKeys = [],
     ): array {
         $visitorsBreakdown = $service->loadVisitorsBreakdownData($siteIdentifier, $days);
         $metricData = [
@@ -47,7 +49,22 @@ final readonly class TrafficChartDataBuilder
             ['visits' => 'visits', 'sessions' => 'sessions', 'visitors_new' => 'visitors-new', 'visitors_returning' => 'visitors-returning', 'visitors_overall' => 'visitors'],
             // visits on the left axis (page-view scale); all session/visitor counts on the right.
             ['visits' => 0, 'sessions' => 1, 'visitors_new' => 1, 'visitors_returning' => 1, 'visitors_overall' => 1],
+            $hiddenKeys,
         );
+
+        // Dynamic right-axis title: changes when one group becomes fully hidden.
+        $sessionVisible = !in_array('sessions', $hiddenKeys, true) && ($metricData['sessions'] ?? null) !== null;
+        $visitorsVisible = array_filter(
+            ['visitors_new', 'visitors_returning', 'visitors_overall'],
+            fn (string $k): bool => !in_array($k, $hiddenKeys, true) && ($metricData[$k] ?? null) !== null,
+        ) !== [];
+        if ($sessionVisible && !$visitorsVisible) {
+            $chart['yAxisTitleRight'] = 'sessions';
+        } elseif ($visitorsVisible && !$sessionVisible) {
+            $chart['yAxisTitleRight'] = 'visitors';
+        } else {
+            $chart['yAxisTitleRight'] = 'sessionsAndVisitors';
+        }
 
         return ['metricData' => $metricData, 'chart' => $chart];
     }
@@ -107,16 +124,18 @@ final readonly class TrafficChartDataBuilder
      * @param array<string, string> $metricLabels
      * @param array<string, string> $metricTones
      * @param array<string, int> $metricAxes  0 = left Y-axis, 1 = right Y-axis
+     * @param list<string> $hiddenKeys Dataset keys to exclude from Y-axis and sparkline (but kept in legend/tooltips).
      * @return array{
      *     sparkline: string,
      *     yLabels: list<array{value: int, label: string}>,
      *     yLabelsRight: list<array{value: int, label: string}>,
      *     hasRightAxis: bool,
+     *     hasLeftAxisData: bool,
      *     xLabels: list<array{label: string, pct: float}>,
-     *     legend: list<array{label: string, tone: string, key: string}>
+     *     legend: list<array{label: string, tone: string, key: string, hidden: bool}>
      * }
      */
-    public function buildMulti(array $metricData, array $metricLabels, array $metricTones, array $metricAxes = []): array
+    public function buildMulti(array $metricData, array $metricLabels, array $metricTones, array $metricAxes = [], array $hiddenKeys = []): array
     {
         $activeData = [];
         foreach ($metricData as $key => $dataset) {
@@ -130,6 +149,8 @@ final readonly class TrafficChartDataBuilder
             'yLabels' => [],
             'yLabelsRight' => [],
             'hasRightAxis' => false,
+            'hasLeftAxisData' => false,
+            'allMetricsHidden' => false,
             'xLabels' => [],
             'legend' => [],
         ];
@@ -137,6 +158,15 @@ final readonly class TrafficChartDataBuilder
         if ($activeData === []) {
             return $emptyResult;
         }
+
+        // Datasets rendered in the sparkline and used for Y-axis scaling.
+        // Hidden datasets are still included in the legend and hover tooltips so the user
+        // can re-enable them, but they do not contribute to the axis bounds.
+        $visibleData = array_filter(
+            $activeData,
+            static fn (string $k): bool => !in_array($k, $hiddenKeys, true),
+            ARRAY_FILTER_USE_KEY
+        );
 
         // Align all datasets to a shared date axis (union of all dates, 0-fill for missing).
         // Normalize all labels to Y-m-d: different API endpoints may return different ISO formats
@@ -161,6 +191,7 @@ final readonly class TrafficChartDataBuilder
             $sortedIsoDates
         );
 
+        // Build aligned value arrays for ALL active datasets so hidden ones still appear in tooltips.
         $alignedValues = [];
         foreach ($activeData as $key => $dataset) {
             $lookup = [];
@@ -174,38 +205,66 @@ final readonly class TrafficChartDataBuilder
             $alignedValues[$key] = $aligned;
         }
 
-        // Compute separate Y-axis scales for axis 0 (left) and axis 1 (right).
-        $axis0Values = [];
-        $axis1Values = [];
-        foreach ($activeData as $key => $dataset) {
+        // Compute separate Y-axis scales using VISIBLE datasets only so hiding a line rescales the axis.
+        $leftValues = [];
+        $rightValues = [];
+        foreach ($visibleData as $key => $dataset) {
             $axis = $metricAxes[$key] ?? 0;
             if ($axis === 1) {
-                $axis1Values = array_merge($axis1Values, $alignedValues[$key]);
+                $rightValues = array_merge($rightValues, $alignedValues[$key]);
             } else {
-                $axis0Values = array_merge($axis0Values, $alignedValues[$key]);
+                $leftValues = array_merge($leftValues, $alignedValues[$key]);
             }
         }
 
-        // Fall back to a combined single axis when only one axis has data.
-        $hasAxis0 = $axis0Values !== [];
-        $hasAxis1 = $axis1Values !== [];
-        $hasRightAxis = $hasAxis0 && $hasAxis1;
-
-        if (!$hasRightAxis) {
-            $allValues = array_merge($axis0Values, $axis1Values);
-            $scaleMax0 = $this->calcScaleMax($allValues !== [] ? max($allValues) : 0);
-            $scaleMax1 = $scaleMax0;
-        } else {
-            $scaleMax0 = $this->calcScaleMax(max($axis0Values));
-            $scaleMax1 = $this->calcScaleMax(max($axis1Values));
+        // All visible datasets hidden → no chart, but still return the full legend so the user
+        // can re-enable entries without having to reload the page.
+        if ($visibleData === []) {
+            $legend = [];
+            foreach ($activeData as $key => $dataset) {
+                $legend[] = ['label' => $metricLabels[$key] ?? $key, 'tone' => $metricTones[$key] ?? 'series-1', 'key' => $key, 'hidden' => true];
+            }
+            return array_merge($emptyResult, ['legend' => $legend, 'allMetricsHidden' => true]);
         }
 
-        $ticks0 = $this->buildTicks($scaleMax0);
-        $ticks1 = $this->buildTicks($scaleMax1);
-
-        $datasets = [];
-        $legend = [];
+        // Determine dual-axis layout from the FULL active data mix so the layout is stable
+        // regardless of which datasets are currently hidden. This keeps sessions/visitors on
+        // the right axis even when visits (the only left-axis metric) is hidden.
+        $activeHasLeft = false;
+        $activeHasRight = false;
         foreach ($activeData as $key => $dataset) {
+            if (($metricAxes[$key] ?? 0) === 1) {
+                $activeHasRight = true;
+            } else {
+                $activeHasLeft = true;
+            }
+        }
+        // Right axis disappears when all axis-1 datasets are hidden, even if the active data
+        // mix originally had both axis types (i.e. axis1Values comes from visibleData).
+        $hasRightAxis = $activeHasLeft && $activeHasRight && $rightValues !== [];
+        $hasLeftAxisData = $leftValues !== [];
+
+        if (!$hasRightAxis) {
+            // Single-axis mode: all data on the left axis.
+            $combinedValues = array_merge($leftValues, $rightValues);
+            $leftScaleMax = $this->calcScaleMax($combinedValues !== [] ? max($combinedValues) : 0);
+            $rightScaleMax = $leftScaleMax;
+        } else {
+            // Dual-axis mode.
+            $rightScaleMax = $rightValues !== [] ? $this->calcScaleMax(max($rightValues)) : $this->calcScaleMax(0);
+            // When left-axis data (visits) is hidden, adopt the right-axis scale for grid lines
+            // so they still align with visible data; left axis shows no tick labels.
+            $leftScaleMax = $hasLeftAxisData ? $this->calcScaleMax(max($leftValues)) : $rightScaleMax;
+        }
+
+        // Grid lines always use scaleMax0; left tick labels are only shown when visits is visible.
+        $gridLineTicks = $this->buildTicks($leftScaleMax);
+        $leftTicks = $hasLeftAxisData ? $gridLineTicks : [];
+        $rightTicks = $this->buildTicks($rightScaleMax);
+
+        // Build sparkline datasets from visible data only.
+        $datasets = [];
+        foreach ($visibleData as $key => $dataset) {
             $tone = $metricTones[$key] ?? 'series-1';
             $axis = $metricAxes[$key] ?? 0;
             // When there is no right axis, treat everything as axis 0.
@@ -217,9 +276,17 @@ final readonly class TrafficChartDataBuilder
                 'axis' => $effectiveAxis,
                 'key' => $key,
             ];
-            $legend[] = ['label' => $metricLabels[$key] ?? $key, 'tone' => $tone, 'key' => $key];
         }
 
+        // Build legend from ALL active datasets; hidden ones carry hidden=true so the template
+        // can render them as disabled (grayed out) and the user can re-enable them at any time.
+        $legend = [];
+        foreach ($activeData as $key => $dataset) {
+            $tone = $metricTones[$key] ?? 'series-1';
+            $legend[] = ['label' => $metricLabels[$key] ?? $key, 'tone' => $tone, 'key' => $key, 'hidden' => in_array($key, $hiddenKeys, true)];
+        }
+
+        // Build hover-tooltip data from ALL active datasets; JS filters hidden entries client-side.
         $pointTooltips = [];
         foreach ($sortedIsoDates as $i => $isoDate) {
             $metrics = [];
@@ -241,9 +308,9 @@ final readonly class TrafficChartDataBuilder
         $sparkline = $this->sparklineRenderer->renderMultiLine($datasets, [
             'class' => 'tx-analytics-traffic-graph-sparkline',
             'yMin' => 0,
-            'yMax' => $scaleMax0,
-            'yMaxRight' => $scaleMax1,
-            'gridLines' => array_column($ticks0, 'value'),
+            'yMax' => $leftScaleMax,
+            'yMaxRight' => $rightScaleMax,
+            'gridLines' => array_column($gridLineTicks, 'value'),
             'preserveAspectRatio' => 'none',
             'pointTooltips' => $pointTooltips,
             'smooth' => true,
@@ -251,9 +318,10 @@ final readonly class TrafficChartDataBuilder
 
         return [
             'sparkline' => $sparkline,
-            'yLabels' => $ticks0,
-            'yLabelsRight' => $ticks1,
+            'yLabels' => $leftTicks,
+            'yLabelsRight' => $rightTicks,
             'hasRightAxis' => $hasRightAxis,
+            'hasLeftAxisData' => $hasLeftAxisData,
             'xLabels' => $this->visibleLabelPositions($shortLabels),
             'legend' => $legend,
         ];
