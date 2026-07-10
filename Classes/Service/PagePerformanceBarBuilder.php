@@ -131,7 +131,7 @@ final readonly class PagePerformanceBarBuilder
 
     public function normalizeDays(int $days): int
     {
-        return in_array($days, DashboardPeriods::periods(), true) ? $days : DashboardPeriods::defaultPeriod();
+        return DashboardPeriods::sanitizePeriod($days);
     }
 
     public function buildDetailsUri(?Site $site, int $days, string $pageUrl = ''): string

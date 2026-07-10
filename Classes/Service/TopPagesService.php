@@ -114,7 +114,8 @@ final readonly class TopPagesService implements TopPagesServiceInterface
             }
             $pageId = $this->resolvePageId($site, $url);
             if ($pageId === null) {
-                return true;
+                // Deny by default: a URL that cannot be resolved to a page is not access-checkable.
+                return false;
             }
             return $this->pageAccessChecker->userCanAccessPage($pageId);
         }));

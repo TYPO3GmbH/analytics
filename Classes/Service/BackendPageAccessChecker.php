@@ -14,7 +14,8 @@ readonly class BackendPageAccessChecker implements BackendPageAccessCheckerInter
     {
         $backendUser = $GLOBALS['BE_USER'] ?? null;
         if (!$backendUser instanceof BackendUserAuthentication) {
-            return true;
+            // Fail closed: without an authenticated backend user, deny access.
+            return false;
         }
         return BackendUtility::readPageAccess(
             $pageId,

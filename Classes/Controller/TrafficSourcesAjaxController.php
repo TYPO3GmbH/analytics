@@ -6,6 +6,7 @@ namespace T3G\Analytics\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Dashboard\Widget\TrafficSourcesItemsTrait;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
@@ -33,7 +34,8 @@ final readonly class TrafficSourcesAjaxController
     {
         $params = $request->getQueryParams();
         $siteIdentifier = (string)($params['site'] ?? '');
-        $days = max(1, (int)($params['days'] ?? 30));
+        $requestedDays = (int)($params['days'] ?? 30);
+        $days = DashboardPeriods::sanitizePeriod($requestedDays);
 
         if ($siteIdentifier === '') {
             $siteOptions = $this->siteProvider->siteOptions();

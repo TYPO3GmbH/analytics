@@ -6,6 +6,7 @@ namespace T3G\Analytics\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\PagePerformanceBarBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
@@ -13,6 +14,7 @@ final readonly class PagePerformanceAjaxController
 {
     public function __construct(
         private PagePerformanceBarBuilder $builder,
+        private BackendPageAccessCheckerInterface $pageAccessChecker,
     ) {
     }
 
@@ -25,6 +27,10 @@ final readonly class PagePerformanceAjaxController
 
         if ($pageId <= 0) {
             return new JsonResponse(['error' => 'Missing pageId'], 400);
+        }
+
+        if (!$this->pageAccessChecker->userCanAccessPage($pageId)) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
         $site = $this->builder->trySite($pageId);

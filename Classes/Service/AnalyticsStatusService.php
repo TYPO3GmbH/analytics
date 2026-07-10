@@ -95,6 +95,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
 
         $update = [];
         if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
+            // @todo probably a custom HTML sanitizer instance shall be used here
             $update['trackingCode'] = $trackingCode;
         }
         if ($newStatus !== '' && $newStatus !== $existingStatus) {

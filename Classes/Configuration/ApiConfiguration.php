@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Configuration;
 
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Http\Uri;
 
 final readonly class ApiConfiguration
 {
@@ -26,13 +27,16 @@ final readonly class ApiConfiguration
     public function getAnalyticsApiBaseUrl(): string
     {
         $configured = (string)($this->extensionConfiguration->get('analytics', 'analyticsApiBaseUrl') ?? '');
-        return $configured !== '' ? rtrim($configured, '/') : self::DEFAULT_ANALYTICS_API_BASE_URL;
+        if ($configured === '' || !$this->isValidHttpUri($configured)) {
+            return self::DEFAULT_ANALYTICS_API_BASE_URL;
+        }
+        return rtrim($configured, '/');
     }
 
     public function getBaseUrl(): string
     {
         $configured = (string)($this->extensionConfiguration->get('analytics', 'apiBaseUrl') ?? '');
-        $url = $configured !== '' ? $configured : self::DEFAULT_BASE_URL;
+        $url = $configured !== '' && $this->isValidHttpUri($configured) ? $configured : self::DEFAULT_BASE_URL;
         $url = rtrim($url, '/');
         $parts = parse_url($url) ?: [];
         $result = ($parts['scheme'] ?? 'https') . '://' . ($parts['host'] ?? '');
@@ -66,5 +70,15 @@ final readonly class ApiConfiguration
             return ['auth' => [$parts['user'], $parts['pass'] ?? '']];
         }
         return [];
+    }
+
+    private function isValidHttpUri(string $url): bool
+    {
+        try {
+            $scheme = (new Uri($url))->getScheme();
+            return in_array($scheme, ['http', 'https'], true);
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
     }
 }

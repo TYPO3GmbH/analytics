@@ -29,11 +29,12 @@ final class BackendPageAccessCheckerTest extends UnitTestCase
     }
 
     #[Test]
-    public function userCanAccessPageReturnsTrueWhenNoBackendUserIsSet(): void
+    public function userCanAccessPageReturnsFalseWhenNoBackendUserIsSet(): void
     {
         unset($GLOBALS['BE_USER']);
 
-        self::assertTrue($this->subject->userCanAccessPage(1));
+        // Fail closed: without an authenticated backend user, access must be denied.
+        self::assertFalse($this->subject->userCanAccessPage(1));
     }
 
     #[Test]
