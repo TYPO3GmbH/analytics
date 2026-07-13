@@ -202,7 +202,11 @@
     cursor: pointer;
     transform-box: view-box;
     transform-origin: 50% 50%;
-    transition: transform 0.18s ease-out;
+    transition: transform 0.18s ease-out, stroke-width 0.18s ease-out;
+}
+
+.tx-analytics-traffic-sources-donut-segment.is-active {
+    stroke-width: 23;
 }
 
 .tx-analytics-traffic-sources-donut-layout > .tx-analytics-traffic-sources-list {

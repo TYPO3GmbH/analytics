@@ -58,7 +58,7 @@ function hideTooltip() {
   if (tooltip) tooltip.style.display = 'none';
 }
 
-function initSegmentPullout(segment) {
+function initSegmentInteraction(segment) {
   const startAngle = parseFloat(
     (segment.getAttribute('transform') ?? '').match(/rotate\(\s*([\d.eE+\-]+)/)?.[1] ?? '0'
   );
@@ -66,11 +66,6 @@ function initSegmentPullout(segment) {
   const arcLength = parseFloat(
     (segment.getAttribute('stroke-dasharray') ?? '').match(/[\d.]+/)?.[0] ?? '0'
   );
-  const midAngleDeg = startAngle + (arcLength / (2 * Math.PI * radius)) * 180;
-  const midAngleRad = midAngleDeg * Math.PI / 180;
-  const pulloutDistance = 6; // pull-out distance in SVG units (= % of 100×100 viewBox)
-  const translateX = +(pulloutDistance * Math.cos(midAngleRad)).toFixed(3);
-  const translateY = +(pulloutDistance * Math.sin(midAngleRad)).toFixed(3);
 
   // Store geometry for hit-testing after the SVG transform attribute is removed
   segment._tsStartAngle = startAngle;
@@ -79,7 +74,7 @@ function initSegmentPullout(segment) {
 
   segment.removeAttribute('transform');
   segment.style.transform = `rotate(${startAngle}deg)`;
-  segment._tsPullout = `translate(${translateX}%, ${translateY}%) rotate(${startAngle}deg)`;
+  segment._tsActive = `rotate(${startAngle}deg) scale(1.075)`;
   segment._tsBase = `rotate(${startAngle}deg)`;
 }
 
@@ -119,7 +114,7 @@ function initDonutHover(svg) {
   svg._donutHoverInit = true;
 
   svg.querySelectorAll('.tx-analytics-traffic-sources-donut-segment[data-ts-label]').forEach(segment => {
-    initSegmentPullout(segment);
+    initSegmentInteraction(segment);
   });
 
   let activeSegment = null;
@@ -129,10 +124,14 @@ function initDonutHover(svg) {
       if (activeSegment) positionTooltip(getOrCreateTooltip(), clientX, clientY);
       return;
     }
-    if (activeSegment) activeSegment.style.transform = activeSegment._tsBase;
+    if (activeSegment) {
+      activeSegment.style.transform = activeSegment._tsBase;
+      activeSegment.classList.remove('is-active');
+    }
     activeSegment = segment;
     if (segment) {
-      segment.style.transform = segment._tsPullout;
+      segment.style.transform = segment._tsActive;
+      segment.classList.add('is-active');
       const tooltip = renderTooltip(
         segment,
         segment.dataset.tsLabel ?? '',
