@@ -1,17 +1,37 @@
+{namespace core=TYPO3\CMS\Core\ViewHelpers}
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
 <f:if condition="{chart.legend -> f:count()} > 0">
     <div class="tx-analytics-traffic-graph-legend">
         <f:for each="{chart.legend}" as="item">
-            <button class="tx-analytics-traffic-graph-legend-item" data-tone="{item.tone}" data-dataset-key="{item.key}" type="button" aria-pressed="true">{item.label}</button>
+            <button class="{f:if(condition: item.hidden, then: 'tx-analytics-traffic-graph-legend-item tx-analytics-traffic-graph-legend-item--disabled', else: 'tx-analytics-traffic-graph-legend-item')}" data-tone="{item.tone}" data-dataset-key="{item.key}" type="button" aria-pressed="{f:if(condition: item.hidden, then: 'false', else: 'true')}">{item.label}</button>
         </f:for>
     </div>
 </f:if>
+<f:if condition="{chart.allMetricsHidden}">
+    <f:then>
+        <div class="alert alert-info tx-analytics-widget-no-data">
+            <div class="alert-inner">
+                <div class="alert-icon">
+                    <span class="icon-emphasized">
+                        <core:icon identifier="actions-info" size="small" />
+                    </span>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">Info</div>
+                    <p class="alert-message">
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.allMetricsHidden" default="Please enable at least one metric to display the chart." />
+                    </p>
+                </div>
+            </div>
+        </div>
+    </f:then>
+    <f:else>
 <div class="{f:if(condition: chart.hasRightAxis, then: 'tx-analytics-traffic-graph-chart-wrap tx-analytics-traffic-graph-chart-wrap--dual-axis', else: 'tx-analytics-traffic-graph-chart-wrap')}">
     <div class="tx-analytics-traffic-graph-y-axis" aria-hidden="true">
         <f:for each="{chart.yLabels}" as="label">
             <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
         </f:for>
-        <f:if condition="{chart.hasRightAxis}">
+        <f:if condition="{chart.hasLeftAxisData}">
             <span class="tx-analytics-traffic-graph-axis-title"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.visits" default="Visits" /></span>
         </f:if>
     </div>
@@ -23,7 +43,13 @@
             <f:for each="{chart.yLabelsRight}" as="label">
                 <span class="tx-analytics-traffic-graph-y-label">{label.label}</span>
             </f:for>
-            <span class="tx-analytics-traffic-graph-axis-title"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" default="Sessions / Visitors" /></span>
+            <span class="tx-analytics-traffic-graph-axis-title">
+                <f:switch expression="{chart.yAxisTitleRight}">
+                    <f:case value="sessions"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.sessions" default="Sessions" /></f:case>
+                    <f:case value="visitors"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.visitors" default="Visitors" /></f:case>
+                    <f:defaultCase><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" default="Sessions / Visitors" /></f:defaultCase>
+                </f:switch>
+            </span>
         </div>
     </f:if>
     <div class="tx-analytics-traffic-graph-x-axis" aria-hidden="true">
@@ -32,4 +58,6 @@
         </f:for>
     </div>
 </div>
+    </f:else>
+</f:if>
 </html>
