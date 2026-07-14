@@ -2,16 +2,18 @@
 <f:layout name="Widget/Widget" />
 <f:section name="main">
 
-    <f:if condition="{noData}">
-        <f:then>
-            <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: periodLabel}" />
-        </f:then>
-        <f:else>
-            <div class="tx-analytics-traffic-graph">
-                <f:render partial="Dashboard/Widget/TrafficGraphChart" arguments="{chart: chart}" />
-            </div>
-        </f:else>
-    </f:if>
+    <div class="tx-analytics-traffic-graph" data-site="{siteIdentifier}" data-days="{selectedDays}">
+        <div class="tx-analytics-traffic-graph-chart-container">
+            <f:if condition="{noData}">
+                <f:then>
+                    <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: periodLabel}" />
+                </f:then>
+                <f:else>
+                    <f:render partial="Dashboard/Widget/TrafficGraphChart" arguments="{chart: chart}" />
+                </f:else>
+            </f:if>
+        </div>
+    </div>
 
 </f:section>
 <f:section name="footer">

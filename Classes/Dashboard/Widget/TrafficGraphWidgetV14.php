@@ -113,6 +113,8 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
             'chart' => $chart,
             'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data'] ?? []) > 0) === [],
             'periodLabel' => $periodLabel,
+            'siteIdentifier' => $siteIdentifier,
+            'selectedDays' => $days,
             'showAllLabel' => $this->translate('dashboardWidget.trafficGraph.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
         ]);
