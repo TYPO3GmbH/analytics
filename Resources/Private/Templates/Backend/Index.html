@@ -26,6 +26,30 @@
             </div>
         </div>
 
+        <f:if condition="{plansUrl}">
+            <section class="tx-analytics-site-group" id="tx-analytics-plans-section">
+                <div id="tx-analytics-plans-root"
+                     data-plans-url="{plansUrl}"
+                     data-i18n-heading="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.heading')}"
+                     data-i18n-toggle-monthly="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.monthly')}"
+                     data-i18n-toggle-yearly="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.yearlyToggle')}"
+                     data-i18n-free="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.free')}"
+                     data-i18n-trial-note="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.trialLimited')}"
+                     data-i18n-credits="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.touchpointsPerMonth')}"
+                     data-i18n-api-access="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.apiAccess')}"
+                     data-i18n-dashboards="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.ownDashboards')}"
+                     data-i18n-per-month="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.perMonth')}"
+                     data-i18n-per-year="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.perYear')}"
+                     data-i18n-badge-trial="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.trial')}"
+                     data-i18n-custom-name="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.name')}"
+                     data-i18n-custom-tagline="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.tagline')}"
+                     data-i18n-custom-contact="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.contact')}"
+                     data-i18n-custom-email-subject="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.emailSubject')}"
+                     data-i18n-custom-credits="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.credits')}"
+                ></div>
+            </section>
+        </f:if>
+
         <f:for each="{siteGroups}" as="siteGroup">
             <f:if condition="{siteGroup.sites}">
                 <section class="tx-analytics-site-group">

@@ -28,4 +28,9 @@ return [
         'target' => \T3G\Analytics\Controller\PagePerformanceAjaxController::class . '::handle',
         'access' => 'user',
     ],
+    'analytics_plans_content' => [
+        'path' => '/analytics/plans',
+        'target' => \T3G\Analytics\Controller\PlansAjaxController::class . '::handle',
+        'access' => 'user',
+    ],
 ];

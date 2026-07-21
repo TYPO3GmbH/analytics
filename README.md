@@ -90,7 +90,12 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod']
 
 Registered as `site_analytics` (route prefix `site_analytics.*`). Visible in the **Sites** section of the backend module menu.
 
-The module offers per-site views for:
+The module overview page shows:
+
+- **Plans** — a responsive card grid of all available Analytics plans, loaded via AJAX. Each card shows the plan name, price (monthly / yearly toggle), credit volume, API access, and custom-dashboard availability. A **Custom** plan card is always appended at the end with a "Contact us" button for enterprise inquiries.
+- **Active / inactive sites** — all configured TYPO3 sites grouped by registration status.
+
+Per-site views offer:
 - **Registration** — enter an e-mail address to register a site with the TYPO3 Analytics API.
 - **Status** — shows registration status, website ID and API key, with a manual refresh button.
 - **Dashboard** — embeds the TYPO3 Analytics web dashboard as an iframe.
