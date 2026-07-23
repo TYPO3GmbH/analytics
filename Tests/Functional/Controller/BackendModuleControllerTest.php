@@ -30,7 +30,6 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -398,14 +397,11 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     ): BackendModuleController {
         $resolvedSiteFinder = $siteFinder ?? $this->get(SiteFinder::class);
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
         $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
-            new ApiConfiguration($extensionConfiguration),
+            new ApiConfiguration(),
             new HmacSigner(),
             new ApiExceptionExtractor(),
         );

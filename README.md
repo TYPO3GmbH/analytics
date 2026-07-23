@@ -8,8 +8,6 @@ A TYPO3 backend extension that integrates **TYPO3 Analytics** into the TYPO3 sit
 - [What the extension does](#what-the-extension-does)
 - [Installation](#installation)
 - [Configuration reference](#configuration-reference)
-  - [API settings](#api-settings)
-  - [Appearance settings](#appearance-settings)
   - [Development settings](#development-settings)
   - [Dashboard settings](#dashboard-settings)
 - [Modules and widgets](#modules-and-widgets)
@@ -42,15 +40,6 @@ The extension adds a **Sites → Analytics** module to the TYPO3 backend. For ea
 
 Credentials are encrypted using XChaCha20-Poly1305 via libsodium. On TYPO3 v14+ the built-in `TYPO3\CMS\Core\Crypto\Cipher\CipherService` is used automatically; on v13 an equivalent custom implementation is used, ensuring values remain decryptable after an upgrade.
 
-### Content Security Policy
-
-The extension automatically extends the backend CSP (`frame-src`) to allow the analytics dashboard to be embedded as an iframe inside the TYPO3 backend. The production dashboard origin is always included:
-
-| Origin | Purpose |
-|--------|---------|
-| `https://dashboard.analytics.typo3.com` | Production dashboard |
-
-Additional origins can be added via the `additionalFrameSrc` extension setting without touching the code — see [API settings](#api-settings).
 
 ### Module icon
 
@@ -74,30 +63,6 @@ vendor/bin/typo3 extension:setup analytics
 ```
 
 ## Configuration reference
-
-All settings are stored under `$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']`. They can be edited in the TYPO3 Extension Manager (Settings → Extension Configuration → analytics) or set in `AdditionalConfiguration.php` / `config/system/additional.php`:
-
-```php
-$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['settingName'] = 'value';
-```
-
-### API settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `apiBaseUrl` | string | _(empty)_ | Base URL for the analytics management API. Leave empty to use the production default (`https://middleware.analytics.typo3.com/api`). |
-| `analyticsApiBaseUrl` | string | _(empty)_ | Base URL for the analytics data API. Leave empty to use the production default (`https://api.analytics.typo3.com/api`). |
-| `intpId` | string | _(empty)_ | Integration Partner ID. Leave empty to use the production default. |
-| `additionalFrameSrc` | string | _(empty)_ | Comma-separated list of additional origins added to the backend CSP `frame-src` directive (e.g. `https://dashboard.example.com`). Leave empty if no extra origins are needed. |
-| `verifySsl` | bool | `1` | Whether to verify SSL certificates on API requests. Disable (`0`) only for local development with self-signed certificates. |
-| `pageAnalyticsCacheTtl` | int | `3600` | Lifetime in seconds for cached page analytics data. |
-
-### Appearance settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `logoPath` | string | _(empty)_ | EXT: path or absolute path to an SVG file used as the wordmark in the module page header. Leave empty to use the built-in TYPO3 Analytics logo. The SVG is inlined so `currentColor` follows the backend theme. |
-| `moduleIconPath` | string | _(empty)_ | EXT: path or absolute path to an SVG file used as the module icon in the backend navigation sidebar. Leave empty to use the built-in icon (adaptive on v14+, Material Design on v13). |
 
 ### Development settings
 

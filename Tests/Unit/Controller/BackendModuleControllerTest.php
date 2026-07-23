@@ -31,7 +31,6 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -115,14 +114,11 @@ final class BackendModuleControllerTest extends UnitTestCase
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('test-instance-secret');
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
         $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
-            new ApiConfiguration($extensionConfiguration),
+            new ApiConfiguration(),
             new HmacSigner(),
             new ApiExceptionExtractor(),
         );

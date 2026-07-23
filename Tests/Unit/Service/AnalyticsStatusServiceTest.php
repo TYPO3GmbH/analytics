@@ -19,7 +19,6 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -63,12 +62,9 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('plain-secret');
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
-        $apiConfiguration = new ApiConfiguration($extensionConfiguration);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
+        $apiConfiguration = new ApiConfiguration();
         $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
             $apiConfiguration,

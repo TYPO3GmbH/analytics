@@ -467,7 +467,10 @@ final readonly class BackendModuleController
 
     private function readLogoSvg(): string
     {
-        $configured = (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['logoPath'] ?? '');
+        $envLogoPath = getenv('TYPO3_ANALYTICS_LOGO_PATH');
+        $configured = ($envLogoPath !== false && $envLogoPath !== '')
+            ? $envLogoPath
+            : (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['logoPath'] ?? '');
         $path = $configured !== ''
             ? GeneralUtility::getFileAbsFileName($configured)
             : GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Public/Images/analytics-logo.svg');
