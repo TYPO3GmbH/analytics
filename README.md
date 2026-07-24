@@ -110,7 +110,7 @@ All v14+ widgets share two common settings in addition to their widget-specific 
 
 #### Top Pages widget
 
-![Top Pages widget](Resources/Public/Images/Docs/widget-top-pages.png)
+![Top Pages widget](Documentation/Images/widget-top-pages-light.png)
 
 Displays a ranked list of the most-visited pages for a configured site. Each row shows the page title, URL, and view count. Results are sorted by page views descending; a configurable limit controls how many rows are shown. A "Show all" link leads to the pages view of the analytics dashboard.
 
@@ -125,7 +125,7 @@ AJAX endpoint (v13): `TopPagesAjaxController` — registered as backend route `a
 
 #### Site Performance widget
 
-![Site Performance widget](Resources/Public/Images/Docs/widget-site-performance.png)
+![Site Performance widget](Documentation/Images/widget-site-performance-light.png)
 
 Displays four colored metric tiles for a configured site — **Visits**, **Visitors**, **Bounce rate**, and **Avg. visit duration** — each showing the current value and a trend arrow compared to the previous period of equal length.
 
@@ -140,7 +140,7 @@ AJAX endpoint (v13): `SitePerformanceAjaxController` — registered as backend r
 
 #### Traffic Graph widget
 
-![Traffic Graph widget](Resources/Public/Images/Docs/widget-traffic-graph.png)
+![Traffic Graph widget](Documentation/Images/widget-traffic-graph-light-tooltip.png)
 
 Displays a full-width line chart of daily visit counts for a configured site over the selected period. The chart makes traffic trends immediately visible — spikes, dips, and patterns across the chosen date range. A "Show all" link opens the main analytics dashboard.
 
@@ -176,9 +176,16 @@ A DI compiler pass registers **four separate widget types**, one per section, ea
 | `dashboard.widget.analyticsTrafficSourcesBrowser` | Browser | donut |
 | `dashboard.widget.analyticsTrafficSourcesCountries` | Countries | list |
 
-| Channel | Browser | Devices | Countries |
-|---------|---------|---------|-----------|
-| ![Channel](Resources/Public/Images/Docs/widget-traffic-sources-channel.png) | ![Browser](Resources/Public/Images/Docs/widget-traffic-sources-browser.png) | ![Devices](Resources/Public/Images/Docs/widget-traffic-sources-devices.png) | ![Countries](Resources/Public/Images/Docs/widget-traffic-sources-countries.png) |
+<table>
+  <tr>
+    <td align="center"><img src="Documentation/Images/widget-traffic-sources-channel-light.png" alt="Channel"><br><b>Channel</b></td>
+    <td align="center"><img src="Documentation/Images/widget-traffic-sources-browser-light.png" alt="Browser"><br><b>Browser</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="Documentation/Images/widget-traffic-sources-devices-light.png" alt="Devices"><br><b>Devices</b></td>
+    <td align="center"><img src="Documentation/Images/widget-traffic-sources-countries-light.png" alt="Countries"><br><b>Countries</b></td>
+  </tr>
+</table>
 
 Widget settings (v14+):
 
@@ -205,7 +212,7 @@ The bar shows per-page metrics for the currently viewed page:
 
 A period selector (values from `dashboardPeriods`) and a link to the full site analytics dashboard are included. The bar is hidden in language-comparison mode (viewMode = 2).
 
-![Page Performance Bar](Resources/Public/Images/Docs/page-performance-bar.png)
+![Page Performance Bar](Documentation/Images/page-performance-bar-light-tooltip-views.png)
 
 ### Dashboard preset
 

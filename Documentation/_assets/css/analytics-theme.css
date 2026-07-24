@@ -1,0 +1,11 @@
+.analytics-dark-img { display: none; }
+
+@media (prefers-color-scheme: dark) {
+    .analytics-light-img { display: none; }
+    .analytics-dark-img { display: block; }
+}
+
+:root[data-bs-theme="dark"] .analytics-light-img { display: none !important; }
+:root[data-bs-theme="dark"] .analytics-dark-img { display: block !important; }
+:root[data-bs-theme="light"] .analytics-light-img { display: block !important; }
+:root[data-bs-theme="light"] .analytics-dark-img { display: none !important; }
