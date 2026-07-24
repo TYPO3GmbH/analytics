@@ -1,0 +1,10 @@
+.. Every .rst file should include Includes.rst.txt
+   Use correct path: from anywhere in the Documentation folder to the
+   root of the Documentation folder.
+
+.. This is 'Includes.rst.txt' (shared cross-reference targets, substitutions)
+
+.. Standard substitutions
+
+.. |php| replace:: PHP
+.. |typo3| replace:: TYPO3
