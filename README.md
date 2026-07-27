@@ -276,6 +276,7 @@ The script will:
 | `https://site3.analytics.ddev.site/` | Frontend site 3 |
 | `https://site4.analytics.ddev.site/` | Frontend site 4 |
 | `https://site5.analytics.ddev.site/` | Frontend site 5 |
+| `https://analytics.ddev.site:1337` | Documentation preview |
 
 **Backend credentials:** `admin` / `Admin1234!`
 
@@ -294,6 +295,12 @@ rm -rf .Build/dummy-typo3
 # Then restart — setup runs automatically
 ddev restart
 ```
+
+### Documentation preview
+
+The [ddev-typo3-docs](https://github.com/TYPO3-Documentation/ddev-typo3-docs) add-on renders the `.rst` files in `Documentation/` with the same renderer used by docs.typo3.org. It starts automatically with `ddev start`/`ddev restart` and watches for changes.
+
+Open **https://analytics.ddev.site:1337** and edit files under `Documentation/` — the preview re-renders automatically on save.
 
 ### Code quality
 
