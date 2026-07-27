@@ -72,6 +72,7 @@ final readonly class BackendModuleController
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
             'isManager' => $this->isAnalyticsManager(),
             'logoSvg' => $this->readLogoSvg(),
+            'plansUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_analytics_plans_content'),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Index');

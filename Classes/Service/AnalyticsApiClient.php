@@ -129,6 +129,29 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
     }
 
     /**
+     * @return list<array<string, mixed>>
+     * @throws AnalyticsApiException
+     */
+    public function fetchPlans(string $intpId): array
+    {
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getBaseUrl() . '/public/plans?intpId=' . urlencode($intpId),
+                'GET',
+                $this->apiConfiguration->getRequestOptions()
+            );
+            /** @var array<string, mixed> $data */
+            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $packages = $data['packages'] ?? [];
+            return is_array($packages) ? array_values($packages) : [];
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
      * @throws AnalyticsApiException
      */
     public function fetchCheckoutUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string

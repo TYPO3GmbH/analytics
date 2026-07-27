@@ -36,6 +36,9 @@ services:
   T3G\Analytics\Controller\PagePerformanceAjaxController:
     public: true
 
+  T3G\Analytics\Controller\PlansAjaxController:
+    public: true
+
   T3G\Analytics\Service\AnalyticsApiClientInterface:
     alias: T3G\Analytics\Service\AnalyticsApiClient
 
@@ -66,6 +69,9 @@ services:
   T3G\Analytics\Service\MetricFormatterInterface:
     alias: T3G\Analytics\Service\MetricFormatter
 
+  T3G\Analytics\Service\PlansServiceInterface:
+    alias: T3G\Analytics\Service\PlansService
+
   T3G\Analytics\Service\InstanceRegistrationServiceInterface:
     alias: T3G\Analytics\Service\InstanceRegistrationService
 
@@ -82,6 +88,11 @@ services:
     class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
     factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
     arguments: ['tx_analytics_status']
+
+  cache.tx_analytics_plans:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['tx_analytics_plans']
 
   cache.tx_analytics_pages:
     class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
@@ -111,6 +122,10 @@ services:
   T3G\Analytics\Service\AnalyticsStatusService:
     arguments:
       $cache: '@cache.tx_analytics_status'
+
+  T3G\Analytics\Service\PlansService:
+    arguments:
+      $cache: '@cache.tx_analytics_plans'
 
   T3G\Analytics\Service\TopPagesService:
     arguments:

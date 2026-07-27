@@ -116,6 +116,66 @@
             <trans-unit id="button.backToOverview" resname="button.backToOverview">
                 <source>Back to overview</source>
             </trans-unit>
+            <trans-unit id="label.availablePlans" resname="label.availablePlans">
+                <source>Available Plans</source>
+            </trans-unit>
+            <trans-unit id="label.plans.heading" resname="label.plans.heading">
+                <source>Our Plans</source>
+            </trans-unit>
+            <trans-unit id="label.plans.hide" resname="label.plans.hide">
+                <source>Hide price info</source>
+            </trans-unit>
+            <trans-unit id="label.plans.show" resname="label.plans.show">
+                <source>Show price info</source>
+            </trans-unit>
+            <trans-unit id="label.plans.yearlyToggle" resname="label.plans.yearlyToggle">
+                <source>Yearly · Save 20 %</source>
+            </trans-unit>
+            <trans-unit id="label.plans.free" resname="label.plans.free">
+                <source>Free</source>
+            </trans-unit>
+            <trans-unit id="label.plans.monthly" resname="label.plans.monthly">
+                <source>Monthly</source>
+            </trans-unit>
+            <trans-unit id="label.plans.perMonth" resname="label.plans.perMonth">
+                <source>per month</source>
+            </trans-unit>
+            <trans-unit id="label.plans.perYear" resname="label.plans.perYear">
+                <source>per year</source>
+            </trans-unit>
+            <trans-unit id="label.plans.touchpointsPerMonth" resname="label.plans.touchpointsPerMonth">
+                <source>%s credits / month</source>
+            </trans-unit>
+            <trans-unit id="label.plans.apiAccess" resname="label.plans.apiAccess">
+                <source>API access</source>
+            </trans-unit>
+            <trans-unit id="label.plans.ownDashboards" resname="label.plans.ownDashboards">
+                <source>Custom dashboards</source>
+            </trans-unit>
+            <trans-unit id="badge.trial" resname="badge.trial">
+                <source>Trial</source>
+            </trans-unit>
+            <trans-unit id="label.plans.trialLimited" resname="label.plans.trialLimited">
+                <source>Time-limited, for evaluation only</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.name" resname="label.plans.custom.name">
+                <source>Custom</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.tagline" resname="label.plans.custom.tagline">
+                <source>Price on request</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.contact" resname="label.plans.custom.contact">
+                <source>Contact us</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.emailSubject" resname="label.plans.custom.emailSubject">
+                <source>Custom Plan Inquiry</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
+                <source>More credits / month</source>
+            </trans-unit>
+            <trans-unit id="label.plans.exclVat" resname="label.plans.exclVat">
+                <source>All prices excl. VAT.</source>
+            </trans-unit>
             <trans-unit id="notification.statusRefreshed.title" resname="notification.statusRefreshed.title">
                 <source>Status updated</source>
             </trans-unit>

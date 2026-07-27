@@ -40,6 +40,18 @@ final readonly class ApiConfiguration
         return $result . rtrim($parts['path'] ?? '', '/');
     }
 
+    public function getContactEmail(): string
+    {
+        $configured = $this->load('TYPO3_ANALYTICS_CONTACT_EMAIL', 'contactEmail');
+        return $configured !== '' ? $configured : 'support@typo3.com';
+    }
+
+    public function isCustomPlanEnabled(): bool
+    {
+        $configured = $this->load('TYPO3_ANALYTICS_SHOW_CUSTOM_PLAN', 'showCustomPlan');
+        return $configured !== '0';
+    }
+
     /** @return array<string, mixed> */
     public function getRequestOptions(): array
     {

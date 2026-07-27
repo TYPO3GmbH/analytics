@@ -40,7 +40,19 @@
             </trans-unit>
             <trans-unit id="flash.success.registered" resname="flash.success.registered">
                 <source>Site "%s" successfully registered.</source>
-                <target>Site „%s“ erfolgreich registriert.</target>
+                <target>Site „%s" erfolgreich registriert.</target>
+            </trans-unit>
+            <trans-unit id="flash.accessDenied" resname="flash.accessDenied">
+                <source>Access denied. You do not have the Analytics Manager permission.</source>
+                <target>Zugriff verweigert. Du verfügst nicht über die Berechtigung für den Analytics Manager.</target>
+            </trans-unit>
+            <trans-unit id="be_groups.custom_options.analytics" resname="be_groups.custom_options.analytics">
+                <source>TYPO3 Analytics</source>
+                <target>TYPO3 Analytics</target>
+            </trans-unit>
+            <trans-unit id="be_groups.custom_options.analytics.manager" resname="be_groups.custom_options.analytics.manager">
+                <source>Analytics Manager (full access: registration, status, plan management)</source>
+                <target>Analytics Manager (vollständiger Zugriff: Registrierung, Status, Planverwaltung)</target>
             </trans-unit>
             <trans-unit id="backend.headline" resname="backend.headline">
                 <source>TYPO3 Analytics</source>
@@ -57,6 +69,10 @@
             <trans-unit id="badge.notRegistered" resname="badge.notRegistered">
                 <source>Not registered</source>
                 <target>Nicht registriert</target>
+            </trans-unit>
+            <trans-unit id="badge.trial" resname="badge.trial">
+                <source>Trial</source>
+                <target>Testversion</target>
             </trans-unit>
             <trans-unit id="label.domain" resname="label.domain">
                 <source>Domain</source>
@@ -113,6 +129,82 @@
             <trans-unit id="badge.lowCredits" resname="badge.lowCredits">
                 <source>low credits</source>
                 <target>wenig Credits</target>
+            </trans-unit>
+            <trans-unit id="label.plans.heading" resname="label.plans.heading">
+                <source>Our Plans</source>
+                <target>Unsere Pläne</target>
+            </trans-unit>
+            <trans-unit id="label.plans.hide" resname="label.plans.hide">
+                <source>Hide price info</source>
+                <target>Preisinfos ausblenden</target>
+            </trans-unit>
+            <trans-unit id="label.plans.show" resname="label.plans.show">
+                <source>Show price info</source>
+                <target>Preisinfos anzeigen</target>
+            </trans-unit>
+            <trans-unit id="label.plans.yearlyToggle" resname="label.plans.yearlyToggle">
+                <source>Yearly · Save 20 %</source>
+                <target>Jährlich · 20 % sparen</target>
+            </trans-unit>
+            <trans-unit id="label.plans.free" resname="label.plans.free">
+                <source>Free</source>
+                <target>Kostenlos</target>
+            </trans-unit>
+            <trans-unit id="label.availablePlans" resname="label.availablePlans">
+                <source>Available Plans</source>
+                <target>Verfügbare Pläne</target>
+            </trans-unit>
+            <trans-unit id="label.plans.monthly" resname="label.plans.monthly">
+                <source>Monthly</source>
+                <target>Monatlich</target>
+            </trans-unit>
+            <trans-unit id="label.plans.perMonth" resname="label.plans.perMonth">
+                <source>per month</source>
+                <target>pro Monat</target>
+            </trans-unit>
+            <trans-unit id="label.plans.perYear" resname="label.plans.perYear">
+                <source>per year</source>
+                <target>pro Jahr</target>
+            </trans-unit>
+            <trans-unit id="label.plans.touchpointsPerMonth" resname="label.plans.touchpointsPerMonth">
+                <source>%s credits / month</source>
+                <target>%s Credits / Monat</target>
+            </trans-unit>
+            <trans-unit id="label.plans.apiAccess" resname="label.plans.apiAccess">
+                <source>API access</source>
+                <target>API-Zugriff</target>
+            </trans-unit>
+            <trans-unit id="label.plans.ownDashboards" resname="label.plans.ownDashboards">
+                <source>Custom dashboards</source>
+                <target>Eigene Dashboards</target>
+            </trans-unit>
+            <trans-unit id="label.plans.trialLimited" resname="label.plans.trialLimited">
+                <source>Time-limited, for evaluation only</source>
+                <target>Zeitlich begrenzt, nur zur Evaluierung</target>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.name" resname="label.plans.custom.name">
+                <source>Custom</source>
+                <target>Custom</target>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.tagline" resname="label.plans.custom.tagline">
+                <source>Price on request</source>
+                <target>Preis auf Anfrage</target>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.contact" resname="label.plans.custom.contact">
+                <source>Contact us</source>
+                <target>Kontakt aufnehmen</target>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.emailSubject" resname="label.plans.custom.emailSubject">
+                <source>Custom Plan Inquiry</source>
+                <target>Anfrage Custom Plan</target>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
+                <source>More credits / month</source>
+                <target>Mehr Credits / Monat</target>
+            </trans-unit>
+            <trans-unit id="label.plans.exclVat" resname="label.plans.exclVat">
+                <source>All prices excl. VAT.</source>
+                <target>Alle Preise exkl. MwSt.</target>
             </trans-unit>
             <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
                 <source>Your credits have been used up. Add more credits via</source>
@@ -245,6 +337,22 @@
             <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
                 <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
                 <target>Der Prozentsatz der Besucher, die nach dem Aufrufen dieser Seite weiter gesurft haben. Berechnet als 100 % minus Absprungrate.</target>
+            </trans-unit>
+            <trans-unit id="dashboard.analyticsOverview.title" resname="dashboard.analyticsOverview.title">
+                <source>Analytics Overview</source>
+                <target>Analytics-Übersicht</target>
+            </trans-unit>
+            <trans-unit id="dashboard.analyticsOverview.description" resname="dashboard.analyticsOverview.description">
+                <source>Site performance, top pages, traffic graph and traffic sources (channel, devices, browser, countries).</source>
+                <target>Site-Performance, Top-Seiten, Traffic-Verlauf und Traffic-Quellen (Kanal, Geräte, Browser, Länder).</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.setting.title.label" resname="dashboardWidget.setting.title.label">
+                <source>Title</source>
+                <target>Titel</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.setting.showMeta.label" resname="dashboardWidget.setting.showMeta.label">
+                <source>Show site &amp; period in title</source>
+                <target>Site &amp; Zeitraum im Titel anzeigen</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>Analytics</source>
@@ -402,6 +510,38 @@
                 <source>Unique visitors</source>
                 <target>Eindeutige Besucher</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.new" resname="dashboardWidget.trafficGraph.chartLabel.visitors.new">
+                <source>New visitors</source>
+                <target>Neue Besucher</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.overall" resname="dashboardWidget.trafficGraph.chartLabel.visitors.overall">
+                <source>Total visitors</source>
+                <target>Besucher gesamt</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.returning" resname="dashboardWidget.trafficGraph.chartLabel.visitors.returning">
+                <source>Returning visitors</source>
+                <target>Wiederkehrende Besucher</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.allMetricsHidden" resname="dashboardWidget.trafficGraph.allMetricsHidden">
+                <source>Please enable at least one metric to display the chart.</source>
+                <target>Bitte aktiviere mindestens eine Metrik, um das Diagramm anzuzeigen.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessions" resname="dashboardWidget.trafficGraph.yAxisTitle.sessions">
+                <source>Sessions</source>
+                <target>Sitzungen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" resname="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors">
+                <source>Sessions / Visitors</source>
+                <target>Sitzungen / Besucher</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visitors" resname="dashboardWidget.trafficGraph.yAxisTitle.visitors">
+                <source>Visitors</source>
+                <target>Besucher</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visits" resname="dashboardWidget.trafficGraph.yAxisTitle.visits">
+                <source>Visits</source>
+                <target>Besuche</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
                 <target>TYPO3 Analytics</target>
@@ -478,6 +618,50 @@
                 <source>Unknown</source>
                 <target>Unbekannt</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.phone" resname="dashboardWidget.trafficSources.device.phone">
+                <source>Phone</source>
+                <target>Handy</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
+                <source>Other</source>
+                <target>Sonstige</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.browsers" resname="dashboardWidget.trafficSources.browsers">
+                <source>Browser</source>
+                <target>Browser</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.countries" resname="dashboardWidget.trafficSources.countries">
+                <source>Countries</source>
+                <target>Länder</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.other" resname="dashboardWidget.trafficSources.other">
+                <source>Other</source>
+                <target>Sonstige</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.sessions" resname="dashboardWidget.trafficSources.sessions">
+                <source>Sessions</source>
+                <target>Sitzungen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.totalSessions" resname="dashboardWidget.trafficSources.totalSessions">
+                <source>Total Sessions</source>
+                <target>Sitzungen gesamt</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
+                <source>Compared to previous period</source>
+                <target>Verglichen mit dem vorherigen Zeitraum</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.showAll" resname="dashboardWidget.trafficSources.showAll">
+                <source>Show in Analytics</source>
+                <target>In Analytics anzeigen</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.chartType.label" resname="dashboardWidget.trafficSources.setting.chartType.label">
+                <source>Chart type</source>
+                <target>Diagrammtyp</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.setting.section.label" resname="dashboardWidget.trafficSources.setting.section.label">
+                <source>Section</source>
+                <target>Abschnitt</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.tooltip.share" resname="dashboardWidget.trafficSources.tooltip.share">
                 <source>% from all</source>
                 <target>% von allen</target>
@@ -485,6 +669,38 @@
             <trans-unit id="dashboardWidget.trafficSources.tooltip.change" resname="dashboardWidget.trafficSources.tooltip.change">
                 <source>Change</source>
                 <target>Änderung</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesBrowser.title" resname="dashboardWidget.trafficSourcesBrowser.title">
+                <source>Traffic Sources: Browser</source>
+                <target>Traffic-Quellen: Browser</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesBrowser.description" resname="dashboardWidget.trafficSourcesBrowser.description">
+                <source>Shows the browser distribution of your website visitors.</source>
+                <target>Zeigt die Browser-Verteilung deiner Website-Besucher.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesChannel.title" resname="dashboardWidget.trafficSourcesChannel.title">
+                <source>Traffic Sources: Channel</source>
+                <target>Traffic-Quellen: Kanal</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesChannel.description" resname="dashboardWidget.trafficSourcesChannel.description">
+                <source>Shows the traffic channel distribution of your website visitors.</source>
+                <target>Zeigt die Kanalverteilung des Traffics deiner Website-Besucher.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesCountries.title" resname="dashboardWidget.trafficSourcesCountries.title">
+                <source>Traffic Sources: Countries</source>
+                <target>Traffic-Quellen: Länder</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesCountries.description" resname="dashboardWidget.trafficSourcesCountries.description">
+                <source>Shows the geographic distribution of your website visitors.</source>
+                <target>Zeigt die geografische Verteilung deiner Website-Besucher.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesDevices.title" resname="dashboardWidget.trafficSourcesDevices.title">
+                <source>Traffic Sources: Devices</source>
+                <target>Traffic-Quellen: Geräte</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSourcesDevices.description" resname="dashboardWidget.trafficSourcesDevices.description">
+                <source>Shows the device distribution of your website visitors.</source>
+                <target>Zeigt die Geräteverteilung deiner Website-Besucher.</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.noDataForPeriod" resname="dashboardWidget.noDataForPeriod">
                 <source>No data available for the period: %s.</source>

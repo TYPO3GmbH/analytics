@@ -26,6 +26,8 @@
             </div>
         </div>
 
+        <f:render partial="Backend/Plans" arguments="{plansUrl: plansUrl}" />
+
         <f:for each="{siteGroups}" as="siteGroup">
             <f:if condition="{siteGroup.sites}">
                 <section class="tx-analytics-site-group">
