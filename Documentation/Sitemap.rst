@@ -6,7 +6,7 @@
 Sitemap
 =======
 
-..  toctree::
+..  menu::
     :glob:
     :titlesonly:
 

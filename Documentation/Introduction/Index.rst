@@ -11,8 +11,9 @@ integrates it directly into the TYPO3 backend, so editors and administrators
 can access analytics data without switching to a separate tool.
 
 ..  note::
-    After the free trial period, a paid subscription is required. Pricing and
-    plan details are available at `analytics.typo3.com <https://analytics.typo3.com>`__.
+    After the free trial period, a paid subscription is required. Available
+    plans and pricing are shown directly in the backend module and at
+    `analytics.typo3.com <https://analytics.typo3.com>`__.
 
 
 What the extension provides

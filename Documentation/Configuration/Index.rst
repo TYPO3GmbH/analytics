@@ -16,9 +16,6 @@ They can also be set programmatically in :file:`config/system/additional.php`:
     $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['settingName'] = 'value';
 
 
-Dashboard settings
-==================
-
 ..  confval-menu::
     :display: table
     :type:
@@ -40,21 +37,14 @@ Dashboard settings
         Performance Bar. Must be one of the values defined in
         :confval:`dashboardPeriods`.
 
-**Example — custom period options:**
+    ..  confval:: pageAnalyticsCacheTtl
+        :type: int
+        :default: `3600`
 
-..  code-block:: php
-
-    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardPeriods'] = '7,30,90';
-    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod'] = 30;
-
-
-Development settings
-====================
-
-..  confval-menu::
-    :display: table
-    :type:
-    :default:
+        Lifetime in seconds for all analytics data caches (page metrics,
+        top pages, site performance, traffic graph, and traffic sources).
+        Increase this value to reduce API calls on high-traffic backend
+        installations.
 
     ..  confval:: demoData
         :type: bool
@@ -64,3 +54,34 @@ Development settings
         Only takes effect in the TYPO3 :php:`Development` application context.
         Use this to explore the widgets and module without a live analytics
         account.
+
+
+Dashboard settings
+==================
+
+**Example — custom period options:**
+
+..  code-block:: php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardPeriods'] = '7,30,90';
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod'] = 30;
+
+
+Cache settings
+==============
+
+**Example — longer cache lifetime:**
+
+..  code-block:: php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
+
+
+Development settings
+====================
+
+**Example — enable demo data:**
+
+..  code-block:: php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['demoData'] = true;

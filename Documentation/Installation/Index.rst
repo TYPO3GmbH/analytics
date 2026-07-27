@@ -13,21 +13,26 @@ Install via Composer
 
     composer require t3g/analytics
 
-Activate the extension
-=======================
-
 Activate the extension in the TYPO3 Extension Manager or via the CLI:
 
 ..  code-block:: bash
 
     vendor/bin/typo3 extension:setup analytics
 
-Include the Site Set
-====================
+Install via TER (Classic mode)
+===============================
 
-The extension ships a Site Set that must be added to every site that should
-be tracked. Open the site configuration in :guilabel:`Site Management →
-Sites`, switch to the :guilabel:`Sets` tab, and add **TYPO3 Analytics**.
+In a non-Composer TYPO3 installation, search for **analytics** in
+:guilabel:`Admin Tools → Extensions` and install it from there. Make sure the
+**Dashboard** system extension is active before installing, as the extension
+depends on it.
 
-This registers the required settings (website ID, tracking code, etc.) for
-the site and enables frontend tracking code injection once the site is active.
+Deployment note
+===============
+
+Site-specific data written by the extension (credentials, tracking code, API
+keys) is stored in each site's :file:`config/sites/<identifier>/settings.yaml`.
+This file is separate from the structural :file:`config.yaml` and contains
+sensitive values that must not be committed to the repository. In a
+deployment setup, :file:`settings.yaml` should be kept in a shared folder
+outside the release directory and symlinked or copied on each deploy.
