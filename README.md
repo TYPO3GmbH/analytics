@@ -52,6 +52,8 @@ Two icon variants are shipped and selected automatically at runtime based on the
 
 ## Installation
 
+### Composer (recommended)
+
 ```bash
 composer require t3g/analytics
 ```
@@ -61,6 +63,14 @@ Activate the extension in the TYPO3 Extension Manager or via:
 ```bash
 vendor/bin/typo3 extension:setup analytics
 ```
+
+### TER / Classic mode
+
+In a non-Composer TYPO3 installation, search for **analytics** in **Admin Tools → Extensions** and install it from there. Make sure the **Dashboard** system extension is active before installing.
+
+### Deployment note
+
+Site-specific data written by the extension (credentials, tracking code, API keys) is stored in each site's `config/sites/<identifier>/settings.yaml`. This file contains sensitive values and must not be committed to the repository. In a deployment setup, keep `settings.yaml` in a shared folder outside the release directory and symlink or copy it on each deploy.
 
 ## Configuration reference
 
@@ -82,6 +92,18 @@ vendor/bin/typo3 extension:setup analytics
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardPeriods'] = '7,30,90';
 $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod'] = 30;
+```
+
+### Cache settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `pageAnalyticsCacheTtl` | int | `3600` | Lifetime in seconds for all analytics data caches. Increase this value to reduce API calls on high-traffic backend installations. |
+
+**Example — longer cache lifetime:**
+
+```php
+$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
 ```
 
 ## Modules and widgets

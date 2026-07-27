@@ -42,7 +42,7 @@ They can also be set programmatically in :file:`config/system/additional.php`:
         :default: `3600`
 
         Lifetime in seconds for all analytics data caches (page metrics,
-        top pages, site performance, traffic graph, and traffic sources).
+        top pages, site performance, traffic graph, traffic sources, and plans).
         Increase this value to reduce API calls on high-traffic backend
         installations.
 
