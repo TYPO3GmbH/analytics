@@ -2,6 +2,7 @@ import Notification from '@typo3/backend/notification.js';
 import ImmediateAction from '@typo3/backend/action-button/immediate-action.js';
 
 const STORAGE_KEY = 'tx-analytics-notification';
+const PLANS_COLLAPSED_KEY = 'tx-analytics-plans-collapsed';
 
 function showPendingNotification() {
     const pending = sessionStorage.getItem(STORAGE_KEY);
@@ -61,6 +62,8 @@ async function initPlans() {
 
     const creditsFormat = root.dataset.i18nCredits;
     const badgeTrialText = root.dataset.i18nBadgeTrial;
+    const hideText = root.dataset.i18nHide;
+    const showText = root.dataset.i18nShow;
 
     try {
         const resp = await fetch(root.dataset.plansUrl);
@@ -69,7 +72,7 @@ async function initPlans() {
             document.getElementById('tx-analytics-plans-section')?.remove();
             return;
         }
-        renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail ?? 'support@typo3.com', showCustomPlan !== false, locale ?? 'en');
+        renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail ?? 'support@typo3.com', showCustomPlan !== false, locale ?? 'en', hideText, showText);
     } catch {
         document.getElementById('tx-analytics-plans-section')?.remove();
     }
@@ -79,7 +82,7 @@ function cloneTpl(id) {
     return document.getElementById(id).content.cloneNode(true);
 }
 
-function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, showCustomPlan, locale) {
+function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, showCustomPlan, locale, hideText, showText) {
     const header = cloneTpl('tpl-plans-header').firstElementChild;
 
     const grid = document.createElement('div');
@@ -110,6 +113,30 @@ function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, s
             el.hidden = el.dataset.period !== period;
         });
     });
+
+    const collapseBtn = header.querySelector('.tx-analytics-plans-collapse-toggle');
+    const collapseLink = header.querySelector('.tx-analytics-plans-collapse-link');
+    const periodToggle = header.querySelector('.tx-analytics-plans-toggle');
+
+    const setCollapsed = collapsed => {
+        collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+        collapseBtn.classList.toggle('tx-analytics-plans-collapse-toggle--collapsed', collapsed);
+        collapseLink.textContent = collapsed ? showText : hideText;
+        periodToggle.hidden = collapsed;
+        grid.hidden = collapsed;
+        vatNotice.hidden = collapsed;
+    };
+
+    const toggleCollapsed = () => {
+        const collapsed = collapseBtn.getAttribute('aria-expanded') === 'true';
+        localStorage.setItem(PLANS_COLLAPSED_KEY, collapsed ? '1' : '0');
+        setCollapsed(collapsed);
+    };
+
+    collapseBtn.addEventListener('click', toggleCollapsed);
+    collapseLink.addEventListener('click', toggleCollapsed);
+
+    setCollapsed(localStorage.getItem(PLANS_COLLAPSED_KEY) === '1');
 }
 
 function buildPlanCard(plan, creditsFormat, badgeTrialText, locale) {

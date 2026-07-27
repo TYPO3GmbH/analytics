@@ -122,6 +122,12 @@
             <trans-unit id="label.plans.heading" resname="label.plans.heading">
                 <source>Our Plans</source>
             </trans-unit>
+            <trans-unit id="label.plans.hide" resname="label.plans.hide">
+                <source>Hide price info</source>
+            </trans-unit>
+            <trans-unit id="label.plans.show" resname="label.plans.show">
+                <source>Show price info</source>
+            </trans-unit>
             <trans-unit id="label.plans.yearlyToggle" resname="label.plans.yearlyToggle">
                 <source>Yearly · Save 20 %</source>
             </trans-unit>

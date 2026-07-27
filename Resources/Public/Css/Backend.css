@@ -132,6 +132,45 @@ typo3-notification {
     margin-block-end: var(--typo3-spacing);
 }
 
+.tx-analytics-plans-collapse-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    font-weight: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.tx-analytics-plans-collapse-toggle:hover {
+    color: var(--typo3-text-color-primary);
+}
+
+.tx-analytics-plans-collapse-icon {
+    display: inline-block;
+    width: .5rem;
+    height: .5rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform .15s ease;
+    flex-shrink: 0;
+}
+
+.tx-analytics-plans-collapse-toggle--collapsed .tx-analytics-plans-collapse-icon {
+    transform: rotate(-45deg);
+}
+
+.tx-analytics-plans-collapse-link {
+    margin-inline-start: auto;
+    font-size: 12px;
+    color: var(--typo3-text-color-primary);
+}
+
 .tx-analytics-plans-toggle {
     display: inline-flex;
     border: 1px solid var(--typo3-component-border-color);
@@ -184,6 +223,10 @@ typo3-notification {
     margin-block-start: var(--typo3-spacing);
     margin-left: 0;
     margin-right: 0;
+}
+
+.card-container.tx-analytics-plans-card-container[hidden] {
+    display: none !important;
 }
 
 .card-container.tx-analytics-plans-card-container > .card {

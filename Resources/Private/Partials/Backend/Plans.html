@@ -4,15 +4,25 @@
              data-plans-url="{plansUrl}"
              data-i18n-credits="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.touchpointsPerMonth')}"
              data-i18n-badge-trial="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.trial')}"
+             data-i18n-hide="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.hide')}"
+             data-i18n-show="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.show')}"
         ></div>
 
         <template id="tpl-plans-header">
             <div class="tx-analytics-plans-header">
-                <h2 class="tx-analytics-site-group-title" style="margin:0"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.heading" /></h2>
+                <h2 class="tx-analytics-site-group-title" style="margin:0">
+                    <button type="button" class="tx-analytics-plans-collapse-toggle" aria-expanded="true">
+                        <span class="tx-analytics-plans-collapse-icon" aria-hidden="true"></span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.heading" />
+                    </button>
+                </h2>
                 <div class="tx-analytics-plans-toggle" role="group">
                     <button type="button" class="tx-analytics-plans-toggle-btn active" data-period="yearly"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.yearlyToggle" /></button>
                     <button type="button" class="tx-analytics-plans-toggle-btn" data-period="monthly"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.monthly" /></button>
                 </div>
+                <button type="button" class="tx-analytics-plans-collapse-link btn btn-link">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.hide" />
+                </button>
             </div>
         </template>
 

@@ -134,6 +134,14 @@
                 <source>Our Plans</source>
                 <target>Unsere Pläne</target>
             </trans-unit>
+            <trans-unit id="label.plans.hide" resname="label.plans.hide">
+                <source>Hide price info</source>
+                <target>Preisinfos ausblenden</target>
+            </trans-unit>
+            <trans-unit id="label.plans.show" resname="label.plans.show">
+                <source>Show price info</source>
+                <target>Preisinfos anzeigen</target>
+            </trans-unit>
             <trans-unit id="label.plans.yearlyToggle" resname="label.plans.yearlyToggle">
                 <source>Yearly · Save 20 %</source>
                 <target>Jährlich · 20 % sparen</target>
