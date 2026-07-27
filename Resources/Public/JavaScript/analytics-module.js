@@ -64,12 +64,12 @@ async function initPlans() {
 
     try {
         const resp = await fetch(root.dataset.plansUrl);
-        const { plans, contactEmail, showCustomPlan } = await resp.json();
+        const { plans, contactEmail, showCustomPlan, locale } = await resp.json();
         if (!Array.isArray(plans) || plans.length === 0) {
             document.getElementById('tx-analytics-plans-section')?.remove();
             return;
         }
-        renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail ?? 'support@typo3.com', showCustomPlan !== false);
+        renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail ?? 'support@typo3.com', showCustomPlan !== false, locale ?? 'en');
     } catch {
         document.getElementById('tx-analytics-plans-section')?.remove();
     }
@@ -79,13 +79,13 @@ function cloneTpl(id) {
     return document.getElementById(id).content.cloneNode(true);
 }
 
-function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, showCustomPlan) {
+function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, showCustomPlan, locale) {
     const header = cloneTpl('tpl-plans-header').firstElementChild;
 
     const grid = document.createElement('div');
     grid.className = 'card-container tx-analytics-plans-card-container';
     for (const plan of plans) {
-        grid.appendChild(buildPlanCard(plan, creditsFormat, badgeTrialText));
+        grid.appendChild(buildPlanCard(plan, creditsFormat, badgeTrialText, locale));
     }
     if (showCustomPlan) {
         grid.appendChild(buildCustomCard(contactEmail));
@@ -112,7 +112,7 @@ function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, s
     });
 }
 
-function buildPlanCard(plan, creditsFormat, badgeTrialText) {
+function buildPlanCard(plan, creditsFormat, badgeTrialText, locale) {
     const frag = cloneTpl('tpl-plan-card');
     const card = frag.firstElementChild;
 
@@ -131,14 +131,14 @@ function buildPlanCard(plan, creditsFormat, badgeTrialText) {
         pricesContainer.append(priceFrag);
     } else {
         const priceFrag = cloneTpl('tpl-price-paid');
-        setPrice(priceFrag.querySelector('[data-slot="monthly-price"]'), plan.monthlyPrice);
+        setPrice(priceFrag.querySelector('[data-slot="monthly-price"]'), plan.monthlyPrice, plan.currency, locale);
         const strikeEl = priceFrag.querySelector('[data-slot="strike-price"]');
         if (plan.monthlyPrice) {
-            setPrice(strikeEl, plan.monthlyPrice);
+            setPrice(strikeEl, plan.monthlyPrice, plan.currency, locale);
         } else {
             strikeEl.remove();
         }
-        setPrice(priceFrag.querySelector('[data-slot="yearly-price"]'), plan.monthlyEquiv ?? plan.yearlyPrice ?? '');
+        setPrice(priceFrag.querySelector('[data-slot="yearly-price"]'), plan.monthlyEquiv ?? plan.yearlyPrice ?? 0, plan.currency, locale);
         pricesContainer.append(priceFrag);
     }
 
@@ -152,6 +152,7 @@ function buildPlanCard(plan, creditsFormat, badgeTrialText) {
     } else {
         dashIcon.classList.add('tx-analytics-plan-icon--minus');
         dashIcon.textContent = '–';
+        dashIcon.closest('.list-group-item').classList.add('tx-analytics-plan-features-item--muted');
     }
 
     return card;
@@ -165,12 +166,23 @@ function buildCustomCard(contactEmail) {
     return card;
 }
 
-function setPrice(el, price) {
-    el.append(`€ ${price}`);
-    const sup = document.createElement('sup');
-    sup.className = 'tx-analytics-plan-price-sup';
-    sup.textContent = '*';
-    el.appendChild(sup);
+function setPrice(el, price, currency, locale) {
+    let formatter;
+    try {
+        formatter = new Intl.NumberFormat(locale, { style: 'currency', currency });
+    } catch {
+        formatter = new Intl.NumberFormat('en', { style: 'currency', currency });
+    }
+    for (const part of formatter.formatToParts(price)) {
+        if (part.type === 'currency') {
+            const span = document.createElement('span');
+            span.className = 'tx-analytics-plan-price-currency';
+            span.textContent = part.value;
+            el.appendChild(span);
+        } else {
+            el.append(part.value);
+        }
+    }
 }
 
 function fmt(str, ...args) {

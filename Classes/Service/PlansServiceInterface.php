@@ -15,9 +15,9 @@ interface PlansServiceInterface
      *   isFree: bool,
      *   isTrial: bool,
      *   currency: string,
-     *   monthlyPrice: string|null,
-     *   yearlyPrice: string|null,
-     *   monthlyEquiv: string|null,
+     *   monthlyPrice: float|null,
+     *   yearlyPrice: float|null,
+     *   monthlyEquiv: float|null,
      *   hasOwnDashboards: bool,
      * }>
      */

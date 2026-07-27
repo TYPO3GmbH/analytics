@@ -21,7 +21,7 @@ readonly class PlansService implements PlansServiceInterface
         $cacheKey = 'plans_' . sha1($intpId);
 
         if ($this->cache->has($cacheKey)) {
-            /** @var list<array{name: string, displayName: string, touchpoints: int, touchpointsFormatted: string, isFree: bool, isTrial: bool, currency: string, monthlyPrice: string|null, yearlyPrice: string|null, monthlyEquiv: string|null, hasOwnDashboards: bool}> $cached */
+            /** @var list<array{name: string, displayName: string, touchpoints: int, touchpointsFormatted: string, isFree: bool, isTrial: bool, currency: string, monthlyPrice: float|null, yearlyPrice: float|null, monthlyEquiv: float|null, hasOwnDashboards: bool}> $cached */
             $cached = $this->cache->get($cacheKey);
             return $cached;
         }
@@ -40,7 +40,7 @@ readonly class PlansService implements PlansServiceInterface
 
     /**
      * @param list<array<string, mixed>> $packages
-     * @return list<array{name: string, displayName: string, touchpoints: int, touchpointsFormatted: string, isFree: bool, isTrial: bool, currency: string, monthlyPrice: string|null, yearlyPrice: string|null, monthlyEquiv: string|null, hasOwnDashboards: bool}>
+     * @return list<array{name: string, displayName: string, touchpoints: int, touchpointsFormatted: string, isFree: bool, isTrial: bool, currency: string, monthlyPrice: float|null, yearlyPrice: float|null, monthlyEquiv: float|null, hasOwnDashboards: bool}>
      */
     private function buildPlans(array $packages): array
     {
@@ -100,7 +100,7 @@ readonly class PlansService implements PlansServiceInterface
 
     /**
      * @param array{touchpoints: int, currency: string, monthlyPrice: float|null, yearlyPrice: float|null} $data
-     * @return array{name: string, displayName: string, touchpoints: int, touchpointsFormatted: string, isFree: bool, isTrial: bool, currency: string, monthlyPrice: string|null, yearlyPrice: string|null, monthlyEquiv: string|null, hasOwnDashboards: bool}
+     * @return array{name: string, displayName: string, touchpoints: int, touchpointsFormatted: string, isFree: bool, isTrial: bool, currency: string, monthlyPrice: float|null, yearlyPrice: float|null, monthlyEquiv: float|null, hasOwnDashboards: bool}
      */
     private function preparePlan(string $name, array $data): array
     {
@@ -115,16 +115,11 @@ readonly class PlansService implements PlansServiceInterface
             'isFree' => $monthlyPrice === null || $monthlyPrice <= 0.0,
             'isTrial' => $name === 'unlimited_free_trial',
             'currency' => $data['currency'],
-            'monthlyPrice' => $monthlyPrice !== null ? $this->formatPrice($monthlyPrice) : null,
-            'yearlyPrice' => $yearlyPrice !== null ? $this->formatPrice($yearlyPrice) : null,
-            'monthlyEquiv' => $yearlyPrice !== null ? $this->formatPrice($yearlyPrice / 12) : null,
+            'monthlyPrice' => $monthlyPrice,
+            'yearlyPrice' => $yearlyPrice,
+            'monthlyEquiv' => $yearlyPrice !== null ? $yearlyPrice / 12 : null,
             'hasOwnDashboards' => in_array($name, self::PLANS_WITH_OWN_DASHBOARDS, true),
         ];
-    }
-
-    private function formatPrice(float $price): string
-    {
-        return number_format($price, 2, ',', '.');
     }
 
     private function formatTouchpoints(int $touchpoints): string
