@@ -5,6 +5,7 @@ composer.lock
 
 # Generated / cache
 /var/
+/Documentation-GENERATED-temp/
 
 # TYPO3
 /public/

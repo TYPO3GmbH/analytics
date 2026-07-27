@@ -1,0 +1,8 @@
+name: typo3-docs
+repository: TYPO3-Documentation/ddev-typo3-docs
+version: 0.1.1
+install_date: "2026-07-27T09:24:46+02:00"
+project_files:
+    - docker-compose.typo3-docs.yaml
+global_files: []
+removal_actions: []
