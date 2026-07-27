@@ -75,8 +75,8 @@ final class PlansServiceTest extends UnitTestCase
 
         self::assertCount(1, $result);
         self::assertSame('Basic', $result[0]['name']);
-        self::assertSame('12,99', $result[0]['monthlyPrice']);
-        self::assertSame('124,68', $result[0]['yearlyPrice']);
+        self::assertSame(12.99, $result[0]['monthlyPrice']);
+        self::assertSame(124.68, $result[0]['yearlyPrice']);
         self::assertNotNull($result[0]['monthlyEquiv']);
     }
 
@@ -91,7 +91,7 @@ final class PlansServiceTest extends UnitTestCase
         $result = $this->subject->getPlans(self::INTP_ID);
 
         self::assertCount(1, $result);
-        self::assertSame('12,99', $result[0]['monthlyPrice']);
+        self::assertSame(12.99, $result[0]['monthlyPrice']);
         self::assertNull($result[0]['yearlyPrice']);
     }
 
@@ -215,6 +215,6 @@ final class PlansServiceTest extends UnitTestCase
         $result = $this->subject->getPlans(self::INTP_ID);
 
         // 239.88 / 12 = 19.99
-        self::assertSame('19,99', $result[0]['monthlyEquiv']);
+        self::assertSame(19.99, $result[0]['monthlyEquiv']);
     }
 }

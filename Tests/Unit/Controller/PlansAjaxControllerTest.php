@@ -10,6 +10,7 @@ use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Controller\PlansAjaxController;
 use T3G\Analytics\Service\PlansServiceInterface;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Localization\Locales;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class PlansAjaxControllerTest extends UnitTestCase
@@ -28,6 +29,7 @@ final class PlansAjaxControllerTest extends UnitTestCase
         $this->subject = new PlansAjaxController(
             $this->plansService,
             new ApiConfiguration(),
+            new Locales(),
         );
     }
 
@@ -73,7 +75,7 @@ final class PlansAjaxControllerTest extends UnitTestCase
     public function handleIncludesCustomContactEmailFromConfVars(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['contactEmail'] = 'partner@example.com';
-        $subject = new PlansAjaxController($this->plansService, new ApiConfiguration());
+        $subject = new PlansAjaxController($this->plansService, new ApiConfiguration(), new Locales());
 
         $response = $subject->handle(new ServerRequest());
 
@@ -97,7 +99,7 @@ final class PlansAjaxControllerTest extends UnitTestCase
     public function handleIncludesShowCustomPlanFalseWhenDisabledViaConfVars(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['showCustomPlan'] = '0';
-        $subject = new PlansAjaxController($this->plansService, new ApiConfiguration());
+        $subject = new PlansAjaxController($this->plansService, new ApiConfiguration(), new Locales());
 
         $response = $subject->handle(new ServerRequest());
 
