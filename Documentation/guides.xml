@@ -6,11 +6,11 @@
 >
     <extension class="\T3Docs\Typo3DocsTheme\DependencyInjection\Typo3DocsThemeExtension"
                project-home="https://analytics.typo3.com"
-               project-repository="https://github.com/typo3gmbh/ext-analytics"
-               project-issues="https://github.com/typo3gmbh/ext-analytics/issues"
+               project-repository="https://github.com/typo3gmbh/analytics"
+               project-issues="https://github.com/typo3gmbh/analytics/issues"
                project-contact="mailto:support@typo3.com"
                edit-on-github-branch="main"
-               edit-on-github="typo3gmbh/ext-analytics"
+               edit-on-github="typo3gmbh/analytics"
                typo3-core-preferred="stable"
                interlink-shortcode="t3g/analytics"
     />
