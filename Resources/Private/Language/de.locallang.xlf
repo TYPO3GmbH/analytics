@@ -194,6 +194,10 @@
                 <source>More credits / month</source>
                 <target>Mehr Credits / Monat</target>
             </trans-unit>
+            <trans-unit id="label.plans.exclVat" resname="label.plans.exclVat">
+                <source>All prices excl. VAT.</source>
+                <target>Alle Preise exkl. MwSt.</target>
+            </trans-unit>
             <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
                 <source>Your credits have been used up. Add more credits via</source>
                 <target>Deine Credits sind aufgebraucht. Weitere Credits erhältst du über</target>

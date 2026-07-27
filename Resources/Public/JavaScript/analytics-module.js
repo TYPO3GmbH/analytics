@@ -58,58 +58,48 @@ showPendingNotification();
 async function initPlans() {
     const root = document.getElementById('tx-analytics-plans-root');
     if (!root) return;
-    const i18n = {
-        heading:               root.dataset.i18nHeading,
-        toggleMonthly:         root.dataset.i18nToggleMonthly,
-        toggleYearly:          root.dataset.i18nToggleYearly,
-        free:                  root.dataset.i18nFree,
-        trialNote:             root.dataset.i18nTrialNote,
-        credits:               root.dataset.i18nCredits,
-        apiAccess:             root.dataset.i18nApiAccess,
-        dashboards:            root.dataset.i18nDashboards,
-        perMonth:              root.dataset.i18nPerMonth,
-        perYear:               root.dataset.i18nPerYear,
-        badgeTrial:            root.dataset.i18nBadgeTrial,
-        customName:            root.dataset.i18nCustomName,
-        customTagline:         root.dataset.i18nCustomTagline,
-        customContact:         root.dataset.i18nCustomContact,
-        customEmailSubject:    root.dataset.i18nCustomEmailSubject,
-        customCredits:         root.dataset.i18nCustomCredits,
-    };
+
+    const creditsFormat = root.dataset.i18nCredits;
+    const badgeTrialText = root.dataset.i18nBadgeTrial;
+
     try {
         const resp = await fetch(root.dataset.plansUrl);
-        const { plans } = await resp.json();
+        const { plans, contactEmail, showCustomPlan } = await resp.json();
         if (!Array.isArray(plans) || plans.length === 0) {
             document.getElementById('tx-analytics-plans-section')?.remove();
             return;
         }
-        renderPlans(root, plans, i18n);
+        renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail ?? 'support@typo3.com', showCustomPlan !== false);
     } catch {
         document.getElementById('tx-analytics-plans-section')?.remove();
     }
 }
 
-function renderPlans(root, plans, i18n) {
-    const header = document.createElement('div');
-    header.className = 'tx-analytics-plans-header';
-    header.innerHTML = `
-        <h2 class="tx-analytics-site-group-title" style="margin:0">${esc(i18n.heading)}</h2>
-        <div class="tx-analytics-plans-toggle" role="group">
-            <button type="button" class="tx-analytics-plans-toggle-btn active" data-period="monthly">${esc(i18n.toggleMonthly)}</button>
-            <button type="button" class="tx-analytics-plans-toggle-btn" data-period="yearly">${esc(i18n.toggleYearly)}</button>
-        </div>`;
+function cloneTpl(id) {
+    return document.getElementById(id).content.cloneNode(true);
+}
+
+function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, showCustomPlan) {
+    const header = cloneTpl('tpl-plans-header').firstElementChild;
 
     const grid = document.createElement('div');
     grid.className = 'card-container tx-analytics-plans-card-container';
-    plans.forEach(plan => grid.insertAdjacentHTML('beforeend', planCardHtml(plan, i18n)));
-    grid.insertAdjacentHTML('beforeend', customPlanCardHtml(i18n));
+    for (const plan of plans) {
+        grid.appendChild(buildPlanCard(plan, creditsFormat, badgeTrialText));
+    }
+    if (showCustomPlan) {
+        grid.appendChild(buildCustomCard(contactEmail));
+    }
 
-    const total = plans.length + 1;
+    const total = plans.length + (showCustomPlan ? 1 : 0);
     grid.style.setProperty('--plan-count', total);
     grid.style.setProperty('--plan-cols-narrow', Math.min(total, 3));
 
+    const vatNotice = cloneTpl('tpl-plans-vat-notice').firstElementChild;
+
     root.appendChild(header);
     root.appendChild(grid);
+    root.appendChild(vatNotice);
 
     header.querySelector('.tx-analytics-plans-toggle').addEventListener('click', e => {
         const btn = e.target.closest('[data-period]');
@@ -122,86 +112,70 @@ function renderPlans(root, plans, i18n) {
     });
 }
 
-function planCardHtml(plan, i18n) {
-    const title = plan.isTrial ? esc(i18n.badgeTrial) : esc(plan.displayName);
-    let prices;
+function buildPlanCard(plan, creditsFormat, badgeTrialText) {
+    const frag = cloneTpl('tpl-plan-card');
+    const card = frag.firstElementChild;
+
+    card.querySelector('[data-slot="title"]').textContent =
+        plan.isTrial ? badgeTrialText : plan.displayName;
+
+    const pricesContainer = card.querySelector('.tx-analytics-plan-prices');
     if (plan.isFree) {
-        const sublabel = plan.isTrial
-            ? `<span class="tx-analytics-plan-price-sublabel">${esc(i18n.trialNote)}</span>`
-            : `<span class="tx-analytics-plan-price-sublabel" style="visibility:hidden" aria-hidden="true">&nbsp;</span>`;
-        const freeContent = `
-                <span class="tx-analytics-plan-price-amount">${esc(i18n.free)}</span>
-                ${sublabel}
-                <span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-yearly-total" style="visibility:hidden" aria-hidden="true">&nbsp;</span>`;
-        prices = `
-            <div class="tx-analytics-price-period" data-period="monthly">${freeContent}</div>
-            <div class="tx-analytics-price-period" data-period="yearly" hidden>${freeContent}</div>`;
+        const priceFrag = cloneTpl('tpl-price-free');
+        if (plan.isTrial) {
+            priceFrag.querySelectorAll('.tx-analytics-plan-price-sublabel--trial').forEach(el => { el.hidden = false; });
+            priceFrag.querySelectorAll('.tx-analytics-plan-price-sublabel--nontrial').forEach(el => el.remove());
+        } else {
+            priceFrag.querySelectorAll('.tx-analytics-plan-price-sublabel--trial').forEach(el => el.remove());
+        }
+        pricesContainer.append(priceFrag);
     } else {
-        const yearlyTotalLine = plan.yearlyPrice
-            ? `<span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-yearly-total">€ ${esc(plan.yearlyPrice)} ${esc(i18n.perYear)}</span>`
-            : '';
-        prices = `
-            <div class="tx-analytics-price-period" data-period="monthly">
-                <span class="tx-analytics-plan-price-amount">€ ${esc(plan.monthlyPrice)}</span>
-                <span class="tx-analytics-plan-price-sublabel">${esc(i18n.perMonth)}</span>
-                ${yearlyTotalLine ? `<span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-yearly-total" style="visibility:hidden" aria-hidden="true">&nbsp;</span>` : ''}
-            </div>
-            <div class="tx-analytics-price-period" data-period="yearly" hidden>
-                <span class="tx-analytics-plan-price-amount">€ ${esc(plan.monthlyEquiv ?? plan.yearlyPrice ?? '')}</span>
-                <span class="tx-analytics-plan-price-sublabel">${esc(i18n.perMonth)}</span>
-                ${yearlyTotalLine}
-            </div>`;
+        const priceFrag = cloneTpl('tpl-price-paid');
+        setPrice(priceFrag.querySelector('[data-slot="monthly-price"]'), plan.monthlyPrice);
+        const strikeEl = priceFrag.querySelector('[data-slot="strike-price"]');
+        if (plan.monthlyPrice) {
+            setPrice(strikeEl, plan.monthlyPrice);
+        } else {
+            strikeEl.remove();
+        }
+        setPrice(priceFrag.querySelector('[data-slot="yearly-price"]'), plan.monthlyEquiv ?? plan.yearlyPrice ?? '');
+        pricesContainer.append(priceFrag);
     }
-    const check = `<span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>`;
-    const minus = `<span class="tx-analytics-plan-icon tx-analytics-plan-icon--minus">–</span>`;
-    return `
-        <div class="card tx-analytics-plan-card">
-            <div class="card-header">
-                <div class="card-header-body">
-                    <h2 class="card-title">${title}</h2>
-                </div>
-            </div>
-            <div class="tx-analytics-plan-prices">${prices}</div>
-            <ul class="list-group list-group-flush tx-analytics-plan-features">
-                <li class="list-group-item">${check} ${fmt(i18n.credits, plan.touchpointsFormatted)}</li>
-                <li class="list-group-item">${check} ${esc(i18n.apiAccess)}</li>
-                <li class="list-group-item">${plan.hasOwnDashboards ? check : minus} ${esc(i18n.dashboards)}</li>
-            </ul>
-        </div>`;
+
+    const creditsLi = card.querySelector('[data-slot="credits"]');
+    creditsLi.append(document.createTextNode(' ' + fmt(creditsFormat, plan.touchpointsFormatted)));
+
+    const dashIcon = card.querySelector('[data-slot="dashboards-icon"]');
+    if (plan.hasOwnDashboards) {
+        dashIcon.classList.add('tx-analytics-plan-icon--check');
+        dashIcon.textContent = '✓';
+    } else {
+        dashIcon.classList.add('tx-analytics-plan-icon--minus');
+        dashIcon.textContent = '–';
+    }
+
+    return card;
 }
 
-function customPlanCardHtml(i18n) {
-    const check = `<span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>`;
-    const mailtoHref = `mailto:support@typo3.com?subject=${encodeURIComponent(i18n.customEmailSubject ?? 'Custom Plan Inquiry')}`;
-    return `
-        <div class="card tx-analytics-plan-card tx-analytics-plan-card--custom">
-            <div class="card-header">
-                <div class="card-header-body">
-                    <h2 class="card-title">${esc(i18n.customName)}</h2>
-                </div>
-            </div>
-            <div class="tx-analytics-plan-prices tx-analytics-plan-prices--custom">
-                <div class="tx-analytics-plan-custom-cta">
-                    <a href="${mailtoHref}" target="_blank" rel="noreferrer" class="btn btn-primary btn-sm tx-analytics-plan-contact-btn">${esc(i18n.customContact)}</a>
-                    <span class="tx-analytics-plan-price-custom-tagline">${esc(i18n.customTagline)}</span>
-                    <span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-yearly-total" style="visibility:hidden" aria-hidden="true">&nbsp;</span>
-                </div>
-            </div>
-            <ul class="list-group list-group-flush tx-analytics-plan-features">
-                <li class="list-group-item">${check} ${esc(i18n.customCredits)}</li>
-                <li class="list-group-item">${check} ${esc(i18n.apiAccess)}</li>
-                <li class="list-group-item">${check} ${esc(i18n.dashboards)}</li>
-            </ul>
-        </div>`;
+function buildCustomCard(contactEmail) {
+    const frag = cloneTpl('tpl-plan-card-custom');
+    const card = frag.firstElementChild;
+    const btn = card.querySelector('.tx-analytics-plan-contact-btn');
+    btn.href = `mailto:${contactEmail}?subject=${encodeURIComponent(btn.dataset.emailSubject ?? '')}`;
+    return card;
 }
 
-function esc(str) {
-    return String(str ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+function setPrice(el, price) {
+    el.append(`€ ${price}`);
+    const sup = document.createElement('sup');
+    sup.className = 'tx-analytics-plan-price-sup';
+    sup.textContent = '*';
+    el.appendChild(sup);
 }
 
 function fmt(str, ...args) {
     let i = 0;
-    return String(str ?? '').replace(/%s/g, () => esc(String(args[i++] ?? ''))).replace(/%%/g, '%');
+    return String(str ?? '').replace(/%s/g, () => String(args[i++] ?? '')).replace(/%%/g, '%');
 }
 
 initPlans();

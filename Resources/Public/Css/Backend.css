@@ -233,9 +233,13 @@ typo3-notification {
 }
 
 .tx-analytics-price-period {
-    margin-top: auto;
+    flex: 1;
     display: flex;
     flex-direction: column;
+}
+
+.tx-analytics-price-period .tx-analytics-plan-price-amount {
+    margin-top: auto;
 }
 
 .tx-analytics-plan-price-amount {
@@ -255,8 +259,26 @@ typo3-notification {
 }
 
 
-.tx-analytics-plan-price-yearly-total {
-    margin-top: .3rem;
+.tx-analytics-plan-price-sup {
+    font-size: .65em;
+    vertical-align: super;
+    font-weight: normal;
+}
+
+.tx-analytics-plan-price-amount-old {
+    font-size: .85rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    line-height: 1.4;
+    color: var(--typo3-text-color-variant, #6c757d);
+    text-decoration: line-through;
+}
+
+.tx-analytics-plans-vat-notice {
+    margin-block-start: .5rem;
+    margin-block-end: 0;
+    font-size: 11px;
+    color: var(--typo3-text-color-variant, #6c757d);
 }
 
 .tx-analytics-plan-features.list-group-flush {
@@ -273,7 +295,7 @@ typo3-notification {
     border-radius: 0;
 }
 
-.tx-analytics-plan-features .list-group-item:first-child { border-top: 0; min-height: calc(2lh + 0.8rem); }
+.tx-analytics-plan-features .list-group-item:first-child { border-top: 0; }
 .tx-analytics-plan-features .list-group-item:last-child { border-bottom: 0; padding-block-end: .8rem; }
 
 .tx-analytics-plan-price-custom-tagline {
@@ -284,12 +306,13 @@ typo3-notification {
 }
 
 .tx-analytics-plan-custom-cta {
-    margin-top: auto;
+    flex: 1;
     display: flex;
     flex-direction: column;
 }
 
 .tx-analytics-plan-contact-btn {
+    margin-top: auto;
     width: 100%;
     text-align: center;
 }

@@ -167,6 +167,9 @@
             <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
                 <source>More credits / month</source>
             </trans-unit>
+            <trans-unit id="label.plans.exclVat" resname="label.plans.exclVat">
+                <source>All prices excl. VAT.</source>
+            </trans-unit>
             <trans-unit id="notification.statusRefreshed.title" resname="notification.statusRefreshed.title">
                 <source>Status updated</source>
             </trans-unit>

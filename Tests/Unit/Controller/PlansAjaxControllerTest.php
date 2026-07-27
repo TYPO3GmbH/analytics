@@ -9,7 +9,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Controller\PlansAjaxController;
 use T3G\Analytics\Service\PlansServiceInterface;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -26,12 +25,9 @@ final class PlansAjaxControllerTest extends UnitTestCase
 
         $this->plansService = $this->createMock(PlansServiceInterface::class);
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturn('');
-
         $this->subject = new PlansAjaxController(
             $this->plansService,
-            new ApiConfiguration($extensionConfiguration),
+            new ApiConfiguration(),
         );
     }
 
@@ -63,23 +59,65 @@ final class PlansAjaxControllerTest extends UnitTestCase
     }
 
     #[Test]
+    public function handleIncludesContactEmailDefaultInResponse(): void
+    {
+        $this->plansService->method('getPlans')->willReturn([]);
+
+        $response = $this->subject->handle(new ServerRequest());
+
+        $body = json_decode((string)$response->getBody(), true);
+        self::assertSame('support@typo3.com', $body['contactEmail']);
+    }
+
+    #[Test]
+    public function handleIncludesCustomContactEmailFromConfVars(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['contactEmail'] = 'partner@example.com';
+        $subject = new PlansAjaxController($this->plansService, new ApiConfiguration());
+
+        $response = $subject->handle(new ServerRequest());
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['contactEmail']);
+        $body = json_decode((string)$response->getBody(), true);
+        self::assertSame('partner@example.com', $body['contactEmail']);
+    }
+
+    #[Test]
+    public function handleIncludesShowCustomPlanTrueByDefault(): void
+    {
+        $this->plansService->method('getPlans')->willReturn([]);
+
+        $response = $this->subject->handle(new ServerRequest());
+
+        $body = json_decode((string)$response->getBody(), true);
+        self::assertTrue($body['showCustomPlan']);
+    }
+
+    #[Test]
+    public function handleIncludesShowCustomPlanFalseWhenDisabledViaConfVars(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['showCustomPlan'] = '0';
+        $subject = new PlansAjaxController($this->plansService, new ApiConfiguration());
+
+        $response = $subject->handle(new ServerRequest());
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['showCustomPlan']);
+        $body = json_decode((string)$response->getBody(), true);
+        self::assertFalse($body['showCustomPlan']);
+    }
+
+    #[Test]
     public function handlePassesIntpIdFromConfigurationToService(): void
     {
-        $configWithCustomIntpId = $this->createMock(ExtensionConfiguration::class);
-        $configWithCustomIntpId->method('get')
-            ->with('analytics', 'intpId')
-            ->willReturn('configured-intp-id');
-
-        $controllerWithCustomIntpId = new PlansAjaxController(
-            $this->plansService,
-            new ApiConfiguration($configWithCustomIntpId),
-        );
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['intpId'] = 'configured-intp-id';
 
         $this->plansService->expects(self::once())
             ->method('getPlans')
             ->with('configured-intp-id')
             ->willReturn([]);
 
-        $controllerWithCustomIntpId->handle(new ServerRequest());
+        $this->subject->handle(new ServerRequest());
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['intpId']);
     }
 }

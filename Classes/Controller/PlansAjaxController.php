@@ -21,6 +21,10 @@ final readonly class PlansAjaxController
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $plans = $this->plansService->getPlans($this->apiConfiguration->getIntpId());
-        return new JsonResponse(['plans' => $plans]);
+        return new JsonResponse([
+            'plans' => $plans,
+            'contactEmail' => $this->apiConfiguration->getContactEmail(),
+            'showCustomPlan' => $this->apiConfiguration->isCustomPlanEnabled(),
+        ]);
     }
 }

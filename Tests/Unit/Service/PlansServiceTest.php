@@ -85,14 +85,29 @@ final class PlansServiceTest extends UnitTestCase
     {
         $this->cache->method('has')->willReturn(false);
         $this->apiClient->method('fetchPlans')->willReturn([
-            ['name' => 'Free', 'touchpoints' => 0, 'price' => 0.0, 'currency' => 'EUR', 'period' => 'monhtly'],
+            ['name' => 'Basic', 'touchpoints' => 25000, 'price' => 12.99, 'currency' => 'EUR', 'period' => 'monhtly'],
         ]);
 
         $result = $this->subject->getPlans(self::INTP_ID);
 
         self::assertCount(1, $result);
-        self::assertSame('0,00', $result[0]['monthlyPrice']);
+        self::assertSame('12,99', $result[0]['monthlyPrice']);
         self::assertNull($result[0]['yearlyPrice']);
+    }
+
+    #[Test]
+    public function getPlansSkipsPackagesWithZeroTouchpoints(): void
+    {
+        $this->cache->method('has')->willReturn(false);
+        $this->apiClient->method('fetchPlans')->willReturn([
+            ['name' => 'Free',  'touchpoints' => 0,     'price' => 0.0,   'currency' => 'EUR', 'period' => 'monthly'],
+            ['name' => 'Basic', 'touchpoints' => 25000, 'price' => 12.99, 'currency' => 'EUR', 'period' => 'monthly'],
+        ]);
+
+        $result = $this->subject->getPlans(self::INTP_ID);
+
+        self::assertCount(1, $result);
+        self::assertSame('Basic', $result[0]['name']);
     }
 
     #[Test]
@@ -128,7 +143,6 @@ final class PlansServiceTest extends UnitTestCase
     {
         $this->cache->method('has')->willReturn(false);
         $this->apiClient->method('fetchPlans')->willReturn([
-            ['name' => 'Free',     'touchpoints' => 0,      'price' => 0,     'currency' => 'EUR', 'period' => 'monthly'],
             ['name' => 'Basic',    'touchpoints' => 25000,  'price' => 12.99, 'currency' => 'EUR', 'period' => 'monthly'],
             ['name' => 'Advanced', 'touchpoints' => 62500,  'price' => 24.99, 'currency' => 'EUR', 'period' => 'monthly'],
             ['name' => 'Pro',      'touchpoints' => 125000, 'price' => 39.99, 'currency' => 'EUR', 'period' => 'monthly'],
@@ -137,7 +151,6 @@ final class PlansServiceTest extends UnitTestCase
         $result = $this->subject->getPlans(self::INTP_ID);
         $byName = array_column($result, null, 'name');
 
-        self::assertFalse($byName['Free']['hasOwnDashboards']);
         self::assertFalse($byName['Basic']['hasOwnDashboards']);
         self::assertTrue($byName['Advanced']['hasOwnDashboards']);
         self::assertTrue($byName['Pro']['hasOwnDashboards']);
@@ -158,7 +171,7 @@ final class PlansServiceTest extends UnitTestCase
         $result = $this->subject->getPlans(self::INTP_ID);
         $touchpoints = array_column($result, 'touchpoints');
 
-        self::assertSame([0, 25000, 62500, 125000, -1], $touchpoints);
+        self::assertSame([25000, 62500, 125000, -1], $touchpoints);
     }
 
     #[Test]
@@ -181,8 +194,8 @@ final class PlansServiceTest extends UnitTestCase
     {
         $this->cache->method('has')->willReturn(false);
         $this->apiClient->method('fetchPlans')->willReturn([
-            ['name' => '',      'touchpoints' => 0, 'price' => 0.0,   'currency' => 'EUR', 'period' => 'monthly'],
-            ['name' => 'Basic', 'touchpoints' => 0, 'price' => 12.99, 'currency' => 'EUR', 'period' => 'monthly'],
+            ['name' => '',      'touchpoints' => 25000, 'price' => 0.0,   'currency' => 'EUR', 'period' => 'monthly'],
+            ['name' => 'Basic', 'touchpoints' => 25000, 'price' => 12.99, 'currency' => 'EUR', 'period' => 'monthly'],
         ]);
 
         $result = $this->subject->getPlans(self::INTP_ID);

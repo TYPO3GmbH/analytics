@@ -52,6 +52,11 @@ readonly class PlansService implements PlansServiceInterface
                 continue;
             }
 
+            // The API returns a "Free" default plan with touchpoints=0 that we never want to display.
+            if ((int)($package['touchpoints'] ?? 0) === 0) {
+                continue;
+            }
+
             // Normalize API typo "monhtly" → "monthly"
             $period = strtolower((string)($package['period'] ?? ''));
             if (str_starts_with($period, 'mon')) {
