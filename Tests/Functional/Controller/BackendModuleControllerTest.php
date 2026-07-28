@@ -32,6 +32,7 @@ use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
+use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
@@ -464,9 +465,17 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     {
         $route = new Route($path, ['packageName' => 't3g/analytics']);
 
-        return (new ServerRequest(new Uri('https://example.com' . $path), $method))
+        $request = (new ServerRequest(
+            new Uri('https://example.com' . $path),
+            $method,
+            'php://input',
+            [],
+            ['HTTP_HOST' => 'example.com', 'HTTPS' => 'on', 'REQUEST_URI' => $path, 'SCRIPT_NAME' => '/index.php'],
+        ))
             ->withAttribute('route', $route)
             ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
+
+        return $request->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request));
     }
 
     private function buildManagerUser(): BackendUserAuthentication
