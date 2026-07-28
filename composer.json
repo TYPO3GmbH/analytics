@@ -2,7 +2,7 @@
   "name": "t3g/analytics",
   "description": "TYPO3 Analytics Extension",
   "type": "typo3-cms-extension",
-  "license": "proprietary",
+  "license": "GPL-2.0-or-later",
   "authors": [
     {
       "name": "TYPO3 GmbH",
