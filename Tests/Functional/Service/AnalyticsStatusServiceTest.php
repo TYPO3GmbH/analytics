@@ -18,7 +18,6 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -58,14 +57,11 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
         $this->cache = $this->get(CacheManager::class)->getCache('tx_analytics_status');
         $this->cipherService = new CipherService();
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
         $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
-            new ApiConfiguration($extensionConfiguration),
+            new ApiConfiguration(),
             new HmacSigner(),
             new ApiExceptionExtractor(),
         );

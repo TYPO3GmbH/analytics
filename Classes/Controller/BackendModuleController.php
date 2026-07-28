@@ -19,15 +19,23 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Resource\Security\SvgSanitizer;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 
 final readonly class BackendModuleController
 {
+    /**
+     * Sub-paths that may be appended to the dashboard iframe URL via the
+     * `dashboardPath` request parameter. Anything else is ignored.
+     */
+    private const ALLOWED_DASHBOARD_PATHS = ['', 'dashboard/pages', 'traffic/share'];
+
     public function __construct(
         private ModuleTemplateFactory $moduleTemplateFactory,
         private UriBuilder $uriBuilder,
@@ -55,11 +63,16 @@ final readonly class BackendModuleController
             moduleClass: 'module-layout-normal'
         );
 
+        $sites = $this->siteDataProvider->fetchSites();
+
         $moduleTemplate->assignMultiple([
-            'sites' => $this->siteDataProvider->fetchSites(),
+            'sites' => $sites,
+            'siteGroups' => $this->groupSitesByAnalyticsStatus($sites),
             'registerUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.register'),
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
             'isManager' => $this->isAnalyticsManager(),
+            'logoSvg' => $this->readLogoSvg(),
+            'plansUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_analytics_plans_content'),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Index');
@@ -139,12 +152,15 @@ final readonly class BackendModuleController
         $dateParams = $this->buildDateParams((int)($queryParams['days'] ?? 0));
         $pageUrl = (string)($queryParams['pageUrl'] ?? '');
         $dashboardPath = (string)($queryParams['dashboardPath'] ?? '');
+        if (!in_array($dashboardPath, self::ALLOWED_DASHBOARD_PATHS, true)) {
+            $dashboardPath = '';
+        }
 
         return $this->renderIframeModule(
             request: $request,
             siteIdentifier: $siteIdentifier,
             urlResolver: function (Site $site) use ($dateParams, $pageUrl, $dashboardPath): ?string {
-                $url = $this->analyticsStatusService->getDashboardUrl($site);
+                $url = $this->analyticsStatusService->getDashboardUrl($site, !$this->isAnalyticsManager());
                 if ($url === null) {
                     return null;
                 }
@@ -403,6 +419,37 @@ final readonly class BackendModuleController
         return $headline . ' - ' . $actionLabel . ': ' . $siteLabel;
     }
 
+    /**
+     * @param list<array<string, mixed>> $sites
+     * @return list<array{title: string, sites: list<array<string, mixed>>}>
+     */
+    private function groupSitesByAnalyticsStatus(array $sites): array
+    {
+        $activeSites = [];
+        $inactiveSites = [];
+
+        foreach ($sites as $site) {
+            $status = is_array($site['status'] ?? null) ? $site['status'] : [];
+            if (($status['status'] ?? '') === 'active') {
+                $activeSites[] = $site;
+                continue;
+            }
+
+            $inactiveSites[] = $site;
+        }
+
+        return [
+            [
+                'title' => $this->translate('label.activeSites'),
+                'sites' => $activeSites,
+            ],
+            [
+                'title' => $this->translate('label.inactiveSites'),
+                'sites' => $inactiveSites,
+            ],
+        ];
+    }
+
     /** @param list<mixed> $arguments */
     private function addFlashMessage(
         string $messageKey,
@@ -417,6 +464,28 @@ final readonly class BackendModuleController
             true,
         );
         $this->flashMessageService->getMessageQueueByIdentifier()->addMessage($message);
+    }
+
+    private function readLogoSvg(): string
+    {
+        $envLogoPath = getenv('TYPO3_ANALYTICS_LOGO_PATH');
+        $configured = ($envLogoPath !== false && $envLogoPath !== '')
+            ? $envLogoPath
+            : (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['logoPath'] ?? '');
+        $path = $configured !== ''
+            ? GeneralUtility::getFileAbsFileName($configured)
+            : GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Public/Images/analytics-logo.svg');
+
+        if ($path === '' || !is_file($path)) {
+            return '';
+        }
+        $svg = (string)file_get_contents($path);
+        // A custom, admin-configured logo is inlined via <f:format.raw>; sanitize it to
+        // strip scripts/event handlers. The shipped default logo is trusted as-is.
+        if ($configured !== '') {
+            $svg = (new SvgSanitizer())->sanitizeContent($svg);
+        }
+        return $svg;
     }
 
     private function isAnalyticsManager(): bool

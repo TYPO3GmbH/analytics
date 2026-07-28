@@ -1,3 +1,5 @@
+import { escHtml, positionTooltip, readStorage, writeStorage } from '@t3g/analytics/widget-utils.js';
+
 const storagePrefix = 'tx-analytics-traffic-graph';
 
 function resolveWidgetIdentifier(widget) {
@@ -13,22 +15,6 @@ function siteKey(widget) {
 
 function daysKey(widget) {
   return `${storagePrefix}:days:${resolveWidgetIdentifier(widget)}`;
-}
-
-function readStorage(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeStorage(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // ignore (e.g. Safari private mode)
-  }
 }
 
 // ─── Tooltip ──────────────────────────────────────────────────────────────────
@@ -48,38 +34,16 @@ function getOrCreateGlobalTooltip() {
 
 function renderTooltipContent(tooltip, data, hiddenDatasets) {
   const { date, metrics } = data;
-  let html = `<div class="tx-analytics-traffic-graph-tooltip-date">${escapeHtml(date)}</div>`;
+  let html = `<div class="tx-analytics-traffic-graph-tooltip-date">${escHtml(date)}</div>`;
   for (const m of (metrics || [])) {
     if (m.key && hiddenDatasets?.has(m.key)) continue;
     html += `<div class="tx-analytics-traffic-graph-tooltip-row">`
-          + `<span class="tx-analytics-traffic-graph-tooltip-dot" data-tone="${escapeHtml(m.tone || '')}"></span>`
-          + `<span class="tx-analytics-traffic-graph-tooltip-label">${escapeHtml(m.label || '')}</span>`
-          + `<span class="tx-analytics-traffic-graph-tooltip-value">${escapeHtml(m.value || '')}</span>`
+          + `<span class="tx-analytics-traffic-graph-tooltip-dot" data-tone="${escHtml(m.tone || '')}"></span>`
+          + `<span class="tx-analytics-traffic-graph-tooltip-label">${escHtml(m.label || '')}</span>`
+          + `<span class="tx-analytics-traffic-graph-tooltip-value">${escHtml(m.value || '')}</span>`
           + `</div>`;
   }
   tooltip.innerHTML = html;
-}
-
-function positionTooltip(tooltip, clientX, clientY) {
-  // Render off-screen first so offsetWidth/Height are computed.
-  tooltip.style.left = '-9999px';
-  tooltip.style.top = '-9999px';
-  tooltip.style.display = 'block';
-
-  const tw = tooltip.offsetWidth;
-  const th = tooltip.offsetHeight;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  let x = clientX + 14;
-  let y = clientY - Math.round(th / 2);
-
-  if (x + tw > vw - 8) x = clientX - tw - 14;
-  x = Math.max(8, x);
-  y = Math.max(8, Math.min(y, vh - th - 8));
-
-  tooltip.style.left = x + 'px';
-  tooltip.style.top = y + 'px';
 }
 
 function showHoverIndicator(tooltipRect, hiddenDatasets) {
@@ -156,14 +120,6 @@ function hideGlobalTooltip() {
   if (el) el.style.display = 'none';
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function initChartTooltips(widget) {
   if (widget._tooltipsInitialized) return;
   widget._tooltipsInitialized = true;
@@ -196,47 +152,27 @@ function initChartTooltips(widget) {
 
 // ─── Legend toggle ─────────────────────────────────────────────────────────────
 
-function setDatasetVisible(chartArea, key, visible) {
-  if (!chartArea) return;
-  chartArea.querySelectorAll(`[data-dataset-key="${CSS.escape(key)}"]`).forEach((el) => {
-    el.style.display = visible ? '' : 'none';
-  });
-}
-
 function initLegendToggles(widget) {
   const legend = widget.querySelector('.tx-analytics-traffic-graph-legend');
   if (!legend) return;
-
-  const chartArea = widget.querySelector('.tx-analytics-traffic-graph-chart-area');
 
   if (!widget._hiddenDatasets) {
     widget._hiddenDatasets = new Set();
   }
 
+  // The server renders all legend items and marks hidden ones with --disabled.
+  // Clicking toggles visibility and triggers a chart reload so the Y-axis rescales.
   legend.querySelectorAll('.tx-analytics-traffic-graph-legend-item[data-dataset-key]').forEach((item) => {
     const key = item.dataset.datasetKey;
     if (!key) return;
 
-    // Re-apply hidden state after chart reload.
-    if (widget._hiddenDatasets.has(key)) {
-      item.classList.add('tx-analytics-traffic-graph-legend-item--disabled');
-      item.setAttribute('aria-pressed', 'false');
-      setDatasetVisible(chartArea, key, false);
-    }
-
     item.addEventListener('click', () => {
-      const isHidden = widget._hiddenDatasets.has(key);
-      if (isHidden) {
+      if (widget._hiddenDatasets.has(key)) {
         widget._hiddenDatasets.delete(key);
-        item.classList.remove('tx-analytics-traffic-graph-legend-item--disabled');
-        item.setAttribute('aria-pressed', 'true');
-        setDatasetVisible(chartArea, key, true);
       } else {
         widget._hiddenDatasets.add(key);
-        item.classList.add('tx-analytics-traffic-graph-legend-item--disabled');
-        item.setAttribute('aria-pressed', 'false');
-        setDatasetVisible(chartArea, key, false);
       }
+      loadChart(widget);
     });
   });
 }
@@ -263,6 +199,11 @@ async function loadChart(widget) {
     const url = new URL(ajaxUrl, window.location.origin);
     url.searchParams.set('site', site);
     url.searchParams.set('days', days);
+    if (widget._hiddenDatasets) {
+      for (const key of widget._hiddenDatasets) {
+        url.searchParams.append('hidden[]', key);
+      }
+    }
 
     const response = await fetch(url.toString(), {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -327,12 +268,14 @@ function initializeWidget(widget) {
   siteSelect?.addEventListener('change', () => {
     writeStorage(siteKey(widget), siteSelect.value);
     widget.dataset.site = siteSelect.value;
+    widget._hiddenDatasets?.clear();
     loadChart(widget);
   });
 
   periodSelect?.addEventListener('change', () => {
     writeStorage(daysKey(widget), periodSelect.value);
     widget.dataset.days = periodSelect.value;
+    widget._hiddenDatasets?.clear();
     loadChart(widget);
   });
 

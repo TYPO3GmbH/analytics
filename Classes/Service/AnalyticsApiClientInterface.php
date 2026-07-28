@@ -24,7 +24,7 @@ interface AnalyticsApiClientInterface
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string;
+    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string;
 
     /**
      * @return array{apiKeyId: string, apiKey: string}
@@ -36,4 +36,10 @@ interface AnalyticsApiClientInterface
      * @throws AnalyticsApiException
      */
     public function fetchCheckoutUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string;
+
+    /**
+     * @return list<array<string, mixed>>
+     * @throws AnalyticsApiException
+     */
+    public function fetchPlans(string $intpId): array;
 }

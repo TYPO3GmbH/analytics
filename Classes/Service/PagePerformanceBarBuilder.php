@@ -33,6 +33,21 @@ final readonly class PagePerformanceBarBuilder
     ) {
     }
 
+    public function buildSkeletonHtml(int $pageId, int $languageId, int $days): string
+    {
+        return '<section class="tx-analytics-performance-bar tx-analytics-performance-bar--loading"'
+            . ' aria-label="' . $this->escape($this->translate('pagePerformance.ariaLabel')) . '"'
+            . ' aria-busy="true"'
+            . ' data-page-id="' . $pageId . '"'
+            . ' data-language-id="' . $languageId . '"'
+            . ' data-days="' . $days . '">'
+            . '<div class="tx-analytics-performance-loading-overlay" aria-live="polite">'
+            . '<span class="tx-analytics-performance-loading-spinner" aria-hidden="true"></span>'
+            . '<span>' . $this->escape($this->translate('pagePerformance.loading')) . '</span>'
+            . '</div>'
+            . '</section>';
+    }
+
     /**
      * @param array<string, mixed> $queryParams
      */
@@ -116,7 +131,7 @@ final readonly class PagePerformanceBarBuilder
 
     public function normalizeDays(int $days): int
     {
-        return in_array($days, DashboardPeriods::periods(), true) ? $days : DashboardPeriods::defaultPeriod();
+        return DashboardPeriods::sanitizePeriod($days);
     }
 
     public function buildDetailsUri(?Site $site, int $days, string $pageUrl = ''): string

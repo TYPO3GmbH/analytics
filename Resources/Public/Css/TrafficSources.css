@@ -11,6 +11,24 @@
     gap: 1.25rem;
 }
 
+.widget-content-main:has(.tx-analytics-traffic-sources .tx-analytics-widget-no-data) {
+    display: flex;
+    flex-direction: column;
+}
+
+.tx-analytics-traffic-sources:has(.tx-analytics-widget-no-data) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.tx-analytics-traffic-sources-sections-container:has(> .tx-analytics-widget-no-data) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
 .tx-analytics-traffic-sources-section {
     min-width: 0;
 }
@@ -181,6 +199,14 @@
 
 .tx-analytics-traffic-sources-donut-segment {
     stroke: var(--tx-analytics-traffic-sources-tone-color);
+    cursor: pointer;
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    transition: transform 0.18s ease-out, stroke-width 0.18s ease-out;
+}
+
+.tx-analytics-traffic-sources-donut-segment.is-active {
+    stroke-width: 23;
 }
 
 .tx-analytics-traffic-sources-donut-layout > .tx-analytics-traffic-sources-list {
@@ -278,6 +304,70 @@
 }
 
 .tx-analytics-traffic-sources-change-negative {
+    color: var(--tx-analytics-color-trend-negative);
+}
+
+/* Hover tooltip */
+.tx-analytics-traffic-sources-tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: var(--typo3-component-bg);
+    border: 1px solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
+    padding: .5rem .75rem;
+    font-size: var(--typo3-font-size-small, 11px);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: var(--typo3-component-box-shadow);
+    min-width: 8rem;
+}
+
+.tx-analytics-traffic-sources-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-traffic-sources-tooltip-dot {
+    width: .65em;
+    height: .65em;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--tx-analytics-traffic-sources-tone-color);
+}
+
+.tx-analytics-traffic-sources-tooltip-name {
+    color: var(--typo3-component-color);
+}
+
+.tx-analytics-traffic-sources-tooltip-row {
+    display: flex;
+    gap: .75rem;
+    align-items: baseline;
+    padding: .1rem 0;
+    color: var(--typo3-text-color-variant);
+}
+
+.tx-analytics-traffic-sources-tooltip-row-label {
+    flex: 1;
+    min-width: 3.5rem;
+}
+
+.tx-analytics-traffic-sources-tooltip-row-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--typo3-component-color);
+    white-space: nowrap;
+}
+
+.tx-analytics-traffic-sources-change-positive .tx-analytics-traffic-sources-tooltip-row-value {
+    color: var(--tx-analytics-color-trend-positive);
+}
+
+.tx-analytics-traffic-sources-change-negative .tx-analytics-traffic-sources-tooltip-row-value {
     color: var(--tx-analytics-color-trend-negative);
 }
 

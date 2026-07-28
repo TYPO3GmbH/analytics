@@ -22,5 +22,5 @@ interface AnalyticsStatusServiceInterface
 
     public function getManagePlanUrl(Site $site): ?string;
 
-    public function getDashboardUrl(Site $site): ?string;
+    public function getDashboardUrl(Site $site, bool $watcher = false): ?string;
 }

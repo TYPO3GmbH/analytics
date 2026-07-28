@@ -23,7 +23,7 @@ use T3G\Analytics\Service\SiteDataProvider;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -85,19 +85,19 @@ final class SiteDataProviderTest extends UnitTestCase
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('test-secret');
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
         $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
-            new ApiConfiguration($extensionConfiguration),
+            new ApiConfiguration(),
             new HmacSigner(),
             new ApiExceptionExtractor(),
         );
         $statusService = new AnalyticsStatusService(
-            new VariableFrontend('analytics_status', new TransientMemoryBackend('production')),
+            // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
+            new VariableFrontend('analytics_status', (new Typo3Version())->getMajorVersion() >= 14
+                ? new TransientMemoryBackend() // @phpstan-ignore argument.count
+                : new TransientMemoryBackend('production')),
             $apiClient,
             $cipherService,
             new NullLogger(),

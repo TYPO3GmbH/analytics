@@ -15,6 +15,7 @@ use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\Settings\SettingsInterface;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Core\View\ViewInterface;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
 use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
@@ -108,7 +109,17 @@ final class TopPagesWidgetV14Test extends UnitTestCase
 
     private function makeContext(SettingsInterface $settings): WidgetContext
     {
-        $context = new WidgetContext();
+        // WidgetContext became a final readonly value object in TYPO3 v14.
+        if ((new Typo3Version())->getMajorVersion() >= 14) {
+            return new WidgetContext(
+                identifier: 'test',
+                rawData: [],
+                configuration: $this->configuration,
+                settings: $settings,
+                request: $this->createMock(ServerRequestInterface::class),
+            );
+        }
+        $context = new WidgetContext(); // @phpstan-ignore argument.count
         $context->settings = $settings;
         $context->request = $this->createMock(ServerRequestInterface::class);
         return $context;

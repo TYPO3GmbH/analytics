@@ -13,7 +13,7 @@ interface TopPagesServiceInterface
 
     /**
      * @param list<array<string, mixed>> $pages
-     * @return list<array{position: int, url: string, title: string, visitCount: string, visitPercentOfTotal: string, trend: string, trendDirection: string, trendLabel: string}>
+     * @return list<array{position: int, url: string, title: string, visitCount: string, visitPercentOfTotal: string, trend: string, trendDirection: string, trendLabel: string, pageId: int|null, languageId: int|null, flagIdentifier: string, slug: string, pageModuleUri: string|null}>
      */
     public function buildPageItems(array $pages, string $trendLabel): array;
 }

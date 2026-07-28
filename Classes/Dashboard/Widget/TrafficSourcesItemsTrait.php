@@ -12,6 +12,10 @@ trait TrafficSourcesItemsTrait
      */
     private function buildTrafficSourceItems(array $sources): array
     {
+        $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+        if ($totalVisitCount === 0) {
+            return [];
+        }
         $tones = [
             'direct' => 'source-direct',
             'search' => 'source-search',
@@ -22,7 +26,7 @@ trait TrafficSourcesItemsTrait
             'ai_traffic' => 'source-ai',
         ];
 
-        $totalVisitCount = array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+        uasort($sources, static fn (array $a, array $b): int => $b['current'] <=> $a['current']);
 
         $items = [];
         foreach ($sources as $channel => $data) {
@@ -33,6 +37,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalVisitCount),
                 'tone' => $tones[$channel] ?? 'source-other',
                 'icon' => '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
@@ -62,6 +67,7 @@ trait TrafficSourcesItemsTrait
                 'value' => $this->formatter->formatShare($current, $totalSessions),
                 'tone' => $tones[$deviceType] ?? 'device-unknown',
                 'icon' => $icons[$deviceType] ?? '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
             ];
@@ -74,22 +80,42 @@ trait TrafficSourcesItemsTrait
      * @param list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}> $payload
      * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
      */
-    private function buildBrowserItems(array $payload): array
+    private function buildBrowserItems(array $payload, int $limit = 6): array
     {
+        if ($payload === []) {
+            return [];
+        }
         $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
-        $totalSessions = array_sum(array_column($payload, 'sessionCount'));
 
+        $top = array_slice($payload, 0, $limit);
         $items = [];
-        foreach ($payload as $index => $item) {
-            $current = $item['sessionCount'];
-            $previous = $item['previousSessionCount'] ?? 0;
+        $shownPercent = 0.0;
+
+        foreach ($top as $index => $item) {
+            $current = (int)($item['sessionCount'] ?? 0);
+            $previous = (int)($item['previousSessionCount'] ?? 0);
+            $pct = (float)($item['sessionPercentOfTotal'] ?? 0.0);
+            $shownPercent += $pct;
             $items[] = [
                 'label' => (string)($item['browserName'] ?? ''),
-                'value' => $this->formatter->formatShare($current, $totalSessions),
+                'value' => number_format($pct, 2, '.', ''),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
+            ];
+        }
+
+        $othersPercent = max(0.0, 100.0 - $shownPercent);
+        if ($othersPercent > 0.05) {
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.other'),
+                'value' => number_format($othersPercent, 2, '.', ''),
+                'tone' => 'series-other',
+                'icon' => '',
+                'change' => null,
+                'changeTone' => '',
             ];
         }
 
@@ -97,25 +123,65 @@ trait TrafficSourcesItemsTrait
     }
 
     /**
+     * Back-calculates the true site session total from the API's sessionPercentOfTotal field.
+     * The largest entry is used as it has the least rounding error.
+     *
+     * @param list<array{sessionCount: int, sessionPercentOfTotal: int|float, ...}> $payload
+     */
+    private function trueSessionTotal(array $payload): int
+    {
+        foreach ($payload as $item) {
+            $pct = (float)($item['sessionPercentOfTotal'] ?? 0.0);
+            $count = (int)($item['sessionCount'] ?? 0);
+            if ($pct > 0.0 && $count > 0) {
+                return (int)round($count / ($pct / 100.0));
+            }
+        }
+        return (int)array_sum(array_column($payload, 'sessionCount'));
+    }
+
+    /**
      * @param list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: int|float, previousSessionCount?: int}> $payload
      * @return list<array{label: string, value: string, tone: string, icon: string, change: string|null, changeTone: string}>
      */
-    private function buildCountryItems(array $payload): array
+    private function buildCountryItems(array $payload, int $limit = 6): array
     {
+        if ($payload === []) {
+            return [];
+        }
         $palette = ['series-1', 'series-2', 'series-3', 'series-4', 'series-5', 'series-6', 'series-7', 'series-8'];
-        $totalSessions = array_sum(array_column($payload, 'sessionCount'));
 
+        $top = array_slice($payload, 0, $limit);
         $items = [];
-        foreach ($payload as $index => $item) {
-            $current = $item['sessionCount'];
-            $previous = $item['previousSessionCount'] ?? 0;
+        $shownPercent = 0.0;
+
+        foreach ($top as $index => $item) {
+            $current = (int)($item['sessionCount'] ?? 0);
+            $previous = (int)($item['previousSessionCount'] ?? 0);
+            $pct = (float)($item['sessionPercentOfTotal'] ?? 0.0);
+            $shownPercent += $pct;
             $items[] = [
                 'label' => $this->countryName((string)($item['countryCode'] ?? '')),
-                'value' => $this->formatter->formatShare($current, $totalSessions),
+                'value' => number_format($pct, 2, '.', ''),
                 'tone' => $palette[$index % count($palette)],
                 'icon' => '',
+                'count' => $current,
                 'change' => $this->formatter->formatAbsoluteChange($current, $previous),
                 'changeTone' => ($current === 0 && $previous === 0) ? '' : ($current >= $previous ? 'positive' : 'negative'),
+            ];
+        }
+
+        // Remaining sessions: returned countries beyond the limit + countries not returned by API at all.
+        // Since sessionPercentOfTotal values reflect the true site total, 100 - shownPercent covers both.
+        $othersPercent = max(0.0, 100.0 - $shownPercent);
+        if ($othersPercent > 0.05) {
+            $items[] = [
+                'label' => $this->translate('dashboardWidget.trafficSources.other'),
+                'value' => number_format($othersPercent, 2, '.', ''),
+                'tone' => 'series-other',
+                'icon' => '',
+                'change' => null,
+                'changeTone' => '',
             ];
         }
 
@@ -197,15 +263,21 @@ trait TrafficSourcesItemsTrait
             $segLen = ($value / 100.0) * $C;
             $rotation = -90.0 + ($cumulative / 100.0) * 360.0;
             $parts[] = sprintf(
-                '<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-segment tx-analytics-traffic-sources-tone-%s" stroke-width="%d" stroke-dasharray="%.3f %.3f" transform="rotate(%.3f 50 50)"><title>%s: %s%%</title></circle>',
+                '<circle cx="50" cy="50" r="%d" fill="none" class="tx-analytics-traffic-sources-donut-segment tx-analytics-traffic-sources-tone-%s" stroke-width="%d" stroke-dasharray="%.3f %.3f" transform="rotate(%.3f 50 50)" data-ts-label="%s" data-ts-value="%s" data-ts-tone="%s" data-ts-count="%d" data-ts-change="%s" data-ts-change-tone="%s" aria-label="%s: %s%%"/>',
                 $r,
                 $item['tone'],
                 $sw,
                 $segLen,
                 $C - $segLen,
                 $rotation,
-                htmlspecialchars($item['label'], ENT_XML1),
-                $item['value'],
+                htmlspecialchars($item['label'], ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['value'], ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['tone'], ENT_XML1 | ENT_QUOTES),
+                (int)($item['count'] ?? 0),
+                htmlspecialchars((string)($item['change'] ?? ''), ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars((string)($item['changeTone'] ?? ''), ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['label'], ENT_XML1 | ENT_QUOTES),
+                htmlspecialchars($item['value'], ENT_XML1 | ENT_QUOTES),
             );
             $cumulative += $value;
         }

@@ -75,12 +75,13 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string
+    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string
     {
-        $path = '/api/dashboard-url/' . $websiteId;
+        $path = '/api/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
+        $url = $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
         try {
             $response = $this->requestFactory->request(
-                $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $websiteId,
+                $url,
                 'GET',
                 array_merge($this->apiConfiguration->getRequestOptions(), [
                     'headers' => $this->hmacSigner->buildHeaders('GET', $path, $instanceId, $instanceSecret),
@@ -120,6 +121,29 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
                 'apiKeyId' => (string)($body['apiKeyId'] ?? ''),
                 'apiKey' => (string)($body['apiKey'] ?? ''),
             ];
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     * @throws AnalyticsApiException
+     */
+    public function fetchPlans(string $intpId): array
+    {
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getBaseUrl() . '/public/plans?intpId=' . urlencode($intpId),
+                'GET',
+                $this->apiConfiguration->getRequestOptions()
+            );
+            /** @var array<string, mixed> $data */
+            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $packages = $data['packages'] ?? [];
+            return is_array($packages) ? array_values($packages) : [];
         } catch (AnalyticsApiException $e) {
             throw $e;
         } catch (\Throwable $e) {

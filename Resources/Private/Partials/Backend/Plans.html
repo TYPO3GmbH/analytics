@@ -1,0 +1,117 @@
+<f:if condition="{plansUrl}">
+    <section class="tx-analytics-site-group" id="tx-analytics-plans-section">
+        <div id="tx-analytics-plans-root"
+             data-plans-url="{plansUrl}"
+             data-i18n-credits="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.touchpointsPerMonth')}"
+             data-i18n-badge-trial="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.trial')}"
+             data-i18n-hide="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.hide')}"
+             data-i18n-show="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.show')}"
+        ></div>
+
+        <template id="tpl-plans-header">
+            <div class="tx-analytics-plans-header">
+                <h2 class="tx-analytics-site-group-title" style="margin:0">
+                    <button type="button" class="tx-analytics-plans-collapse-toggle" aria-expanded="true">
+                        <span class="tx-analytics-plans-collapse-icon" aria-hidden="true"></span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.heading" />
+                    </button>
+                </h2>
+                <div class="tx-analytics-plans-toggle" role="group">
+                    <button type="button" class="tx-analytics-plans-toggle-btn active" data-period="yearly"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.yearlyToggle" /></button>
+                    <button type="button" class="tx-analytics-plans-toggle-btn" data-period="monthly"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.monthly" /></button>
+                </div>
+                <button type="button" class="tx-analytics-plans-collapse-link btn btn-link">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.hide" />
+                </button>
+            </div>
+        </template>
+
+        <template id="tpl-plan-card">
+            <div class="card tx-analytics-plan-card">
+                <div class="card-header">
+                    <div class="card-header-body">
+                        <h2 class="card-title" data-slot="title"></h2>
+                    </div>
+                </div>
+                <div class="tx-analytics-plan-prices"></div>
+                <ul class="list-group list-group-flush tx-analytics-plan-features">
+                    <li class="list-group-item" data-slot="credits">
+                        <span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.apiAccess" />
+                    </li>
+                    <li class="list-group-item">
+                        <span class="tx-analytics-plan-icon" data-slot="dashboards-icon"></span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.ownDashboards" />
+                    </li>
+                </ul>
+            </div>
+        </template>
+
+        <template id="tpl-price-paid">
+            <div class="tx-analytics-price-period" data-period="monthly" hidden>
+                <span class="tx-analytics-plan-price-amount" data-slot="monthly-price"></span>
+                <span class="tx-analytics-plan-price-sublabel"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.perMonth" /></span>
+            </div>
+            <div class="tx-analytics-price-period" data-period="yearly">
+                <span class="tx-analytics-plan-price-amount-old" data-slot="strike-price"></span>
+                <span class="tx-analytics-plan-price-amount" data-slot="yearly-price"></span>
+                <span class="tx-analytics-plan-price-sublabel"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.perMonth" /></span>
+            </div>
+        </template>
+
+        <template id="tpl-price-free">
+            <div class="tx-analytics-price-period" data-period="monthly" hidden>
+                <span class="tx-analytics-plan-price-amount"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.free" /></span>
+                <span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-sublabel--trial" hidden><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.trialLimited" /></span>
+                <span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-sublabel--nontrial" style="visibility:hidden" aria-hidden="true">&nbsp;</span>
+            </div>
+            <div class="tx-analytics-price-period" data-period="yearly">
+                <span class="tx-analytics-plan-price-amount"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.free" /></span>
+                <span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-sublabel--trial" hidden><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.trialLimited" /></span>
+                <span class="tx-analytics-plan-price-sublabel tx-analytics-plan-price-sublabel--nontrial" style="visibility:hidden" aria-hidden="true">&nbsp;</span>
+            </div>
+        </template>
+
+        <template id="tpl-plan-card-custom">
+            <div class="card tx-analytics-plan-card tx-analytics-plan-card--custom">
+                <div class="card-header">
+                    <div class="card-header-body">
+                        <h2 class="card-title"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.name" /></h2>
+                    </div>
+                </div>
+                <div class="tx-analytics-plan-prices tx-analytics-plan-prices--custom">
+                    <div class="tx-analytics-plan-custom-cta">
+                        <a href="#"
+                           data-email-subject="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.emailSubject')}"
+                           target="_blank" rel="noreferrer"
+                           class="btn btn-sm tx-analytics-plan-contact-btn">
+                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.contact" />
+                        </a>
+                        <span class="tx-analytics-plan-price-custom-tagline"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.tagline" /></span>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush tx-analytics-plan-features">
+                    <li class="list-group-item">
+                        <span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.custom.credits" />
+                    </li>
+                    <li class="list-group-item">
+                        <span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.apiAccess" />
+                    </li>
+                    <li class="list-group-item">
+                        <span class="tx-analytics-plan-icon tx-analytics-plan-icon--check">✓</span>
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.ownDashboards" />
+                    </li>
+                </ul>
+            </div>
+        </template>
+
+        <template id="tpl-plans-vat-notice">
+            <p class="tx-analytics-plans-vat-notice"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.exclVat" /></p>
+        </template>
+    </section>
+</f:if>

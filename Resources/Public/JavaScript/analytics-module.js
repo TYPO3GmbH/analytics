@@ -2,6 +2,7 @@ import Notification from '@typo3/backend/notification.js';
 import ImmediateAction from '@typo3/backend/action-button/immediate-action.js';
 
 const STORAGE_KEY = 'tx-analytics-notification';
+const PLANS_COLLAPSED_KEY = 'tx-analytics-plans-collapsed';
 
 function showPendingNotification() {
     const pending = sessionStorage.getItem(STORAGE_KEY);
@@ -9,8 +10,10 @@ function showPendingNotification() {
     sessionStorage.removeItem(STORAGE_KEY);
     try {
         const { title, message, dashboardUri } = JSON.parse(pending);
-        const actions = dashboardUri
-            ? [{ label: 'Dashboard', action: new ImmediateAction(() => { window.location.href = dashboardUri; }) }]
+        // Only follow same-origin relative backend paths, never absolute/protocol-relative/javascript: URLs.
+        const safeUri = typeof dashboardUri === 'string' && /^\/(?!\/)/.test(dashboardUri) ? dashboardUri : null;
+        const actions = safeUri
+            ? [{ label: 'Dashboard', action: new ImmediateAction(() => { window.location.href = safeUri; }) }]
             : [];
         Notification.success(title, message, 5, actions);
     } catch {
@@ -51,3 +54,167 @@ document.addEventListener('submit', function (e) {
 });
 
 showPendingNotification();
+
+// Plans
+async function initPlans() {
+    const root = document.getElementById('tx-analytics-plans-root');
+    if (!root) return;
+
+    const creditsFormat = root.dataset.i18nCredits;
+    const badgeTrialText = root.dataset.i18nBadgeTrial;
+    const hideText = root.dataset.i18nHide;
+    const showText = root.dataset.i18nShow;
+
+    try {
+        const resp = await fetch(root.dataset.plansUrl);
+        const { plans, contactEmail, showCustomPlan, locale } = await resp.json();
+        if (!Array.isArray(plans) || plans.length === 0) {
+            document.getElementById('tx-analytics-plans-section')?.remove();
+            return;
+        }
+        renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail ?? 'support@typo3.com', showCustomPlan !== false, locale ?? 'en', hideText, showText);
+    } catch {
+        document.getElementById('tx-analytics-plans-section')?.remove();
+    }
+}
+
+function cloneTpl(id) {
+    return document.getElementById(id).content.cloneNode(true);
+}
+
+function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, showCustomPlan, locale, hideText, showText) {
+    const header = cloneTpl('tpl-plans-header').firstElementChild;
+
+    const grid = document.createElement('div');
+    grid.className = 'card-container tx-analytics-plans-card-container';
+    for (const plan of plans) {
+        grid.appendChild(buildPlanCard(plan, creditsFormat, badgeTrialText, locale));
+    }
+    if (showCustomPlan) {
+        grid.appendChild(buildCustomCard(contactEmail));
+    }
+
+    const total = plans.length + (showCustomPlan ? 1 : 0);
+    grid.style.setProperty('--plan-count', total);
+    grid.style.setProperty('--plan-cols-narrow', Math.min(total, 3));
+
+    const vatNotice = cloneTpl('tpl-plans-vat-notice').firstElementChild;
+
+    root.appendChild(header);
+    root.appendChild(grid);
+    root.appendChild(vatNotice);
+
+    header.querySelector('.tx-analytics-plans-toggle').addEventListener('click', e => {
+        const btn = e.target.closest('[data-period]');
+        if (!btn) return;
+        const period = btn.dataset.period;
+        header.querySelectorAll('.tx-analytics-plans-toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
+        grid.querySelectorAll('.tx-analytics-price-period').forEach(el => {
+            el.hidden = el.dataset.period !== period;
+        });
+    });
+
+    const collapseBtn = header.querySelector('.tx-analytics-plans-collapse-toggle');
+    const collapseLink = header.querySelector('.tx-analytics-plans-collapse-link');
+    const periodToggle = header.querySelector('.tx-analytics-plans-toggle');
+
+    const setCollapsed = collapsed => {
+        collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+        collapseBtn.classList.toggle('tx-analytics-plans-collapse-toggle--collapsed', collapsed);
+        collapseLink.textContent = collapsed ? showText : hideText;
+        periodToggle.hidden = collapsed;
+        grid.hidden = collapsed;
+        vatNotice.hidden = collapsed;
+    };
+
+    const toggleCollapsed = () => {
+        const collapsed = collapseBtn.getAttribute('aria-expanded') === 'true';
+        localStorage.setItem(PLANS_COLLAPSED_KEY, collapsed ? '1' : '0');
+        setCollapsed(collapsed);
+    };
+
+    collapseBtn.addEventListener('click', toggleCollapsed);
+    collapseLink.addEventListener('click', toggleCollapsed);
+
+    setCollapsed(localStorage.getItem(PLANS_COLLAPSED_KEY) === '1');
+}
+
+function buildPlanCard(plan, creditsFormat, badgeTrialText, locale) {
+    const frag = cloneTpl('tpl-plan-card');
+    const card = frag.firstElementChild;
+
+    card.querySelector('[data-slot="title"]').textContent =
+        plan.isTrial ? badgeTrialText : plan.displayName;
+
+    const pricesContainer = card.querySelector('.tx-analytics-plan-prices');
+    if (plan.isFree) {
+        const priceFrag = cloneTpl('tpl-price-free');
+        if (plan.isTrial) {
+            priceFrag.querySelectorAll('.tx-analytics-plan-price-sublabel--trial').forEach(el => { el.hidden = false; });
+            priceFrag.querySelectorAll('.tx-analytics-plan-price-sublabel--nontrial').forEach(el => el.remove());
+        } else {
+            priceFrag.querySelectorAll('.tx-analytics-plan-price-sublabel--trial').forEach(el => el.remove());
+        }
+        pricesContainer.append(priceFrag);
+    } else {
+        const priceFrag = cloneTpl('tpl-price-paid');
+        setPrice(priceFrag.querySelector('[data-slot="monthly-price"]'), plan.monthlyPrice, plan.currency, locale);
+        const strikeEl = priceFrag.querySelector('[data-slot="strike-price"]');
+        if (plan.monthlyPrice) {
+            setPrice(strikeEl, plan.monthlyPrice, plan.currency, locale);
+        } else {
+            strikeEl.remove();
+        }
+        setPrice(priceFrag.querySelector('[data-slot="yearly-price"]'), plan.monthlyEquiv ?? plan.yearlyPrice ?? 0, plan.currency, locale);
+        pricesContainer.append(priceFrag);
+    }
+
+    const creditsLi = card.querySelector('[data-slot="credits"]');
+    creditsLi.append(document.createTextNode(' ' + fmt(creditsFormat, plan.touchpointsFormatted)));
+
+    const dashIcon = card.querySelector('[data-slot="dashboards-icon"]');
+    if (plan.hasOwnDashboards) {
+        dashIcon.classList.add('tx-analytics-plan-icon--check');
+        dashIcon.textContent = '✓';
+    } else {
+        dashIcon.classList.add('tx-analytics-plan-icon--minus');
+        dashIcon.textContent = '–';
+        dashIcon.closest('.list-group-item').classList.add('tx-analytics-plan-features-item--muted');
+    }
+
+    return card;
+}
+
+function buildCustomCard(contactEmail) {
+    const frag = cloneTpl('tpl-plan-card-custom');
+    const card = frag.firstElementChild;
+    const btn = card.querySelector('.tx-analytics-plan-contact-btn');
+    btn.href = `mailto:${contactEmail}?subject=${encodeURIComponent(btn.dataset.emailSubject ?? '')}`;
+    return card;
+}
+
+function setPrice(el, price, currency, locale) {
+    let formatter;
+    try {
+        formatter = new Intl.NumberFormat(locale, { style: 'currency', currency });
+    } catch {
+        formatter = new Intl.NumberFormat('en', { style: 'currency', currency });
+    }
+    for (const part of formatter.formatToParts(price)) {
+        if (part.type === 'currency') {
+            const span = document.createElement('span');
+            span.className = 'tx-analytics-plan-price-currency';
+            span.textContent = part.value;
+            el.appendChild(span);
+        } else {
+            el.append(part.value);
+        }
+    }
+}
+
+function fmt(str, ...args) {
+    let i = 0;
+    return String(str ?? '').replace(/%s/g, () => String(args[i++] ?? '')).replace(/%%/g, '%');
+}
+
+initPlans();

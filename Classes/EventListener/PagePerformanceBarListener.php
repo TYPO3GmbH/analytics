@@ -33,6 +33,8 @@ final readonly class PagePerformanceBarListener
             return;
         }
 
+        $languagesParam = $queryParams['languages'] ?? [];
+        $languageId = is_array($languagesParam) ? (int)($languagesParam[0] ?? 0) : 0;
         $days = $this->builder->normalizeDays((int)($queryParams['tx_analytics_period'] ?? 7));
 
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/AnalyticsColors.css');
@@ -44,15 +46,8 @@ final readonly class PagePerformanceBarListener
             $this->renderIconVariables(),
         );
 
-        $site = $this->builder->trySite($pageId);
-        $languagesParam = $queryParams['languages'] ?? [];
-        $languageId = is_array($languagesParam) ? (int)($languagesParam[0] ?? 0) : 0;
-        $language = $this->builder->trySiteLanguage($site, $languageId);
-        $pageUrl = $site !== null ? $this->builder->resolvePageUrl($site, $pageId, $language) : '';
-        $detailsUri = $this->builder->buildDetailsUri($site, $days, $pageUrl);
-
         $event->addHeaderContent(
-            $this->builder->buildHtml($pageId, $site, $language, $days, $queryParams, $detailsUri)
+            $this->builder->buildSkeletonHtml($pageId, $languageId, $days)
         );
     }
 

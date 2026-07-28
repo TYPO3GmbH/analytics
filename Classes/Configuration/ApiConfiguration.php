@@ -4,35 +4,33 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Configuration;
 
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Http\Uri;
 
 final readonly class ApiConfiguration
 {
     private const DEFAULT_BASE_URL = 'https://middleware.analytics.typo3.com/api';
-    private const DEFAULT_INTP_ID = 'cad26303-1c79-415e-8b39-45d8aadfb7f3';
+    private const DEFAULT_INTP_ID = '28096317-d75a-43b7-af39-f0862b66afa3';
     private const DEFAULT_ANALYTICS_API_BASE_URL = 'https://api.analytics.typo3.com/api';
-
-    public function __construct(
-        private ExtensionConfiguration $extensionConfiguration,
-    ) {
-    }
 
     public function getIntpId(): string
     {
-        $configured = (string)($this->extensionConfiguration->get('analytics', 'intpId') ?? '');
+        $configured = $this->load('TYPO3_ANALYTICS_INTP_ID', 'intpId');
         return $configured !== '' ? $configured : self::DEFAULT_INTP_ID;
     }
 
     public function getAnalyticsApiBaseUrl(): string
     {
-        $configured = (string)($this->extensionConfiguration->get('analytics', 'analyticsApiBaseUrl') ?? '');
-        return $configured !== '' ? rtrim($configured, '/') : self::DEFAULT_ANALYTICS_API_BASE_URL;
+        $configured = $this->load('TYPO3_ANALYTICS_DATA_API_BASE_URL', 'analyticsApiBaseUrl');
+        if ($configured === '' || !$this->isValidHttpUri($configured)) {
+            return self::DEFAULT_ANALYTICS_API_BASE_URL;
+        }
+        return rtrim($configured, '/');
     }
 
     public function getBaseUrl(): string
     {
-        $configured = (string)($this->extensionConfiguration->get('analytics', 'apiBaseUrl') ?? '');
-        $url = $configured !== '' ? $configured : self::DEFAULT_BASE_URL;
+        $configured = $this->load('TYPO3_ANALYTICS_API_BASE_URL', 'apiBaseUrl');
+        $url = $configured !== '' && $this->isValidHttpUri($configured) ? $configured : self::DEFAULT_BASE_URL;
         $url = rtrim($url, '/');
         $parts = parse_url($url) ?: [];
         $result = ($parts['scheme'] ?? 'https') . '://' . ($parts['host'] ?? '');
@@ -42,11 +40,23 @@ final readonly class ApiConfiguration
         return $result . rtrim($parts['path'] ?? '', '/');
     }
 
+    public function getContactEmail(): string
+    {
+        $configured = $this->load('TYPO3_ANALYTICS_CONTACT_EMAIL', 'contactEmail');
+        return $configured !== '' ? $configured : 'support@typo3.com';
+    }
+
+    public function isCustomPlanEnabled(): bool
+    {
+        $configured = $this->load('TYPO3_ANALYTICS_SHOW_CUSTOM_PLAN', 'showCustomPlan');
+        return $configured !== '0';
+    }
+
     /** @return array<string, mixed> */
     public function getRequestOptions(): array
     {
-        $verifySsl = (bool)($this->extensionConfiguration->get('analytics', 'verifySsl') ?? true);
-        return ['verify' => $verifySsl];
+        $verifySsl = $this->load('TYPO3_ANALYTICS_VERIFY_SSL', 'verifySsl');
+        return ['verify' => $verifySsl !== '0'];
     }
 
     /**
@@ -57,7 +67,7 @@ final readonly class ApiConfiguration
      */
     public function getAuthOptions(): array
     {
-        $configured = (string)($this->extensionConfiguration->get('analytics', 'apiBaseUrl') ?? '');
+        $configured = $this->load('TYPO3_ANALYTICS_API_BASE_URL', 'apiBaseUrl');
         if ($configured === '') {
             return [];
         }
@@ -66,5 +76,24 @@ final readonly class ApiConfiguration
             return ['auth' => [$parts['user'], $parts['pass'] ?? '']];
         }
         return [];
+    }
+
+    private function load(string $envVar, string $confVarsKey): string
+    {
+        $env = getenv($envVar);
+        if ($env !== false && $env !== '') {
+            return $env;
+        }
+        return (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics'][$confVarsKey] ?? '');
+    }
+
+    private function isValidHttpUri(string $url): bool
+    {
+        try {
+            $scheme = (new Uri($url))->getScheme();
+            return in_array($scheme, ['http', 'https'], true);
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
     }
 }

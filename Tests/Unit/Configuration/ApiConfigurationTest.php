@@ -6,27 +6,23 @@ namespace T3G\Analytics\Tests\Unit\Configuration;
 
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Configuration\ApiConfiguration;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class ApiConfigurationTest extends UnitTestCase
 {
     private function buildSubject(string $apiBaseUrl = '', string $verifySsl = '1', string $intpId = '', string $analyticsApiBaseUrl = ''): ApiConfiguration
     {
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', $apiBaseUrl],
-            ['analytics', 'verifySsl', $verifySsl],
-            ['analytics', 'intpId', $intpId],
-            ['analytics', 'analyticsApiBaseUrl', $analyticsApiBaseUrl],
-        ]);
-        return new ApiConfiguration($extensionConfiguration);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = $apiBaseUrl;
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = $verifySsl;
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['intpId'] = $intpId;
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['analyticsApiBaseUrl'] = $analyticsApiBaseUrl;
+        return new ApiConfiguration();
     }
 
     #[Test]
     public function getIntpIdReturnsDefaultWhenNotConfigured(): void
     {
-        self::assertSame('cad26303-1c79-415e-8b39-45d8aadfb7f3', $this->buildSubject()->getIntpId());
+        self::assertSame('28096317-d75a-43b7-af39-f0862b66afa3', $this->buildSubject()->getIntpId());
     }
 
     #[Test]

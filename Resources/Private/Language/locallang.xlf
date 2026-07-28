@@ -53,6 +53,12 @@
             <trans-unit id="label.registeredSites" resname="label.registeredSites">
                 <source>Registered sites</source>
             </trans-unit>
+            <trans-unit id="label.activeSites" resname="label.activeSites">
+                <source>Active sites</source>
+            </trans-unit>
+            <trans-unit id="label.inactiveSites" resname="label.inactiveSites">
+                <source>Inactive sites</source>
+            </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
             </trans-unit>
@@ -109,6 +115,66 @@
             </trans-unit>
             <trans-unit id="button.backToOverview" resname="button.backToOverview">
                 <source>Back to overview</source>
+            </trans-unit>
+            <trans-unit id="label.availablePlans" resname="label.availablePlans">
+                <source>Available Plans</source>
+            </trans-unit>
+            <trans-unit id="label.plans.heading" resname="label.plans.heading">
+                <source>Our Plans</source>
+            </trans-unit>
+            <trans-unit id="label.plans.hide" resname="label.plans.hide">
+                <source>Hide price info</source>
+            </trans-unit>
+            <trans-unit id="label.plans.show" resname="label.plans.show">
+                <source>Show price info</source>
+            </trans-unit>
+            <trans-unit id="label.plans.yearlyToggle" resname="label.plans.yearlyToggle">
+                <source>Yearly · Save 20 %</source>
+            </trans-unit>
+            <trans-unit id="label.plans.free" resname="label.plans.free">
+                <source>Free</source>
+            </trans-unit>
+            <trans-unit id="label.plans.monthly" resname="label.plans.monthly">
+                <source>Monthly</source>
+            </trans-unit>
+            <trans-unit id="label.plans.perMonth" resname="label.plans.perMonth">
+                <source>per month</source>
+            </trans-unit>
+            <trans-unit id="label.plans.perYear" resname="label.plans.perYear">
+                <source>per year</source>
+            </trans-unit>
+            <trans-unit id="label.plans.touchpointsPerMonth" resname="label.plans.touchpointsPerMonth">
+                <source>%s credits / month</source>
+            </trans-unit>
+            <trans-unit id="label.plans.apiAccess" resname="label.plans.apiAccess">
+                <source>API access</source>
+            </trans-unit>
+            <trans-unit id="label.plans.ownDashboards" resname="label.plans.ownDashboards">
+                <source>Custom dashboards</source>
+            </trans-unit>
+            <trans-unit id="badge.trial" resname="badge.trial">
+                <source>Trial</source>
+            </trans-unit>
+            <trans-unit id="label.plans.trialLimited" resname="label.plans.trialLimited">
+                <source>Time-limited, for evaluation only</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.name" resname="label.plans.custom.name">
+                <source>Custom</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.tagline" resname="label.plans.custom.tagline">
+                <source>Price on request</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.contact" resname="label.plans.custom.contact">
+                <source>Contact us</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.emailSubject" resname="label.plans.custom.emailSubject">
+                <source>Custom Plan Inquiry</source>
+            </trans-unit>
+            <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
+                <source>More credits / month</source>
+            </trans-unit>
+            <trans-unit id="label.plans.exclVat" resname="label.plans.exclVat">
+                <source>All prices excl. VAT.</source>
             </trans-unit>
             <trans-unit id="notification.statusRefreshed.title" resname="notification.statusRefreshed.title">
                 <source>Status updated</source>
@@ -205,6 +271,15 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.topPages.comparedToPreviousPeriod" resname="dashboardWidget.topPages.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.tooltip.views" resname="dashboardWidget.topPages.tooltip.views">
+                <source>Views</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.openInBrowser" resname="dashboardWidget.topPages.openInBrowser">
+                <source>Open page in browser</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.topPages.openInPageModule" resname="dashboardWidget.topPages.openInPageModule">
+                <source>Open in page module</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>Analytics</source>
@@ -305,11 +380,20 @@
             <trans-unit id="flash.accessDenied" resname="flash.accessDenied">
                 <source>Access denied. You do not have the Analytics Manager permission.</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.allMetricsHidden" resname="dashboardWidget.trafficGraph.allMetricsHidden">
+                <source>Please enable at least one metric to display the chart.</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visits" resname="dashboardWidget.trafficGraph.yAxisTitle.visits">
                 <source>Visits</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" resname="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors">
                 <source>Sessions / Visitors</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessions" resname="dashboardWidget.trafficGraph.yAxisTitle.sessions">
+                <source>Sessions</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visitors" resname="dashboardWidget.trafficGraph.yAxisTitle.visitors">
+                <source>Visitors</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
@@ -365,6 +449,12 @@
             <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.tooltip.share" resname="dashboardWidget.trafficSources.tooltip.share">
+                <source>% from all</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.tooltip.change" resname="dashboardWidget.trafficSources.tooltip.change">
+                <source>Change</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.showAll" resname="dashboardWidget.trafficSources.showAll">
                 <source>Show in Analytics</source>
             </trans-unit>
@@ -403,6 +493,9 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
                 <source>Other</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.trafficSources.device.unknown" resname="dashboardWidget.trafficSources.device.unknown">
+                <source>Unknown</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficSourcesChannel.title" resname="dashboardWidget.trafficSourcesChannel.title">
                 <source>Traffic Sources: Channel</source>

@@ -16,7 +16,8 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: '8.4'
+          extensions: intl, mbstring
           coverage: none
 
       - name: Get Composer Cache Directory
@@ -29,22 +30,35 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: install
-        run: composer install --no-progress --no-interaction --ansi
+      - name: Pin TYPO3 version
+        run: |
+          composer require --no-update \
+            typo3/cms-core:^13.4 \
+            typo3/cms-backend:^13.4 \
+            typo3/cms-dashboard:^13.4
 
-      - name: cgl
+      - name: Install dependencies
+        run: composer update --no-progress --no-interaction --ansi --with-all-dependencies
+
+      - name: Coding standards
         run: composer t3g:cgl
 
-      - name: phpstan
+      - name: Static analysis
         run: composer t3g:phpstan
 
   test:
-    name: Tests (PHP ${{ matrix.php-version }})
+    name: Tests (PHP ${{ matrix.php-version }}, TYPO3 ${{ matrix.typo3-version }})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
         php-version: ['8.2', '8.3', '8.4', '8.5']
+        typo3-version: ['^13.4', '^14.0']
+        include:
+          - php-version: '8.5'
+            typo3-version: 'dev-main'
+            experimental: true
 
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +66,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
+          extensions: intl, mbstring, pdo_sqlite, sqlite3
           coverage: pcov
 
       - name: Get Composer Cache Directory
@@ -61,14 +76,30 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-${{ matrix.php-version }}-
+          key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ matrix.typo3-version }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ matrix.typo3-version }}-
 
-      - name: install
-        run: composer install --no-progress --no-interaction --ansi
+      - name: Allow development dependencies (TYPO3 main only)
+        if: matrix.typo3-version == 'dev-main'
+        run: |
+          composer config minimum-stability dev
+          composer config prefer-stable true
+          composer remove --dev --no-update \
+            saschaegerer/phpstan-typo3 phpstan/phpstan
+          composer require --dev --no-update typo3/testing-framework:dev-main
 
-      - name: unit test
+      - name: Pin TYPO3 version
+        run: |
+          composer require --no-update \
+            typo3/cms-core:${{ matrix.typo3-version }} \
+            typo3/cms-backend:${{ matrix.typo3-version }} \
+            typo3/cms-dashboard:${{ matrix.typo3-version }}
+
+      - name: Install dependencies
+        run: composer update --no-progress --with-all-dependencies
+
+      - name: Unit tests
         run: composer t3g:test:unit
 
-      - name: functional test
+      - name: Functional tests
         run: composer t3g:test:functional

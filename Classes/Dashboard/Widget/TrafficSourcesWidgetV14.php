@@ -9,9 +9,11 @@ use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
+use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
@@ -22,7 +24,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
  *
  * Site, period, displayed section and chart type are configured via the native widget settings panel.
  */
-final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
+final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface, JavaScriptInterface
 {
     use TrafficSourcesWidgetTrait;
 
@@ -86,6 +88,17 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         ];
     }
 
+    /**
+     * @return list<JavaScriptModuleInstruction>
+     */
+    public function getJavaScriptModuleInstructions(): array
+    {
+        return [
+            JavaScriptModuleInstruction::create('@typo3/backend/element/progress-bar-element.js'),
+            JavaScriptModuleInstruction::create('@t3g/analytics/traffic-sources-widget.js'),
+        ];
+    }
+
     public function renderWidget(WidgetContext $context): WidgetResult
     {
         $siteIdentifier = (string)$context->settings->get('site');
@@ -111,12 +124,12 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
         } elseif ($section === 'browser') {
             $browsers = $this->loadBrowsers($siteIdentifier, $days);
             $sections = [
-                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), $isDonut, (int) array_sum(array_column($browsers, 'sessionCount'))),
+                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), $isDonut, $this->trueSessionTotal($browsers)),
             ];
         } elseif ($section === 'countries') {
             $countries = $this->loadCountries($siteIdentifier, $days);
             $sections = [
-                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), $isDonut, (int) array_sum(array_column($countries, 'sessionCount'))),
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), $isDonut, $this->trueSessionTotal($countries)),
             ];
         } else {
             $sources = $siteIdentifier !== '' ? ($this->trafficSourcesService->loadTrafficSources($siteIdentifier, $days) ?? []) : [];

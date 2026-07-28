@@ -5,6 +5,7 @@ composer.lock
 
 # Generated / cache
 /var/
+/Documentation-GENERATED-temp/
 
 # TYPO3
 /public/
@@ -20,3 +21,9 @@ composer.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Tools
+/.playwright-mcp/
+
+# Sensitive / not for VCS
+Partners.md

@@ -2,13 +2,13 @@
 <f:layout name="Widget/Widget" />
 <f:section name="main">
 
-    <div class="tx-analytics-top-pages" data-site="{siteIdentifier}" data-days="{selectedDays}">
+    <div class="tx-analytics-top-pages" data-site="{siteIdentifier}" data-days="{selectedDays}" data-tp-label-views="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.tooltip.views')}" data-tp-label-share="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.tooltip.share')}" data-tp-label-change="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.tooltip.change')}">
         <f:render partial="Dashboard/Widget/WidgetToolbar" arguments="{prefix: 'top-pages', showSiteSelect: showSiteSelect, siteSelectId: siteSelectId, siteLabel: siteLabel, siteOptions: siteOptions, periodSelectId: periodSelectId, periodLabel: periodLabel, periodOptions: periodOptions}" />
 
         <div class="tx-analytics-top-pages-list-container">
             <f:if condition="{noData}">
                 <f:then>
-                    <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: currentPeriodLabel}" /></p>
+                    <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: currentPeriodLabel}" />
                 </f:then>
                 <f:else>
                     <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />

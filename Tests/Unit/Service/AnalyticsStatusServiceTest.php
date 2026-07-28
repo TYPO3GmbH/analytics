@@ -19,7 +19,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -58,17 +58,18 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
-        $this->cache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
+        // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
+        $backend = (new Typo3Version())->getMajorVersion() >= 14
+            ? new TransientMemoryBackend() // @phpstan-ignore argument.count
+            : new TransientMemoryBackend('production');
+        $this->cache = new VariableFrontend('analytics_status', $backend);
 
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('plain-secret');
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
-        $apiConfiguration = new ApiConfiguration($extensionConfiguration);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
+        $apiConfiguration = new ApiConfiguration();
         $apiClient = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
             $apiConfiguration,
@@ -127,6 +128,45 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         self::assertNull($this->subject->getManagePlanUrl($this->buildSite('main', '', '')));
         self::assertEmpty($this->httpHistory);
+    }
+
+    /** getDashboardUrl */
+
+    #[Test]
+    public function getDashboardUrlReturnsUrlFromApiResponse(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?intpc_token=jwt"}'));
+
+        self::assertSame('https://dashboard.example.com?intpc_token=jwt', $this->subject->getDashboardUrl($site));
+    }
+
+    #[Test]
+    public function getDashboardUrlPassesWatcherFlagToApiClient(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?intpc_token=watcher-jwt"}'));
+
+        $this->subject->getDashboardUrl($site, watcher: true);
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('role=watcher', $uri);
+    }
+
+    #[Test]
+    public function getDashboardUrlReturnsNullWhenSiteHasNoCredentials(): void
+    {
+        self::assertNull($this->subject->getDashboardUrl($this->buildSite('main', '', '')));
+        self::assertEmpty($this->httpHistory);
+    }
+
+    #[Test]
+    public function getDashboardUrlReturnsNullWhenApiCallFails(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new \RuntimeException('connection refused'));
+
+        self::assertNull($this->subject->getDashboardUrl($site));
     }
 
     /** getStatus */

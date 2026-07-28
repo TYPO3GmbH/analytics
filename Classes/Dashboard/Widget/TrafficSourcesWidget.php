@@ -86,7 +86,8 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         $browsers = $this->loadBrowsers($siteIdentifier, $days);
         $countries = $this->loadCountries($siteIdentifier, $days);
 
-        $noData = $sources === [] && $devices === [] && $browsers === [] && $countries === [];
+        $sourcesTotal = (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources));
+        $noData = $sourcesTotal === 0 && $devices === [] && $browsers === [] && $countries === [];
         $view = $this->viewFactory->create($this->createViewFactoryData());
         $view->assignMultiple([
             'siteIdentifier' => $siteIdentifier,
@@ -106,8 +107,8 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
             'sections' => [
                 $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.sources'), $this->buildTrafficSourceItems($sources), false, (int) array_sum(array_map(static fn (array $d): int => $d['current'], $sources))),
                 $this->asSectionData('display', $this->translate('dashboardWidget.trafficSources.devices'), $this->buildDeviceItems($devices), false, (int) array_sum(array_column($devices, 'sessionCount'))),
-                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), false, (int) array_sum(array_column($browsers, 'sessionCount'))),
-                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), false, (int) array_sum(array_column($countries, 'sessionCount'))),
+                $this->asSectionData('browser', $this->translate('dashboardWidget.trafficSources.browsers'), $this->buildBrowserItems($browsers), false, $this->trueSessionTotal($browsers)),
+                $this->asSectionData('earth-europe', $this->translate('dashboardWidget.trafficSources.countries'), $this->buildCountryItems($countries), false, $this->trueSessionTotal($countries)),
             ],
         ]);
 

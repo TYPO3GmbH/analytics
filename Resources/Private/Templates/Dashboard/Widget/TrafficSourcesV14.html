@@ -4,10 +4,10 @@
 
     <f:if condition="{noData}">
         <f:then>
-            <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: periodLabel}" /></p>
+            <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: periodLabel}" />
         </f:then>
         <f:else>
-            <div class="tx-analytics-traffic-sources" data-site="{siteIdentifier}">
+            <div class="tx-analytics-traffic-sources" data-site="{siteIdentifier}" data-ts-label-share="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.tooltip.share')}" data-ts-label-change="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.tooltip.change')}" data-ts-label-sessions="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.sessions')}">
                 <f:for each="{sections}" as="section">
                     <section class="tx-analytics-traffic-sources-section" aria-label="{section.title}">
                         <div class="tx-analytics-traffic-sources-section-header">

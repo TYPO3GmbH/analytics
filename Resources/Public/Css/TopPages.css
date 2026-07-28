@@ -59,6 +59,11 @@
     -webkit-mask-image: url("../Icons/TopPages/file-text.svg");
 }
 
+.tx-analytics-top-pages-icon-external {
+    mask-image: url("../Icons/TopPages/arrow-up-right.svg");
+    -webkit-mask-image: url("../Icons/TopPages/arrow-up-right.svg");
+}
+
 .tx-analytics-top-pages-icon-trend-up {
     mask-image: url("../Icons/TopPages/arrow-up.svg");
     -webkit-mask-image: url("../Icons/TopPages/arrow-up.svg");
@@ -102,6 +107,32 @@
     text-align: start;
 }
 
+.tx-analytics-top-pages-title-cell {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    min-width: 0;
+}
+
+.tx-analytics-top-pages-flag {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    line-height: 0;
+}
+
+.tx-analytics-top-pages-flag .icon {
+    flex-shrink: 0;
+}
+
+.tx-analytics-top-pages-title-group {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+}
+
 .tx-analytics-top-pages-title {
     min-width: 0;
     overflow: hidden;
@@ -113,8 +144,39 @@
 }
 
 .tx-analytics-top-pages-title:hover {
-    color: var(--tx-analytics-color-visits);
     text-decoration: underline;
+}
+
+.tx-analytics-top-pages-slug {
+    overflow: hidden;
+    color: var(--typo3-text-color-variant);
+    font-size: .75em;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tx-analytics-top-pages-actions {
+    display: flex;
+    gap: .125rem;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity .1s;
+}
+
+.tx-analytics-top-pages-row:hover .tx-analytics-top-pages-actions {
+    opacity: 1;
+}
+
+.tx-analytics-top-pages-action-link {
+    display: flex;
+    align-items: center;
+    color: var(--typo3-text-color-variant);
+    text-decoration: none;
+}
+
+.tx-analytics-top-pages-action-link:hover {
+    color: var(--tx-analytics-color-visits);
 }
 
 .tx-analytics-top-pages-bar {
@@ -159,6 +221,58 @@
 
 .tx-analytics-top-pages-trend-neutral {
     color: var(--typo3-text-color-variant);
+}
+
+/* Hover tooltip */
+.tx-analytics-top-pages-tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: var(--typo3-component-bg);
+    border: 1px solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
+    padding: .5rem .75rem;
+    font-size: var(--typo3-font-size-small, 11px);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: var(--typo3-component-box-shadow);
+    min-width: 8rem;
+}
+
+.tx-analytics-top-pages-tooltip-header {
+    font-weight: 600;
+    margin-bottom: .25rem;
+    color: var(--typo3-component-color);
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tx-analytics-top-pages-tooltip-row {
+    display: flex;
+    gap: .75rem;
+    align-items: baseline;
+    padding: .1rem 0;
+    color: var(--typo3-text-color-variant);
+}
+
+.tx-analytics-top-pages-tooltip-row-label {
+    flex: 1;
+    min-width: 3.5rem;
+}
+
+.tx-analytics-top-pages-tooltip-row-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--typo3-component-color);
+    white-space: nowrap;
+}
+
+.tx-analytics-top-pages-trend-up .tx-analytics-top-pages-tooltip-row-value {
+    color: var(--tx-analytics-color-trend-positive);
+}
+
+.tx-analytics-top-pages-trend-down .tx-analytics-top-pages-tooltip-row-value {
+    color: var(--tx-analytics-color-trend-negative);
 }
 
 @container (max-width: 300px) {

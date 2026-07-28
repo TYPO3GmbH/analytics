@@ -14,7 +14,6 @@ use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\HmacSigner;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -37,15 +36,12 @@ final class AnalyticsApiClientTest extends UnitTestCase
         $stack->push(Middleware::history($this->httpHistory));
         $GLOBALS['TYPO3_CONF_VARS']['HTTP'] = ['verify' => false, 'handler' => $stack];
 
-        $extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
-        $extensionConfiguration->method('get')->willReturnMap([
-            ['analytics', 'apiBaseUrl', ''],
-            ['analytics', 'verifySsl', '0'],
-        ]);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
 
         $this->subject = new AnalyticsApiClient(
             new RequestFactory(new GuzzleClientFactory()),
-            new ApiConfiguration($extensionConfiguration),
+            new ApiConfiguration(),
             new HmacSigner(),
             new ApiExceptionExtractor(),
         );
@@ -122,5 +118,50 @@ final class AnalyticsApiClientTest extends UnitTestCase
 
         self::assertSame('', $result['apiKeyId']);
         self::assertSame('', $result['apiKey']);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlSendsGetWithoutRoleParamByDefault(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com"}'));
+
+        $this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret');
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('/dashboard-url/w-123', $uri);
+        self::assertStringNotContainsString('role=', $uri);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlAppendsRoleWatcherWhenWatcherIsTrue(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com"}'));
+
+        $this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret', watcher: true);
+
+        $uri = (string)$this->httpHistory[0]['request']->getUri();
+        self::assertStringContainsString('role=watcher', $uri);
+
+        // HMAC must be signed including the query string so middleware validation passes
+        $authHeader = $this->httpHistory[0]['request']->getHeaderLine('Authorization');
+        self::assertNotEmpty($authHeader);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlReturnsUrlFromResponse(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?token=abc"}'));
+
+        $result = $this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret');
+
+        self::assertSame('https://dashboard.example.com?token=abc', $result);
+    }
+
+    #[Test]
+    public function fetchDashboardUrlReturnsNullWhenResponseHasNoDashboardUrl(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{}'));
+
+        self::assertNull($this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret'));
     }
 }

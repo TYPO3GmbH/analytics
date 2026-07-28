@@ -1,9 +1,12 @@
 .tx-analytics-widget-no-data {
-    color: var(--typo3-text-color-variant);
-    font-style: italic;
     margin: auto;
-    padding: 1rem;
-    text-align: center;
+    width: fit-content;
+    min-width: min(100%, 24rem);
+    max-width: 100%;
+}
+
+.tx-analytics-widget-no-data .alert-message {
+    margin-bottom: 0;
 }
 
 /* v14: widget-content-main is display:block; :has() turns it into a flex

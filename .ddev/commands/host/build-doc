@@ -1,0 +1,19 @@
+#!/bin/bash
+## Description: Build the RST documentation using the TYPO3 render-guides Docker image
+## Usage: build-doc
+## ExecRaw: true
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+OUTPUT_DIR="$PROJECT_ROOT/Documentation-GENERATED-temp"
+
+mkdir -p "$OUTPUT_DIR"
+
+docker run --rm \
+  -v "$PROJECT_ROOT/Documentation:/project/Documentation:ro" \
+  -v "$OUTPUT_DIR:/project/Documentation-GENERATED-temp" \
+  ghcr.io/typo3-documentation/render-guides:latest \
+  --config=Documentation
+
+echo "Documentation built: $OUTPUT_DIR/Index.html"

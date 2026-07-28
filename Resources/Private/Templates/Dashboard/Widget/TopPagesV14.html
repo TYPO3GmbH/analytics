@@ -4,10 +4,10 @@
 
     <f:if condition="{noData}">
         <f:then>
-            <p class="tx-analytics-widget-no-data"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.noDataForPeriod" arguments="{0: periodLabel}" /></p>
+            <f:render partial="Dashboard/Widget/NoDataAlert" arguments="{periodLabel: periodLabel}" />
         </f:then>
         <f:else>
-            <div class="tx-analytics-top-pages">
+            <div class="tx-analytics-top-pages" data-tp-label-views="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.topPages.tooltip.views')}" data-tp-label-share="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.tooltip.share')}" data-tp-label-change="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.trafficSources.tooltip.change')}">
                 <f:render partial="Dashboard/Widget/TopPagesList" arguments="{pages: pages}" />
             </div>
         </f:else>
