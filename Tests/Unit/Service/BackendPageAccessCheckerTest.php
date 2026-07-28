@@ -7,6 +7,8 @@ namespace T3G\Analytics\Tests\Unit\Service;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Service\BackendPageAccessChecker;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class BackendPageAccessCheckerTest extends UnitTestCase
@@ -43,6 +45,17 @@ final class BackendPageAccessCheckerTest extends UnitTestCase
         $backendUser = $this->createMock(BackendUserAuthentication::class);
         $backendUser->method('getPagePermsClause')->willReturn('');
         $GLOBALS['BE_USER'] = $backendUser;
+
+        // TYPO3 v14+ introduced TcaSchemaFactory as a required dependency of BackendUtility::readPageAccess().
+        // In a unit test there is no DI container, so we inject a mock instance manually.
+        if ((new Typo3Version())->getMajorVersion() >= 14) {
+            GeneralUtility::addInstance(
+                \TYPO3\CMS\Core\Schema\TcaSchemaFactory::class,
+                $this->getMockBuilder(\TYPO3\CMS\Core\Schema\TcaSchemaFactory::class)
+                    ->disableOriginalConstructor()
+                    ->getMock()
+            );
+        }
 
         self::assertFalse($this->subject->userCanAccessPage(1));
     }

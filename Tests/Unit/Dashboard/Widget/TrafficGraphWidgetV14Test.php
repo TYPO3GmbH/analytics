@@ -115,7 +115,9 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
 
     private function makeContext(SettingsInterface $settings): WidgetContext
     {
-        $context = new WidgetContext();
+        // WidgetContext gained required constructor parameters in TYPO3 v15 (dev-main).
+        // ReflectionClass::newInstanceWithoutConstructor() bypasses the constructor on all versions.
+        $context = (new \ReflectionClass(WidgetContext::class))->newInstanceWithoutConstructor();
         $context->settings = $settings;
         $context->request = $this->createMock(ServerRequestInterface::class);
         return $context;
