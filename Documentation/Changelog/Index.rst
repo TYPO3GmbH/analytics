@@ -6,6 +6,18 @@
 Changelog
 =========
 
+..  _changelog-0.10.0:
+
+0.10.0
+======
+
+*   **Feature:** The plan selection page now loads dynamically via AJAX and
+    supports toggling between monthly and yearly billing. Plans are sorted by
+    credit volume.
+*   **Improvement:** Verified and extended TYPO3 v14 compatibility — CI now
+    runs against TYPO3 v13, v14, and v15 (dev-main).
+
+
 ..  _changelog-0.9.15:
 
 0.9.15
