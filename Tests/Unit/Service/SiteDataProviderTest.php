@@ -23,6 +23,7 @@ use T3G\Analytics\Service\SiteDataProvider;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -93,7 +94,10 @@ final class SiteDataProviderTest extends UnitTestCase
             new ApiExceptionExtractor(),
         );
         $statusService = new AnalyticsStatusService(
-            new VariableFrontend('analytics_status', new TransientMemoryBackend('production')),
+            // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
+            new VariableFrontend('analytics_status', (new Typo3Version())->getMajorVersion() >= 14
+                ? new TransientMemoryBackend() // @phpstan-ignore argument.count
+                : new TransientMemoryBackend('production')),
             $apiClient,
             $cipherService,
             new NullLogger(),

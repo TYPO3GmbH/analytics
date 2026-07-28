@@ -31,6 +31,7 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -123,7 +124,11 @@ final class BackendModuleControllerTest extends UnitTestCase
             new ApiExceptionExtractor(),
         );
 
-        $statusCache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
+        // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
+        $backend = (new Typo3Version())->getMajorVersion() >= 14
+            ? new TransientMemoryBackend() // @phpstan-ignore argument.count
+            : new TransientMemoryBackend('production');
+        $statusCache = new VariableFrontend('analytics_status', $backend);
         $analyticsStatusService = new AnalyticsStatusService(
             $statusCache,
             $apiClient,

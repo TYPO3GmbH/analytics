@@ -19,6 +19,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -57,7 +58,11 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
-        $this->cache = new VariableFrontend('analytics_status', new TransientMemoryBackend('production'));
+        // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
+        $backend = (new Typo3Version())->getMajorVersion() >= 14
+            ? new TransientMemoryBackend() // @phpstan-ignore argument.count
+            : new TransientMemoryBackend('production');
+        $this->cache = new VariableFrontend('analytics_status', $backend);
 
         $cipherService = new CipherService();
         $this->encryptedTestSecret = $cipherService->encrypt('plain-secret');
