@@ -6,6 +6,19 @@
 Changelog
 =========
 
+..  _changelog-0.10.1:
+
+0.10.1
+======
+
+*   **Bugfix:** Plan pricing now loads correctly against password-protected API
+    environments (e.g. staging). HTTP Basic Auth credentials were missing from
+    the ``fetchPlans()`` request, causing silent ``401`` errors and an empty
+    pricing overview in the Analytics backend module.
+*   **Improvement:** Default contact email changed from ``support@typo3.com``
+    to ``analytics@typo3.com``.
+
+
 ..  _changelog-0.10.0:
 
 0.10.0
