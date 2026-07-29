@@ -10,6 +10,9 @@ TYPO3 Analytics is a web analytics service built for TYPO3. This extension
 integrates it directly into the TYPO3 backend, so editors and administrators
 can access analytics data without switching to a separate tool.
 
+..  figure:: ../Images/docs-header-image.png
+    :alt: TYPO3 Analytics
+
 ..  note::
     After the free trial period, a paid subscription is required. Available
     plans and pricing are shown directly in the backend module and at
