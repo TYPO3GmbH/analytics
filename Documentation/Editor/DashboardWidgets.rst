@@ -37,57 +37,71 @@ All v14+ widgets share two common settings:
 Traffic Graph
 =============
 
-..  figure:: ../Images/widget-traffic-graph-light.png
-    :alt: Traffic Graph widget
-    :zoom: gallery
-    :gallery: traffic-graph
-    :align: center
+..  tabs::
 
-..  list-table::
-    :widths: 14 14 14 14 14 14 14
+    ..  tab:: Light
 
-    *   -   .. figure:: ../Images/widget-traffic-graph-dark.png
-                :alt: Traffic Graph (dark)
-                :zoom: gallery
-                :gallery: traffic-graph
+        ..  figure:: ../Images/widget-traffic-graph-light.png
+            :alt: Traffic Graph widget
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
 
-                Traffic Graph (dark)
-        -   .. figure:: ../Images/widget-traffic-graph-light-tooltip.png
-                :alt: Traffic Graph (with tooltip)
-                :zoom: gallery
-                :gallery: traffic-graph
+    ..  tab:: Dark
 
-                Traffic Graph (with tooltip)
-        -   .. figure:: ../Images/widget-traffic-graph-single-visits.png
-                :alt: Metric: Visits
-                :zoom: gallery
-                :gallery: traffic-graph
+        ..  figure:: ../Images/widget-traffic-graph-dark.png
+            :alt: Traffic Graph (dark)
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
 
-                Metric: Visits
-        -   .. figure:: ../Images/widget-traffic-graph-single-sessions.png
-                :alt: Metric: Sessions
-                :zoom: gallery
-                :gallery: traffic-graph
+    ..  tab:: With tooltip
 
-                Metric: Sessions
-        -   .. figure:: ../Images/widget-traffic-graph-single-new-visitors.png
-                :alt: Metric: New visitors
-                :zoom: gallery
-                :gallery: traffic-graph
+        ..  figure:: ../Images/widget-traffic-graph-light-tooltip.png
+            :alt: Traffic Graph (with tooltip)
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
 
-                Metric: New visitors
-        -   .. figure:: ../Images/widget-traffic-graph-single-returning.png
-                :alt: Metric: Returning visitors
-                :zoom: gallery
-                :gallery: traffic-graph
+    ..  tab:: Metric: Visits
 
-                Metric: Returning visitors
-        -   .. figure:: ../Images/widget-traffic-graph-single-total.png
-                :alt: Metric: Total visitors
-                :zoom: gallery
-                :gallery: traffic-graph
+        ..  figure:: ../Images/widget-traffic-graph-single-visits.png
+            :alt: Metric: Visits
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
 
-                Metric: Total visitors
+    ..  tab:: Metric: Sessions
+
+        ..  figure:: ../Images/widget-traffic-graph-single-sessions.png
+            :alt: Metric: Sessions
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
+
+    ..  tab:: Metric: New visitors
+
+        ..  figure:: ../Images/widget-traffic-graph-single-new-visitors.png
+            :alt: Metric: New visitors
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
+
+    ..  tab:: Metric: Returning visitors
+
+        ..  figure:: ../Images/widget-traffic-graph-single-returning.png
+            :alt: Metric: Returning visitors
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
+
+    ..  tab:: Metric: Total visitors
+
+        ..  figure:: ../Images/widget-traffic-graph-single-total.png
+            :alt: Metric: Total visitors
+            :zoom: gallery
+            :gallery: traffic-graph
+            :align: center
 
 Displays a full-width line chart of daily visit counts for a configured site
 over the selected period. A :guilabel:`Show in Analytics` link opens the main
@@ -108,21 +122,23 @@ Widget settings (v14+): **Site**, **Period** (days).
 Site Performance
 ================
 
-..  list-table::
-    :widths: 50 50
+..  tabs::
 
-    *   -   .. figure:: ../Images/widget-site-performance-light.png
-                :alt: Site Performance widget (light)
-                :zoom: gallery
-                :gallery: site-performance
+    ..  tab:: Light mode
 
-                Light mode
-        -   .. figure:: ../Images/widget-site-performance-dark.png
-                :alt: Site Performance widget (dark)
-                :zoom: gallery
-                :gallery: site-performance
+        ..  figure:: ../Images/widget-site-performance-light.png
+            :alt: Site Performance widget (light)
+            :zoom: gallery
+            :gallery: site-performance
+            :align: center
 
-                Dark mode
+    ..  tab:: Dark mode
+
+        ..  figure:: ../Images/widget-site-performance-dark.png
+            :alt: Site Performance widget (dark)
+            :zoom: gallery
+            :gallery: site-performance
+            :align: center
 
 Displays four metric tiles — **Visits**, **Visitors**, **Bounce rate**, and
 **Avg. visit duration** — each showing the current value and a trend arrow
@@ -137,21 +153,23 @@ Widget settings (v14+): **Site**, **Period** (days).
 Top Pages
 =========
 
-..  list-table::
-    :widths: 50 50
+..  tabs::
 
-    *   -   .. figure:: ../Images/widget-top-pages-light.png
-                :alt: Top Pages widget (light)
-                :zoom: gallery
-                :gallery: top-pages
+    ..  tab:: Light mode
 
-                Light mode
-        -   .. figure:: ../Images/widget-top-pages-dark.png
-                :alt: Top Pages widget (dark)
-                :zoom: gallery
-                :gallery: top-pages
+        ..  figure:: ../Images/widget-top-pages-light.png
+            :alt: Top Pages widget (light)
+            :zoom: gallery
+            :gallery: top-pages
+            :align: center
 
-                Dark mode
+    ..  tab:: Dark mode
+
+        ..  figure:: ../Images/widget-top-pages-dark.png
+            :alt: Top Pages widget (dark)
+            :zoom: gallery
+            :gallery: top-pages
+            :align: center
 
 Displays a ranked list of the most-visited pages for a configured site. Each
 row shows the page title, URL, and view count. A :guilabel:`Show all` link
@@ -194,109 +212,131 @@ On **TYPO3 v14+**, four separate widgets are registered — one per section:
         -   Countries
         -   List
 
-..  list-table::
-    :widths: 50 50
+..  tabs::
 
-    *   -   .. figure:: ../Images/widget-traffic-sources-channel-light.png
-                :alt: Channel widget
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+    ..  tab:: Channel
 
-                Channel
-        -   .. figure:: ../Images/widget-traffic-sources-browser-light.png
-                :alt: Browser widget
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+        ..  tabs::
 
-                Browser
-    *   -   .. figure:: ../Images/widget-traffic-sources-devices-light.png
-                :alt: Devices widget
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+            ..  tab:: Light
 
-                Devices
-        -   .. figure:: ../Images/widget-traffic-sources-countries-light.png
-                :alt: Countries widget
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+                ..  figure:: ../Images/widget-traffic-sources-channel-light.png
+                    :alt: Channel widget
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
 
-                Countries
+            ..  tab:: Dark
 
-..  list-table::
-    :widths: 12 12 13 13 12 12 13 13
+                ..  figure:: ../Images/widget-traffic-sources-channel-dark.png
+                    :alt: Channel (dark)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
 
-    *   -   .. figure:: ../Images/widget-traffic-sources-channel-dark.png
-                :alt: Channel (dark)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+            ..  tab:: With tooltip
 
-                Channel (dark)
-        -   .. figure:: ../Images/widget-traffic-sources-browser-dark.png
-                :alt: Browser (dark)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+                ..  figure:: ../Images/widget-traffic-sources-channel-light-tooltip.png
+                    :alt: Channel (with tooltip)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
 
-                Browser (dark)
-        -   .. figure:: ../Images/widget-traffic-sources-devices-dark.png
-                :alt: Devices (dark)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+    ..  tab:: Browser
 
-                Devices (dark)
-        -   .. figure:: ../Images/widget-traffic-sources-countries-dark.png
-                :alt: Countries (dark)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+        ..  tabs::
 
-                Countries (dark)
-        -   .. figure:: ../Images/widget-traffic-sources-channel-light-tooltip.png
-                :alt: Channel (with tooltip)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+            ..  tab:: Light
 
-                Channel (tooltip)
-        -   .. figure:: ../Images/widget-traffic-sources-browser-light-tooltip.png
-                :alt: Browser (with tooltip)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+                ..  figure:: ../Images/widget-traffic-sources-browser-light.png
+                    :alt: Browser widget
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
 
-                Browser (tooltip)
-        -   .. figure:: ../Images/widget-traffic-sources-devices-light-tooltip.png
-                :alt: Devices (with tooltip)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+            ..  tab:: Dark
 
-                Devices (tooltip)
-        -   .. figure:: ../Images/widget-traffic-sources-countries-light-tooltip.png
-                :alt: Countries (with tooltip)
-                :zoom: gallery
-                :class: with-border with-shadow
-                :gallery: traffic-sources
-                :align: center
+                ..  figure:: ../Images/widget-traffic-sources-browser-dark.png
+                    :alt: Browser (dark)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
 
-                Countries (tooltip)
+            ..  tab:: With tooltip
+
+                ..  figure:: ../Images/widget-traffic-sources-browser-light-tooltip.png
+                    :alt: Browser (with tooltip)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
+
+    ..  tab:: Devices
+
+        ..  tabs::
+
+            ..  tab:: Light
+
+                ..  figure:: ../Images/widget-traffic-sources-devices-light.png
+                    :alt: Devices widget
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
+
+            ..  tab:: Dark
+
+                ..  figure:: ../Images/widget-traffic-sources-devices-dark.png
+                    :alt: Devices (dark)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
+
+            ..  tab:: With tooltip
+
+                ..  figure:: ../Images/widget-traffic-sources-devices-light-tooltip.png
+                    :alt: Devices (with tooltip)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
+
+    ..  tab:: Countries
+
+        ..  tabs::
+
+            ..  tab:: Light
+
+                ..  figure:: ../Images/widget-traffic-sources-countries-light.png
+                    :alt: Countries widget
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
+
+            ..  tab:: Dark
+
+                ..  figure:: ../Images/widget-traffic-sources-countries-dark.png
+                    :alt: Countries (dark)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
+
+            ..  tab:: With tooltip
+
+                ..  figure:: ../Images/widget-traffic-sources-countries-light-tooltip.png
+                    :alt: Countries (with tooltip)
+                    :zoom: gallery
+                    :class: with-border with-shadow
+                    :gallery: traffic-sources
+                    :align: center
 
 Widget settings (v14+):
 
