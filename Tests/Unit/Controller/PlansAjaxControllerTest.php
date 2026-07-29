@@ -68,7 +68,7 @@ final class PlansAjaxControllerTest extends UnitTestCase
         $response = $this->subject->handle(new ServerRequest());
 
         $body = json_decode((string)$response->getBody(), true);
-        self::assertSame('support@typo3.com', $body['contactEmail']);
+        self::assertSame('analytics@typo3.com', $body['contactEmail']);
     }
 
     #[Test]
