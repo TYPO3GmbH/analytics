@@ -6,51 +6,61 @@
 Page Performance Bar
 ====================
 
-..  figure:: ../Images/page-performance-bar-light.png
-    :alt: Page Performance Bar
-    :zoom: gallery
-    :gallery: page-performance-bar
-    :align: center
-    :class: with-shadow
+..  tabs::
 
-..  list-table::
-    :widths: 20 20 20 20 20
+    ..  tab:: Light
 
-    *   -   .. figure:: ../Images/page-performance-bar-dark.png
-                :alt: Page Performance Bar (dark)
-                :zoom: gallery
-                :gallery: page-performance-bar
-                :class: with-shadow
+        ..  figure:: ../Images/page-performance-bar-light.png
+            :alt: Page Performance Bar
+            :zoom: gallery
+            :gallery: page-performance-bar
+            :align: center
+            :class: with-shadow
 
-                Page Performance Bar (dark)
-        -   .. figure:: ../Images/page-performance-bar-light-tooltip-views.png
-                :alt: Tooltip: Views
-                :zoom: gallery
-                :gallery: page-performance-bar
-                :class: with-shadow
+    ..  tab:: Dark
 
-                Tooltip: Views
-        -   .. figure:: ../Images/page-performance-bar-light-tooltip-bounce.png
-                :alt: Tooltip: Bounce Rate
-                :zoom: gallery
-                :gallery: page-performance-bar
-                :class: with-shadow
+        ..  figure:: ../Images/page-performance-bar-dark.png
+            :alt: Page Performance Bar (dark)
+            :zoom: gallery
+            :gallery: page-performance-bar
+            :align: center
+            :class: with-shadow
 
-                Tooltip: Bounce Rate
-        -   .. figure:: ../Images/page-performance-bar-light-tooltip-avgtime.png
-                :alt: Tooltip: Avg. Time on Page
-                :zoom: gallery
-                :gallery: page-performance-bar
-                :class: with-shadow
+    ..  tab:: Tooltip: Views
 
-                Tooltip: Avg. Time
-        -   .. figure:: ../Images/page-performance-bar-light-tooltip-continuation.png
-                :alt: Tooltip: Continuation Rate
-                :zoom: gallery
-                :gallery: page-performance-bar
-                :class: with-shadow
+        ..  figure:: ../Images/page-performance-bar-light-tooltip-views.png
+            :alt: Tooltip: Views
+            :zoom: gallery
+            :gallery: page-performance-bar
+            :align: center
+            :class: with-shadow
 
-                Tooltip: Continuation Rate
+    ..  tab:: Tooltip: Bounce Rate
+
+        ..  figure:: ../Images/page-performance-bar-light-tooltip-bounce.png
+            :alt: Tooltip: Bounce Rate
+            :zoom: gallery
+            :gallery: page-performance-bar
+            :align: center
+            :class: with-shadow
+
+    ..  tab:: Tooltip: Avg. Time on Page
+
+        ..  figure:: ../Images/page-performance-bar-light-tooltip-avgtime.png
+            :alt: Tooltip: Avg. Time on Page
+            :zoom: gallery
+            :gallery: page-performance-bar
+            :align: center
+            :class: with-shadow
+
+    ..  tab:: Tooltip: Continuation Rate
+
+        ..  figure:: ../Images/page-performance-bar-light-tooltip-continuation.png
+            :alt: Tooltip: Continuation Rate
+            :zoom: gallery
+            :gallery: page-performance-bar
+            :align: center
+            :class: with-shadow
 
 The Page Performance Bar appears above the page content in the
 :guilabel:`Web → Page` module. It shows analytics metrics for the currently
