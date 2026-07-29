@@ -138,7 +138,7 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
             $response = $this->requestFactory->request(
                 $this->apiConfiguration->getBaseUrl() . '/public/plans?intpId=' . urlencode($intpId),
                 'GET',
-                $this->apiConfiguration->getRequestOptions()
+                array_merge($this->apiConfiguration->getRequestOptions(), $this->apiConfiguration->getAuthOptions())
             );
             /** @var array<string, mixed> $data */
             $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
