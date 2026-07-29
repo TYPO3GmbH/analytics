@@ -11,6 +11,7 @@ final readonly class ApiConfiguration
     private const DEFAULT_BASE_URL = 'https://middleware.analytics.typo3.com/api';
     private const DEFAULT_INTP_ID = '28096317-d75a-43b7-af39-f0862b66afa3';
     private const DEFAULT_ANALYTICS_API_BASE_URL = 'https://api.analytics.typo3.com/api';
+    private const DEFAULT_CONTACT_EMAIL = 'analytics@typo3.com';
 
     public function getIntpId(): string
     {
@@ -43,7 +44,7 @@ final readonly class ApiConfiguration
     public function getContactEmail(): string
     {
         $configured = $this->load('TYPO3_ANALYTICS_CONTACT_EMAIL', 'contactEmail');
-        return $configured !== '' ? $configured : 'support@typo3.com';
+        return $configured !== '' ? $configured : self::DEFAULT_CONTACT_EMAIL;
     }
 
     public function isCustomPlanEnabled(): bool

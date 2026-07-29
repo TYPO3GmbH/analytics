@@ -2,7 +2,20 @@
   "name": "t3g/analytics",
   "description": "TYPO3 Analytics Extension",
   "type": "typo3-cms-extension",
-  "license": "proprietary",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "TYPO3 GmbH",
+      "email": "support@typo3.com",
+      "homepage": "https://typo3.com",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "docs": "https://docs.typo3.org/p/t3g/analytics/main/en-us/",
+    "issues": "https://github.com/TYPO3GmbH/analytics/issues",
+    "source": "https://github.com/TYPO3GmbH/analytics"
+  },
   "require": {
     "php": "^8.2",
     "ext-sodium": "*",
