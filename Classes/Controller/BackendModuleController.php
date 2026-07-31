@@ -180,7 +180,7 @@ final readonly class BackendModuleController
                 }
                 $extra = $dateParams;
                 if ($pageUrl !== '') {
-                    $extra .= ($extra !== '' ? '&' : '') . 'mainDashboardPageUrl=' . rawurlencode($pageUrl);
+                    $extra .= ($extra !== '' ? '&' : '') . 'mainDashboardPageUrl=' . rawurlencode($pageUrl) . '&allWidgets=true';
                 }
                 if ($extra !== '') {
                     $url .= (str_contains($url, '?') ? '&' : '?') . $extra;
