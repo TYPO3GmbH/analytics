@@ -6,6 +6,17 @@
 Changelog
 =========
 
+..  _changelog-0.10.2:
+
+0.10.2
+======
+
+*   **Improvement:** When opening the dashboard with a page filter (e.g. from
+    the Page Performance Bar), all widgets are now shown instead of only
+    page-specific ones.
+
+
+
 ..  _changelog-0.10.1:
 
 0.10.1
