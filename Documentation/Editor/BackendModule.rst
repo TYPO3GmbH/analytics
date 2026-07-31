@@ -18,10 +18,6 @@ At the top of the module, available subscription plans are displayed with
 pricing and feature comparison. The toggle switches between monthly and yearly
 billing. Plans and pricing are fetched live from the TYPO3 Analytics API.
 
-..  note::
-    The plans section is only shown when a valid integration partner ID is
-    configured.
-
 
 Site cards
 ==========
