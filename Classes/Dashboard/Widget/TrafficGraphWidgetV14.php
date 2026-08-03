@@ -111,7 +111,7 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
         $view = $this->viewFactory->create($this->createViewFactoryData($context->request));
         $view->assignMultiple([
             'chart' => $chart,
-            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data'] ?? []) > 0) === [],
+            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data']) > 0) === [],
             'periodLabel' => $periodLabel,
             'siteIdentifier' => $siteIdentifier,
             'selectedDays' => $days,

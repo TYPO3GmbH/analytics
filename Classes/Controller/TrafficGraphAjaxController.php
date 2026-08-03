@@ -56,7 +56,7 @@ final readonly class TrafficGraphAjaxController
         ));
         $view->assignMultiple([
             'chart' => $chart,
-            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data'] ?? []) > 0) === [],
+            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data']) > 0) === [],
             'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
         ]);
         $html = $view->render('Dashboard/Widget/TrafficGraphChart');

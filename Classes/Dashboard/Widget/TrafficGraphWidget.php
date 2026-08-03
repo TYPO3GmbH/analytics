@@ -92,7 +92,7 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
             'periodLabel' => $this->translate('dashboardWidget.trafficGraph.setting.period.label'),
             'periodOptions' => $this->buildPeriodOptions($days),
             'chart' => $chart,
-            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data'] ?? []) > 0) === [],
+            'noData' => array_filter($metricData, static fn (?array $d): bool => $d !== null && array_sum($d['data']) > 0) === [],
             'currentPeriodLabel' => sprintf($this->translate('pagePerformance.days'), $days),
             'showAllLabel' => $this->translate('dashboardWidget.trafficGraph.showAll'),
             'showAllUrl' => $this->buildShowAllUrl($siteIdentifier, $days),
