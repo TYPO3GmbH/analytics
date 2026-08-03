@@ -15,7 +15,7 @@
                interlink-shortcode="t3g/analytics"
     />
     <project title="TYPO3 Analytics"
-             release="0.10.2"
+             release="1.0.0"
              version="0.10"
              copyright="TYPO3 GmbH"
     />
