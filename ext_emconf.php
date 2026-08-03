@@ -8,11 +8,11 @@
 
 $EM_CONF['analytics'] = [
     'title' => 'Analytics',
-    'description' => 'TYPO3 Analytics',
+    'description' => 'Integrates analytics dashboards and widgets into the TYPO3 backend — including traffic graphs, site performance, top pages, traffic sources, and a page performance bar.',
     'category' => 'module',
-    'state' => 'alpha',
+    'state' => 'stable',
     'clearCacheOnLoad' => 1,
-    'author' => 'Vendor',
+    'author' => 'TYPO3 GmbH',
     'author_email' => 'simon.schmidt@typo3.com',
     'author_company' => 'TYPO3 GmbH',
     'version' => '1.0.0',
