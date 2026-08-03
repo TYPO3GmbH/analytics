@@ -6,6 +6,13 @@
 Changelog
 =========
 
+..  _changelog-1.0.2:
+
+1.0.2
+=====
+
+*   replace links to documentation with its permalinks
+
 
 ..  _changelog-1.0.1:
 
