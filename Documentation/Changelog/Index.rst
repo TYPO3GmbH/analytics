@@ -6,6 +6,17 @@
 Changelog
 =========
 
+..  _changelog-1.0.0:
+
+1.0.0
+=====
+
+*   **Release:** First public release — the extension is now available on the
+    `TYPO3 Extension Repository (TER) <https://extensions.typo3.org>`__ and
+    `Packagist <https://packagist.org>`__.
+
+
+
 ..  _changelog-0.10.2:
 
 0.10.2
