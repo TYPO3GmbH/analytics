@@ -29,13 +29,13 @@ jobs:
           coverage: none
           tools: typo3/tailor
 
-#      - name: Publish to TER
-#        env:
-#          TYPO3_API_TOKEN: ${{ secrets.TYPO3_API_TOKEN }}
-#        run: >-
-#          tailor ter:publish
-#          --comment "Released via GitHub Actions from ${{ github.ref_name }}"
-#          "${{ steps.version.outputs.number }}"
+      - name: Publish to TER
+        env:
+          TYPO3_API_TOKEN: ${{ secrets.TYPO3_API_TOKEN }}
+        run: >-
+          tailor ter:publish
+          --comment "Released via GitHub Actions from ${{ github.ref_name }}"
+          "${{ steps.version.outputs.number }}"
 
       - name: Create GitHub release
         env:
