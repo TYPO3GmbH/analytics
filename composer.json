@@ -49,9 +49,6 @@
       "Package": {
         "providesPackages": {}
       }
-    },
-    "branch-alias": {
-      "dev-develop": "dev-main"
     }
   },
   "scripts": {
