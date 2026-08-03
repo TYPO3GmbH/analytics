@@ -6,6 +6,14 @@
 Changelog
 =========
 
+
+..  _changelog-1.0.1:
+
+1.0.1
+=====
+
+*   update ext_emconf
+
 ..  _changelog-1.0.0:
 
 1.0.0
