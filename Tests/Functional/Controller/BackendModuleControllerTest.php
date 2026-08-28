@@ -415,6 +415,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             new NullLogger(),
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
         );
 
         $siteDataProvider = new SiteDataProvider(
@@ -436,6 +437,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $cipherService,
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
             new NullLogger(),
         );
 
@@ -444,6 +446,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $cipherService,
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
             new NullLogger(),
         );
 

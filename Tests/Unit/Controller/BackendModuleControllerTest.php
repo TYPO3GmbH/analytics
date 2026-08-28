@@ -136,6 +136,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             new NullLogger(),
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
         );
 
         $registrationService = new InstanceRegistrationService(
@@ -143,6 +144,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
             new NullLogger(),
         );
 
@@ -151,6 +153,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
             new NullLogger(),
         );
 

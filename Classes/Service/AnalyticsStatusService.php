@@ -9,6 +9,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -25,6 +26,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         private LoggerInterface $logger,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
+        private SiteSettingsWriteGuardInterface $writeGuard,
     ) {
     }
 
@@ -110,7 +112,26 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         }
 
         $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
-        $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
+        try {
+            $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
+        } catch (SiteConfigurationWriteException $e) {
+            $this->logger->warning(
+                'syncSiteSettingsFromStatus: writeSettings threw. Check file system permissions.',
+                ['siteIdentifier' => $site->getIdentifier(), 'exception' => $e->getMessage()]
+            );
+            return;
+        }
+
+        try {
+            $this->writeGuard->assertSettingsPersisted($site, $update);
+        } catch (AnalyticsApiException) {
+            $this->logger->warning(
+                'syncSiteSettingsFromStatus: settings could not be persisted. Check file system permissions.',
+                ['siteIdentifier' => $site->getIdentifier()]
+            );
+            return;
+        }
+
         $this->logger->info(
             'Site settings updated from status response.',
             ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]

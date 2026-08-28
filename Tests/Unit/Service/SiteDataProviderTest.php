@@ -103,6 +103,7 @@ final class SiteDataProviderTest extends UnitTestCase
             new NullLogger(),
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
         );
 
         $this->pageAccessChecker = $this->createMock(BackendPageAccessCheckerInterface::class);

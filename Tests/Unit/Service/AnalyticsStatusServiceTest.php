@@ -12,11 +12,13 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsWriteGuardInterface;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Information\Typo3Version;
@@ -38,6 +40,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     private array $httpHistory = [];
     private SiteSettingsService&MockObject $siteSettingsService;
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
+    private SiteSettingsWriteGuardInterface&MockObject $writeGuard;
 
     private VariableFrontend $cache;
     private string $encryptedTestSecret;
@@ -58,6 +61,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
+        $this->writeGuard = $this->createMock(SiteSettingsWriteGuardInterface::class);
         // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
         $backend = (new Typo3Version())->getMajorVersion() >= 14
             ? new TransientMemoryBackend() // @phpstan-ignore argument.count
@@ -84,6 +88,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
             new NullLogger(),
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->writeGuard,
         );
     }
 
@@ -229,6 +234,39 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         $this->subject->getStatus($site);
 
         self::assertEmpty($this->httpHistory);
+    }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusLogsWarningWhenWriteSettingsThrows(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+        $this->siteSettingsService
+            ->method('writeSettings')
+            ->willThrowException(new \TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException('disk full', 1590487411));
+
+        $status = $this->subject->getStatus($site, forceRefresh: true);
+        $this->subject->syncSiteSettingsFromStatus($site, $status ?? []);
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusLogsWarningWhenSettingsCouldNotBePersisted(): void
+    {
+        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+        $this->writeGuard
+            ->method('assertSettingsPersisted')
+            ->willThrowException(new AnalyticsApiException('Credentials could not be written.', 0));
+
+        $status = $this->subject->getStatus($site, forceRefresh: true);
+        $this->subject->syncSiteSettingsFromStatus($site, $status ?? []);
+
+        // No exception propagated — the service warns and returns.
+        $this->expectNotToPerformAssertions();
     }
 
     /** Helpers */

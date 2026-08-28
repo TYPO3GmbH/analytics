@@ -8,6 +8,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -19,6 +20,7 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         private CipherServiceInterface $cipherService,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
+        private SiteSettingsWriteGuardInterface $writeGuard,
         private LoggerInterface $logger,
     ) {
     }
@@ -102,10 +104,28 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         }
 
         $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
-        $this->siteSettingsService->writeSettings($site, array_merge($existing, [
-            'apiKeyId' => $result['apiKeyId'],
-            'apiKey' => $encryptedApiKey,
-        ]));
+        try {
+            $this->siteSettingsService->writeSettings($site, array_merge($existing, [
+                'apiKeyId' => $result['apiKeyId'],
+                'apiKey' => $encryptedApiKey,
+            ]));
+        } catch (SiteConfigurationWriteException $e) {
+            $this->logger->error('ApiKeyService: writeSettings threw.', [
+                'siteIdentifier' => $siteIdentifier,
+                'exception' => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        try {
+            $this->writeGuard->assertSettingsPersisted($site, ['apiKeyId' => $result['apiKeyId']]);
+        } catch (AnalyticsApiException $e) {
+            $this->logger->error('ApiKeyService: API key could not be persisted.', [
+                'siteIdentifier' => $siteIdentifier,
+                'apiKeyId' => $result['apiKeyId'],
+            ]);
+            return;
+        }
 
         $this->logger->info('ApiKeyService: API key provisioned.', [
             'siteIdentifier' => $siteIdentifier,

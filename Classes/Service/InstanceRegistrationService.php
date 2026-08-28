@@ -6,6 +6,7 @@ namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -17,6 +18,7 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         private CipherServiceInterface $cipherService,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
+        private SiteSettingsWriteGuardInterface $writeGuard,
         private LoggerInterface $logger,
     ) {
     }
@@ -30,6 +32,8 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
     public function register(Site $site, string $email): void
     {
         $siteIdentifier = $site->getIdentifier();
+
+        $this->writeGuard->assertDirectoryWritable($site);
 
         try {
             $data = $this->apiClient->registerInstance($site, $email);
@@ -51,11 +55,23 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         $encryptedSecret = $instanceSecret !== '' ? $this->cipherService->encrypt($instanceSecret) : '';
 
         $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
-        $this->siteSettingsService->writeSettings($site, array_merge($existing, [
-            'websiteId' => $websiteId,
-            'instanceId' => $instanceId,
-            'instanceSecret' => $encryptedSecret,
-        ]));
+        try {
+            $this->siteSettingsService->writeSettings($site, array_merge($existing, [
+                'websiteId' => $websiteId,
+                'instanceId' => $instanceId,
+                'instanceSecret' => $encryptedSecret,
+            ]));
+        } catch (SiteConfigurationWriteException $e) {
+            $this->logger->error('Registration: writeSettings threw.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e->getMessage()]);
+            throw new AnalyticsApiException('Settings could not be written to config/sites/' . $siteIdentifier . '/settings.yaml. Check file system permissions for this directory.', 0);
+        }
+
+        try {
+            $this->writeGuard->assertSettingsPersisted($site, ['websiteId' => $websiteId]);
+        } catch (AnalyticsApiException $e) {
+            $this->logger->error('Registration: settings could not be persisted.', ['siteIdentifier' => $siteIdentifier]);
+            throw $e;
+        }
 
         $this->logger->info('Site successfully registered.', ['siteIdentifier' => $siteIdentifier, 'websiteId' => $websiteId]);
     }

@@ -75,6 +75,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
             new \Psr\Log\NullLogger(),
         );
     }

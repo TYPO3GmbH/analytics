@@ -12,6 +12,9 @@ services:
       - '../Classes/Dashboard/Widget/TrafficGraphWidgetV14.php'
       - '../Classes/Dashboard/Widget/TrafficSourcesWidgetV14.php'
 
+  T3G\Analytics\Service\SiteSettingsWriteGuardInterface:
+    alias: T3G\Analytics\Service\SiteSettingsWriteGuard
+
   T3G\Analytics\Service\TopPagesServiceInterface:
     alias: T3G\Analytics\Service\TopPagesService
 
