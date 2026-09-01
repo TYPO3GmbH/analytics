@@ -12,8 +12,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *
  * On TYPO3 v14+ the built-in TYPO3\CMS\Core\Crypto\Cipher\CipherService is used
  * automatically (Feature-108002). On v13 an equivalent implementation based on
- * the same algorithm and serialization format is used as fallback, so encrypted
- * values written under v13 remain decryptable after upgrading to v14.
+ * the same algorithm and serialization format is used as fallback.
+ *
+ * Values written under v13 use the same "cipher" JSON key as v14 and are therefore
+ * directly decryptable after upgrading. Older values written with the legacy
+ * "ciphertext" key are handled by the InstanceSecretEncryptionMigrationWizard.
  *
  * Key derivation mirrors KeyFactory::deriveSharedKeyFromEncryptionKey():
  * BLAKE2b keyed hash over a domain-specific seed derived from
@@ -78,7 +81,12 @@ class CipherService implements CipherServiceInterface
         // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\KeyFactory does not exist in v13)
         $key = $keyFactory->deriveSharedKeyFromEncryptionKey(self::KEY_SEED);
 
-        // CipherValue::fromSerialized() reconstructs the value object from the serialized form
+        // Values written under v13 use "ciphertext" as JSON key — route them to the sodium
+        // fallback path until InstanceSecretEncryptionMigrationWizard has re-encrypted them.
+        if ($this->isLegacyFormat($encrypted)) {
+            return $this->decryptWithSodium($encrypted);
+        }
+
         $cipherValueClass = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherValue';
         $cipherValue = $cipherValueClass::fromSerialized($encrypted);
 
@@ -109,7 +117,7 @@ class CipherService implements CipherServiceInterface
         return sodium_bin2base64(
             (string)json_encode([
                 'nonce' => sodium_bin2base64($nonce, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
-                'ciphertext' => sodium_bin2base64($ciphertext, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+                'cipher' => sodium_bin2base64($ciphertext, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
             ]),
             SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING
         );
@@ -131,7 +139,7 @@ class CipherService implements CipherServiceInterface
         );
 
         $nonce = sodium_base642bin((string) $payload['nonce'], SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
-        $ciphertext = sodium_base642bin((string) $payload['ciphertext'], SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
+        $ciphertext = sodium_base642bin((string) ($payload['cipher'] ?? $payload['ciphertext'] ?? ''), SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
 
         $plaintext = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(
             $ciphertext,
@@ -147,6 +155,21 @@ class CipherService implements CipherServiceInterface
         }
 
         return $plaintext;
+    }
+
+    public function isLegacyFormat(string $encrypted): bool
+    {
+        try {
+            $decoded = json_decode(
+                sodium_base642bin($encrypted, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+            return isset($decoded['ciphertext']) && !isset($decoded['cipher']);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /** Shared helpers */
