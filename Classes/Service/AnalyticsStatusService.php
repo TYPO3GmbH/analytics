@@ -26,7 +26,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         private LoggerInterface $logger,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
-        private SiteSettingsWriteGuardInterface $writeGuard,
+        private SiteSettingsWriteVerifierInterface $writeGuard,
     ) {
     }
 

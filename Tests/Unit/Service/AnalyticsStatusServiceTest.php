@@ -18,7 +18,7 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
-use T3G\Analytics\Service\SiteSettingsWriteGuardInterface;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Information\Typo3Version;
@@ -40,7 +40,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     private array $httpHistory = [];
     private SiteSettingsService&MockObject $siteSettingsService;
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
-    private SiteSettingsWriteGuardInterface&MockObject $writeGuard;
+    private SiteSettingsWriteVerifierInterface&MockObject $writeGuard;
 
     private VariableFrontend $cache;
     private string $encryptedTestSecret;
@@ -61,7 +61,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
-        $this->writeGuard = $this->createMock(SiteSettingsWriteGuardInterface::class);
+        $this->writeGuard = $this->createMock(SiteSettingsWriteVerifierInterface::class);
         // TransientMemoryBackend dropped the $context parameter in TYPO3 v14.
         $backend = (new Typo3Version())->getMajorVersion() >= 14
             ? new TransientMemoryBackend() // @phpstan-ignore argument.count

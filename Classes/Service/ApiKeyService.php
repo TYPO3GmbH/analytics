@@ -20,7 +20,7 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         private CipherServiceInterface $cipherService,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
-        private SiteSettingsWriteGuardInterface $writeGuard,
+        private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
     ) {
     }

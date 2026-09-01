@@ -18,7 +18,7 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         private CipherServiceInterface $cipherService,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
-        private SiteSettingsWriteGuardInterface $writeGuard,
+        private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
     ) {
     }

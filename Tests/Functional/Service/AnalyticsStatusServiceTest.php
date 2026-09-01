@@ -15,6 +15,7 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
@@ -73,7 +74,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             new \Psr\Log\NullLogger(),
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
-            $this->createMock(\T3G\Analytics\Service\SiteSettingsWriteGuardInterface::class),
+            $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
     }
 

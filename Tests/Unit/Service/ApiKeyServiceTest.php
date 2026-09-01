@@ -18,7 +18,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
-use T3G\Analytics\Service\SiteSettingsWriteGuardInterface;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -36,7 +36,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     private array $httpHistory = [];
     private SiteSettingsService&MockObject $siteSettingsService;
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
-    private SiteSettingsWriteGuardInterface&MockObject $writeGuard;
+    private SiteSettingsWriteVerifierInterface&MockObject $writeGuard;
     private CipherService $cipherService;
     private ApiKeyService $subject;
 
@@ -59,7 +59,7 @@ final class ApiKeyServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
-        $this->writeGuard = $this->createMock(SiteSettingsWriteGuardInterface::class);
+        $this->writeGuard = $this->createMock(SiteSettingsWriteVerifierInterface::class);
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';

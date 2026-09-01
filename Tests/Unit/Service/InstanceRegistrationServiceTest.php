@@ -18,7 +18,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
-use T3G\Analytics\Service\SiteSettingsWriteGuardInterface;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -37,7 +37,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     private array $httpHistory = [];
     private SiteSettingsService&MockObject $siteSettingsService;
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
-    private SiteSettingsWriteGuardInterface&MockObject $writeGuard;
+    private SiteSettingsWriteVerifierInterface&MockObject $writeGuard;
 
     private CipherService $cipherService;
     private InstanceRegistrationService $subject;
@@ -56,7 +56,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
-        $this->writeGuard = $this->createMock(SiteSettingsWriteGuardInterface::class);
+        $this->writeGuard = $this->createMock(SiteSettingsWriteVerifierInterface::class);
         $this->cipherService = new CipherService();
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
