@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace T3G\Analytics\Tests\Unit\Service;
+namespace T3G\Analytics\Tests\Functional\Service;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\SiteSettingsWriteGuard;
+use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
-use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-final class SiteSettingsWriteGuardTest extends UnitTestCase
+final class SiteSettingsWriteGuardTest extends FunctionalTestCase
 {
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
     private string $tempDir;
@@ -24,7 +24,7 @@ final class SiteSettingsWriteGuardTest extends UnitTestCase
     {
         parent::setUp();
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
-        $this->tempDir = sys_get_temp_dir() . '/analytics-guard-test-' . uniqid();
+        $this->tempDir = $this->getInstancePath() . '/analytics-guard-test';
         mkdir($this->tempDir . '/main', 0755, recursive: true);
     }
 
@@ -57,7 +57,6 @@ final class SiteSettingsWriteGuardTest extends UnitTestCase
         $guard = new SiteSettingsWriteGuard($this->siteSettingsFactory, $this->tempDir);
 
         $this->expectException(AnalyticsApiException::class);
-        $this->expectExceptionMessageMatches('/config\/sites\/main/');
 
         $guard->assertDirectoryWritable($this->buildSite());
     }

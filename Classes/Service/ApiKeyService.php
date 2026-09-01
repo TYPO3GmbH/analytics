@@ -110,7 +110,7 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
                 'apiKey' => $encryptedApiKey,
             ]));
         } catch (SiteConfigurationWriteException $e) {
-            $this->logger->error('ApiKeyService: writeSettings threw.', [
+            $this->logger->error('ApiKeyService: Failed to write API key settings to site configuration.', [
                 'siteIdentifier' => $siteIdentifier,
                 'exception' => $e->getMessage(),
             ]);

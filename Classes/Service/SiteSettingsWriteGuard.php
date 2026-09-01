@@ -24,7 +24,7 @@ readonly class SiteSettingsWriteGuard implements SiteSettingsWriteGuardInterface
 
         if (!is_dir($configDir) || !is_writable($configDir)) {
             throw new AnalyticsApiException(
-                'Cannot write to config/sites/' . $identifier . '/. Check file system permissions for this directory.',
+                'Cannot write to ' . $configDir . '/. Check file system permissions for this directory.',
                 0
             );
         }
