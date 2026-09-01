@@ -71,4 +71,32 @@ final class CipherServiceTest extends TestCase
         $encrypted = $this->subject->encrypt('');
         self::assertSame('', $this->subject->decrypt($encrypted));
     }
+
+    #[Test]
+    public function encryptProducesCipherKey(): void
+    {
+        $encrypted = $this->subject->encrypt('test');
+        $payload = json_decode(
+            sodium_base642bin($encrypted, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        self::assertArrayHasKey('cipher', $payload);
+        self::assertArrayNotHasKey('ciphertext', $payload);
+    }
+
+    #[Test]
+    public function decryptHandlesLegacyCiphertextKey(): void
+    {
+        $fixture = json_decode(
+            (string)file_get_contents(__DIR__ . '/Fixtures/legacy_cipher_value.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        self::assertSame($fixture['plaintext'], $this->subject->decrypt($fixture['encrypted']));
+    }
 }
