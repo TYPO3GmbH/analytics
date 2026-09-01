@@ -16,6 +16,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -75,6 +76,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new \Psr\Log\NullLogger(),
         );
     }

@@ -18,6 +18,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -36,6 +37,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     private array $httpHistory = [];
     private SiteSettingsService&MockObject $siteSettingsService;
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
+    private SiteSettingsWriteVerifierInterface&MockObject $writeGuard;
 
     private CipherService $cipherService;
     private InstanceRegistrationService $subject;
@@ -54,6 +56,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
+        $this->writeGuard = $this->createMock(SiteSettingsWriteVerifierInterface::class);
         $this->cipherService = new CipherService();
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
@@ -70,6 +73,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->writeGuard,
             new NullLogger(),
         );
     }
@@ -164,6 +168,49 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
             ->expects(self::once())
             ->method('writeSettings')
             ->with($this->buildSite(), self::callback(static fn (array $s): bool => $s['instanceSecret'] === ''));
+
+        $this->subject->register($this->buildSite(), 'user@example.com');
+    }
+
+    #[Test]
+    public function registerThrowsBeforeApiCallWhenDirectoryIsNotWritable(): void
+    {
+        $this->writeGuard
+            ->method('assertDirectoryWritable')
+            ->willThrowException(new AnalyticsApiException('Cannot write to config/sites/main/.', 0));
+
+        $this->expectException(AnalyticsApiException::class);
+        $this->expectExceptionMessage('Cannot write to config/sites/main/.');
+
+        $this->subject->register($this->buildSite(), 'user@example.com');
+
+        self::assertCount(0, $this->httpHistory, 'API must not be called when directory is not writable.');
+    }
+
+    #[Test]
+    public function registerThrowsAnalyticsApiExceptionWhenWriteSettingsThrows(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+        $this->siteSettingsService
+            ->method('writeSettings')
+            ->willThrowException(new \TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException('disk full', 1590487411));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->register($this->buildSite(), 'user@example.com');
+    }
+
+    #[Test]
+    public function registerThrowsWhenSettingsCouldNotBePersisted(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+        $this->writeGuard
+            ->method('assertSettingsPersisted')
+            ->willThrowException(new AnalyticsApiException('Credentials could not be written.', 0));
+
+        $this->expectException(AnalyticsApiException::class);
 
         $this->subject->register($this->buildSite(), 'user@example.com');
     }

@@ -12,11 +12,13 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -34,6 +36,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     private array $httpHistory = [];
     private SiteSettingsService&MockObject $siteSettingsService;
     private SiteSettingsFactory&MockObject $siteSettingsFactory;
+    private SiteSettingsWriteVerifierInterface&MockObject $writeGuard;
     private CipherService $cipherService;
     private ApiKeyService $subject;
 
@@ -56,6 +59,7 @@ final class ApiKeyServiceTest extends UnitTestCase
 
         $this->siteSettingsService = $this->createMock(SiteSettingsService::class);
         $this->siteSettingsFactory = $this->createMock(SiteSettingsFactory::class);
+        $this->writeGuard = $this->createMock(SiteSettingsWriteVerifierInterface::class);
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = '';
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['verifySsl'] = '0';
@@ -71,6 +75,7 @@ final class ApiKeyServiceTest extends UnitTestCase
             $this->cipherService,
             $this->siteSettingsService,
             $this->siteSettingsFactory,
+            $this->writeGuard,
             new NullLogger(),
         );
     }
@@ -195,6 +200,37 @@ final class ApiKeyServiceTest extends UnitTestCase
 
         $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+    }
+
+    #[Test]
+    public function provisionIfNeededReturnsWhenWriteSettingsThrows(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"new-key-uuid","apiKey":"new-api-key"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+        $this->siteSettingsService
+            ->method('writeSettings')
+            ->willThrowException(new \TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException('disk full', 1590487411));
+
+        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    #[Test]
+    public function provisionIfNeededLogsErrorWhenApiKeyCouldNotBePersisted(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"new-key-uuid","apiKey":"new-api-key"}'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+        $this->writeGuard
+            ->method('assertSettingsPersisted')
+            ->willThrowException(new AnalyticsApiException('Credentials could not be written.', 0));
+
+        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        // No exception thrown — the service returns silently and logs an error.
+        $this->expectNotToPerformAssertions();
     }
 
     /** Helpers */
