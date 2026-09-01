@@ -1,0 +1,6 @@
+{
+    "description": "instanceSecret encrypted with the v13 'ciphertext' key format using the test encryptionKey",
+    "encryptionKey": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+    "plaintext": "legacy-test-secret",
+    "encrypted": "eyJub25jZSI6InhoZTJqR1JRMGptZ3Y4TGktMmtoS1BQYmVDSGZjcHI1IiwiY2lwaGVydGV4dCI6IkRWV1VlajlSdWVzT3R0aThnQU1OX2U4Q1RJb1AtbkJmeGlhZzRNbFdjZF92clEifQ"
+}
