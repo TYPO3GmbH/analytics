@@ -6,6 +6,15 @@
 Changelog
 =========
 
+
+..  _changelog-1.0.5:
+
+1.0.5
+=====
+
+*   [BUGFIX] ext_emconf (revert changes from before)
+
+
 ..  _changelog-1.0.4:
 
 1.0.4
