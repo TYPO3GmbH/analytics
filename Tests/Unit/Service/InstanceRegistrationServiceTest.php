@@ -19,6 +19,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
@@ -194,7 +195,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService
             ->method('writeSettings')
-            ->willThrowException(new \TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException('disk full', 1590487411));
+            ->willThrowException(new SiteConfigurationWriteException('disk full', 1590487411));
 
         $this->expectException(AnalyticsApiException::class);
 

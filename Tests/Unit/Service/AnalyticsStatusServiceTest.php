@@ -21,6 +21,7 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
+use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -244,7 +245,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService
             ->method('writeSettings')
-            ->willThrowException(new \TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException('disk full', 1590487411));
+            ->willThrowException(new SiteConfigurationWriteException('disk full', 1590487411));
 
         $status = $this->subject->getStatus($site, forceRefresh: true);
         $this->subject->syncSiteSettingsFromStatus($site, $status ?? []);

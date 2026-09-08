@@ -19,6 +19,7 @@ use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -209,7 +210,7 @@ final class ApiKeyServiceTest extends UnitTestCase
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService
             ->method('writeSettings')
-            ->willThrowException(new \TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException('disk full', 1590487411));
+            ->willThrowException(new SiteConfigurationWriteException('disk full', 1590487411));
 
         $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
