@@ -22,6 +22,7 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Backend\Routing\Route;
@@ -415,6 +416,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             new NullLogger(),
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
 
         $siteDataProvider = new SiteDataProvider(
@@ -436,6 +438,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $cipherService,
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
 
@@ -444,6 +447,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $cipherService,
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
 

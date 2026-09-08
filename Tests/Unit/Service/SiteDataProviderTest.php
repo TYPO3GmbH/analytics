@@ -19,6 +19,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\SiteDataProvider;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
@@ -103,6 +104,7 @@ final class SiteDataProviderTest extends UnitTestCase
             new NullLogger(),
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
+            $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
 
         $this->pageAccessChecker = $this->createMock(BackendPageAccessCheckerInterface::class);
