@@ -6,7 +6,7 @@
  * @see https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/14.2/Deprecation-108345-Deprecation-of-ext-emconf-php.html
  */
 
-$EM_CONF['analytics'] = [
+$EM_CONF[$_EXTKEY] = [
     'title' => 'Analytics',
     'description' => 'Integrates analytics dashboards and widgets into the TYPO3 backend — including traffic graphs, site performance, top pages, traffic sources, and a page performance bar.',
     'category' => 'module',
