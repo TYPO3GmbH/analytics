@@ -6,6 +6,24 @@
 Changelog
 =========
 
+..  _changelog-1.0.4:
+
+1.0.4
+=====
+
+*   raise version (TER upload failed before)
+
+
+..  _changelog-1.0.3:
+
+1.0.3
+=====
+
+*   Fix ext_emconf.php by @josefglatz in #17
+*   [TASK] Update ignore rules in .gitattributes by @eliashaeussler in #18
+*   [BUGFIX] detect and surface site settings write failures by @sfsmfc in #20
+
+
 ..  _changelog-1.0.2:
 
 1.0.2
