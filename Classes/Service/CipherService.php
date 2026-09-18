@@ -131,24 +131,26 @@ class CipherService implements CipherServiceInterface
     {
         $key = $this->deriveKey();
 
-        $payload = json_decode(
-            sodium_base642bin($encrypted, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
-            true,
-            512,
-            JSON_THROW_ON_ERROR
-        );
+        try {
+            $payload = json_decode(
+                sodium_base642bin($encrypted, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
 
-        $nonce = sodium_base642bin((string) $payload['nonce'], SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
-        $ciphertext = sodium_base642bin((string) ($payload['cipher'] ?? $payload['ciphertext'] ?? ''), SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
+            $nonce = sodium_base642bin((string) $payload['nonce'], SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
+            $ciphertext = sodium_base642bin((string) ($payload['cipher'] ?? $payload['ciphertext'] ?? ''), SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
 
-        $plaintext = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(
-            $ciphertext,
-            '',
-            $nonce,
-            $key
-        );
-
-        sodium_memzero($key);
+            $plaintext = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(
+                $ciphertext,
+                '',
+                $nonce,
+                $key
+            );
+        } finally {
+            sodium_memzero($key);
+        }
 
         if ($plaintext === false) {
             throw new \RuntimeException('Cipher decryption failed: authentication tag mismatch.', 1744800000);

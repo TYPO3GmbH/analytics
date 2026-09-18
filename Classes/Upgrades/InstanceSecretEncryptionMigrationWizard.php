@@ -61,7 +61,7 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
             } catch (\Throwable) {
                 continue;
             }
-            if ($encrypted === '' || !$this->isLegacyFormat($encrypted)) {
+            if ($encrypted === '' || !$this->cipherService->isLegacyFormat($encrypted)) {
                 continue;
             }
             try {

@@ -9,8 +9,5 @@ parameters:
     paths:
         - %currentWorkingDirectory%/Classes/
 
-    excludePaths:
-        - %currentWorkingDirectory%/Classes/Upgrades/
-
     bootstrapFiles:
-        - phpstan.bootstrap-dashboard.php
+        - phpstan.bootstrap-typo3stubs.php
