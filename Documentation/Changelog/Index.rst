@@ -6,6 +6,13 @@
 Changelog
 =========
 
+..  _changelog-1.1.0:
+
+1.1.0
+=====
+
+*   [BUGFIX] add upgrade wizard to migrate v13 to v14
+*   !! IMPORTANT CHANGE: Please apply the UpdateWizard, if you have a working installation with 1.0.5 and lower. !!
 
 ..  _changelog-1.0.5:
 
