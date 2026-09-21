@@ -10,4 +10,4 @@ parameters:
         - %currentWorkingDirectory%/Classes/
 
     bootstrapFiles:
-        - phpstan.bootstrap-dashboard.php
+        - phpstan.bootstrap-typo3stubs.php

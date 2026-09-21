@@ -1,7 +1,8 @@
 <?php
 
-// Stubs for TYPO3 v14-only dashboard types. No strict_types so conditional
-// interface/class declarations are valid. Guards prevent redeclaration on v14.
+// Stubs for TYPO3 v14-only types. No strict_types so conditional
+// interface/class declarations are valid. Guards prevent redeclaration when
+// the real packages are available (local dummy install or CI with cms-install).
 
 namespace TYPO3\CMS\Dashboard\Widgets;
 
@@ -35,5 +36,29 @@ if (!class_exists(WidgetResult::class)) {
             public bool $refreshable = false,
             public ?string $label = null,
         ) {}
+    }
+}
+
+namespace TYPO3\CMS\Install\Updates;
+
+if (!interface_exists(UpgradeWizardInterface::class)) {
+    interface UpgradeWizardInterface
+    {
+        public function getTitle(): string;
+        public function getDescription(): string;
+        public function executeUpdate(): bool;
+        public function updateNecessary(): bool;
+        /** @return string[] */
+        public function getPrerequisites(): array;
+    }
+}
+
+namespace TYPO3\CMS\Install\Attribute;
+
+if (!class_exists(UpgradeWizard::class)) {
+    #[\Attribute(\Attribute::TARGET_CLASS)]
+    class UpgradeWizard
+    {
+        public function __construct(public string $identifier) {}
     }
 }

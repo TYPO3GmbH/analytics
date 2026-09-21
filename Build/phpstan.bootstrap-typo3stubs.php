@@ -17,6 +17,22 @@ if (is_dir($dashboardClassesDir)) {
     });
 }
 
+// Register autoloader for typo3/cms-install (not in the main vendor).
+// Needed for UpgradeWizardInterface and the UpgradeWizard attribute.
+$installClassesDir = __DIR__ . '/../.Build/dummy-typo3/vendor/typo3/cms-install/Classes/';
+if (is_dir($installClassesDir)) {
+    spl_autoload_register(static function (string $class) use ($installClassesDir): void {
+        $prefix = 'TYPO3\\CMS\\Install\\';
+        if (!str_starts_with($class, $prefix)) {
+            return;
+        }
+        $file = $installClassesDir . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+        if (is_file($file)) {
+            require_once $file;
+        }
+    });
+}
+
 // v13 fallback stubs — declared when cms-dashboard is not available (e.g. CI).
 require_once __DIR__ . '/phpstan.bootstrap-v13stubs.php';
 
