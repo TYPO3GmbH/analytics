@@ -21,4 +21,11 @@ Open :guilabel:`System → Backend Users → Backend Groups`, edit the group tha
 should have manager access, and switch to the :guilabel:`Custom Options` tab.
 Enable :guilabel:`Analytics → Analytics Manager`.
 
+..  figure:: /Images/be-group-option.png
+    :alt: The Analytics Manager option at the bottom of a backend user group "Module Permissions" page
+    :zoom: lightbox
+
+    Enable the Analytics Manager option at the bottom of your backend user group "Module Permissions" page
+
+
 The TCA value for programmatic assignment is ``tx_analytics:manager``.
