@@ -6,45 +6,48 @@
 Introduction
 ============
 
-TYPO3 Analytics is a web analytics service built for TYPO3. This extension
-integrates it directly into the TYPO3 backend, so editors and administrators
-can access analytics data without switching to a separate tool.
+TYPO3 Analytics is a web analytics service built for TYPO3. Editors and
+administrators can view analytics data directly in the TYPO3 backend without
+having to switch to a separate tool.
 
 ..  figure:: ../Images/docs-header-image.png
     :alt: TYPO3 Analytics
 
 ..  note::
-    After the free trial period, a paid subscription is required. Available
-    plans and pricing are shown directly in the backend module and at
+    After a free trial period you will need a paid subscription to continue
+    using this extension. You can find plans and pricing in the backend module
+    after you have installed the extension or at
     `analytics.typo3.com <https://analytics.typo3.com>`__.
 
 
 What the extension provides
 ===========================
 
-The extension adds a **Sites → Analytics** module to the TYPO3 backend.
-For each configured TYPO3 site it provides:
+The extension adds a :guilabel:`Sites > TYPO3 Analytics` module to the TYPO3 backend.
+It provides:
 
 **Registration**
-    Enter an e-mail address to register the site with the TYPO3 Analytics API.
-    The tracking code is then automatically injected into every frontend page.
+    Enter an email address to register a site in your installation with the TYPO3 Analytics API.
+    The API injects a tracking code into every frontend page.
 
 **Status display**
-    Shows the current registration status, website ID and API key.
-    The status is cached and can be refreshed manually.
+    Shows the registration status, website ID and API key.
+    The status is cached but can be refreshed manually.
 
 **Dashboard**
-    Opens the TYPO3 Analytics dashboard as an embedded iframe inside the
-    TYPO3 backend.
+    Opens the **TYPO3 Analytics web dashboard** as an embedded iframe inside the
+    TYPO3 backend. Note that the **TYPO3 Analytics web dashboard** and a
+    **TYPO3 dashboard** are two different things.
 
 **Dashboard widgets**
-    Four widget types for the TYPO3 dashboard — Traffic Graph, Site
-    Performance, Top Pages, and Traffic Sources — give editors an at-a-glance
-    view of their site's analytics directly on the dashboard.
+    Four widgets for a **TYPO3 dashboard** — Traffic Graph, Site
+    Performance, Top Pages, and Traffic Sources. Editors
+    can view all analytics data at-a-glance on a TYPO3 dashboard .
 
 **Page Performance Bar**
-    An analytics bar above the page layout in the **Page** module shows
-    per-page metrics such as page views, bounce rate, and average time on page.
+    An analytics bar above a page in the backend :guilabel:`Content > Layout`
+    module (:guilabel:`Web > Page` in TYPO3 v13). It displays page metrics such as page views, bounce
+    rate, and average visitor duration.
 
 
 Requirements
