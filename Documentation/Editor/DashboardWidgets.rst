@@ -371,6 +371,12 @@ vertically. Site and period are selected via inline dropdowns.
 Dashboard presets
 =================
 
+..  figure:: /Images/dashboard-preset.png
+    :alt: The Add Dashboard modal showing the Analytics Overview preset
+    :zoom: lightbox
+
+    Select the Analytics Overview preset to add an analytics dashboard
+
 The extension ships a ready-made dashboard preset called **Analytics Overview**.
 It can be selected when creating a new dashboard via the
 :guilabel:`Add dashboard` wizard and pre-populates the dashboard with all
@@ -384,3 +390,5 @@ available analytics widgets:
 
 The preset is a convenience starting point — widgets can be removed, reordered,
 or supplemented with other TYPO3 dashboard widgets after creation.
+
+
