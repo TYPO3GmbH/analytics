@@ -6,15 +6,27 @@
 Backend module
 ==============
 
+..  tabs::
+
+    ..  tab:: Light
+
+        ..  figure:: /Images/backend-module-active-light.png
+            :alt: The analytics backend module with an active site card in light mode
+            :zoom: gallery
+            :gallery: backend-module
+            :align: center
+
+    ..  tab:: Dark
+
+        ..  figure:: /Images/backend-module-active-dark.png
+            :alt: The analytics backend module with an active site card in dark mode
+            :zoom: gallery
+            :gallery: backend-module
+            :align: center
+
 The **Sites → TYPO3 Analytics** module provides an overview of all configured
 TYPO3 sites and their analytics status. Sites are grouped into **Active sites**
 and **Inactive sites**.
-
-..  figure:: /Images/backend-module-inactive.png
-    :alt: The analytics backend module with a site card showing main as an inactive site showing status "Not registered"
-    :zoom: lightbox
-
-    An site card with an inactive site in the analytics backend module showing status "Not registered"
 
 Plans
 =====
@@ -36,6 +48,24 @@ Each site is shown as a card with the following information:
 -   Subscribed package and expiry date
 -   Credit usage and reset date
 
+..  tabs::
+
+    ..  tab:: Active site card Light
+
+        ..  figure:: /Images/active-site-card-light.png
+            :alt: Active site card information in light mode
+            :zoom: gallery
+            :gallery: site-card
+            :align: center
+
+    ..  tab:: Active site card Dark
+
+        ..  figure:: /Images/active-site-card-dark.png
+            :alt: Active site card information in dark mode
+            :zoom: gallery
+            :gallery: site-card
+            :align: center
+
 **Active sites** additionally show:
 
 -   A :guilabel:`Dashboard` button that opens the analytics dashboard as an
@@ -44,12 +74,6 @@ Each site is shown as a card with the following information:
 -   A :guilabel:`Refresh status` button to force a fresh status lookup from
     the API (bypasses the 24-hour cache)
 
-
-..  figure:: /Images/backend-module-active.png
-    :alt: The analytics backend module with a site card showing main as an active site showing buttons Dashboard, Manage Plan and Refresh Status
-    :zoom: lightbox
-
-    A site card with an active site in the analytics backend module with buttons Dashboard, Manage Plan and Refresh Status
 
 ..  note::
     The :guilabel:`Manage Plan` link and :guilabel:`Refresh status` button are
