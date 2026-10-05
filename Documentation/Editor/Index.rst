@@ -17,8 +17,8 @@ For editors
 
 ..  _dashboard-preset:
 
-Dashboard preset
-================
+Analytics dashboard
+===================
 
 ..  figure:: /Images/dashboard.png
     :alt: The Dashboard module showing the button to create a new dashboard
@@ -26,19 +26,17 @@ Dashboard preset
 
     Creating a new dashboard
 
-The extension ships a ready-made **Analytics Overview** dashboard preset that
-can be selected when creating a new TYPO3 dashboard. It pre-populates the
-dashboard with all four widget types:
+The extension ships a ready-made analytics dashboard that
+can be selected when creating a new TYPO3 dashboard. It populates the
+dashboard with four widgets:
 
 -   Traffic Graph
 -   Site Performance
 -   Top Pages
 -   Traffic Sources (Channel, Devices, Browser, Countries — one widget each)
 
-Select **Analytics Overview** in the dashboard creation wizard to get started
-immediately.
-
-
+Click on :guilabel:`Add dashboard` (above) and then select the **Analytics Overview** preset in the
+dashboard creation wizard (below) to get started.
 
 ..  tabs::
 
@@ -68,7 +66,7 @@ immediately.
 
 ..  tabs::
 
-    ..  tab:: Dashboard Light
+    ..  tab:: Analytics Dashboard Light
 
         ..  figure:: /Images/dashboard-widgets-light.png
             :alt: Analytics dashboard showing widgets Traffic Graph, Site performance and Top pages in light mode
@@ -76,10 +74,12 @@ immediately.
             :gallery: dashboard-preset-widgets
             :align: center
 
-    ..  tab:: Dashboard Dark
+    ..  tab:: Analytics Dashboard Dark
 
         ..  figure:: /Images/dashboard-widgets-dark.png
             :alt: Analytics dashboard showing widgets Traffic Graph, Site performance and Top pages in dark mode
             :zoom: gallery
             :gallery: dashboard-preset-widgets
             :align: center
+
+Screenshot showing the analytics dashboard, with Traffic graph, Site performance and Top pages widgets visible.
