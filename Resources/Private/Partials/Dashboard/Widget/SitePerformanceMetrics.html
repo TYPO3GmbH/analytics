@@ -13,6 +13,30 @@
                 </f:if>
             </span>
             <span class="tx-analytics-site-performance-label">{metric.label}</span>
+            <div class="tx-analytics-site-performance-details">
+                <p class="tx-analytics-site-performance-description">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.description.{metric.tone}" />
+                </p>
+                <f:if condition="{metric.details}">
+                    <dl class="tx-analytics-site-performance-details-data">
+                        <div>
+                            <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.today" /></dt>
+                            <dd>{metric.details.0}</dd>
+                        </div>
+                        <div>
+                            <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.yesterday" /></dt>
+                            <dd>{metric.details.1}</dd>
+                        </div>
+                        <div>
+                            <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.peak" /></dt>
+                            <dd>{metric.details.2}</dd>
+                        </div>
+                    </dl>
+                </f:if>
+                <f:if condition="{metric.sparkline}">
+                    <div class="tx-analytics-site-performance-chart"><f:format.raw>{metric.sparkline}</f:format.raw></div>
+                </f:if>
+            </div>
         </li>
     </f:for>
 </ul>

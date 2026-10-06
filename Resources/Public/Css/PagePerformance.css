@@ -281,7 +281,7 @@
     grid-row: span 4;
     grid-template-rows: subgrid;
     min-width: 0;
-    padding: .75rem 1rem 0;
+    padding: .75rem 1rem;
     border-right: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
 }
 
@@ -296,8 +296,7 @@
     inset-inline-start: 1rem;
     inset-block-start: calc(100% - .5rem);
     width: min(18rem, calc(100vw - 2rem));
-    padding: .75rem .75rem 0;
-    overflow: hidden;
+    padding: .75rem;
     border: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
     border-radius: var(--typo3-component-border-radius);
     background: var(--typo3-component-bg);
@@ -365,7 +364,7 @@
 
 .tx-analytics-performance-tooltip-chart {
     align-self: end;
-    padding-block-start: .25rem;
+    padding-block-start: .75rem;
     border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
 }
 

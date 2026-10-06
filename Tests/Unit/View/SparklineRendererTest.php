@@ -73,14 +73,22 @@ final class SparklineRendererTest extends UnitTestCase
     }
 
     #[Test]
-    public function renderFillPathClosesAtBottomEdgeWhenFillToBottomIsSet(): void
+    public function renderDrawsBottomAndLeftAxisWhenAxesIsSet(): void
     {
         $subject = new SparklineRenderer();
 
-        $html = $subject->render([10, 20, 15], ['fillToBottom' => true]);
+        $html = $subject->render([10, 20, 15], ['axes' => true]);
 
-        self::assertStringContainsString('d="M0 30 L50 2 L100 16 L100 32 L0 32 Z"', $html);
-        self::assertStringContainsString('cy="16"', $html);
+        self::assertStringContainsString('<line class="tx-analytics-sparkline-axis" x1="0" y1="30" x2="100" y2="30"/>', $html);
+        self::assertStringContainsString('<line class="tx-analytics-sparkline-axis" x1="0" y1="0" x2="0" y2="30"/>', $html);
+    }
+
+    #[Test]
+    public function renderDrawsNoAxesByDefault(): void
+    {
+        $subject = new SparklineRenderer();
+
+        self::assertStringNotContainsString('tx-analytics-sparkline-axis', $subject->render([10, 20, 15]));
     }
 
     #[Test]
