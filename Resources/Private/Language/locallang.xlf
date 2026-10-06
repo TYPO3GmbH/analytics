@@ -212,8 +212,14 @@
             <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
                 <source>Period</source>
             </trans-unit>
-            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
-                <source>Details</source>
+            <trans-unit id="pagePerformance.showInAnalytics" resname="pagePerformance.showInAnalytics">
+                <source>Show in Analytics</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.showAllDetails" resname="pagePerformance.showAllDetails">
+                <source>Show all details</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.hideAllDetails" resname="pagePerformance.hideAllDetails">
+                <source>Hide all details</source>
             </trans-unit>
             <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
                 <source>%d days</source>

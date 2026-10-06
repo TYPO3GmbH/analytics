@@ -17,6 +17,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\PagePerformanceBarBuilder;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -54,7 +55,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
     protected function tearDown(): void
     {
-        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'], $GLOBALS['LANG']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'], $GLOBALS['LANG'], $GLOBALS['BE_USER']);
         parent::tearDown();
     }
 
@@ -313,5 +314,32 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         self::assertIsArray($result);
         self::assertSame($pageRow, $result['page']);
+    }
+
+    /** buildHtml — details panel */
+
+    #[Test]
+    public function buildHtmlRendersCollapsedDetailsPanelByDefault(): void
+    {
+        $html = $this->buildSubject($this->siteFinder())->buildHtml(5, null, null, 7, [], '');
+
+        self::assertStringContainsString('aria-expanded="false" aria-controls="tx-analytics-performance-details-5"', $html);
+        self::assertStringContainsString('<div id="tx-analytics-performance-details-5" class="tx-analytics-performance-details" hidden>', $html);
+        self::assertStringNotContainsString('tx-analytics-performance-bar--expanded', $html);
+        self::assertSame(4, substr_count($html, 'class="tx-analytics-performance-detail"'));
+    }
+
+    #[Test]
+    public function buildHtmlRendersExpandedDetailsPanelWhenStoredInUserSettings(): void
+    {
+        $backendUser = $this->createMock(BackendUserAuthentication::class);
+        $backendUser->uc = ['tx_analytics' => ['pagePerformanceExpanded' => '1']];
+        $GLOBALS['BE_USER'] = $backendUser;
+
+        $html = $this->buildSubject($this->siteFinder())->buildHtml(5, null, null, 7, [], '');
+
+        self::assertStringContainsString('aria-expanded="true" aria-controls="tx-analytics-performance-details-5"', $html);
+        self::assertStringContainsString('<div id="tx-analytics-performance-details-5" class="tx-analytics-performance-details">', $html);
+        self::assertStringContainsString('tx-analytics-performance-bar--expanded', $html);
     }
 }

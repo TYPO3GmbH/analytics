@@ -294,9 +294,17 @@
                 <source>Period</source>
                 <target>Zeitraum</target>
             </trans-unit>
-            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
-                <source>Details</source>
-                <target>Details</target>
+            <trans-unit id="pagePerformance.showInAnalytics" resname="pagePerformance.showInAnalytics">
+                <source>Show in Analytics</source>
+                <target>In Analytics anzeigen</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.showAllDetails" resname="pagePerformance.showAllDetails">
+                <source>Show all details</source>
+                <target>Alle Details anzeigen</target>
+            </trans-unit>
+            <trans-unit id="pagePerformance.hideAllDetails" resname="pagePerformance.hideAllDetails">
+                <source>Hide all details</source>
+                <target>Alle Details ausblenden</target>
             </trans-unit>
             <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
                 <source>%d days</source>
