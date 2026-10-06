@@ -73,6 +73,17 @@ final class SparklineRendererTest extends UnitTestCase
     }
 
     #[Test]
+    public function renderFillPathClosesAtBottomEdgeWhenFillToBottomIsSet(): void
+    {
+        $subject = new SparklineRenderer();
+
+        $html = $subject->render([10, 20, 15], ['fillToBottom' => true]);
+
+        self::assertStringContainsString('d="M0 30 L50 2 L100 16 L100 32 L0 32 Z"', $html);
+        self::assertStringContainsString('cy="16"', $html);
+    }
+
+    #[Test]
     public function renderCentersFlatValues(): void
     {
         $subject = new SparklineRenderer();

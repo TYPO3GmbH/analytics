@@ -20,6 +20,7 @@ final class SparklineRenderer
      *     tone?: string,
      *     showLastPoint?: bool,
      *     fill?: bool,
+     *     fillToBottom?: bool,
      *     yMin?: float,
      *     yMax?: float,
      *     gridLines?: list<int|float>,
@@ -50,6 +51,7 @@ final class SparklineRenderer
         $lastPoint = $points[array_key_last($points)];
         $showLastPoint = (bool)($options['showLastPoint'] ?? true);
         $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
+        $fillToBottom = (bool)($options['fillToBottom'] ?? false);
         $gridLines = (array)($options['gridLines'] ?? []);
         $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
         $pointLabels = (array)($options['labels'] ?? []);
@@ -73,7 +75,7 @@ final class SparklineRenderer
         }
 
         if ($showFill) {
-            $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath) . '"></path>';
+            $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath, $fillToBottom) . '"></path>';
         }
         $html .= '<path class="tx-analytics-sparkline-line" d="' . $linePath . '"></path>';
         if ($pointLabels !== []) {
@@ -353,11 +355,12 @@ final class SparklineRenderer
     /**
      * @param non-empty-list<array{0: float, 1: float}> $points
      */
-    private function buildFillPath(array $points, string $linePath): string
+    private function buildFillPath(array $points, string $linePath, bool $toBottom = false): string
     {
         $firstPoint = $points[0];
         $lastPoint = $points[array_key_last($points)];
-        $baseline = self::VIEW_BOX_HEIGHT - self::PADDING;
+        // The line keeps its padding so the end point is never clipped; the fill may reach the edge.
+        $baseline = $toBottom ? self::VIEW_BOX_HEIGHT : self::VIEW_BOX_HEIGHT - self::PADDING;
 
         return $linePath
             . ' L' . $this->formatNumber($lastPoint[0]) . ' ' . $baseline

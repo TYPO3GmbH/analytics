@@ -225,6 +225,66 @@
     text-decoration: underline;
 }
 
+.tx-analytics-performance-details-toggle {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.tx-analytics-performance-details-toggle:hover {
+    text-decoration: underline;
+}
+
+/* Same 1.25rem box as the other meta icons, the chevron is centered inside it. */
+.tx-analytics-performance-details-toggle-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* A rotated border chevron sits off-center, the translate moves its tip back to the middle. */
+.tx-analytics-performance-details-toggle-icon::before {
+    width: .45rem;
+    height: .45rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    content: "";
+    transform: translateX(-20%) rotate(-45deg);
+    transition: transform .15s ease;
+}
+
+.tx-analytics-performance-details-toggle[aria-expanded="true"] .tx-analytics-performance-details-toggle-icon::before {
+    transform: translateY(-20%) rotate(45deg);
+}
+
+.tx-analytics-performance-bar--expanded .tx-analytics-performance-tooltip {
+    display: none;
+}
+
+.tx-analytics-performance-details {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-performance-details[hidden] {
+    display: none;
+}
+
+.tx-analytics-performance-details > .tx-analytics-performance-detail {
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    min-width: 0;
+    padding: .75rem 1rem 0;
+    border-right: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
 .tx-analytics-performance-period-form {
     min-width: 7.5rem;
     margin: 0;
@@ -236,7 +296,8 @@
     inset-inline-start: 1rem;
     inset-block-start: calc(100% - .5rem);
     width: min(18rem, calc(100vw - 2rem));
-    padding: .75rem;
+    padding: .75rem .75rem 0;
+    overflow: hidden;
     border: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
     border-radius: var(--typo3-component-border-radius);
     background: var(--typo3-component-bg);
@@ -254,16 +315,32 @@
     transform: translateY(0);
 }
 
+.tx-analytics-performance-tooltip,
+.tx-analytics-performance-detail {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    row-gap: .5rem;
+}
+
 .tx-analytics-performance-tooltip-title {
-    margin-bottom: .5rem;
     font-weight: 700;
+}
+
+.tx-analytics-performance-tooltip-description {
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Tooltips are shown one at a time: a fixed description height keeps their rows in place. */
+.tx-analytics-performance-tooltip .tx-analytics-performance-tooltip-description {
+    min-height: 4lh;
 }
 
 .tx-analytics-performance-tooltip-data {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: .5rem;
-    margin: 0 0 .75rem;
+    margin: 0;
 }
 
 .tx-analytics-performance-tooltip-data div,
@@ -282,10 +359,12 @@
     font-weight: 700;
 }
 
+.tx-analytics-performance-tooltip-chart:empty {
+    display: none;
+}
+
 .tx-analytics-performance-tooltip-chart {
-    display: grid;
-    grid-template-rows: auto auto;
-    gap: .35rem;
+    align-self: end;
     padding-block-start: .25rem;
     border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
 }
@@ -338,6 +417,10 @@
 
     .tx-analytics-performance-meta-item {
         align-self: flex-start;
+    }
+
+    .tx-analytics-performance-detail:nth-child(n + 3) {
+        border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
     }
 }
 
