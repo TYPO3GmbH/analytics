@@ -82,6 +82,18 @@
                 <source>Site title</source>
                 <target>Site-Titel</target>
             </trans-unit>
+            <trans-unit id="label.site" resname="label.site">
+                <source>Site</source>
+                <target>Site</target>
+            </trans-unit>
+            <trans-unit id="label.actions" resname="label.actions">
+                <source>Actions</source>
+                <target>Aktionen</target>
+            </trans-unit>
+            <trans-unit id="label.details" resname="label.details">
+                <source>Details</source>
+                <target>Details</target>
+            </trans-unit>
             <trans-unit id="label.registeredSites" resname="label.registeredSites">
                 <source>Registered sites</source>
                 <target>Registrierte Sites</target>
