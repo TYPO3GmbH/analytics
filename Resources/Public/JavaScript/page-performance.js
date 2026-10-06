@@ -67,3 +67,25 @@ document.addEventListener('change', (e) => {
     e.preventDefault();
     reloadPerformanceBar(section, select.value);
 });
+
+document.addEventListener('click', (e) => {
+    const toggle = e.target instanceof Element ? e.target.closest('.tx-analytics-performance-details-toggle') : null;
+    if (!(toggle instanceof HTMLElement)) return;
+
+    const section = toggle.closest('.tx-analytics-performance-bar');
+    const details = document.getElementById(toggle.getAttribute('aria-controls') ?? '');
+    if (!section || !details) return;
+
+    const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(expanded));
+    const label = toggle.querySelector('.tx-analytics-performance-details-toggle-label');
+    if (label) {
+        label.textContent = (expanded ? toggle.dataset.labelHide : toggle.dataset.labelShow) ?? '';
+    }
+    details.hidden = !expanded;
+    section.classList.toggle('tx-analytics-performance-bar--expanded', expanded);
+
+    import('@typo3/backend/storage/persistent.js')
+        .then(({ default: Persistent }) => Persistent.set('tx_analytics.pagePerformanceExpanded', expanded ? '1' : '0'))
+        .catch(() => {});
+});
