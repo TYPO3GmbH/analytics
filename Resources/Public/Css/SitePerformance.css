@@ -54,7 +54,8 @@
 .tx-analytics-site-performance-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: minmax(6.75rem, 1fr);
+    /* Rows follow their content (cards with a chart need more), spare height is shared out. */
+    grid-auto-rows: minmax(6.75rem, auto);
     flex: 1 1 auto;
     gap: .75rem;
     height: 100%;
@@ -72,7 +73,7 @@
     grid-template-columns: 3.75rem minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: center;
-    align-content: center;
+    align-content: start;
     column-gap: 1rem;
     min-width: 0;
     min-height: 0;
@@ -216,6 +217,66 @@
 
 .tx-analytics-site-performance-icon-arrow-trend-neutral {
     display: none;
+}
+
+.tx-analytics-site-performance-details {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: .5rem;
+    min-width: 0;
+    margin-block-start: .75rem;
+    padding-block-start: .75rem;
+    border-top: var(--typo3-component-border-width) solid var(--typo3-component-border-color);
+}
+
+.tx-analytics-site-performance-description {
+    margin: 0;
+    color: var(--typo3-text-color-variant);
+    font-size: var(--typo3-font-size-small, 11px);
+    line-height: 1.4;
+}
+
+.tx-analytics-site-performance-details-data {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+    margin: 0;
+}
+
+.tx-analytics-site-performance-details-data div,
+.tx-analytics-site-performance-details-data dt,
+.tx-analytics-site-performance-details-data dd {
+    min-width: 0;
+    margin: 0;
+}
+
+.tx-analytics-site-performance-details-data dt {
+    color: var(--typo3-text-color-variant);
+    font-size: var(--typo3-font-size-small, 11px);
+    font-weight: normal;
+}
+
+.tx-analytics-site-performance-details-data dd {
+    font-weight: 700;
+}
+
+/* Cards with a chart push it to the bottom of the card, like the page module details. */
+.tx-analytics-site-performance-metric:has(.tx-analytics-site-performance-chart) {
+    grid-template-rows: auto auto 1fr;
+    align-content: stretch;
+}
+
+.tx-analytics-site-performance-metric:has(.tx-analytics-site-performance-chart) .tx-analytics-site-performance-details {
+    grid-template-rows: auto auto 1fr;
+    align-self: stretch;
+}
+
+.tx-analytics-site-performance-chart {
+    align-self: end;
+}
+
+.tx-analytics-site-performance-sparkline {
+    width: 100%;
 }
 
 @container (max-width: 430px) {
