@@ -55,6 +55,25 @@ document.addEventListener('submit', function (e) {
 
 showPendingNotification();
 
+// Collapsible site groups and site detail rows
+document.addEventListener('click', function (e) {
+    const toggle = e.target.closest('.t3js-analytics-collapse');
+    if (!toggle) return;
+    const target = document.getElementById(toggle.getAttribute('aria-controls'));
+    if (!target) return;
+
+    const expand = target.hidden;
+    target.hidden = !expand;
+    document.querySelectorAll('.t3js-analytics-collapse').forEach(t => {
+        if (t.getAttribute('aria-controls') === target.id) {
+            t.setAttribute('aria-expanded', String(expand));
+        }
+    });
+    if (expand && !toggle.classList.contains('tx-analytics-collapse-toggle')) {
+        target.querySelector('input:not([type="hidden"])')?.focus();
+    }
+});
+
 // Plans
 async function initPlans() {
     const root = document.getElementById('tx-analytics-plans-root');
@@ -114,13 +133,12 @@ function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, s
         });
     });
 
-    const collapseBtn = header.querySelector('.tx-analytics-plans-collapse-toggle');
+    const collapseBtn = header.querySelector('.tx-analytics-collapse-toggle');
     const collapseLink = header.querySelector('.tx-analytics-plans-collapse-link');
     const periodToggle = header.querySelector('.tx-analytics-plans-toggle');
 
     const setCollapsed = collapsed => {
         collapseBtn.setAttribute('aria-expanded', String(!collapsed));
-        collapseBtn.classList.toggle('tx-analytics-plans-collapse-toggle--collapsed', collapsed);
         collapseLink.textContent = collapsed ? showText : hideText;
         periodToggle.hidden = collapsed;
         grid.hidden = collapsed;
