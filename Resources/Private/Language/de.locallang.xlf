@@ -474,6 +474,22 @@
                 <source>Compared to previous period</source>
                 <target>Gegenüber Vorperiode</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.visits" resname="dashboardWidget.sitePerformance.description.visits">
+                <source>The number of visits to this site in the selected period.</source>
+                <target>Die Anzahl der Besuche dieser Site im gewählten Zeitraum.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.visitors" resname="dashboardWidget.sitePerformance.description.visitors">
+                <source>Unique visitors to this site in the selected period.</source>
+                <target>Eindeutige Besucher dieser Site im gewählten Zeitraum.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.bounce-rate" resname="dashboardWidget.sitePerformance.description.bounce-rate">
+                <source>The percentage of visits that ended after viewing only one page.</source>
+                <target>Der Anteil der Besuche, die nach nur einer aufgerufenen Seite endeten.</target>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.avg-duration" resname="dashboardWidget.sitePerformance.description.avg-duration">
+                <source>How long a visit to this site lasts on average.</source>
+                <target>Wie lange ein Besuch dieser Site durchschnittlich dauert.</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
                 <target>TYPO3 Analytics</target>

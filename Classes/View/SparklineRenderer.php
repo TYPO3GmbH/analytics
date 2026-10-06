@@ -20,7 +20,7 @@ final class SparklineRenderer
      *     tone?: string,
      *     showLastPoint?: bool,
      *     fill?: bool,
-     *     fillToBottom?: bool,
+     *     axes?: bool,
      *     yMin?: float,
      *     yMax?: float,
      *     gridLines?: list<int|float>,
@@ -51,7 +51,7 @@ final class SparklineRenderer
         $lastPoint = $points[array_key_last($points)];
         $showLastPoint = (bool)($options['showLastPoint'] ?? true);
         $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
-        $fillToBottom = (bool)($options['fillToBottom'] ?? false);
+        $showAxes = (bool)($options['axes'] ?? false);
         $gridLines = (array)($options['gridLines'] ?? []);
         $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
         $pointLabels = (array)($options['labels'] ?? []);
@@ -74,8 +74,14 @@ final class SparklineRenderer
             $html .= '<line class="tx-analytics-sparkline-grid-line" x1="0" y1="' . $this->formatNumber($y) . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $this->formatNumber($y) . '"/>';
         }
 
+        if ($showAxes) {
+            // Bottom axis on the baseline the fill closes at, left axis along the first value.
+            $baseline = $this->formatNumber(self::VIEW_BOX_HEIGHT - self::PADDING);
+            $html .= '<line class="tx-analytics-sparkline-axis" x1="0" y1="' . $baseline . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $baseline . '"/>';
+            $html .= '<line class="tx-analytics-sparkline-axis" x1="0" y1="0" x2="0" y2="' . $baseline . '"/>';
+        }
         if ($showFill) {
-            $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath, $fillToBottom) . '"></path>';
+            $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath) . '"></path>';
         }
         $html .= '<path class="tx-analytics-sparkline-line" d="' . $linePath . '"></path>';
         if ($pointLabels !== []) {
@@ -355,12 +361,11 @@ final class SparklineRenderer
     /**
      * @param non-empty-list<array{0: float, 1: float}> $points
      */
-    private function buildFillPath(array $points, string $linePath, bool $toBottom = false): string
+    private function buildFillPath(array $points, string $linePath): string
     {
         $firstPoint = $points[0];
         $lastPoint = $points[array_key_last($points)];
-        // The line keeps its padding so the end point is never clipped; the fill may reach the edge.
-        $baseline = $toBottom ? self::VIEW_BOX_HEIGHT : self::VIEW_BOX_HEIGHT - self::PADDING;
+        $baseline = self::VIEW_BOX_HEIGHT - self::PADDING;
 
         return $linePath
             . ' L' . $this->formatNumber($lastPoint[0]) . ' ' . $baseline

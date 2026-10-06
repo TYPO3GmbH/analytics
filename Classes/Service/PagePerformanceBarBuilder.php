@@ -573,7 +573,7 @@ final readonly class PagePerformanceBarBuilder
                 'tone' => $metric['tone'],
                 'labels' => $metric['chartLabels'] ?? [],
                 'smooth' => true,
-                'fillToBottom' => true,
+                'axes' => true,
             ]);
         }
         $html .= '</div>';
