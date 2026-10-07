@@ -164,7 +164,7 @@ services:
         title: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.title'
         description: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:dashboardWidget.sitePerformance.description'
         iconIdentifier: 'analytics-site-performance-widget-icon'
-        height: 'medium'
+        height: 'large'
         width: 'medium'
 
   dashboard.widget.analyticsTopPages:

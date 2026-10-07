@@ -20,6 +20,7 @@ final class SparklineRenderer
      *     tone?: string,
      *     showLastPoint?: bool,
      *     fill?: bool,
+     *     axes?: bool,
      *     yMin?: float,
      *     yMax?: float,
      *     gridLines?: list<int|float>,
@@ -50,6 +51,7 @@ final class SparklineRenderer
         $lastPoint = $points[array_key_last($points)];
         $showLastPoint = (bool)($options['showLastPoint'] ?? true);
         $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
+        $showAxes = (bool)($options['axes'] ?? false);
         $gridLines = (array)($options['gridLines'] ?? []);
         $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
         $pointLabels = (array)($options['labels'] ?? []);
@@ -72,6 +74,12 @@ final class SparklineRenderer
             $html .= '<line class="tx-analytics-sparkline-grid-line" x1="0" y1="' . $this->formatNumber($y) . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $this->formatNumber($y) . '"/>';
         }
 
+        if ($showAxes) {
+            // Bottom axis on the baseline the fill closes at, left axis along the first value.
+            $baseline = $this->formatNumber(self::VIEW_BOX_HEIGHT - self::PADDING);
+            $html .= '<line class="tx-analytics-sparkline-axis" x1="0" y1="' . $baseline . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $baseline . '"/>';
+            $html .= '<line class="tx-analytics-sparkline-axis" x1="0" y1="0" x2="0" y2="' . $baseline . '"/>';
+        }
         if ($showFill) {
             $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath) . '"></path>';
         }

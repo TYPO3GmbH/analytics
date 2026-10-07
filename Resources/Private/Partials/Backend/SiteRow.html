@@ -1,0 +1,223 @@
+{namespace core=TYPO3\CMS\Core\ViewHelpers}
+
+<f:variable name="detailsId" value="tx-analytics-site-details-{site.identifier}" />
+<f:variable name="rowClass" value="" />
+<f:if condition="{site.status.consumption.warning}">
+    <f:variable name="rowClass" value="table-warning" />
+</f:if>
+<f:if condition="{site.status.consumption.exhausted}">
+    <f:variable name="rowClass" value="table-danger" />
+</f:if>
+
+<tbody class="tx-analytics-site">
+    <tr class="{rowClass}">
+        <td>
+            <div class="tx-analytics-site-name">
+                <button
+                    type="button"
+                    class="tx-analytics-collapse-toggle t3js-analytics-collapse"
+                    aria-expanded="false"
+                    aria-controls="{detailsId}"
+                    title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.details')}"
+                >
+                    <span class="tx-analytics-collapse-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.details" /></span>
+                </button>
+                <div>
+                    <strong>{site.pageName}</strong>
+                    <div><code>{site.identifier}</code></div>
+                </div>
+            </div>
+        </td>
+        <td class="tx-analytics-site-domain">
+            <a href="{site.domain}" target="_blank" rel="noreferrer">{site.domain}</a>
+        </td>
+        <td>
+            <f:render partial="Backend/SiteStatusBadge" arguments="{site: site}" />
+        </td>
+        <td class="text-nowrap">
+            <f:if condition="{site.status.consumption.limited}">
+                <f:then>
+                    {site.status.consumption.stpConsumed} / {site.status.consumption.stpLimit}
+                    <f:if condition="{site.status.consumption.exhausted}">
+                        <span class="badge badge-danger">
+                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.exhausted" />
+                        </span>
+                    </f:if>
+                    <f:if condition="{site.status.consumption.warning}">
+                        <span class="badge badge-warning">
+                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.lowCredits" />
+                        </span>
+                    </f:if>
+                </f:then>
+                <f:else>
+                    <span class="text-variant">&ndash;</span>
+                </f:else>
+            </f:if>
+        </td>
+        <td class="text-end">
+            <f:if condition="{site.registered}">
+                <f:then>
+                    <div class="btn-group">
+                        <a href="{site.dashboardUri}" class="btn btn-default">
+                            <core:icon identifier="actions-view" size="small" />
+                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.dashboard" />
+                        </a>
+                        <f:if condition="{isManager}">
+                            <f:if condition="{site.status.status} == 'active'">
+                                <f:then>
+                                    <a href="{site.managePlanUri}" class="btn btn-default">
+                                        <core:icon identifier="actions-credit-card" size="small" />
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
+                                    </a>
+                                </f:then>
+                                <f:else>
+                                    <a href="{site.managePlanUri}" class="btn btn-primary">
+                                        <core:icon identifier="actions-credit-card" size="small" />
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.subscribePlan" />
+                                    </a>
+                                </f:else>
+                            </f:if>
+                            <form method="post" action="{statusUri}" class="tx-analytics-status-form">
+                                <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                                <button type="submit" class="btn btn-default" title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.refreshStatus')}">
+                                    <core:icon identifier="actions-refresh" size="small" />
+                                    <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.refreshStatus" /></span>
+                                </button>
+                            </form>
+                        </f:if>
+                    </div>
+                </f:then>
+                <f:else>
+                    <f:if condition="{isManager}">
+                        <button type="button" class="btn btn-primary t3js-analytics-collapse" aria-expanded="false" aria-controls="{detailsId}">
+                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
+                        </button>
+                    </f:if>
+                </f:else>
+            </f:if>
+        </td>
+    </tr>
+    <tr id="{detailsId}" class="tx-analytics-site-details" hidden>
+        <td colspan="5">
+            <dl class="tx-analytics-site-details-list">
+                <div>
+                    <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.siteTitle" /></dt>
+                    <dd>{site.title}</dd>
+                </div>
+                <f:if condition="{site.registered}">
+                    <div>
+                        <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.websiteId" /></dt>
+                        <dd><code>{site.websiteId}</code></dd>
+                    </div>
+                    <f:if condition="{site.status.packageName}">
+                        <div>
+                            <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.package" /></dt>
+                            <dd>{site.status.packageName}</dd>
+                        </div>
+                    </f:if>
+                    <f:if condition="{site.status.expiresAt}">
+                        <div>
+                            <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.validUntil" /></dt>
+                            <dd><f:format.date format="d.m.Y" date="{site.status.expiresAt}" /></dd>
+                        </div>
+                    </f:if>
+                    <f:if condition="{site.status.consumption.limited}">
+                        <f:if condition="{site.status.stpResetAt}">
+                            <div>
+                                <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.resetsAt" /></dt>
+                                <dd><f:format.date format="d.m.Y" date="{site.status.stpResetAt}" /></dd>
+                            </div>
+                        </f:if>
+                    </f:if>
+                    <f:if condition="{site.status._fetchedAt}">
+                        <div>
+                            <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.updatedAt" /></dt>
+                            <dd><f:format.date format="d.m.Y H:i" date="{site.status._fetchedAt}" /></dd>
+                        </div>
+                    </f:if>
+                </f:if>
+            </dl>
+
+            <f:if condition="{site.status.consumption.exhausted}">
+                <div class="alert alert-danger mb-0">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:message.touchpointsExhausted" />
+                    <a href="{site.managePlanUri}" class="alert-link">
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
+                    </a>.
+                </div>
+            </f:if>
+            <f:if condition="{site.status.consumption.warning}">
+                <div class="alert alert-warning mb-0">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:message.touchpointsLow" />
+                    <a href="{site.managePlanUri}" class="alert-link">
+                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.managePlan" />
+                    </a>.
+                </div>
+            </f:if>
+
+            <f:if condition="{isManager}">
+                <f:if condition="{site.registered}">
+                    <f:else>
+                        <form method="post" action="{registerUri}" class="tx-analytics-registration-form">
+                            <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                            <f:if condition="{activeSites}">
+                                <fieldset class="tx-analytics-registration-mode" tabindex="-1">
+                                    <legend class="form-label">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registrationMode" />
+                                    </legend>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input t3js-analytics-registration-mode" name="mode" value="register" id="tx-analytics-mode-register-{site.identifier}" />
+                                        <label class="form-check-label" for="tx-analytics-mode-register-{site.identifier}">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registerNewSite" />
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input t3js-analytics-registration-mode" name="mode" value="attach" id="tx-analytics-mode-attach-{site.identifier}" />
+                                        <label class="form-check-label" for="tx-analytics-mode-attach-{site.identifier}">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachToSite" />
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            </f:if>
+                            <fieldset data-registration-mode="register" {f:if(condition: activeSites, then: 'hidden disabled')}>
+                                <div class="input-group">
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        class="form-control"
+                                        placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
+                                        required
+                                    />
+                                    <button type="submit" class="btn btn-primary">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
+                                    </button>
+                                </div>
+                            </fieldset>
+                            <f:if condition="{activeSites}">
+                                <fieldset data-registration-mode="attach" hidden disabled>
+                                    <label class="visually-hidden" for="tx-analytics-attach-target-{site.identifier}">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachTarget" />
+                                    </label>
+                                    <div class="input-group">
+                                        <select name="targetSiteIdentifier" id="tx-analytics-attach-target-{site.identifier}" class="form-select" required>
+                                            <option value="">
+                                                <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.attachTarget" />
+                                            </option>
+                                            <f:for each="{activeSites}" as="activeSite">
+                                                <option value="{activeSite.identifier}">{activeSite.pageName} ({activeSite.domain})</option>
+                                            </f:for>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.attach" />
+                                        </button>
+                                    </div>
+                                </fieldset>
+                            </f:if>
+                        </form>
+                    </f:else>
+                </f:if>
+            </f:if>
+        </td>
+    </tr>
+</tbody>

@@ -25,7 +25,7 @@ async function handleFormAjax(e, getNotificationData) {
     const form = e.target;
     e.preventDefault();
 
-    const btn = form.querySelector('[type="submit"]');
+    const btn = e.submitter ?? form.querySelector('[type="submit"]');
     btn.disabled = true;
 
     try {
@@ -54,6 +54,37 @@ document.addEventListener('submit', function (e) {
 });
 
 showPendingNotification();
+
+// Disabled fieldsets keep the inactive mode's required fields out of validation and FormData.
+document.addEventListener('change', function (e) {
+    const radio = e.target.closest('.t3js-analytics-registration-mode');
+    if (!radio) return;
+    radio.form.querySelectorAll('[data-registration-mode]').forEach(fieldset => {
+        const active = fieldset.dataset.registrationMode === radio.value;
+        fieldset.hidden = !active;
+        fieldset.disabled = !active;
+    });
+});
+
+// Collapsible site groups and site detail rows
+document.addEventListener('click', function (e) {
+    const toggle = e.target.closest('.t3js-analytics-collapse');
+    if (!toggle) return;
+    const target = document.getElementById(toggle.getAttribute('aria-controls'));
+    if (!target) return;
+
+    const expand = target.hidden;
+    target.hidden = !expand;
+    document.querySelectorAll('.t3js-analytics-collapse').forEach(t => {
+        if (t.getAttribute('aria-controls') === target.id) {
+            t.setAttribute('aria-expanded', String(expand));
+        }
+    });
+    if (expand && !toggle.classList.contains('tx-analytics-collapse-toggle')) {
+        // A focused radio looks selected, so the mode group itself takes focus.
+        target.querySelector('.tx-analytics-registration-mode, input:not([type="hidden"])')?.focus();
+    }
+});
 
 // Plans
 async function initPlans() {
@@ -114,13 +145,12 @@ function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, s
         });
     });
 
-    const collapseBtn = header.querySelector('.tx-analytics-plans-collapse-toggle');
+    const collapseBtn = header.querySelector('.tx-analytics-collapse-toggle');
     const collapseLink = header.querySelector('.tx-analytics-plans-collapse-link');
     const periodToggle = header.querySelector('.tx-analytics-plans-toggle');
 
     const setCollapsed = collapsed => {
         collapseBtn.setAttribute('aria-expanded', String(!collapsed));
-        collapseBtn.classList.toggle('tx-analytics-plans-collapse-toggle--collapsed', collapsed);
         collapseLink.textContent = collapsed ? showText : hideText;
         periodToggle.hidden = collapsed;
         grid.hidden = collapsed;

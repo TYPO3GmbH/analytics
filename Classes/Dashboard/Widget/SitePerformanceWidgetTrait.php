@@ -21,15 +21,17 @@ trait SitePerformanceWidgetTrait
             'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
             'EXT:analytics/Resources/Public/Css/DashboardWidget.css',
             'EXT:analytics/Resources/Public/Css/SitePerformance.css',
+            'EXT:analytics/Resources/Public/Css/Components/Sparkline.css',
         ];
     }
 
     /**
      * @param array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}
+     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     series?: array{dates: list<string>, visits: list<int>, visitors: list<int>}
      * } $data
-     * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string}>
+     * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string, details: list<string>|null, sparkline: string}>
      */
     private function buildMetrics(array $data): array
     {
@@ -40,6 +42,7 @@ trait SitePerformanceWidgetTrait
             $this->translate('dashboardWidget.sitePerformance.bounceRate'),
             $this->translate('dashboardWidget.sitePerformance.averageVisitDuration'),
             $this->translate('dashboardWidget.sitePerformance.comparedToPreviousPeriod'),
+            $this->translate('pagePerformance.tooltip.chart'),
         );
     }
 

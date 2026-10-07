@@ -421,7 +421,7 @@ final readonly class BackendModuleController
 
     /**
      * @param list<array<string, mixed>> $sites
-     * @return list<array{title: string, sites: list<array<string, mixed>>}>
+     * @return list<array{id: string, title: string, collapsed: bool, sites: list<array<string, mixed>>}>
      */
     private function groupSitesByAnalyticsStatus(array $sites): array
     {
@@ -440,11 +440,15 @@ final readonly class BackendModuleController
 
         return [
             [
+                'id' => 'active',
                 'title' => $this->translate('label.activeSites'),
+                'collapsed' => false,
                 'sites' => $activeSites,
             ],
             [
+                'id' => 'inactive',
                 'title' => $this->translate('label.inactiveSites'),
+                'collapsed' => true,
                 'sites' => $inactiveSites,
             ],
         ];

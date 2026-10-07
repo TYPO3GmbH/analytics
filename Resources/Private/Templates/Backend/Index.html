@@ -28,14 +28,46 @@
 
         <f:render partial="Backend/Plans" arguments="{plansUrl: plansUrl}" />
 
+        <f:variable name="activeSites" value="{}" />
+        <f:for each="{siteGroups}" as="siteGroup">
+            <f:if condition="{siteGroup.id} == 'active'">
+                <f:variable name="activeSites" value="{siteGroup.sites}" />
+            </f:if>
+        </f:for>
+
         <f:for each="{siteGroups}" as="siteGroup">
             <f:if condition="{siteGroup.sites}">
+                <f:variable name="groupContentId" value="tx-analytics-site-group-{siteGroup.id}" />
                 <section class="tx-analytics-site-group">
-                    <h2 class="tx-analytics-site-group-title">{siteGroup.title}</h2>
-                    <div class="card-container tx-analytics-site-card-container">
-                        <f:for each="{siteGroup.sites}" as="site">
-                            <f:render partial="Backend/SiteCard" arguments="{site: site, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
-                        </f:for>
+                    <h2 class="tx-analytics-site-group-title">
+                        <button
+                            type="button"
+                            class="tx-analytics-collapse-toggle t3js-analytics-collapse"
+                            aria-expanded="{f:if(condition: siteGroup.collapsed, then: 'false', else: 'true')}"
+                            aria-controls="{groupContentId}"
+                        >
+                            <span class="tx-analytics-collapse-icon" aria-hidden="true"></span>
+                            {siteGroup.title}
+                            <span class="badge badge-default">{siteGroup.sites -> f:count()}</span>
+                        </button>
+                    </h2>
+                    <div id="{groupContentId}" class="table-fit tx-analytics-site-table" {f:if(condition: siteGroup.collapsed, then: 'hidden')}>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.site" /></th>
+                                    <th><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.domain" /></th>
+                                    <th><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.status" /></th>
+                                    <th><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.touchpoints" /></th>
+                                    <th class="text-end">
+                                        <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.actions" /></span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <f:for each="{siteGroup.sites}" as="site">
+                                <f:render partial="Backend/SiteRow" arguments="{site: site, activeSites: activeSites, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
+                            </f:for>
+                        </table>
                     </div>
                 </section>
             </f:if>

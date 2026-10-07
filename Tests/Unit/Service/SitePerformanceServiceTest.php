@@ -6,11 +6,14 @@ namespace T3G\Analytics\Tests\Unit\Service;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
+use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsDataClientInterface;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\SitePerformanceService;
+use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class SitePerformanceServiceTest extends UnitTestCase
@@ -29,6 +32,7 @@ final class SitePerformanceServiceTest extends UnitTestCase
             $this->createMock(FrontendInterface::class),
             new MetricFormatter(),
             $this->createMock(AnalyticsSiteProviderInterface::class),
+            new SparklineRenderer(),
         );
     }
 
@@ -167,6 +171,60 @@ final class SitePerformanceServiceTest extends UnitTestCase
         $result = $this->subject->buildMetricItems($this->data(), '', '', '', '', 'Compared to previous period');
 
         self::assertSame('Compared to previous period', $result[0]['trendLabel']);
+    }
+
+    /** buildMetricItems — series details */
+
+    #[Test]
+    public function buildMetricItemsHasNoDetailsWithoutSeries(): void
+    {
+        $result = $this->subject->buildMetricItems($this->data(), 'Visits', 'Visitors', 'Bounce rate', 'Avg. duration', '');
+
+        foreach ($result as $item) {
+            self::assertNull($item['details']);
+            self::assertSame('', $item['sparkline']);
+        }
+    }
+
+    #[Test]
+    public function buildMetricItemsBuildsTodayYesterdayAndPeakFromSeries(): void
+    {
+        $data = $this->data() + ['series' => [
+            'dates' => ['2026-10-04', '2026-10-05', '2026-10-06'],
+            'visits' => [1200, 3400, 50],
+            'visitors' => [10, 20, 30],
+        ]];
+
+        $result = $this->subject->buildMetricItems($data, 'Visits', 'Visitors', 'Bounce rate', 'Avg. duration', '', 'Trend');
+
+        self::assertSame(['50', '3.400', '3.400'], $result[0]['details']);
+        self::assertSame(['30', '20', '30'], $result[1]['details']);
+        self::assertStringContainsString('<svg', $result[0]['sparkline']);
+        self::assertStringContainsString('Trend: Visits', $result[0]['sparkline']);
+        self::assertNull($result[2]['details']);
+        self::assertSame('', $result[3]['sparkline']);
+    }
+
+    /** loadPerformanceData — series */
+
+    #[Test]
+    public function loadPerformanceDataKeepsMetricsWhenSeriesFail(): void
+    {
+        $performance = $this->data(10, 5);
+        $client = $this->createMock(AnalyticsDataClientInterface::class);
+        $client->method('fetchSitePerformance')->willReturn($performance);
+        $client->method('fetchSiteVisitsGraph')->willThrowException(new AnalyticsApiException('timeout'));
+        $siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
+        $siteProvider->method('resolveAnalyticsSite')->willReturn(['site' => new Site('main', 1, []), 'websiteId' => 'w', 'apiKey' => 'k']);
+        $cache = $this->createMock(FrontendInterface::class);
+        $cache->method('get')->willReturn(false);
+
+        $subject = new SitePerformanceService($client, $this->createMock(LoggerInterface::class), $cache, new MetricFormatter(), $siteProvider, new SparklineRenderer());
+        $result = $subject->loadPerformanceData('main', 7);
+
+        self::assertNotNull($result);
+        self::assertSame($performance['current'], $result['current']);
+        self::assertSame(['dates' => [], 'visits' => [], 'visitors' => []], $result['series']);
     }
 
     /**

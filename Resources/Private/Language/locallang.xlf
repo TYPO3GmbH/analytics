@@ -50,6 +50,15 @@
             <trans-unit id="label.siteTitle" resname="label.siteTitle">
                 <source>Site title</source>
             </trans-unit>
+            <trans-unit id="label.site" resname="label.site">
+                <source>Site</source>
+            </trans-unit>
+            <trans-unit id="label.actions" resname="label.actions">
+                <source>Actions</source>
+            </trans-unit>
+            <trans-unit id="label.details" resname="label.details">
+                <source>Details</source>
+            </trans-unit>
             <trans-unit id="label.registeredSites" resname="label.registeredSites">
                 <source>Registered sites</source>
             </trans-unit>
@@ -109,6 +118,24 @@
             </trans-unit>
             <trans-unit id="placeholder.registrationEmail" resname="placeholder.registrationEmail">
                 <source>Email address for registration</source>
+            </trans-unit>
+            <trans-unit id="label.registrationMode" resname="label.registrationMode">
+                <source>What would you like to do with this site?</source>
+            </trans-unit>
+            <trans-unit id="label.registerNewSite" resname="label.registerNewSite">
+                <source>Register as a new site</source>
+            </trans-unit>
+            <trans-unit id="label.attachToSite" resname="label.attachToSite">
+                <source>Add to an existing active site</source>
+            </trans-unit>
+            <trans-unit id="label.attachTarget" resname="label.attachTarget">
+                <source>Active site</source>
+            </trans-unit>
+            <trans-unit id="placeholder.attachTarget" resname="placeholder.attachTarget">
+                <source>Select an active site</source>
+            </trans-unit>
+            <trans-unit id="button.attach" resname="button.attach">
+                <source>Add</source>
             </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
@@ -203,8 +230,14 @@
             <trans-unit id="pagePerformance.period" resname="pagePerformance.period">
                 <source>Period</source>
             </trans-unit>
-            <trans-unit id="pagePerformance.details" resname="pagePerformance.details">
-                <source>Details</source>
+            <trans-unit id="pagePerformance.showInAnalytics" resname="pagePerformance.showInAnalytics">
+                <source>Show in Analytics</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.showAllDetails" resname="pagePerformance.showAllDetails">
+                <source>Show all details</source>
+            </trans-unit>
+            <trans-unit id="pagePerformance.hideAllDetails" resname="pagePerformance.hideAllDetails">
+                <source>Hide all details</source>
             </trans-unit>
             <trans-unit id="pagePerformance.days" resname="pagePerformance.days">
                 <source>%d days</source>
@@ -319,6 +352,18 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.comparedToPreviousPeriod" resname="dashboardWidget.sitePerformance.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.visits" resname="dashboardWidget.sitePerformance.description.visits">
+                <source>The number of visits to this site in the selected period.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.visitors" resname="dashboardWidget.sitePerformance.description.visitors">
+                <source>Unique visitors to this site in the selected period.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.bounce-rate" resname="dashboardWidget.sitePerformance.description.bounce-rate">
+                <source>The percentage of visits that ended after viewing only one page.</source>
+            </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.description.avg-duration" resname="dashboardWidget.sitePerformance.description.avg-duration">
+                <source>How long a visit to this site lasts on average.</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>

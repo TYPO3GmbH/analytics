@@ -12,6 +12,7 @@ use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Localization\LanguageService;
@@ -54,8 +55,10 @@ final readonly class PagePerformanceBarBuilder
     public function buildHtml(int $pageId, ?Site $site, ?SiteLanguage $language, int $days, array $queryParams, string $detailsUri): string
     {
         $metrics = $this->buildMetrics($pageId, $site, $language, $days);
+        $detailsId = 'tx-analytics-performance-details-' . $pageId;
+        $expanded = $this->isDetailsExpanded();
 
-        $html = '<section class="tx-analytics-performance-bar"'
+        $html = '<section class="tx-analytics-performance-bar' . ($expanded ? ' tx-analytics-performance-bar--expanded' : '') . '"'
             . ' aria-label="' . $this->escape($this->translate('pagePerformance.ariaLabel')) . '"'
             . ' data-page-id="' . $pageId . '"'
             . ' data-language-id="' . ($language?->getLanguageId() ?? 0) . '">';
@@ -73,7 +76,7 @@ final readonly class PagePerformanceBarBuilder
             }
             $html .= '</span>';
             $html .= '<span class="tx-analytics-performance-label">' . $this->escape($metric['label']) . '</span>';
-            $html .= $this->renderTooltip($metric);
+            $html .= '<div class="tx-analytics-performance-tooltip" role="tooltip">' . $this->renderMetricDetails($metric) . '</div>';
             $html .= '</div>';
             $html .= '</div>';
         }
@@ -97,11 +100,27 @@ final readonly class PagePerformanceBarBuilder
             $html .= '<option value="' . $period . '"' . $selected . '>' . $this->escape($this->translate('pagePerformance.days', [$period])) . '</option>';
         }
         $html .= '</select></form></div>';
+        $html .= '<button type="button" class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link tx-analytics-performance-details-toggle"'
+            . ' aria-expanded="' . ($expanded ? 'true' : 'false') . '"'
+            . ' aria-controls="' . $detailsId . '"'
+            . ' data-label-show="' . $this->escape($this->translate('pagePerformance.showAllDetails')) . '"'
+            . ' data-label-hide="' . $this->escape($this->translate('pagePerformance.hideAllDetails')) . '">';
+        $html .= '<span class="tx-analytics-performance-details-toggle-icon" aria-hidden="true"></span>';
+        $html .= '<span class="tx-analytics-performance-details-toggle-label">'
+            . $this->escape($this->translate($expanded ? 'pagePerformance.hideAllDetails' : 'pagePerformance.showAllDetails'))
+            . '</span>';
+        $html .= '</button>';
         if ($detailsUri !== '') {
             $html .= '<a class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link" href="' . $this->escape($detailsUri) . '">';
             $html .= '<span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-circle-plus" aria-hidden="true"></span>';
-            $html .= '<span>' . $this->escape($this->translate('pagePerformance.details')) . '</span>';
+            $html .= '<span>' . $this->escape($this->translate('pagePerformance.showInAnalytics')) . '</span>';
             $html .= '</a>';
+        }
+        $html .= '</div>';
+
+        $html .= '<div id="' . $detailsId . '" class="tx-analytics-performance-details"' . ($expanded ? '' : ' hidden') . '>';
+        foreach ($metrics as $metric) {
+            $html .= '<div class="tx-analytics-performance-detail">' . $this->renderMetricDetails($metric) . '</div>';
         }
         $html .= '</div></section>';
 
@@ -530,7 +549,7 @@ final readonly class PagePerformanceBarBuilder
     /**
      * @param array<string, mixed> $metric
      */
-    private function renderTooltip(array $metric): string
+    private function renderMetricDetails(array $metric): string
     {
         $detailLabels = [
             $this->translate('pagePerformance.tooltip.today'),
@@ -538,26 +557,24 @@ final readonly class PagePerformanceBarBuilder
             $this->translate('pagePerformance.tooltip.peak'),
         ];
 
-        $html = '<div class="tx-analytics-performance-tooltip" role="tooltip">';
-        $html .= '<div class="tx-analytics-performance-tooltip-title">' . $this->escape($metric['label']) . '</div>';
-        if (isset($metric['description']) && $metric['description'] !== '') {
-            $html .= '<p class="tx-analytics-performance-tooltip-description">' . $this->escape((string)$metric['description']) . '</p>';
-        }
+        $html = '<div class="tx-analytics-performance-tooltip-title">' . $this->escape($metric['label']) . '</div>';
+        // Description and chart are always rendered so the rows line up across metrics.
+        $html .= '<p class="tx-analytics-performance-tooltip-description">' . $this->escape((string)($metric['description'] ?? '')) . '</p>';
         $html .= '<dl class="tx-analytics-performance-tooltip-data">';
         foreach ($detailLabels as $index => $label) {
             $html .= '<div><dt>' . $this->escape($label) . '</dt><dd>' . $this->escape($metric['details'][$index] ?? '-') . '</dd></div>';
         }
         $html .= '</dl>';
+        $html .= '<div class="tx-analytics-performance-tooltip-chart" aria-label="' . $this->escape($this->translate('pagePerformance.tooltip.chart')) . '">';
         if ($metric['chart'] !== []) {
-            $html .= '<div class="tx-analytics-performance-tooltip-chart" aria-label="' . $this->escape($this->translate('pagePerformance.tooltip.chart')) . '">';
             $html .= $this->sparklineRenderer->render($metric['chart'], [
                 'label' => $this->translate('pagePerformance.tooltip.chart') . ': ' . $metric['label'],
                 'class' => 'tx-analytics-performance-sparkline',
                 'tone' => $metric['tone'],
                 'labels' => $metric['chartLabels'] ?? [],
                 'smooth' => true,
+                'axes' => true,
             ]);
-            $html .= '</div>';
         }
         $html .= '</div>';
 
@@ -605,6 +622,15 @@ final readonly class PagePerformanceBarBuilder
             return $key;
         }
         return $arguments === [] ? $label : sprintf($label, ...$arguments);
+    }
+
+    private function isDetailsExpanded(): bool
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$backendUser instanceof BackendUserAuthentication) {
+            return false;
+        }
+        return (bool)($backendUser->uc['tx_analytics']['pagePerformanceExpanded'] ?? false);
     }
 
     private function getLanguageService(): LanguageService

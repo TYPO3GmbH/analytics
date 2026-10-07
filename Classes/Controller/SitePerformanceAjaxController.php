@@ -39,6 +39,7 @@ final readonly class SitePerformanceAjaxController
             $this->translate('dashboardWidget.sitePerformance.bounceRate'),
             $this->translate('dashboardWidget.sitePerformance.averageVisitDuration'),
             $this->translate('dashboardWidget.sitePerformance.comparedToPreviousPeriod'),
+            $this->translate('pagePerformance.tooltip.chart'),
         ) : [];
 
         $view = $this->viewFactory->create(new ViewFactoryData(
