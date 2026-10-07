@@ -28,6 +28,13 @@
 
         <f:render partial="Backend/Plans" arguments="{plansUrl: plansUrl}" />
 
+        <f:variable name="activeSites" value="{}" />
+        <f:for each="{siteGroups}" as="siteGroup">
+            <f:if condition="{siteGroup.id} == 'active'">
+                <f:variable name="activeSites" value="{siteGroup.sites}" />
+            </f:if>
+        </f:for>
+
         <f:for each="{siteGroups}" as="siteGroup">
             <f:if condition="{siteGroup.sites}">
                 <f:variable name="groupContentId" value="tx-analytics-site-group-{siteGroup.id}" />
@@ -58,7 +65,7 @@
                                 </tr>
                             </thead>
                             <f:for each="{siteGroup.sites}" as="site">
-                                <f:render partial="Backend/SiteRow" arguments="{site: site, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
+                                <f:render partial="Backend/SiteRow" arguments="{site: site, activeSites: activeSites, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
                             </f:for>
                         </table>
                     </div>
