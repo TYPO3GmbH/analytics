@@ -119,6 +119,24 @@
             <trans-unit id="placeholder.registrationEmail" resname="placeholder.registrationEmail">
                 <source>Email address for registration</source>
             </trans-unit>
+            <trans-unit id="label.registrationMode" resname="label.registrationMode">
+                <source>What would you like to do with this site?</source>
+            </trans-unit>
+            <trans-unit id="label.registerNewSite" resname="label.registerNewSite">
+                <source>Register as a new site</source>
+            </trans-unit>
+            <trans-unit id="label.attachToSite" resname="label.attachToSite">
+                <source>Add to an existing active site</source>
+            </trans-unit>
+            <trans-unit id="label.attachTarget" resname="label.attachTarget">
+                <source>Active site</source>
+            </trans-unit>
+            <trans-unit id="placeholder.attachTarget" resname="placeholder.attachTarget">
+                <source>Select an active site</source>
+            </trans-unit>
+            <trans-unit id="button.attach" resname="button.attach">
+                <source>Add</source>
+            </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
             </trans-unit>

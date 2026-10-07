@@ -250,6 +250,30 @@
                 <source>Email address for registration</source>
                 <target>E-Mail-Adresse für Registrierung</target>
             </trans-unit>
+            <trans-unit id="label.registrationMode" resname="label.registrationMode">
+                <source>What would you like to do with this site?</source>
+                <target>Was möchtest du mit dieser Site tun?</target>
+            </trans-unit>
+            <trans-unit id="label.registerNewSite" resname="label.registerNewSite">
+                <source>Register as a new site</source>
+                <target>Als neue Site registrieren</target>
+            </trans-unit>
+            <trans-unit id="label.attachToSite" resname="label.attachToSite">
+                <source>Add to an existing active site</source>
+                <target>Zu einer bestehenden aktiven Site hinzufügen</target>
+            </trans-unit>
+            <trans-unit id="label.attachTarget" resname="label.attachTarget">
+                <source>Active site</source>
+                <target>Aktive Site</target>
+            </trans-unit>
+            <trans-unit id="placeholder.attachTarget" resname="placeholder.attachTarget">
+                <source>Select an active site</source>
+                <target>Aktive Site auswählen</target>
+            </trans-unit>
+            <trans-unit id="button.attach" resname="button.attach">
+                <source>Add</source>
+                <target>Hinzufügen</target>
+            </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
                 <target>Aktualisieren</target>

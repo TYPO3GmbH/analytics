@@ -161,18 +161,59 @@
                     <f:else>
                         <form method="post" action="{registerUri}" class="tx-analytics-registration-form">
                             <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
-                            <div class="input-group">
-                                <input
-                                    type="email"
-                                    name="email"
-                                    class="form-control"
-                                    placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
-                                    required
-                                />
-                                <button type="submit" class="btn btn-primary">
-                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
-                                </button>
-                            </div>
+                            <f:if condition="{activeSites}">
+                                <fieldset class="tx-analytics-registration-mode" tabindex="-1">
+                                    <legend class="form-label">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registrationMode" />
+                                    </legend>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input t3js-analytics-registration-mode" name="mode" value="register" id="tx-analytics-mode-register-{site.identifier}" />
+                                        <label class="form-check-label" for="tx-analytics-mode-register-{site.identifier}">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registerNewSite" />
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input t3js-analytics-registration-mode" name="mode" value="attach" id="tx-analytics-mode-attach-{site.identifier}" />
+                                        <label class="form-check-label" for="tx-analytics-mode-attach-{site.identifier}">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachToSite" />
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            </f:if>
+                            <fieldset data-registration-mode="register" {f:if(condition: activeSites, then: 'hidden disabled')}>
+                                <div class="input-group">
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        class="form-control"
+                                        placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
+                                        required
+                                    />
+                                    <button type="submit" class="btn btn-primary">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
+                                    </button>
+                                </div>
+                            </fieldset>
+                            <f:if condition="{activeSites}">
+                                <fieldset data-registration-mode="attach" hidden disabled>
+                                    <label class="visually-hidden" for="tx-analytics-attach-target-{site.identifier}">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachTarget" />
+                                    </label>
+                                    <div class="input-group">
+                                        <select name="targetSiteIdentifier" id="tx-analytics-attach-target-{site.identifier}" class="form-select" required>
+                                            <option value="">
+                                                <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.attachTarget" />
+                                            </option>
+                                            <f:for each="{activeSites}" as="activeSite">
+                                                <option value="{activeSite.identifier}">{activeSite.pageName} ({activeSite.domain})</option>
+                                            </f:for>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.attach" />
+                                        </button>
+                                    </div>
+                                </fieldset>
+                            </f:if>
                         </form>
                     </f:else>
                 </f:if>
