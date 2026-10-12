@@ -29,7 +29,7 @@ trait SitePerformanceWidgetTrait
      * @param array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     series?: array{dates: list<string>, visits: list<int>, visitors: list<int>}
+     *     series?: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}
      * } $data
      * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string, details: list<string>|null, sparkline: string}>
      */

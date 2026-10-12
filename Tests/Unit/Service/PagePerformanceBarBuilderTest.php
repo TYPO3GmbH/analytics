@@ -330,6 +330,14 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function buildHtmlLeavesChartLabelToTheSvg(): void
+    {
+        $html = $this->buildSubject($this->siteFinder())->buildHtml(5, null, null, 7, [], '');
+
+        self::assertStringContainsString('<div class="tx-analytics-performance-tooltip-chart">', $html);
+    }
+
+    #[Test]
     public function buildHtmlRendersExpandedDetailsPanelWhenStoredInUserSettings(): void
     {
         $backendUser = $this->createMock(BackendUserAuthentication::class);
