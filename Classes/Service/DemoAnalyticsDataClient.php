@@ -141,6 +141,22 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         ];
     }
 
+    public function fetchSiteDailyMetrics(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        $visits = $this->series($from, $to, 420, 60);
+        return [
+            'dates' => $this->labels($from, $to),
+            'visits' => $visits,
+            'visitors' => array_map(static fn (int $v): int => (int)round($v * 0.64), $visits),
+            'bounceRate' => array_map(static fn (int $v): float => (float)$v, $this->series($from, $to, 38, -2, 24, 58)),
+            'avgDuration' => $this->series($from, $to, 68, 9, 35, 150),
+        ];
+    }
+
     public function fetchTrafficShareInDepth(
         string $websiteId,
         string $apiKey,

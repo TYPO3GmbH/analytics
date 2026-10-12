@@ -193,38 +193,67 @@ final class SitePerformanceServiceTest extends UnitTestCase
             'dates' => ['2026-10-04', '2026-10-05', '2026-10-06'],
             'visits' => [1200, 3400, 50],
             'visitors' => [10, 20, 30],
+            'bounceRate' => [40.0, 55.5, 30.25],
+            'avgDuration' => [65, 125, 90],
         ]];
 
         $result = $this->subject->buildMetricItems($data, 'Visits', 'Visitors', 'Bounce rate', 'Avg. duration', '', 'Trend');
 
         self::assertSame(['50', '3.400', '3.400'], $result[0]['details']);
         self::assertSame(['30', '20', '30'], $result[1]['details']);
-        self::assertStringContainsString('<svg', $result[0]['sparkline']);
+        self::assertSame(['30.25%', '55.50%', '55.50%'], $result[2]['details']);
+        self::assertSame(['1:30', '2:05', '2:05'], $result[3]['details']);
+        foreach ($result as $item) {
+            self::assertStringContainsString('<svg', $item['sparkline']);
+        }
         self::assertStringContainsString('Trend: Visits', $result[0]['sparkline']);
-        self::assertNull($result[2]['details']);
-        self::assertSame('', $result[3]['sparkline']);
+        self::assertStringContainsString('Trend: Avg. duration', $result[3]['sparkline']);
     }
 
     /** loadPerformanceData — series */
 
     #[Test]
-    public function loadPerformanceDataKeepsMetricsWhenSeriesFail(): void
+    public function loadPerformanceDataLoadsAllSeriesWithOneRequestAndCachesThem(): void
+    {
+        $series = ['dates' => ['2026-10-05', '2026-10-06'], 'visits' => [3, 4], 'visitors' => [2, 3], 'bounceRate' => [50.0, 25.0], 'avgDuration' => [30, 60]];
+        $client = $this->createMock(AnalyticsDataClientInterface::class);
+        $client->method('fetchSitePerformance')->willReturn($this->data(10, 5));
+        $client->expects(self::once())->method('fetchSiteDailyMetrics')->willReturn($series);
+        $client->expects(self::never())->method('fetchSiteVisitsGraph');
+        $client->expects(self::never())->method('fetchSiteVisitorsGraph');
+        $cache = $this->createMock(FrontendInterface::class);
+        $cache->method('get')->willReturn(false);
+        $cache->expects(self::once())->method('set');
+
+        $result = $this->subjectWith($client, $cache)->loadPerformanceData('main', 2);
+
+        self::assertNotNull($result);
+        self::assertSame($series, $result['series']);
+    }
+
+    #[Test]
+    public function loadPerformanceDataKeepsMetricsAndSkipsCacheWhenSeriesFail(): void
     {
         $performance = $this->data(10, 5);
         $client = $this->createMock(AnalyticsDataClientInterface::class);
         $client->method('fetchSitePerformance')->willReturn($performance);
-        $client->method('fetchSiteVisitsGraph')->willThrowException(new AnalyticsApiException('timeout'));
-        $siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
-        $siteProvider->method('resolveAnalyticsSite')->willReturn(['site' => new Site('main', 1, []), 'websiteId' => 'w', 'apiKey' => 'k']);
+        $client->method('fetchSiteDailyMetrics')->willThrowException(new AnalyticsApiException('timeout'));
         $cache = $this->createMock(FrontendInterface::class);
         $cache->method('get')->willReturn(false);
+        $cache->expects(self::never())->method('set');
 
-        $subject = new SitePerformanceService($client, $this->createMock(LoggerInterface::class), $cache, new MetricFormatter(), $siteProvider, new SparklineRenderer());
-        $result = $subject->loadPerformanceData('main', 7);
+        $result = $this->subjectWith($client, $cache)->loadPerformanceData('main', 7);
 
         self::assertNotNull($result);
         self::assertSame($performance['current'], $result['current']);
-        self::assertSame(['dates' => [], 'visits' => [], 'visitors' => []], $result['series']);
+        self::assertSame(['dates' => [], 'visits' => [], 'visitors' => [], 'bounceRate' => [], 'avgDuration' => []], $result['series']);
+    }
+
+    private function subjectWith(AnalyticsDataClientInterface $client, FrontendInterface $cache): SitePerformanceService
+    {
+        $siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
+        $siteProvider->method('resolveAnalyticsSite')->willReturn(['site' => new Site('main', 1, []), 'websiteId' => 'w', 'apiKey' => 'k']);
+        return new SitePerformanceService($client, $this->createMock(LoggerInterface::class), $cache, new MetricFormatter(), $siteProvider, new SparklineRenderer());
     }
 
     /**

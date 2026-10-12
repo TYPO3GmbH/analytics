@@ -121,6 +121,20 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
+     * Fetches site-wide daily visits, visitors, bounce rate (percent) and average
+     * session duration (seconds) in one request.
+     *
+     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchSiteDailyMetrics(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array;
+
+    /**
      * Fetches traffic share by channel for a date range.
      *
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}

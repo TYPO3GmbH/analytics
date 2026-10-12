@@ -565,7 +565,7 @@ final readonly class PagePerformanceBarBuilder
             $html .= '<div><dt>' . $this->escape($label) . '</dt><dd>' . $this->escape($metric['details'][$index] ?? '-') . '</dd></div>';
         }
         $html .= '</dl>';
-        $html .= '<div class="tx-analytics-performance-tooltip-chart" aria-label="' . $this->escape($this->translate('pagePerformance.tooltip.chart')) . '">';
+        $html .= '<div class="tx-analytics-performance-tooltip-chart">';
         if ($metric['chart'] !== []) {
             $html .= $this->sparklineRenderer->render($metric['chart'], [
                 'label' => $this->translate('pagePerformance.tooltip.chart') . ': ' . $metric['label'],
@@ -574,6 +574,8 @@ final readonly class PagePerformanceBarBuilder
                 'labels' => $metric['chartLabels'] ?? [],
                 'smooth' => true,
                 'axes' => true,
+                // The bottom axis is drawn at yMin, so it has to be zero to read as one.
+                'yMin' => 0.0,
             ]);
         }
         $html .= '</div>';
