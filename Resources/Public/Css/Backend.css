@@ -102,18 +102,9 @@
     width: 100%;
 }
 
-.tx-analytics-registration-form .form-control,
-.tx-analytics-registration-form .form-select {
+.tx-analytics-registration-form .form-control {
     flex: 1 1 auto;
     min-width: 18rem;
-}
-
-.tx-analytics-registration-mode:focus {
-    outline: none;
-}
-
-.tx-analytics-registration-mode .form-check:last-child {
-    margin-block-end: 0;
 }
 
 .tx-analytics-iframe-module {
