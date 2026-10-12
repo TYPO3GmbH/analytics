@@ -108,17 +108,68 @@ The row of an **active site** also shows these buttons:
 Registration
 ============
 
-To register a site, do these steps:
+You can register a site in two ways:
+
+-   **Register as a new site**: the site gets its own analytics, plan and
+    credits.
+-   **Add to an existing active site**: the site uses the analytics, the plan
+    and the credits of an active site. All data goes into the analytics of
+    the active site.
+
+The module shows the choice only when there is an active site. Without an
+active site, the module shows the e-mail field directly.
+
+Register as a new site
+----------------------
 
 #.  In the group **Inactive sites**, find the site.
 #.  Click :guilabel:`Register`. The details of the site open and show the
     registration form.
+#.  Select :guilabel:`Register as a new site`.
 #.  Enter an e-mail address.
 #.  Click :guilabel:`Register`.
 
 The module connects the site with the TYPO3 Analytics API. After the
 confirmation, the extension adds the tracking script to all frontend pages of
 the site.
+
+Add to an existing active site
+------------------------------
+
+Use this option for a second domain of the same project, for example a shop
+or a landing page.
+
+#.  In the group **Inactive sites**, find the site.
+#.  Click :guilabel:`Register`. The details of the site open and show the
+    registration form.
+#.  Select :guilabel:`Add to an existing active site`.
+#.  Select the active site.
+#.  Click :guilabel:`Add`.
+
+The module adds the domain of the site to the whitelisted domains of the
+active site. The site then shows in the group **Active sites**. Its details
+show the active site in the line :guilabel:`Uses the analytics of`. The
+extension adds the tracking script of the active site to all frontend pages
+of the site.
+
+..  note::
+    The plan and the credits are shared. Visits on the added site use the
+    credits of the active site.
+
+Detach an added site
+--------------------
+
+To stop an added site from using the analytics of the active site, do these
+steps:
+
+#.  In the group **Active sites**, find the added site.
+#.  Click the :guilabel:`Detach` button in the row of the site.
+#.  Click :guilabel:`Detach` in the confirmation dialog.
+
+The module removes the domain of the site from the whitelisted domains of the
+active site and removes the analytics settings from the site. The site stops
+tracking and shows in the group **Inactive sites** again. You can register
+the site or add it to an active site again later.
 
 ..  figure:: /Images/backend-module-registration.png
     :alt: The email address field and Register button in the analytics backend module
