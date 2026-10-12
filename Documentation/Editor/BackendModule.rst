@@ -120,9 +120,6 @@ The module connects the site with the TYPO3 Analytics API. After the
 confirmation, the extension adds the tracking script to all frontend pages of
 the site.
 
-..  TODO: Describe the choice between a new site and an active site, when the
-    registration supports mode "attach".
-
 ..  figure:: /Images/backend-module-registration.png
     :alt: The email address field and Register button in the analytics backend module
     :zoom: lightbox
