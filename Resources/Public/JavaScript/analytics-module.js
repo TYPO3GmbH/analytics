@@ -60,17 +60,6 @@ document.addEventListener('submit', function (e) {
 
 showPendingNotification();
 
-// Disabled fieldsets keep the inactive mode's required fields out of validation and FormData.
-document.addEventListener('change', function (e) {
-    const radio = e.target.closest('.t3js-analytics-registration-mode');
-    if (!radio) return;
-    radio.form.querySelectorAll('[data-registration-mode]').forEach(fieldset => {
-        const active = fieldset.dataset.registrationMode === radio.value;
-        fieldset.hidden = !active;
-        fieldset.disabled = !active;
-    });
-});
-
 // Collapsible site groups and site detail rows
 document.addEventListener('click', function (e) {
     const toggle = e.target.closest('.t3js-analytics-collapse');
@@ -90,8 +79,7 @@ document.addEventListener('click', function (e) {
         }
     });
     if (expand && !toggle.classList.contains('tx-analytics-collapse-toggle')) {
-        // A focused radio looks selected, so the mode group itself takes focus.
-        target.querySelector('.tx-analytics-registration-mode, input:not([type="hidden"])')?.focus();
+        target.querySelector('input:not([type="hidden"])')?.focus();
     }
 });
 
