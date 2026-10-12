@@ -196,6 +196,9 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
             'axes' => true,
             // The bottom axis is drawn at yMin, so it has to be zero to read as one.
             'yMin' => 0.0,
+            // The chart stretches into the card height the fixed widget leaves; a circle would distort.
+            'preserveAspectRatio' => 'none',
+            'showLastPoint' => false,
         ]);
     }
 
