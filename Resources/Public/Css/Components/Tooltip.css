@@ -1,0 +1,18 @@
+/* Accessible tooltip, see initTooltips() in widget-utils.js */
+.tx-analytics-tooltip {
+    position: fixed;
+    z-index: 9999;
+    max-width: 16rem;
+    padding: .5rem .75rem;
+    font-size: var(--typo3-font-size-small, 11px);
+    line-height: 1.4;
+    color: var(--typo3-component-color);
+    background: var(--typo3-component-bg);
+    border: 1px solid var(--typo3-component-border-color);
+    border-radius: var(--typo3-component-border-radius);
+    box-shadow: var(--typo3-component-box-shadow);
+}
+
+.tx-analytics-tooltip[hidden] {
+    display: none;
+}

@@ -1,3 +1,5 @@
+import { initTooltips } from '@t3g/analytics/widget-utils.js';
+
 const storagePrefix = 'tx-analytics-site-performance';
 
 function resolveWidgetIdentifier(widget) {
@@ -133,6 +135,7 @@ function initializeWidgets(root = document) {
   });
 }
 
+initTooltips();
 initializeWidgets();
 
 document.addEventListener('widgetContentRendered', (event) => {

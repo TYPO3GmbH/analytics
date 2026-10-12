@@ -14,7 +14,9 @@ use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Service\AnalyticsDataClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
+use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\PagePerformanceBarBuilder;
+use T3G\Analytics\Service\TrendNote;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -82,6 +84,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
             new CipherService(),
             $this->createMock(LoggerInterface::class),
             $this->cache,
+            new MetricFormatter(),
         );
     }
 
@@ -145,7 +148,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
     /** buildMetrics — null previous period */
 
     #[Test]
-    public function buildMetricsHasNullVisitTrendWhenNoPreviousData(): void
+    public function buildMetricsComparesViewsWithZeroWhenPreviousPeriodHasNoVisits(): void
     {
         $this->mockHandler->append(
             $this->pageApiResponse(21, 50.0, 0.0),
@@ -157,8 +160,10 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
 
-        // previousPage = null → prevVisitCount = null → absoluteCountTrend returns null
-        self::assertNull($metrics[0]['trend']);
+        // No row for the previous period means no visits: 0 is a measured value for the views.
+        self::assertSame('+21', $metrics[0]['trend']);
+        self::assertSame('up', $metrics[0]['trendDirection']);
+        self::assertNull($metrics[0]['trendNote']);
     }
 
     #[Test]
@@ -174,8 +179,48 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
 
-        // When there is no previous-period data, bounce rate trend must be null — not -100%.
-        self::assertNull($metrics[1]['trend']);
+        // The rates of a period without visits are not measured: a note instead of a trend, not -100%.
+        foreach ([1, 2, 3] as $index) {
+            self::assertNull($metrics[$index]['trend']);
+            self::assertSame(TrendNote::NoPreviousVisits->value, $metrics[$index]['trendNote']);
+        }
+    }
+
+    #[Test]
+    public function buildMetricsShowsNeutralTrendWhenValuesAreUnchanged(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(10, 40.0, 60.0),
+            $this->pageApiResponse(10, 40.0, 60.0),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+
+        $metrics = $this->callBuildMetrics($this->buildSubject($this->siteFinder()));
+
+        self::assertSame(['±0', '±0.00%', '±0s', '±0.00%'], array_column($metrics, 'trend'));
+        self::assertSame(['neutral', 'neutral', 'neutral', 'neutral'], array_column($metrics, 'trendDirection'));
+    }
+
+    #[Test]
+    public function buildHtmlRendersTrendNoteWithoutOwnTooltip(): void
+    {
+        $this->mockHandler->append(
+            $this->pageApiResponse(21, 50.0, 30.0),
+            $this->emptyPageApiResponse(),
+            $this->emptySeriesResponse(),
+            $this->emptySeriesResponse(),
+        );
+        $this->cache->method('get')->willReturn(false);
+        $subject = $this->buildSubject($this->siteFinder());
+
+        $html = $subject->buildHtml(1, $subject->trySite(1), null, 7, [], '');
+
+        // Three rates with a note: icon in the value row plus text in the tooltip and in the details panel.
+        self::assertSame(3 * 3, substr_count($html, 'tx-analytics-performance-icon-circle-info'));
+        self::assertSame(3 * 2, substr_count($html, 'tx-analytics-performance-tooltip-note'));
+        self::assertStringNotContainsString('data-tx-analytics-tooltip', $html);
     }
 
     /** buildMetrics — bounce rate direction (inverted: lower bounce = better) */

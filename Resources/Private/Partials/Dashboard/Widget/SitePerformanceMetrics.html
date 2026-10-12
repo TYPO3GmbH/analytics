@@ -1,4 +1,4 @@
-<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" xmlns:analytics="http://typo3.org/ns/T3G/Analytics/ViewHelpers" data-namespace-typo3-fluid="true">
 <ul class="tx-analytics-site-performance-list">
     <f:for each="{metrics}" as="metric">
         <li class="tx-analytics-site-performance-metric tx-analytics-site-performance-metric-{metric.tone}">
@@ -6,10 +6,19 @@
             <span class="tx-analytics-site-performance-value-row">
                 <strong class="tx-analytics-site-performance-value">{metric.value}</strong>
                 <f:if condition="{metric.trend}">
-                    <span class="tx-analytics-site-performance-trend tx-analytics-site-performance-trend-{metric.trendDirection}" title="{metric.trendLabel}">
-                        <span class="tx-analytics-site-performance-trend-icon tx-analytics-site-performance-icon-arrow-trend-{metric.trendDirection}" aria-hidden="true"></span>
-                        {metric.trend}
-                    </span>
+                    <f:then>
+                        <span class="tx-analytics-site-performance-trend tx-analytics-site-performance-trend-{metric.trendDirection}" tabindex="0" data-tx-analytics-tooltip="{metric.trendLabel}">
+                            <span class="tx-analytics-site-performance-trend-icon tx-analytics-site-performance-icon-arrow-trend-{metric.trendDirection}" aria-hidden="true"></span>
+                            {metric.trend}
+                            <span class="visually-hidden">{metric.trendLabel}</span>
+                        </span>
+                    </f:then>
+                    <f:else if="{metric.trendNote}">
+                        <f:variable name="trendNoteText" value="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:trendNote.{metric.trendNote}')}" />
+                        <button type="button" class="tx-analytics-site-performance-trend tx-analytics-site-performance-trend-neutral tx-analytics-site-performance-trend-note" aria-label="{trendNoteText}" data-tx-analytics-tooltip="{trendNoteText}">
+                            <span class="tx-analytics-site-performance-trend-icon tx-analytics-site-performance-icon-circle-info" aria-hidden="true"></span>
+                        </button>
+                    </f:else>
                 </f:if>
             </span>
             <span class="tx-analytics-site-performance-label">{metric.label}</span>
@@ -33,8 +42,15 @@
                         </div>
                     </dl>
                 </f:if>
-                <f:if condition="{metric.sparkline}">
-                    <div class="tx-analytics-site-performance-chart"><f:format.raw>{metric.sparkline}</f:format.raw></div>
+                <f:if condition="{metric.chart}">
+                    <f:comment>
+                        yMin 0: the bottom axis is drawn at yMin, so it has to be zero to read as one.
+                        preserveAspectRatio none: the chart stretches into the card height the fixed widget leaves,
+                        so the last point is not shown; a circle would distort.
+                    </f:comment>
+                    <div class="tx-analytics-site-performance-chart">
+                        <analytics:sparkline values="{metric.chart.values}" options="{label: metric.chart.label, labels: metric.chart.labels, tone: metric.tone, class: 'tx-analytics-site-performance-sparkline', smooth: 1, axes: 1, yMin: 0, preserveAspectRatio: 'none', showLastPoint: 0}" />
+                    </div>
                 </f:if>
             </div>
         </li>

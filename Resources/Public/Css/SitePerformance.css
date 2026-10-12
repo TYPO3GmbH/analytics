@@ -219,6 +219,24 @@
     display: none;
 }
 
+.tx-analytics-site-performance-trend:focus-visible {
+    outline: 2px solid var(--typo3-state-focus-border-color, currentColor);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.tx-analytics-site-performance-trend-note {
+    padding: 0;
+    font: inherit;
+    background: none;
+    border: 0;
+    cursor: help;
+}
+
+.tx-analytics-site-performance-icon-circle-info {
+    --tx-analytics-site-performance-trend-icon: url("../Icons/PagePerformance/circle-info.svg");
+}
+
 .tx-analytics-site-performance-details {
     grid-column: 1 / -1;
     display: grid;

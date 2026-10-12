@@ -31,6 +31,7 @@ final readonly class PagePerformanceBarBuilder
         private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
         private FrontendInterface $pageAnalyticsCache,
+        private MetricFormatterInterface $formatter,
     ) {
     }
 
@@ -72,7 +73,19 @@ final readonly class PagePerformanceBarBuilder
             if ($metric['trend'] !== null) {
                 $html .= '<span class="tx-analytics-performance-trend tx-analytics-performance-trend-' . $this->escape((string)$metric['trendDirection']) . '">';
                 $html .= '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-arrow-trend-' . $this->escape((string)$metric['trendDirection']) . '" aria-hidden="true"></span>';
-                $html .= $this->escape((string)$metric['trend']) . '</span>';
+                $html .= $this->escape((string)$metric['trend']);
+                $html .= '<span class="visually-hidden"> ' . $this->escape($this->translate(
+                    in_array($metric['key'], ['bounceRate', 'continuationRate'], true)
+                        ? 'dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints'
+                        : 'dashboardWidget.sitePerformance.comparedToPreviousPeriod'
+                )) . '</span>';
+                $html .= '</span>';
+            } elseif (($metric['trendNote'] ?? null) !== null) {
+                // The metric already opens the details tooltip, which holds the note as text, so the icon has no tooltip of its own.
+                $html .= '<span class="tx-analytics-performance-trend tx-analytics-performance-trend-neutral">';
+                $html .= '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-circle-info" aria-hidden="true"></span>';
+                $html .= '<span class="visually-hidden">' . $this->escape($this->translate('trendNote.' . $metric['trendNote'])) . '</span>';
+                $html .= '</span>';
             }
             $html .= '</span>';
             $html .= '<span class="tx-analytics-performance-label">' . $this->escape($metric['label']) . '</span>';
@@ -197,7 +210,7 @@ final readonly class PagePerformanceBarBuilder
         $bounceRateSeries = $analyticsData['bounceRateSeries'];
         $avgDurationSeries = $analyticsData['avgDurationSeries'];
         $formattedDates = array_map(
-            static fn (string $d): string => (new \DateTimeImmutable($d))->format('d.m.Y'),
+            fn (string $d): string => $this->formatter->formatDate(new \DateTimeImmutable($d)),
             $analyticsData['seriesDates'],
         );
 
@@ -206,10 +219,13 @@ final readonly class PagePerformanceBarBuilder
         $avgDuration = (float)($pageData['averageVisitDuration'] ?? 0.0);
         $continuationRate = max(0.0, 100.0 - $bounceRate);
 
-        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : null;
+        // Without a row for the previous period the page had no visits there. The views compare with 0 as a measured value.
+        // The rates of a period without visits are not measured, so they show a note instead of a trend.
+        $prevVisitCount = $previousPage !== null ? (int)($previousPage['visitCount'] ?? 0) : 0;
         $prevBounceRate = $previousPage !== null ? (float)($previousPage['bounceRate'] ?? 0.0) : null;
         $prevAvgDuration = $previousPage !== null ? (float)($previousPage['averageVisitDuration'] ?? 0.0) : null;
         $prevContinuationRate = $prevBounceRate !== null ? max(0.0, 100.0 - $prevBounceRate) : null;
+        $rateNote = $previousPage === null ? TrendNote::NoPreviousVisits->value : null;
 
         $visitsChart = $visitsSeries !== [] ? $visitsSeries : [$visitCount];
         $visitsCurrent = $this->seriesCurrent($visitsSeries);
@@ -240,8 +256,9 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'eye',
                 'tone' => 'visits',
                 'value' => number_format($visitCount, 0, '.', "\u{202F}"),
-                'trend' => $this->absoluteCountTrend($visitCount, $prevVisitCount),
-                'trendDirection' => $this->trendDirection($visitCount, $prevVisitCount),
+                'trend' => $this->formatter->formatAbsoluteCountTrend($visitCount, $prevVisitCount),
+                'trendDirection' => $this->formatter->trendDirection($visitCount, $prevVisitCount),
+                'trendNote' => null,
                 'details' => [
                     $visitsCurrent !== null ? number_format((int)$visitsCurrent, 0, '.', "\u{202F}") : '-',
                     $visitsPrevious !== null ? number_format((int)$visitsPrevious, 0, '.', "\u{202F}") : '-',
@@ -261,8 +278,9 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'bounce-rate',
                 'value' => number_format($bounceRate, 2) . '%',
-                'trend' => $this->absolutePercentPointTrend($bounceRate, $prevBounceRate),
-                'trendDirection' => $prevBounceRate !== null ? $this->trendDirection($prevBounceRate, $bounceRate) : null,
+                'trend' => $prevBounceRate !== null ? $this->formatter->formatAbsolutePercentPointTrend($bounceRate, $prevBounceRate) : null,
+                'trendDirection' => $prevBounceRate !== null ? $this->formatter->trendDirection($prevBounceRate, $bounceRate) : null,
+                'trendNote' => $rateNote,
                 'details' => [
                     $bounceRateCurrent !== null ? number_format($bounceRateCurrent, 2) . '%' : '-',
                     $bounceRatePrevious !== null ? number_format($bounceRatePrevious, 2) . '%' : '-',
@@ -282,8 +300,9 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'clock',
                 'tone' => 'avg-duration',
                 'value' => $this->formatDuration($avgDuration),
-                'trend' => $this->durationTrend($avgDuration, $prevAvgDuration),
-                'trendDirection' => $this->trendDirection($avgDuration, $prevAvgDuration),
+                'trend' => $prevAvgDuration !== null ? $this->formatter->formatAbsoluteDurationTrend((int)round($avgDuration), (int)round($prevAvgDuration)) : null,
+                'trendDirection' => $prevAvgDuration !== null ? $this->formatter->trendDirection(round($avgDuration), round($prevAvgDuration)) : null,
+                'trendNote' => $rateNote,
                 'details' => [
                     $avgDurationCurrent !== null ? $this->formatDuration($avgDurationCurrent) : '-',
                     $avgDurationPrevious !== null ? $this->formatDuration($avgDurationPrevious) : '-',
@@ -303,8 +322,9 @@ final readonly class PagePerformanceBarBuilder
                 'icon' => 'right-to-bracket',
                 'tone' => 'continuation-rate',
                 'value' => number_format($continuationRate, 2) . '%',
-                'trend' => $this->absolutePercentPointTrend($continuationRate, $prevContinuationRate),
-                'trendDirection' => $this->trendDirection($continuationRate, $prevContinuationRate),
+                'trend' => $prevContinuationRate !== null ? $this->formatter->formatAbsolutePercentPointTrend($continuationRate, $prevContinuationRate) : null,
+                'trendDirection' => $prevContinuationRate !== null ? $this->formatter->trendDirection($continuationRate, $prevContinuationRate) : null,
+                'trendNote' => $rateNote,
                 'details' => [
                     $continuationCurrent !== null ? number_format($continuationCurrent, 2) . '%' : '-',
                     $continuationPrevious !== null ? number_format($continuationPrevious, 2) . '%' : '-',
@@ -348,6 +368,7 @@ final readonly class PagePerformanceBarBuilder
                 'value' => '-',
                 'trend' => null,
                 'trendDirection' => null,
+                'trendNote' => null,
                 'details' => ['-', '-', '-'],
                 'chart' => [],
                 'chartLegend' => ['-', '-'],
@@ -483,60 +504,6 @@ final readonly class PagePerformanceBarBuilder
         return $series !== [] ? max($series) : null;
     }
 
-    private function absoluteCountTrend(int|float $current, int|float|null $previous): ?string
-    {
-        if ($previous === null) {
-            return null;
-        }
-        $diff = (int)round($current) - (int)round($previous);
-        if ($diff === 0) {
-            return null;
-        }
-        return ($diff > 0 ? '+' : '') . number_format($diff, 0, '.', "\u{202F}");
-    }
-
-    private function absolutePercentPointTrend(float $current, float|null $previous): ?string
-    {
-        if ($previous === null) {
-            return null;
-        }
-        $diff = $current - $previous;
-        if (round($diff, 2) === 0.0) {
-            return null;
-        }
-        return ($diff > 0 ? '+' : '') . number_format($diff, 2) . '%';
-    }
-
-    private function durationTrend(float $current, float|null $previous): ?string
-    {
-        if ($previous === null) {
-            return null;
-        }
-        $delta = (int)round($current - $previous);
-        if ($delta === 0) {
-            return null;
-        }
-        $abs = abs($delta);
-        $sign = $delta > 0 ? '+' : '-';
-        return $abs < 60
-            ? $sign . $abs . 's'
-            : $sign . intdiv($abs, 60) . ':' . str_pad((string)($abs % 60), 2, '0', STR_PAD_LEFT);
-    }
-
-    private function trendDirection(int|float $current, int|float|null $previous): ?string
-    {
-        if ($previous === null) {
-            return null;
-        }
-        if ($current > $previous) {
-            return 'up';
-        }
-        if ($current < $previous) {
-            return 'down';
-        }
-        return null;
-    }
-
     private function formatDuration(float $seconds): string
     {
         if ($seconds <= 0) {
@@ -559,7 +526,15 @@ final readonly class PagePerformanceBarBuilder
 
         $html = '<div class="tx-analytics-performance-tooltip-title">' . $this->escape($metric['label']) . '</div>';
         // Description and chart are always rendered so the rows line up across metrics.
-        $html .= '<p class="tx-analytics-performance-tooltip-description">' . $this->escape((string)($metric['description'] ?? '')) . '</p>';
+        // The note stays inside the description: the details panel is a subgrid with one row per part.
+        $html .= '<p class="tx-analytics-performance-tooltip-description">' . $this->escape((string)($metric['description'] ?? ''));
+        if (($metric['trendNote'] ?? null) !== null) {
+            $html .= '<span class="tx-analytics-performance-tooltip-note">'
+                . '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-circle-info" aria-hidden="true"></span>'
+                . $this->escape($this->translate('trendNote.' . $metric['trendNote']))
+                . '</span>';
+        }
+        $html .= '</p>';
         $html .= '<dl class="tx-analytics-performance-tooltip-data">';
         foreach ($detailLabels as $index => $label) {
             $html .= '<div><dt>' . $this->escape($label) . '</dt><dd>' . $this->escape($metric['details'][$index] ?? '-') . '</dd></div>';
