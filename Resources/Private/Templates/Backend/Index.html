@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <f:render partial="Backend/Plans" arguments="{plansUrl: plansUrl}" />
+        <f:render partial="Backend/Plans" arguments="{plansUrl: plansUrl, plansCollapsed: plansCollapsed}" />
 
         <f:variable name="activeSites" value="{}" />
         <f:for each="{siteGroups}" as="siteGroup">
@@ -45,6 +45,7 @@
                             class="tx-analytics-collapse-toggle t3js-analytics-collapse"
                             aria-expanded="{f:if(condition: siteGroup.collapsed, then: 'false', else: 'true')}"
                             aria-controls="{groupContentId}"
+                            data-collapsed-key="siteGroup.{siteGroup.id}"
                         >
                             <span class="tx-analytics-collapse-icon" aria-hidden="true"></span>
                             {siteGroup.title}
