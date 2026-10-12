@@ -1,12 +1,16 @@
 {namespace core=TYPO3\CMS\Core\ViewHelpers}
 
 <f:variable name="detailsId" value="tx-analytics-site-details-{site.identifier}" />
+<f:variable name="detailsLabel" value="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.detailsFor', arguments: {0: site.pageName})}" />
 <f:variable name="rowClass" value="" />
+<f:variable name="detailsOpen" value="0" />
 <f:if condition="{site.status.consumption.warning}">
     <f:variable name="rowClass" value="table-warning" />
+    <f:variable name="detailsOpen" value="1" />
 </f:if>
 <f:if condition="{site.status.consumption.exhausted}">
     <f:variable name="rowClass" value="table-danger" />
+    <f:variable name="detailsOpen" value="1" />
 </f:if>
 
 <tbody class="tx-analytics-site">
@@ -16,12 +20,12 @@
                 <button
                     type="button"
                     class="tx-analytics-collapse-toggle t3js-analytics-collapse"
-                    aria-expanded="false"
+                    aria-expanded="{f:if(condition: detailsOpen, then: 'true', else: 'false')}"
                     aria-controls="{detailsId}"
-                    title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.details')}"
+                    title="{detailsLabel}"
                 >
                     <span class="tx-analytics-collapse-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.details" /></span>
+                    <span class="visually-hidden">{detailsLabel}</span>
                 </button>
                 <div>
                     <strong>{site.pageName}</strong>
@@ -90,7 +94,7 @@
                 </f:then>
                 <f:else>
                     <f:if condition="{isManager}">
-                        <button type="button" class="btn btn-primary t3js-analytics-collapse" aria-expanded="false" aria-controls="{detailsId}">
+                        <button type="button" class="btn btn-primary t3js-analytics-collapse" aria-expanded="false" aria-controls="{detailsId}" data-collapse-action="open">
                             <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
                         </button>
                     </f:if>
@@ -98,7 +102,7 @@
             </f:if>
         </td>
     </tr>
-    <tr id="{detailsId}" class="tx-analytics-site-details" hidden>
+    <tr id="{detailsId}" class="tx-analytics-site-details" {f:if(condition: detailsOpen, else: 'hidden')}>
         <td colspan="5">
             <dl class="tx-analytics-site-details-list">
                 <div>

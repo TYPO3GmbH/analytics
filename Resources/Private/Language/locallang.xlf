@@ -56,8 +56,8 @@
             <trans-unit id="label.actions" resname="label.actions">
                 <source>Actions</source>
             </trans-unit>
-            <trans-unit id="label.details" resname="label.details">
-                <source>Details</source>
+            <trans-unit id="label.detailsFor" resname="label.detailsFor">
+                <source>Details: %s</source>
             </trans-unit>
             <trans-unit id="label.registeredSites" resname="label.registeredSites">
                 <source>Registered sites</source>

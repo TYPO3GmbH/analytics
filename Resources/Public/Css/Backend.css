@@ -95,10 +95,6 @@
     max-width: 30rem;
 }
 
-.tx-analytics-site-card > .card-footer {
-    margin-block-start: auto;
-}
-
 .tx-analytics-registration-form {
     display: flex;
     flex-direction: column;
@@ -392,10 +388,6 @@ typo3-notification {
 }
 
 @media (max-width: 500px) {
-    .tx-analytics-site-card-value {
-        text-align: start;
-    }
-
     .tx-analytics-registration-form,
     .tx-analytics-registration-form .form-control,
     .tx-analytics-registration-form .form-select {

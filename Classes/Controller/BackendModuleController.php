@@ -73,6 +73,7 @@ final readonly class BackendModuleController
             'isManager' => $this->isAnalyticsManager(),
             'logoSvg' => $this->readLogoSvg(),
             'plansUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_analytics_plans_content'),
+            'plansCollapsed' => $this->isCollapsed('plans', false),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Index');
@@ -442,13 +443,13 @@ final readonly class BackendModuleController
             [
                 'id' => 'active',
                 'title' => $this->translate('label.activeSites'),
-                'collapsed' => false,
+                'collapsed' => $this->isCollapsed('siteGroup.active', false),
                 'sites' => $activeSites,
             ],
             [
                 'id' => 'inactive',
                 'title' => $this->translate('label.inactiveSites'),
-                'collapsed' => true,
+                'collapsed' => $this->isCollapsed('siteGroup.inactive', true),
                 'sites' => $inactiveSites,
             ],
         ];
@@ -490,6 +491,18 @@ final readonly class BackendModuleController
             $svg = (new SvgSanitizer())->sanitizeContent($svg);
         }
         return $svg;
+    }
+
+    /**
+     * Collapsed state the module JavaScript stores per backend user under tx_analytics.collapsed.
+     */
+    private function isCollapsed(string $key, bool $default): bool
+    {
+        $state = $GLOBALS['BE_USER']->uc['tx_analytics']['collapsed'] ?? [];
+        foreach (explode('.', $key) as $segment) {
+            $state = is_array($state) ? ($state[$segment] ?? null) : null;
+        }
+        return $state === null ? $default : $state === '1';
     }
 
     private function isAnalyticsManager(): bool
