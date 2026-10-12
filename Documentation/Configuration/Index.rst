@@ -6,10 +6,11 @@
 Configuration
 =============
 
-The following settings can be configured in the TYPO3 Extension Manager under
-:guilabel:`Admin Tools → Settings → Extension Configuration → analytics`.
+The following settings can be configured in the TYPO3 Extension Manager, under
+:guilabel:`System > Settings > Extension Configuration`.
 
-They can also be set programmatically in :file:`config/system/additional.php`:
+Alternatively, you can set them in the configuration overrides file
+:file:`config/system/additional.php`:
 
 ..  code-block:: php
 
@@ -25,41 +26,42 @@ They can also be set programmatically in :file:`config/system/additional.php`:
         :type: string
         :default: `7,14,30`
 
-        Comma-separated list of period options (in days) available in all
-        dashboard widget dropdowns and the Page Performance Bar. Must be
-        positive integers.
+        A comma-separated list of time periods (in days) for
+        dashboard widget dropdowns and the Page Performance Bar. They
+        must be positive integers.
 
     ..  confval:: dashboardDefaultPeriod
         :type: int
         :default: `7`
 
-        Pre-selected period (in days) for all dashboard widgets and the Page
-        Performance Bar. Must be one of the values defined in
-        :confval:`dashboardPeriods`.
+        A time period (in days) that is pre-selected in dropdowns for dashboard
+        widgets and the Page Performance Bar. It must be one of the values defined
+        in
+        :confval:`dashboardPeriods` (above).
 
     ..  confval:: pageAnalyticsCacheTtl
         :type: int
         :default: `3600`
 
-        Lifetime in seconds for all analytics data caches (page metrics,
+        Lifetime (in seconds) for analytics data caches (page metrics,
         top pages, site performance, traffic graph, traffic sources, and plans).
-        Increase this value to reduce API calls on high-traffic backend
+        Increase this value to reduce API calls in high-traffic backend
         installations.
 
     ..  confval:: demoData
         :type: bool
         :default: `0`
 
-        When enabled, replaces all analytics API calls with static demo data.
-        Only takes effect in the TYPO3 :php:`Development` application context.
-        Use this to explore the widgets and module without a live analytics
-        account.
+        If enabled, replaces analytics API calls with static demo data.
+        Will only take effect if the application context is set to
+        :php:`Development`. Use it to explore the analytics widgets and
+        module without needing an analytics account.
 
 
 Dashboard settings
 ==================
 
-**Example — custom period options:**
+**Example — setting time periods:**
 
 ..  code-block:: php
 
@@ -70,7 +72,7 @@ Dashboard settings
 Cache settings
 ==============
 
-**Example — longer cache lifetime:**
+**Example — setting a long cache lifetime:**
 
 ..  code-block:: php
 
@@ -80,7 +82,7 @@ Cache settings
 Development settings
 ====================
 
-**Example — enable demo data:**
+**Example — enabling demo data:**
 
 ..  code-block:: php
 
