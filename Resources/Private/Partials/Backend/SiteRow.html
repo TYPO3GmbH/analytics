@@ -1,4 +1,5 @@
 {namespace core=TYPO3\CMS\Core\ViewHelpers}
+{namespace analytics=T3G\Analytics\ViewHelpers}
 
 <f:variable name="detailsId" value="tx-analytics-site-details-{site.identifier}" />
 <f:variable name="detailsLabel" value="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.detailsFor', arguments: {0: site.pageName})}" />
@@ -123,21 +124,21 @@
                     <f:if condition="{site.status.expiresAt}">
                         <div>
                             <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.validUntil" /></dt>
-                            <dd><f:format.date format="d.m.Y" date="{site.status.expiresAt}" /></dd>
+                            <dd><analytics:format.localizedDate date="{site.status.expiresAt}" /></dd>
                         </div>
                     </f:if>
                     <f:if condition="{site.status.consumption.limited}">
                         <f:if condition="{site.status.stpResetAt}">
                             <div>
                                 <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.resetsAt" /></dt>
-                                <dd><f:format.date format="d.m.Y" date="{site.status.stpResetAt}" /></dd>
+                                <dd><analytics:format.localizedDate date="{site.status.stpResetAt}" /></dd>
                             </div>
                         </f:if>
                     </f:if>
                     <f:if condition="{site.status._fetchedAt}">
                         <div>
                             <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.updatedAt" /></dt>
-                            <dd><f:format.date format="d.m.Y H:i" date="{site.status._fetchedAt}" /></dd>
+                            <dd><analytics:format.localizedDate date="{site.status._fetchedAt}" withTime="1" /></dd>
                         </div>
                     </f:if>
                 </f:if>

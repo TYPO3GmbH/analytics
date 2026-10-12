@@ -121,20 +121,6 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
-     * Fetches site-wide daily visits, visitors, bounce rate (percent) and average
-     * session duration (seconds) in one request.
-     *
-     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}
-     * @throws AnalyticsApiException
-     */
-    public function fetchSiteDailyMetrics(
-        string $websiteId,
-        string $apiKey,
-        \DateTimeImmutable $from,
-        \DateTimeImmutable $to,
-    ): array;
-
-    /**
      * Fetches traffic share by channel for a date range.
      *
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
@@ -196,11 +182,17 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
-     * Fetches site-wide performance metrics for two date ranges via analytics/pages (2 parallel requests).
+     * Fetches site-wide metrics for the current and the previous period plus the daily
+     * series of the current period (5 parallel requests). Visits, visitors and bounce rate
+     * come from analytics/sessions, the average time on page from the page view duration graph.
+     *
+     * A failed request does not throw. Its values stay 0 (or the series empty) and its key
+     * is added to "failures": current, previous, series, currentTimeOnPage, previousTimeOnPage.
      *
      * @return array{
-     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
+     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
+     *     series: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgTimeOnPage: list<int>},
      *     failures: array<string, string>
      * }
      */

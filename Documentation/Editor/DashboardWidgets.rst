@@ -140,10 +140,32 @@ Site Performance
             :gallery: site-performance
             :align: center
 
-Displays four metric tiles — **Visits**, **Visitors**, **Bounce rate**, and
-**Avg. visit duration** — each showing the current value and a trend arrow
-compared to the previous period of equal length. A :guilabel:`Show all` link
-leads to the analytics dashboard.
+The widget shows four metrics of the selected site:
+
+-   **Views**: the number of page views
+-   **Visitors**: the number of unique visitors
+-   **Bounce rate**: the percentage of sessions that ended after one page
+-   **Avg. time on page**: the average time that visitors view a page
+
+Each metric shows these items:
+
+-   The value for the selected period
+-   The trend compared to the previous period of the same length
+-   A short description
+-   The values of today and yesterday, and the peak value of the period
+-   A chart with one value for each day
+
+The trend can show these items:
+
+-   **+n** or **−n**: the value went up or down.
+-   **±0**: the value did not change.
+-   An info icon: there is no value to compare with. Move the pointer onto the
+    icon or select the icon with the keyboard to show the reason. For example,
+    the previous period had no visits.
+
+The trend of the bounce rate shows percentage points.
+
+The :guilabel:`Show all` button opens the analytics dashboard.
 
 Widget settings (v14+): **Site**, **Period** (days).
 

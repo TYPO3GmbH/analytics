@@ -336,7 +336,7 @@
                 <source>Page views</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.visits" resname="dashboardWidget.sitePerformance.visits">
-                <source>Visits</source>
+                <source>Views</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.visitors" resname="dashboardWidget.sitePerformance.visitors">
                 <source>Visitors</source>
@@ -344,8 +344,8 @@
             <trans-unit id="dashboardWidget.sitePerformance.bounceRate" resname="dashboardWidget.sitePerformance.bounceRate">
                 <source>Avg. bounce rate</source>
             </trans-unit>
-            <trans-unit id="dashboardWidget.sitePerformance.averageVisitDuration" resname="dashboardWidget.sitePerformance.averageVisitDuration">
-                <source>Avg. visit duration</source>
+            <trans-unit id="dashboardWidget.sitePerformance.averageTimeOnPage" resname="dashboardWidget.sitePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.showAll" resname="dashboardWidget.sitePerformance.showAll">
                 <source>Show all</source>
@@ -353,17 +353,26 @@
             <trans-unit id="dashboardWidget.sitePerformance.comparedToPreviousPeriod" resname="dashboardWidget.sitePerformance.comparedToPreviousPeriod">
                 <source>Compared to previous period</source>
             </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints" resname="dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints">
+                <source>Percentage points compared to previous period</source>
+            </trans-unit>
+            <trans-unit id="trendNote.noPreviousVisits" resname="trendNote.noPreviousVisits">
+                <source>No visits in the previous period. There is no value to compare with.</source>
+            </trans-unit>
+            <trans-unit id="trendNote.previousUnavailable" resname="trendNote.previousUnavailable">
+                <source>The values of the previous period are not available.</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.visits" resname="dashboardWidget.sitePerformance.description.visits">
-                <source>The number of visits to this site in the selected period.</source>
+                <source>The number of page views on this site in the selected period.</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.visitors" resname="dashboardWidget.sitePerformance.description.visitors">
                 <source>Unique visitors to this site in the selected period.</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.bounce-rate" resname="dashboardWidget.sitePerformance.description.bounce-rate">
-                <source>The percentage of visits that ended after viewing only one page.</source>
+                <source>The percentage of sessions that ended after viewing only one page.</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.avg-duration" resname="dashboardWidget.sitePerformance.description.avg-duration">
-                <source>How long a visit to this site lasts on average.</source>
+                <source>How long visitors view a page of this site on average.</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
