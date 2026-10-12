@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Resource\Security\SvgSanitizer;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
 final readonly class BackendModuleController
 {
@@ -498,7 +499,11 @@ final readonly class BackendModuleController
      */
     private function isCollapsed(string $key, bool $default): bool
     {
-        $state = $GLOBALS['BE_USER']->uc['tx_analytics']['collapsed'] ?? [];
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$backendUser instanceof BackendUserAuthentication) {
+            return $default;
+        }
+        $state = $backendUser->uc['tx_analytics']['collapsed'] ?? [];
         foreach (explode('.', $key) as $segment) {
             $state = is_array($state) ? ($state[$segment] ?? null) : null;
         }

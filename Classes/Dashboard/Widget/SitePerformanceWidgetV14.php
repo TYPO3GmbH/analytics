@@ -8,9 +8,11 @@ use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
+use TYPO3\CMS\Dashboard\Widgets\JavaScriptInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetContext;
 use TYPO3\CMS\Dashboard\Widgets\WidgetRendererInterface;
@@ -22,7 +24,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetResult;
  * Site and period are configured via the native widget settings panel (WidgetRendererInterface)
  * rather than inline dropdowns. Requires TYPO3 >= 14 (WidgetRendererInterface).
  */
-final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface
+final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface, AdditionalCssInterface, JavaScriptInterface
 {
     use SitePerformanceWidgetTrait;
 
@@ -34,6 +36,18 @@ final readonly class SitePerformanceWidgetV14 implements WidgetRendererInterface
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
+    }
+
+    /**
+     * The module sets up the tooltips of the metric trends.
+     *
+     * @return list<JavaScriptModuleInstruction>
+     */
+    public function getJavaScriptModuleInstructions(): array
+    {
+        return [
+            JavaScriptModuleInstruction::create('@t3g/analytics/site-performance-widget.js'),
+        ];
     }
 
     /**

@@ -475,8 +475,8 @@
                 <target>Seitenaufrufe</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.visits" resname="dashboardWidget.sitePerformance.visits">
-                <source>Visits</source>
-                <target>Besuche</target>
+                <source>Views</source>
+                <target>Aufrufe</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.visitors" resname="dashboardWidget.sitePerformance.visitors">
                 <source>Visitors</source>
@@ -484,11 +484,11 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.bounceRate" resname="dashboardWidget.sitePerformance.bounceRate">
                 <source>Avg. bounce rate</source>
-                <target>Durchschn. Absprungrate</target>
+                <target>Ø Absprungrate</target>
             </trans-unit>
-            <trans-unit id="dashboardWidget.sitePerformance.averageVisitDuration" resname="dashboardWidget.sitePerformance.averageVisitDuration">
-                <source>Avg. visit duration</source>
-                <target>Durchschn. Verweildauer</target>
+            <trans-unit id="dashboardWidget.sitePerformance.averageTimeOnPage" resname="dashboardWidget.sitePerformance.averageTimeOnPage">
+                <source>Avg. time on page</source>
+                <target>Ø Verweildauer</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.showAll" resname="dashboardWidget.sitePerformance.showAll">
                 <source>Show all</source>
@@ -498,21 +498,33 @@
                 <source>Compared to previous period</source>
                 <target>Gegenüber Vorperiode</target>
             </trans-unit>
+            <trans-unit id="dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints" resname="dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints">
+                <source>Percentage points compared to previous period</source>
+                <target>Prozentpunkte gegenüber Vorperiode</target>
+            </trans-unit>
+            <trans-unit id="trendNote.noPreviousVisits" resname="trendNote.noPreviousVisits">
+                <source>No visits in the previous period. There is no value to compare with.</source>
+                <target>Keine Besuche im vorherigen Zeitraum. Es gibt keinen Vergleichswert.</target>
+            </trans-unit>
+            <trans-unit id="trendNote.previousUnavailable" resname="trendNote.previousUnavailable">
+                <source>The values of the previous period are not available.</source>
+                <target>Die Werte des vorherigen Zeitraums sind nicht verfügbar.</target>
+            </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.visits" resname="dashboardWidget.sitePerformance.description.visits">
-                <source>The number of visits to this site in the selected period.</source>
-                <target>Die Anzahl der Besuche dieser Site im gewählten Zeitraum.</target>
+                <source>The number of page views on this site in the selected period.</source>
+                <target>Die Anzahl der Seitenaufrufe dieser Site im gewählten Zeitraum.</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.visitors" resname="dashboardWidget.sitePerformance.description.visitors">
                 <source>Unique visitors to this site in the selected period.</source>
                 <target>Eindeutige Besucher dieser Site im gewählten Zeitraum.</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.bounce-rate" resname="dashboardWidget.sitePerformance.description.bounce-rate">
-                <source>The percentage of visits that ended after viewing only one page.</source>
-                <target>Der Anteil der Besuche, die nach nur einer aufgerufenen Seite endeten.</target>
+                <source>The percentage of sessions that ended after viewing only one page.</source>
+                <target>Der Anteil der Sitzungen, die nach nur einer aufgerufenen Seite endeten.</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.avg-duration" resname="dashboardWidget.sitePerformance.description.avg-duration">
-                <source>How long a visit to this site lasts on average.</source>
-                <target>Wie lange ein Besuch dieser Site durchschnittlich dauert.</target>
+                <source>How long visitors view a page of this site on average.</source>
+                <target>Wie lange Besucher eine Seite dieser Site durchschnittlich ansehen.</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>

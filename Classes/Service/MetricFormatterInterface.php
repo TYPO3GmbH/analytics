@@ -29,4 +29,19 @@ interface MetricFormatterInterface
     public function formatPercentageChange(int $current, int $previous): ?string;
 
     public function formatAbsoluteChange(int $current, int $previous): ?string;
+
+    /**
+     * Date in the locale of the backend user, for example "12.10.2026" (de) or "Oct 12, 2026" (en).
+     */
+    public function formatDate(\DateTimeInterface $date): string;
+
+    /**
+     * Date and time in the locale of the backend user.
+     */
+    public function formatDateTime(\DateTimeInterface $date): string;
+
+    /**
+     * Day and month without year for chart axes, for example "02.10." (de) or "10/02" (en).
+     */
+    public function formatDayMonth(\DateTimeInterface $date): string;
 }

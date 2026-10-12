@@ -189,6 +189,26 @@
     color: var(--tx-analytics-color-trend-negative);
 }
 
+.tx-analytics-performance-trend-neutral {
+    color: var(--tx-analytics-color-trend-neutral);
+}
+
+.tx-analytics-performance-icon-arrow-trend-neutral {
+    display: none;
+}
+
+.tx-analytics-performance-tooltip-note {
+    display: flex;
+    gap: .35rem;
+    align-items: flex-start;
+    margin-block-start: .5rem;
+    color: var(--typo3-text-color-variant);
+}
+
+.tx-analytics-performance-tooltip-note .tx-analytics-performance-trend-icon {
+    margin-top: .1em;
+}
+
 .tx-analytics-performance-meta {
     display: flex;
     flex-direction: column;

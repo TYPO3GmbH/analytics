@@ -9,6 +9,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\Widget\TrafficGraphWidgetV14;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use T3G\Analytics\View\SparklineRenderer;
@@ -80,7 +81,7 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
         $this->uriBuilder = $this->createMock(UriBuilder::class);
         $this->uriBuilder->method('buildUriFromRoute')->willReturn($mockUri);
 
-        $this->chartDataBuilder = new TrafficChartDataBuilder(new SparklineRenderer());
+        $this->chartDataBuilder = new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter());
 
         $this->view = $this->createMock(ViewInterface::class);
         $this->view->method('assignMultiple')->willReturnSelf();

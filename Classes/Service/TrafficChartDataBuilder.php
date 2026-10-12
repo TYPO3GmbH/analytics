@@ -10,6 +10,7 @@ final readonly class TrafficChartDataBuilder
 {
     public function __construct(
         private SparklineRenderer $sparklineRenderer,
+        private MetricFormatterInterface $formatter,
     ) {
     }
 
@@ -79,11 +80,11 @@ final readonly class TrafficChartDataBuilder
         $labels = $graphData['labels'] ?? [];
 
         $shortLabels = array_map(
-            static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('d.m.'),
+            fn (string $iso): string => $this->formatter->formatDayMonth(new \DateTimeImmutable($iso)),
             $labels
         );
         $fullLabels = array_map(
-            static fn (string $iso): string => (new \DateTimeImmutable($iso))->format('d.m.Y'),
+            fn (string $iso): string => $this->formatter->formatDate(new \DateTimeImmutable($iso)),
             $labels
         );
 
@@ -183,11 +184,11 @@ final readonly class TrafficChartDataBuilder
         $sortedIsoDates = array_keys($allIsoDates);
 
         $shortLabels = array_map(
-            static fn (string $ymd): string => (new \DateTimeImmutable($ymd))->format('d.m.'),
+            fn (string $ymd): string => $this->formatter->formatDayMonth(new \DateTimeImmutable($ymd)),
             $sortedIsoDates
         );
         $formattedLabels = array_map(
-            static fn (string $ymd): string => (new \DateTimeImmutable($ymd))->format('d.m.Y'),
+            fn (string $ymd): string => $this->formatter->formatDate(new \DateTimeImmutable($ymd)),
             $sortedIsoDates
         );
 
