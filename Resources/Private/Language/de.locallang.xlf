@@ -90,9 +90,9 @@
                 <source>Actions</source>
                 <target>Aktionen</target>
             </trans-unit>
-            <trans-unit id="label.details" resname="label.details">
-                <source>Details</source>
-                <target>Details</target>
+            <trans-unit id="label.detailsFor" resname="label.detailsFor">
+                <source>Details: %s</source>
+                <target>Details: %s</target>
             </trans-unit>
             <trans-unit id="label.registeredSites" resname="label.registeredSites">
                 <source>Registered sites</source>
