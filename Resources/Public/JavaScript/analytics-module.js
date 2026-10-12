@@ -1,6 +1,8 @@
 import Notification from '@typo3/backend/notification.js';
 import ImmediateAction from '@typo3/backend/action-button/immediate-action.js';
 import Persistent from '@typo3/backend/storage/persistent.js';
+import Modal from '@typo3/backend/modal.js';
+import { SeverityEnum } from '@typo3/backend/enum/severity.js';
 
 const STORAGE_KEY = 'tx-analytics-notification';
 
@@ -27,10 +29,12 @@ function showPendingNotification() {
 }
 
 async function handleFormAjax(e, getNotificationData) {
-    const form = e.target;
     e.preventDefault();
+    await submitFormAjax(e.target, e.submitter, getNotificationData);
+}
 
-    const btn = e.submitter ?? form.querySelector('[type="submit"]');
+async function submitFormAjax(form, submitter, getNotificationData) {
+    const btn = submitter ?? form.querySelector('[type="submit"]');
     btn.disabled = true;
 
     try {
@@ -55,10 +59,37 @@ document.addEventListener('submit', function (e) {
         handleFormAjax(e, (data) => ({ title: data.title ?? '', message: data.message ?? '', dashboardUri: data.dashboardUri ?? null }));
     } else if (form.classList.contains('tx-analytics-status-form')) {
         handleFormAjax(e, (data) => ({ title: data.title ?? '', message: '' }));
+    } else if (form.classList.contains('tx-analytics-detach-form')) {
+        // The site stops tracking, so the user confirms first.
+        e.preventDefault();
+        const submitter = e.submitter;
+        Modal.confirm(form.dataset.confirmTitle ?? '', form.dataset.confirmMessage ?? '', SeverityEnum.warning, [
+            { text: form.dataset.confirmCancel ?? 'Cancel', active: true, btnClass: 'btn-default', name: 'cancel', trigger: (event, modal) => modal.hideModal() },
+            {
+                text: form.dataset.confirmOk ?? 'OK',
+                btnClass: 'btn-warning',
+                name: 'ok',
+                trigger: (event, modal) => {
+                    modal.hideModal();
+                    submitFormAjax(form, submitter, (data) => ({ title: data.title ?? '', message: data.message ?? '' }));
+                },
+            },
+        ]);
     }
 });
 
 showPendingNotification();
+
+// Disabled fieldsets keep the inactive mode's required fields out of validation and FormData.
+document.addEventListener('change', function (e) {
+    const radio = e.target.closest('.t3js-analytics-registration-mode');
+    if (!radio) return;
+    radio.form.querySelectorAll('[data-registration-mode]').forEach(fieldset => {
+        const active = fieldset.dataset.registrationMode === radio.value;
+        fieldset.hidden = !active;
+        fieldset.disabled = !active;
+    });
+});
 
 // Collapsible site groups and site detail rows
 document.addEventListener('click', function (e) {
@@ -79,7 +110,8 @@ document.addEventListener('click', function (e) {
         }
     });
     if (expand && !toggle.classList.contains('tx-analytics-collapse-toggle')) {
-        target.querySelector('input:not([type="hidden"])')?.focus();
+        // A focused radio looks selected, so the mode group itself takes focus.
+        target.querySelector('.tx-analytics-registration-mode, input:not([type="hidden"])')?.focus();
     }
 });
 

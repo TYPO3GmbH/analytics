@@ -11,6 +11,36 @@
             <trans-unit id="flash.siteNotFound" resname="flash.siteNotFound">
                 <source>Site not found.</source>
             </trans-unit>
+            <trans-unit id="flash.attachFailed" resname="flash.attachFailed">
+                <source>The site could not be added to the active site: %s</source>
+            </trans-unit>
+            <trans-unit id="flash.success.attached" resname="flash.success.attached">
+                <source>Site "%s" now uses the analytics of site "%s".</source>
+            </trans-unit>
+            <trans-unit id="label.attachedTo" resname="label.attachedTo">
+                <source>Uses the analytics of</source>
+            </trans-unit>
+            <trans-unit id="flash.detachFailed" resname="flash.detachFailed">
+                <source>The site could not be detached: %s</source>
+            </trans-unit>
+            <trans-unit id="flash.success.detached.title" resname="flash.success.detached.title">
+                <source>Site detached</source>
+            </trans-unit>
+            <trans-unit id="flash.success.detached" resname="flash.success.detached">
+                <source>Site "%s" no longer uses the analytics of the active site.</source>
+            </trans-unit>
+            <trans-unit id="button.detach" resname="button.detach">
+                <source>Detach</source>
+            </trans-unit>
+            <trans-unit id="button.cancel" resname="button.cancel">
+                <source>Cancel</source>
+            </trans-unit>
+            <trans-unit id="modal.detach.title" resname="modal.detach.title">
+                <source>Detach "%s"?</source>
+            </trans-unit>
+            <trans-unit id="modal.detach.message" resname="modal.detach.message">
+                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or add it to an active site again later.</source>
+            </trans-unit>
             <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
                 <source>Registration failed: %s</source>
             </trans-unit>
@@ -118,6 +148,24 @@
             </trans-unit>
             <trans-unit id="placeholder.registrationEmail" resname="placeholder.registrationEmail">
                 <source>Email address for registration</source>
+            </trans-unit>
+            <trans-unit id="label.registrationMode" resname="label.registrationMode">
+                <source>What would you like to do with this site?</source>
+            </trans-unit>
+            <trans-unit id="label.registerNewSite" resname="label.registerNewSite">
+                <source>Register as a new site</source>
+            </trans-unit>
+            <trans-unit id="label.attachToSite" resname="label.attachToSite">
+                <source>Add to an existing active site</source>
+            </trans-unit>
+            <trans-unit id="label.attachTarget" resname="label.attachTarget">
+                <source>Active site</source>
+            </trans-unit>
+            <trans-unit id="placeholder.attachTarget" resname="placeholder.attachTarget">
+                <source>Select an active site</source>
+            </trans-unit>
+            <trans-unit id="button.attach" resname="button.attach">
+                <source>Add</source>
             </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>

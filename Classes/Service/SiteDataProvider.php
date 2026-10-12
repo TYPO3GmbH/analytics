@@ -47,6 +47,11 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 $websiteId = null;
             }
             $registered = $websiteId !== null;
+            try {
+                $attachedTo = (string)($site->getSettings()->get('attachedTo', '') ?: '');
+            } catch (NotFoundExceptionInterface|ContainerExceptionInterface) {
+                $attachedTo = '';
+            }
 
             $status = $registered ? $this->analyticsStatusService->getStatus($site) : null;
 
@@ -57,6 +62,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 'domain' => rtrim($site->getBase()->__toString(), '/'),
                 'websiteId' => $websiteId,
                 'registered' => $registered,
+                'attachedTo' => $attachedTo,
                 'status' => $status,
                 'panelClass' => $this->resolvePanelClass($status),
                 'dashboardUri' => $registered ? (string)$this->uriBuilder->buildUriFromRoute(

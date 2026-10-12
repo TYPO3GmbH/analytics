@@ -61,3 +61,10 @@ settings:
     default: ''
     category: typo3_analytics
     readonly: true
+  attachedTo:
+    label: 'Attached to site'
+    description: 'Identifier of the active site whose analytics this site uses. Set automatically when the site is added to an active site.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true

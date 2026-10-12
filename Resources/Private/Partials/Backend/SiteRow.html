@@ -90,6 +90,23 @@
                                     <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.refreshStatus" /></span>
                                 </button>
                             </form>
+                            <f:if condition="{site.attachedTo}">
+                                <form
+                                    method="post"
+                                    action="{detachUri}"
+                                    class="tx-analytics-detach-form"
+                                    data-confirm-title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:modal.detach.title', arguments: {0: site.pageName})}"
+                                    data-confirm-message="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:modal.detach.message', arguments: {0: site.attachedTo})}"
+                                    data-confirm-ok="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.detach')}"
+                                    data-confirm-cancel="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.cancel')}"
+                                >
+                                    <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+                                    <button type="submit" class="btn btn-default" title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.detach')}">
+                                        <core:icon identifier="actions-unlink" size="small" />
+                                        <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.detach" /></span>
+                                    </button>
+                                </form>
+                            </f:if>
                         </f:if>
                     </div>
                 </f:then>
@@ -110,6 +127,12 @@
                     <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.siteTitle" /></dt>
                     <dd>{site.title}</dd>
                 </div>
+                <f:if condition="{site.attachedTo}">
+                    <div>
+                        <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachedTo" /></dt>
+                        <dd><code>{site.attachedTo}</code></dd>
+                    </div>
+                </f:if>
                 <f:if condition="{site.registered}">
                     <div>
                         <dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.websiteId" /></dt>
@@ -166,18 +189,59 @@
                     <f:else>
                         <form method="post" action="{registerUri}" class="tx-analytics-registration-form">
                             <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
-                            <div class="input-group">
-                                <input
-                                    type="email"
-                                    name="email"
-                                    class="form-control"
-                                    placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
-                                    required
-                                />
-                                <button type="submit" class="btn btn-primary">
-                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
-                                </button>
-                            </div>
+                            <f:if condition="{activeSites}">
+                                <fieldset class="tx-analytics-registration-mode" tabindex="-1">
+                                    <legend class="form-label">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registrationMode" />
+                                    </legend>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input t3js-analytics-registration-mode" name="mode" value="register" id="tx-analytics-mode-register-{site.identifier}" />
+                                        <label class="form-check-label" for="tx-analytics-mode-register-{site.identifier}">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registerNewSite" />
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input t3js-analytics-registration-mode" name="mode" value="attach" id="tx-analytics-mode-attach-{site.identifier}" />
+                                        <label class="form-check-label" for="tx-analytics-mode-attach-{site.identifier}">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachToSite" />
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            </f:if>
+                            <fieldset data-registration-mode="register" {f:if(condition: activeSites, then: 'hidden disabled')}>
+                                <div class="input-group">
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        class="form-control"
+                                        placeholder="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.registrationEmail')}"
+                                        required
+                                    />
+                                    <button type="submit" class="btn btn-primary">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.register" />
+                                    </button>
+                                </div>
+                            </fieldset>
+                            <f:if condition="{activeSites}">
+                                <fieldset data-registration-mode="attach" hidden disabled>
+                                    <label class="visually-hidden" for="tx-analytics-attach-target-{site.identifier}">
+                                        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachTarget" />
+                                    </label>
+                                    <div class="input-group">
+                                        <select name="targetSiteIdentifier" id="tx-analytics-attach-target-{site.identifier}" class="form-select" required>
+                                            <option value="">
+                                                <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:placeholder.attachTarget" />
+                                            </option>
+                                            <f:for each="{activeSites}" as="activeSite">
+                                                <option value="{activeSite.identifier}">{activeSite.pageName} ({activeSite.domain})</option>
+                                            </f:for>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.attach" />
+                                        </button>
+                                    </div>
+                                </fieldset>
+                            </f:if>
                         </form>
                     </f:else>
                 </f:if>
