@@ -593,6 +593,62 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}
+     * @throws AnalyticsApiException
+     */
+    public function fetchSiteDailyMetrics(
+        string $websiteId,
+        string $apiKey,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        // The API buckets the date dimension by UTC day; a range with a local offset adds a partial first bucket.
+        $json = [
+            'where' => ['and' => []],
+            'metrics' => ['visitCount', 'visitorCount', 'bounceRate', 'averageSessionDuration'],
+            'dimensions' => ['date'],
+            'granularity' => 'day',
+            'dateRange' => [
+                'start' => $from->format('Y-m-d\T00:00:00.000\Z'),
+                'end' => $to->format('Y-m-d\T23:59:59.999\Z'),
+            ],
+        ];
+
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/analytics/sessions?trace=sitePerformanceDaily',
+                'POST',
+                array_merge(
+                    [
+                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                        'json' => $json,
+                    ],
+                    $this->apiConfiguration->getRequestOptions()
+                )
+            );
+            /** @var array<string, mixed> $body */
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+
+        $series = ['dates' => [], 'visits' => [], 'visitors' => [], 'bounceRate' => [], 'avgDuration' => []];
+        foreach (is_array($body['payload'] ?? null) ? $body['payload'] : [] as $row) {
+            if (!is_array($row) || !is_string($row['date'] ?? null)) {
+                continue;
+            }
+            $series['dates'][] = substr($row['date'], 0, 10);
+            $series['visits'][] = (int)($row['visitCount'] ?? 0);
+            $series['visitors'][] = (int)($row['visitorCount'] ?? 0);
+            $series['bounceRate'][] = (float)($row['bounceRate'] ?? 0);
+            $series['avgDuration'][] = (int)round((float)($row['averageSessionDuration'] ?? 0));
+        }
+        return $series;
+    }
+
+    /**
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},

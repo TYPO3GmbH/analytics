@@ -11,6 +11,8 @@ use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 
 final readonly class SitePerformanceService implements SitePerformanceServiceInterface
 {
+    private const EMPTY_SERIES = ['dates' => [], 'visits' => [], 'visitors' => [], 'bounceRate' => [], 'avgDuration' => []];
+
     public function __construct(
         private AnalyticsDataClientInterface $analyticsClient,
         private LoggerInterface $logger,
@@ -25,7 +27,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     series: array{dates: list<string>, visits: list<int>, visitors: list<int>}
+     *     series: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}
      * }|null
      */
     public function loadPerformanceData(string $siteIdentifier, int $days): ?array
@@ -39,9 +41,9 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
 
-        $cacheKey = 'site_performance_v2_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'site_performance_v3_' . md5($websiteId . '_' . $days);
 
-        /** @var array{current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}, previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}, series: array{dates: list<string>, visits: list<int>, visitors: list<int>}}|false $cached */
+        /** @var array{current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}, previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}, series: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}}|false $cached */
         $cached = $this->cache->get($cacheKey);
         if ($cached !== false) {
             return $cached;
@@ -54,47 +56,45 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
 
         try {
             $result = $this->analyticsClient->fetchSitePerformance($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo);
-            $data = [
-                'current' => $result['current'],
-                'previous' => $result['previous'],
-                'series' => $this->loadSeries($websiteId, $apiKey, $from, $to),
-            ];
-            $this->cache->set($cacheKey, $data);
-            return $data;
         } catch (AnalyticsApiException $e) {
             $this->logger->warning('SitePerformanceService: Failed to fetch performance data.', ['reason' => $e->reason]);
             return null;
         }
+
+        $series = $this->loadSeries($websiteId, $apiKey, $from, $to);
+        $data = [
+            'current' => $result['current'],
+            'previous' => $result['previous'],
+            'series' => $series ?? self::EMPTY_SERIES,
+        ];
+        // A failed series is not cached, so the details return with the next request instead of after the cache lifetime.
+        if ($series !== null) {
+            $this->cache->set($cacheKey, $data);
+        }
+        return $data;
     }
 
     /**
-     * Daily values for the details of visits and visitors. A failure here only drops
-     * the details, the aggregated metrics are still shown.
+     * Daily values for the metric details. A failure here only drops the details,
+     * the aggregated metrics are still shown.
      *
-     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>}
+     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}|null
      */
-    private function loadSeries(string $websiteId, string $apiKey, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    private function loadSeries(string $websiteId, string $apiKey, \DateTimeImmutable $from, \DateTimeImmutable $to): ?array
     {
-        $series = ['dates' => [], 'visits' => [], 'visitors' => []];
         try {
-            $visits = $this->analyticsClient->fetchSiteVisitsGraph($websiteId, $apiKey, $from, $to);
-            $series['dates'] = $visits['labels'];
-            $series['visits'] = $visits['datasets'][0]['data'] ?? [];
-
-            // Dataset order of the visitors graph: new, returning, overall.
-            $visitors = $this->analyticsClient->fetchSiteVisitorsGraph($websiteId, $apiKey, $from, $to);
-            $series['visitors'] = $visitors['datasets'][2]['data'] ?? [];
+            return $this->analyticsClient->fetchSiteDailyMetrics($websiteId, $apiKey, $from, $to);
         } catch (AnalyticsApiException $e) {
             $this->logger->warning('SitePerformanceService: Failed to fetch time series.', ['reason' => $e->reason]);
+            return null;
         }
-        return $series;
     }
 
     /**
      * @param array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     series?: array{dates: list<string>, visits: list<int>, visitors: list<int>}
+     *     series?: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgDuration: list<int>}
      * } $data
      * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string, details: list<string>|null, sparkline: string}>
      */
@@ -102,7 +102,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
     {
         $current = $data['current'];
         $previous = $data['previous'];
-        $series = $data['series'] ?? ['dates' => [], 'visits' => [], 'visitors' => []];
+        $series = ($data['series'] ?? []) + self::EMPTY_SERIES;
 
         return [
             [
@@ -113,8 +113,8 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
                 'trend' => $this->formatter->formatAbsoluteCountTrend($current['visitCount'], $previous['visitCount']),
                 'trendDirection' => $this->formatter->trendDirection((float)$current['visitCount'], (float)$previous['visitCount']),
                 'trendLabel' => $trendLabel,
-                'details' => $this->buildSeriesDetails($series['visits']),
-                'sparkline' => $this->renderSparkline($series['visits'], $series['dates'], 'visits', $chartLabel . ': ' . $visitsLabel),
+                'details' => $this->buildSeriesDetails($series['visits'], $this->formatCount(...)),
+                'sparkline' => $this->renderSparkline($series['visits'], $series['dates'], 'visits', $chartLabel . ': ' . $visitsLabel, $this->formatCount(...)),
             ],
             [
                 'label' => $visitorsLabel,
@@ -124,8 +124,8 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
                 'trend' => $this->formatter->formatAbsoluteCountTrend($current['visitorCount'], $previous['visitorCount']),
                 'trendDirection' => $this->formatter->trendDirection((float)$current['visitorCount'], (float)$previous['visitorCount']),
                 'trendLabel' => $trendLabel,
-                'details' => $this->buildSeriesDetails($series['visitors']),
-                'sparkline' => $this->renderSparkline($series['visitors'], $series['dates'], 'visitors', $chartLabel . ': ' . $visitorsLabel),
+                'details' => $this->buildSeriesDetails($series['visitors'], $this->formatCount(...)),
+                'sparkline' => $this->renderSparkline($series['visitors'], $series['dates'], 'visitors', $chartLabel . ': ' . $visitorsLabel, $this->formatCount(...)),
             ],
             [
                 'label' => $bounceRateLabel,
@@ -135,8 +135,8 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
                 'trend' => $this->formatter->formatAbsolutePercentPointTrend($current['bounceRate'], $previous['bounceRate']),
                 'trendDirection' => $this->formatter->trendDirection($previous['bounceRate'], $current['bounceRate']),
                 'trendLabel' => $trendLabel,
-                'details' => null,
-                'sparkline' => '',
+                'details' => $this->buildSeriesDetails($series['bounceRate'], $this->formatter->formatPercentage(...)),
+                'sparkline' => $this->renderSparkline($series['bounceRate'], $series['dates'], 'bounce-rate', $chartLabel . ': ' . $bounceRateLabel, $this->formatter->formatPercentage(...)),
             ],
             [
                 'label' => $avgDurationLabel,
@@ -146,8 +146,8 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
                 'trend' => $this->formatter->formatAbsoluteDurationTrend($current['avgDuration'], $previous['avgDuration']),
                 'trendDirection' => $this->formatter->trendDirection((float)$current['avgDuration'], (float)$previous['avgDuration']),
                 'trendLabel' => $trendLabel,
-                'details' => null,
-                'sparkline' => '',
+                'details' => $this->buildSeriesDetails($series['avgDuration'], $this->formatDuration(...)),
+                'sparkline' => $this->renderSparkline($series['avgDuration'], $series['dates'], 'avg-duration', $chartLabel . ': ' . $avgDurationLabel, $this->formatDuration(...)),
             ],
         ];
     }
@@ -155,27 +155,29 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
     /**
      * Today, yesterday and peak of a daily series, formatted like the metric value.
      *
-     * @param list<int> $values
+     * @param list<int|float> $values
+     * @param \Closure(int|float): string $format
      * @return list<string>|null
      */
-    private function buildSeriesDetails(array $values): ?array
+    private function buildSeriesDetails(array $values, \Closure $format): ?array
     {
         if ($values === []) {
             return null;
         }
         $count = count($values);
         return [
-            $this->formatter->formatNumber($values[$count - 1]),
-            $count >= 2 ? $this->formatter->formatNumber($values[$count - 2]) : '-',
-            $this->formatter->formatNumber(max($values)),
+            $format($values[$count - 1]),
+            $count >= 2 ? $format($values[$count - 2]) : '-',
+            $format(max($values)),
         ];
     }
 
     /**
-     * @param list<int> $values
+     * @param list<int|float> $values
      * @param list<string> $dates
+     * @param \Closure(int|float): string $format
      */
-    private function renderSparkline(array $values, array $dates, string $tone, string $label): string
+    private function renderSparkline(array $values, array $dates, string $tone, string $label, \Closure $format): string
     {
         if (count($values) < 2) {
             return '';
@@ -183,7 +185,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
         $labels = [];
         foreach ($values as $index => $value) {
             $date = isset($dates[$index]) ? (new \DateTimeImmutable($dates[$index]))->format('d.m.Y') . ': ' : '';
-            $labels[] = $date . $this->formatter->formatNumber($value);
+            $labels[] = $date . $format($value);
         }
         return $this->sparklineRenderer->render($values, [
             'label' => $label,
@@ -192,6 +194,18 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
             'labels' => $labels,
             'smooth' => true,
             'axes' => true,
+            // The bottom axis is drawn at yMin, so it has to be zero to read as one.
+            'yMin' => 0.0,
         ]);
+    }
+
+    private function formatCount(int|float $value): string
+    {
+        return $this->formatter->formatNumber((int)$value);
+    }
+
+    private function formatDuration(int|float $value): string
+    {
+        return $this->formatter->formatDuration((int)$value);
     }
 }

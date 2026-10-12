@@ -645,6 +645,69 @@ final class AnalyticsDataClientTest extends UnitTestCase
         $this->subject->fetchSiteVisitsGraph('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
     }
 
+    /** fetchSiteDailyMetrics */
+
+    #[Test]
+    public function fetchSiteDailyMetricsSendsOneSessionsRequestWithDateDimension(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchSiteDailyMetrics('w-123', 'api-key', $this->date('2026-06-01 23:59:59'), $this->date('2026-06-08 23:59:59'));
+
+        self::assertCount(1, $this->httpHistory);
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringContainsString('/v2/websites/w-123/analytics/sessions', (string)$request->getUri());
+        self::assertSame('api-key', $request->getHeaderLine('X-Api-Key'));
+        $body = json_decode((string)$request->getBody(), true);
+        self::assertSame(['visitCount', 'visitorCount', 'bounceRate', 'averageSessionDuration'], $body['metrics']);
+        self::assertSame(['date'], $body['dimensions']);
+        self::assertSame('day', $body['granularity']);
+        self::assertArrayNotHasKey('pagination', $body);
+        self::assertArrayNotHasKey('order', $body);
+    }
+
+    #[Test]
+    public function fetchSiteDailyMetricsSendsUtcDayBoundaries(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchSiteDailyMetrics('w-123', 'api-key', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-08 23:59:59+02:00'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['start' => '2026-06-01T00:00:00.000Z', 'end' => '2026-06-08T23:59:59.999Z'], $body['dateRange']);
+    }
+
+    #[Test]
+    public function fetchSiteDailyMetricsReturnsOneSeriesPerMetric(): void
+    {
+        $payload = json_encode(['payload' => [
+            ['date' => '2026-06-01T00:00:00Z', 'visitCount' => 12, 'visitorCount' => 10, 'bounceRate' => 41.5, 'averageSessionDuration' => 64.6],
+            ['date' => '2026-06-02T00:00:00Z', 'visitCount' => 34, 'visitorCount' => 21, 'bounceRate' => 0, 'averageSessionDuration' => 0],
+        ], 'meta' => ['pageTotal' => 1, 'total' => 2]]);
+        $this->mockHandler->append(new Response(200, [], $payload));
+
+        $result = $this->subject->fetchSiteDailyMetrics('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-02'));
+
+        self::assertSame([
+            'dates' => ['2026-06-01', '2026-06-02'],
+            'visits' => [12, 34],
+            'visitors' => [10, 21],
+            'bounceRate' => [41.5, 0.0],
+            'avgDuration' => [65, 0],
+        ], $result);
+    }
+
+    #[Test]
+    public function fetchSiteDailyMetricsThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(500, [], '{}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->fetchSiteDailyMetrics('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-08'));
+    }
+
     /** fetchTrafficShareInDepth */
 
     #[Test]
