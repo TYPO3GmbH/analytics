@@ -57,7 +57,11 @@ final readonly class ApiConfiguration
     public function getRequestOptions(): array
     {
         $verifySsl = $this->load('TYPO3_ANALYTICS_VERIFY_SSL', 'verifySsl');
-        return ['verify' => $verifySsl !== '0'];
+        return [
+            'verify' => $verifySsl !== '0',
+            'allow_redirects' => false,
+            'timeout' => 10,
+        ];
     }
 
     /**
