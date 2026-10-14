@@ -87,14 +87,8 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'order' => [['member' => 'visitCount', 'direction' => 'desc']],
             'pagination' => ['page' => 1, 'pageSize' => $limit],
             'where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter),
-            'dateRange' => [
-                'start' => $from->format('Y-m-d\T00:00:00.000P'),
-                'end' => $to->format('Y-m-d\T23:59:59.999P'),
-            ],
-            'previousDateRange' => [
-                'start' => $previousFrom->format('Y-m-d\T00:00:00.000P'),
-                'end' => $previousTo->format('Y-m-d\T23:59:59.999P'),
-            ],
+            'dateRange' => AnalyticsQueryUtility::utcDayRange($from, $to),
+            'previousDateRange' => AnalyticsQueryUtility::utcDayRange($previousFrom, $previousTo),
         ];
 
         $body = $this->postJson($this->websiteUrl($websiteId, 'analytics/pages?trace=topPagesDashboard'), $apiKey, $payload);
@@ -293,11 +287,8 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         array $pageUrlFilter = [],
     ): array {
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'unit' => 'day',
-        ]);
+        $range = AnalyticsQueryUtility::utcDayRange($from, $to);
+        $query = '?' . http_build_query(['from' => $range['start'], 'until' => $range['end'], 'unit' => 'day']);
         $body = $this->postJson(
             $this->websiteUrl($websiteId, 'traffic-api/traffic-share/in-depth' . $query),
             $apiKey,
@@ -387,19 +378,13 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'metrics' => $metrics,
             'dimensions' => [$dimension],
             'order' => [['member' => 'sessionPercentOfTotal', 'direction' => 'desc']],
-            'dateRange' => [
-                'start' => $from->format('Y-m-d\T00:00:00.000P'),
-                'end' => $to->format('Y-m-d\T23:59:59.999P'),
-            ],
+            'dateRange' => AnalyticsQueryUtility::utcDayRange($from, $to),
             'pagination' => ['page' => 1, 'pageSize' => $pageSize],
         ];
 
         if ($previousFrom !== null && $previousTo !== null) {
             $json['metrics'][] = 'previousSessionCount';
-            $json['previousDateRange'] = [
-                'start' => $previousFrom->format('Y-m-d\T00:00:00.000P'),
-                'end' => $previousTo->format('Y-m-d\T23:59:59.999P'),
-            ];
+            $json['previousDateRange'] = AnalyticsQueryUtility::utcDayRange($previousFrom, $previousTo);
         }
 
         $body = $this->postJson($this->websiteUrl($websiteId, 'analytics/sessions?trace=' . $traceParam), $apiKey, $json);
@@ -477,7 +462,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * Daily graph of a website, for example "visits/graph".
+     * Daily graph of a website over full UTC days, for example "visits/graph".
      *
      * @param list<string> $pageUrlFilter
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
@@ -491,14 +476,8 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         array $pageUrlFilter,
     ): array {
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
         $body = $this->postJson(
-            $this->websiteUrl($websiteId, $graphPath . $query),
+            $this->websiteUrl($websiteId, $graphPath . AnalyticsQueryUtility::utcDayGraphQuery($from, $to)),
             $apiKey,
             ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)]
         );

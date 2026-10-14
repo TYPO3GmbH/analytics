@@ -151,6 +151,60 @@ final class AnalyticsDataClientTest extends UnitTestCase
         );
     }
 
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function utcDayGraphRequestProvider(): \Generator
+    {
+        yield 'visits graph' => ['fetchSiteVisitsGraph', '{"payload":{"labels":[],"datasets":[]}}'];
+        yield 'sessions graph' => ['fetchSiteSessionsGraph', '{"payload":{"labels":[],"datasets":[]}}'];
+        yield 'visitors graph' => ['fetchSiteVisitorsGraph', '{"payload":{"labels":[],"datasets":[]}}'];
+        yield 'traffic share' => ['fetchTrafficShareInDepth', '{"labels":[],"datasets":[]}'];
+    }
+
+    #[Test]
+    #[DataProvider('utcDayGraphRequestProvider')]
+    public function graphQueriesUseFullUtcDays(string $method, string $responseBody): void
+    {
+        $this->mockHandler->append(new Response(200, [], $responseBody));
+
+        $this->subject->{$method}('w-123', 'api-key', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-07 23:59:59+02:00'));
+
+        parse_str($this->httpHistory[0]['request']->getUri()->getQuery(), $query);
+        self::assertSame('2026-06-01T00:00:00.000Z', $query['from']);
+        self::assertSame('2026-06-07T23:59:59.999Z', $query['until']);
+    }
+
+    /**
+     * @return \Generator<string, array{string, int, string}>
+     */
+    public static function utcDayRangeRequestProvider(): \Generator
+    {
+        yield 'top pages' => ['fetchTopPages', 4, '{"payload":[]}'];
+        yield 'device sessions' => ['fetchDeviceSessions', 4, '{"payload":[]}'];
+        yield 'browser sessions' => ['fetchBrowserSessions', 4, '{"payload":[]}'];
+        yield 'country sessions' => ['fetchCountrySessions', 4, '{"payload":[]}'];
+    }
+
+    #[Test]
+    #[DataProvider('utcDayRangeRequestProvider')]
+    public function rangeQueriesUseFullUtcDaysForBothPeriods(string $method, int $dateCount, string $responseBody): void
+    {
+        $this->mockHandler->append(new Response(200, [], $responseBody));
+        $dates = array_slice([
+            $this->date('2026-06-01 23:59:59+02:00'),
+            $this->date('2026-06-07 23:59:59+02:00'),
+            $this->date('2026-05-25 23:59:59+02:00'),
+            $this->date('2026-05-31 23:59:59+02:00'),
+        ], 0, $dateCount);
+
+        $this->subject->{$method}('w-123', 'api-key', ...$dates);
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['start' => '2026-06-01T00:00:00.000Z', 'end' => '2026-06-07T23:59:59.999Z'], $body['dateRange']);
+        self::assertSame(['start' => '2026-05-25T00:00:00.000Z', 'end' => '2026-05-31T23:59:59.999Z'], $body['previousDateRange']);
+    }
+
     #[Test]
     public function fetchSitePerformanceLimitsAllRequestsToThePageUrlFilter(): void
     {
