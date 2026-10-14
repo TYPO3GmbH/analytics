@@ -100,7 +100,7 @@
             </trans-unit>
             <trans-unit id="flash.statusFetchFailed" resname="flash.statusFetchFailed">
                 <source>Status query failed. Please check the registration.</source>
-                <target>Statusabfrage fehlgeschlagen. Bitte prüfe die Registrierung.</target>
+                <target>Statusabfrage fehlgeschlagen. Bitte prüfen Sie die Registrierung.</target>
             </trans-unit>
             <trans-unit id="flash.dashboardUrlUnavailable" resname="flash.dashboardUrlUnavailable">
                 <source>Dashboard URL could not be retrieved.</source>
@@ -284,11 +284,11 @@
             </trans-unit>
             <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
                 <source>Your credits have been used up. Add more credits via</source>
-                <target>Deine Credits sind aufgebraucht. Weitere Credits erhältst du über</target>
+                <target>Ihre Credits sind aufgebraucht. Weitere Credits erhalten Sie über</target>
             </trans-unit>
             <trans-unit id="message.touchpointsLow" resname="message.touchpointsLow">
                 <source>Your credits are running low. Add more credits via</source>
-                <target>Deine Credits werden knapp. Weitere Credits erhältst du über</target>
+                <target>Ihre Credits werden knapp. Weitere Credits erhalten Sie über</target>
             </trans-unit>
             <trans-unit id="button.dashboard" resname="button.dashboard">
                 <source>Dashboard</source>
@@ -316,7 +316,7 @@
             </trans-unit>
             <trans-unit id="label.registrationMode" resname="label.registrationMode">
                 <source>What would you like to do with this site?</source>
-                <target>Was möchtest du mit dieser Site tun?</target>
+                <target>Was möchten Sie mit dieser Site tun?</target>
             </trans-unit>
             <trans-unit id="label.registerNewSite" resname="label.registerNewSite">
                 <source>Register as a new site</source>
@@ -356,7 +356,7 @@
             </trans-unit>
             <trans-unit id="notification.subscriptionUpgraded.message" resname="notification.subscriptionUpgraded.message">
                 <source>Your plan has been successfully upgraded.</source>
-                <target>Dein Plan wurde erfolgreich aktualisiert.</target>
+                <target>Ihr Plan wurde erfolgreich aktualisiert.</target>
             </trans-unit>
             <trans-unit id="pagePerformance.ariaLabel" resname="pagePerformance.ariaLabel">
                 <source>Page performance</source>
