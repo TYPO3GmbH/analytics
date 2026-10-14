@@ -41,7 +41,7 @@ The top of the module shows the available subscription plans with prices and
 features. Use the toggle to switch between monthly and yearly billing. The
 module gets the plans and prices live from the TYPO3 Analytics API.
 
-Click :guilabel:`Our Plans` or :guilabel:`Hide price info` to collapse the
+Click :guilabel:`Our plans` or :guilabel:`Hide price info` to collapse the
 plans. The module keeps the collapsed state for each backend user.
 
 
@@ -52,7 +52,9 @@ Each group shows its sites in a table with these columns:
 
 -   **Site**: the site name and the site identifier
 -   **Domain**: the base URL of the site
--   **Status**: ``active``, ``pending``, ``inactive`` or ``cancelled``
+-   **Status**: :guilabel:`Active`, :guilabel:`Pending`, :guilabel:`Inactive`
+    or :guilabel:`Cancelled`. A site that is attached to an active site shows
+    :guilabel:`Attached`.
 -   **Credits**: the used and the available credits, if the plan has a limit
 
 Click the arrow in front of the site name to show the details of the site:
@@ -68,7 +70,7 @@ The module shows dates in the language of the backend user.
 
 When the credits of a site are low or used up, the row has a warning color.
 The details of this site are open by default and show a message with a link
-to :guilabel:`Manage Plan`.
+to :guilabel:`Manage plan`.
 
 ..  tabs::
 
@@ -92,7 +94,7 @@ The row of an **active site** also shows these buttons:
 
 -   :guilabel:`Dashboard`: opens the analytics dashboard in an iframe in the
     TYPO3 backend.
--   :guilabel:`Manage Plan`: opens the page to upgrade or change the
+-   :guilabel:`Manage plan`: opens the page to upgrade or change the
     subscription. A site without an active plan shows
     :guilabel:`Subscribe plan`.
 -   :guilabel:`Refresh status`: gets a new status from the API. This button
@@ -100,7 +102,7 @@ The row of an **active site** also shows these buttons:
 
 
 ..  note::
-    The :guilabel:`Manage Plan` link and :guilabel:`Refresh status` button are
+    The :guilabel:`Manage plan` link and :guilabel:`Refresh status` button are
     only available to backend administrators and users with the
     **Analytics Manager** custom option. See :ref:`access-control`.
 
@@ -112,7 +114,7 @@ You can register a site in two ways:
 
 -   **Register as a new site**: the site gets its own analytics, plan and
     credits.
--   **Add to an existing active site**: the site uses the analytics, the plan
+-   **Attach to an active site**: the site uses the analytics, the plan
     and the credits of an active site. All data goes into the analytics of
     the active site.
 
@@ -133,8 +135,8 @@ The module connects the site with the TYPO3 Analytics API. After the
 confirmation, the extension adds the tracking script to all frontend pages of
 the site.
 
-Add to an existing active site
-------------------------------
+Attach to an active site
+------------------------
 
 Use this option for a second domain of the same project, for example a shop
 or a landing page.
@@ -142,34 +144,59 @@ or a landing page.
 #.  In the group **Inactive sites**, find the site.
 #.  Click :guilabel:`Register`. The details of the site open and show the
     registration form.
-#.  Select :guilabel:`Add to an existing active site`.
+#.  Select :guilabel:`Attach to an active site`.
 #.  Select the active site.
-#.  Click :guilabel:`Add`.
+#.  Click :guilabel:`Attach`. A confirmation dialog opens.
+#.  Read the message and click :guilabel:`Attach`.
 
-The module adds the domain of the site to the whitelisted domains of the
-active site. The site then shows in the group **Active sites**. Its details
-show the active site in the line :guilabel:`Uses the analytics of`. The
-extension adds the tracking script of the active site to all frontend pages
-of the site.
+..  important::
+    You cannot move the data of the attached site to separate analytics later.
+    When you detach the site, the data from before the detach stays in the
+    analytics of the active site.
+
+The module attaches the site: it adds the domain of the site to the
+whitelisted domains of the active site. The extension adds the tracking script of the active site to all
+frontend pages of the site.
+
+The attached site then shows in an indented row directly below the active site.
+The row shows the status :guilabel:`Attached` and the :guilabel:`Detach` button.
+
+If you have no access to the active site, the attached site keeps a row of its
+own.
+
+An attached site has no analytics of its own. The data of the attached site is part
+of the analytics of the active site:
+
+-   The row of the attached site shows no credits and no credit warnings.
+-   The row of the attached site has no :guilabel:`Dashboard` button and no
+    :guilabel:`Manage plan` button. Use the buttons of the active site.
+-   The site menu in the module header does not show the attached site.
+-   The dashboard widgets show the attached site. A widget shows only the data
+    of the pages on the domain of the selected site. The widgets of the added
+    site have no :guilabel:`Show in Analytics` link. See
+    :ref:`widgets-shared-analytics`.
+-   The page performance bar shows the data of each page of the attached site.
+    :guilabel:`Show in Analytics` opens the dashboard of the active site.
+-   You cannot attach a site to an attached site.
 
 ..  note::
-    The plan and the credits are shared. Visits on the added site use the
+    The plan and the credits are shared. Visits on the attached site use the
     credits of the active site.
 
-Detach an added site
---------------------
+Detach an attached site
+-----------------------
 
-To stop an added site from using the analytics of the active site, do these
+To stop an attached site from using the analytics of the active site, do these
 steps:
 
-#.  In the group **Active sites**, find the added site.
-#.  Click the :guilabel:`Detach` button in the row of the site.
+#.  In the group **Active sites**, find the attached site below its active site.
+#.  In the row of the attached site, click :guilabel:`Detach`.
 #.  Click :guilabel:`Detach` in the confirmation dialog.
 
 The module removes the domain of the site from the whitelisted domains of the
 active site and removes the analytics settings from the site. The site stops
 tracking and shows in the group **Inactive sites** again. You can register
-the site or add it to an active site again later.
+the site or attach it to an active site again later.
 
 ..  figure:: /Images/backend-module-registration.png
     :alt: The email address field and Register button in the analytics backend module

@@ -1,27 +1,38 @@
-<f:if condition="{site.registered}">
+<f:if condition="{site.attachedTo}">
     <f:then>
-        <f:if condition="{site.status.status}">
+        <span class="badge badge-info">
+            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.attached" />
+        </span>
+    </f:then>
+    <f:else>
+        <f:if condition="{site.registered}">
             <f:then>
-                <f:if condition="{site.status.status} == 'active'">
-                    <f:then><span class="badge badge-success">{site.status.status}</span></f:then>
-                    <f:else>
-                        <f:if condition="{site.status.status} == 'pending'">
-                            <f:then><span class="badge badge-warning">{site.status.status}</span></f:then>
-                            <f:else><span class="badge badge-danger">{site.status.status}</span></f:else>
+                <f:if condition="{site.status.status}">
+                    <f:then>
+                        <f:comment>Known status values have a label; another value shows as the API returns it.</f:comment>
+                        <f:variable name="statusLabel" value="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.status.{site.status.status}', default: site.status.status)}" />
+                        <f:if condition="{site.status.status} == 'active'">
+                            <f:then><span class="badge badge-success">{statusLabel}</span></f:then>
+                            <f:else>
+                                <f:if condition="{site.status.status} == 'pending'">
+                                    <f:then><span class="badge badge-warning">{statusLabel}</span></f:then>
+                                    <f:else><span class="badge badge-danger">{statusLabel}</span></f:else>
+                                </f:if>
+                            </f:else>
                         </f:if>
+                    </f:then>
+                    <f:else>
+                        <span class="badge badge-success">
+                            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.registered" />
+                        </span>
                     </f:else>
                 </f:if>
             </f:then>
             <f:else>
-                <span class="badge badge-success">
-                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.registered" />
+                <span class="badge badge-warning">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.notRegistered" />
                 </span>
             </f:else>
         </f:if>
-    </f:then>
-    <f:else>
-        <span class="badge badge-warning">
-            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.notRegistered" />
-        </span>
     </f:else>
 </f:if>
