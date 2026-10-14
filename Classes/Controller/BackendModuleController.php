@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Exception\SiteAlreadyRegisteredException;
+use T3G\Analytics\Exception\SiteSettingsLockedException;
 use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\ApiKeyServiceInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
@@ -110,6 +112,10 @@ final readonly class BackendModuleController
 
         try {
             $this->registrationService->register($site, $email);
+        } catch (SiteAlreadyRegisteredException) {
+            return new JsonResponse($this->errorPayload('flash.alreadyRegistered'), 409);
+        } catch (SiteSettingsLockedException) {
+            return new JsonResponse($this->errorPayload('flash.registrationInProgress'), 409);
         } catch (AnalyticsApiException $e) {
             return new JsonResponse($this->errorPayload('flash.registrationFailed', [$e->getMessage()]), 500);
         }

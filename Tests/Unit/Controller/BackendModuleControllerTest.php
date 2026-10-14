@@ -24,6 +24,8 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteSettingsLock;
+use T3G\Analytics\Tests\Fixtures\RecordingLockFactoryTrait;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
@@ -66,6 +68,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  */
 final class BackendModuleControllerTest extends UnitTestCase
 {
+    use RecordingLockFactoryTrait;
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -142,6 +146,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteSettingsService,
             $this->siteSettingsFactory,
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
+            new SiteSettingsLock($this->buildRecordingLockFactory()),
         );
         $this->analyticsStatusService = $analyticsStatusService;
 
@@ -152,6 +157,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
+            new SiteSettingsLock($this->buildRecordingLockFactory()),
         );
 
         $apiKeyService = new ApiKeyService(
@@ -161,6 +167,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
+            new SiteSettingsLock($this->buildRecordingLockFactory()),
         );
 
         $expressionBuilder = $this->createMock(ExpressionBuilder::class);
@@ -217,6 +224,8 @@ final class BackendModuleControllerTest extends UnitTestCase
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
         unset($GLOBALS['LANG']);
+        $this->lockAvailable = true;
+        $this->lockEvents = [];
         parent::tearDown();
     }
 
@@ -274,6 +283,39 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(JsonResponse::class, $response);
         self::assertSame(500, $response->getStatusCode());
         self::assertFalse($this->decodeJson($response)['success']);
+    }
+
+    #[Test]
+    public function registerActionReturnsConflictWhenSiteIsAlreadyRegistered(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main', 'https://example.com'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => AnalyticsIds::WEBSITE_ID]);
+        $this->mockHandler->append(new Response(200, [], json_encode(['instanceId' => AnalyticsIds::INSTANCE_ID, 'websiteId' => AnalyticsIds::WEBSITE_ID], JSON_THROW_ON_ERROR)));
+
+        $response = $this->subject->registerAction(
+            $this->buildRequest(['siteIdentifier' => 'main', 'email' => 'user@example.com'])
+        );
+
+        self::assertSame(409, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        // The registration response stays in the queue: the controller did not call the API.
+        self::assertCount(1, $this->mockHandler);
+    }
+
+    #[Test]
+    public function registerActionReturnsConflictWhenAnotherRequestRegistersTheSite(): void
+    {
+        $this->lockAvailable = false;
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main', 'https://example.com'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['instanceId' => AnalyticsIds::INSTANCE_ID, 'websiteId' => AnalyticsIds::WEBSITE_ID], JSON_THROW_ON_ERROR)));
+
+        $response = $this->subject->registerAction(
+            $this->buildRequest(['siteIdentifier' => 'main', 'email' => 'user@example.com'])
+        );
+
+        self::assertSame(409, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        self::assertCount(1, $this->mockHandler);
     }
 
     #[Test]

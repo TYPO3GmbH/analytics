@@ -18,6 +18,14 @@
                 <source>Registration failed: %s</source>
                 <target>Registrierung fehlgeschlagen: %s</target>
             </trans-unit>
+            <trans-unit id="flash.alreadyRegistered" resname="flash.alreadyRegistered">
+                <source>The site is already registered. Please reload the page.</source>
+                <target>Die Site ist bereits registriert. Bitte laden Sie die Seite neu.</target>
+            </trans-unit>
+            <trans-unit id="flash.registrationInProgress" resname="flash.registrationInProgress">
+                <source>The site is being registered in another request. Please wait a moment and reload the page.</source>
+                <target>Die Site wird gerade in einer anderen Anfrage registriert. Bitte warten Sie einen Moment und laden Sie die Seite neu.</target>
+            </trans-unit>
             <trans-unit id="flash.apiResponseIncomplete" resname="flash.apiResponseIncomplete">
                 <source>API response incomplete.</source>
                 <target>API-Antwort unvollständig.</target>

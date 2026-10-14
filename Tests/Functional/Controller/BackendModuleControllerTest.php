@@ -22,6 +22,7 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteSettingsLock;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
@@ -38,6 +39,7 @@ use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -417,6 +419,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
+            new SiteSettingsLock(new LockFactory()),
         );
 
         $pageAccessChecker = $this->createMock(BackendPageAccessCheckerInterface::class);
@@ -443,6 +446,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->createMock(SiteSettingsFactory::class),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
+            new SiteSettingsLock(new LockFactory()),
         );
 
         $apiKeyService = new ApiKeyService(
@@ -452,6 +456,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->createMock(SiteSettingsFactory::class),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
+            new SiteSettingsLock(new LockFactory()),
         );
 
         return new BackendModuleController(

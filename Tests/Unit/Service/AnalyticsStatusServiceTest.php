@@ -18,7 +18,10 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsLock;
+use T3G\Analytics\Tests\Fixtures\RecordingLockFactoryTrait;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
@@ -35,6 +38,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class AnalyticsStatusServiceTest extends UnitTestCase
 {
+    use RecordingLockFactoryTrait;
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -90,6 +95,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
             $this->siteSettingsService,
             $this->siteSettingsFactory,
             $this->writeGuard,
+            new SiteSettingsLock($this->buildRecordingLockFactory()),
         );
     }
 
@@ -97,6 +103,8 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        $this->lockAvailable = true;
+        $this->lockEvents = [];
         parent::tearDown();
     }
 
@@ -269,6 +277,34 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         // No exception propagated — the service warns and returns.
         $this->expectNotToPerformAssertions();
     }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusLoadsAndWritesWhileHoldingLock(): void
+    {
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function (): array {
+            $this->lockEvents[] = 'load';
+            return [];
+        });
+        $this->siteSettingsService->method('writeSettings')->willReturnCallback(function (): void {
+            $this->lockEvents[] = 'write';
+        });
+
+        $this->subject->syncSiteSettingsFromStatus($site, ['status' => 'active']);
+
+        self::assertSame(['create tx_analytics_site_settings_main', 'acquire', 'load', 'write', 'release'], $this->lockEvents);
+    }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusSkipsWriteWhenSettingsAreLocked(): void
+    {
+        $this->lockAvailable = false;
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->subject->syncSiteSettingsFromStatus($site, ['status' => 'active']);
+    }
+
 
     /** Helpers */
 

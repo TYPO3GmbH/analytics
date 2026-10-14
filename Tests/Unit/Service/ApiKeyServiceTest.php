@@ -18,7 +18,10 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsLock;
+use T3G\Analytics\Tests\Fixtures\RecordingLockFactoryTrait;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -31,6 +34,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class ApiKeyServiceTest extends UnitTestCase
 {
+    use RecordingLockFactoryTrait;
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -78,6 +83,7 @@ final class ApiKeyServiceTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->writeGuard,
             new NullLogger(),
+            new SiteSettingsLock($this->buildRecordingLockFactory()),
         );
     }
 
@@ -85,6 +91,8 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        $this->lockAvailable = true;
+        $this->lockEvents = [];
         parent::tearDown();
     }
 
@@ -233,6 +241,52 @@ final class ApiKeyServiceTest extends UnitTestCase
         // No exception thrown — the service returns silently and logs an error.
         $this->expectNotToPerformAssertions();
     }
+
+    #[Test]
+    public function provisionIfNeededDoesNothingWhenApiKeyIsAlreadyInSettingsFile(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['apiKeyId' => AnalyticsIds::API_KEY_ID, 'apiKey' => 'v'], JSON_THROW_ON_ERROR)));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['apiKeyId' => 'key-from-other-request']);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        self::assertCount(0, $this->httpHistory);
+        self::assertSame(['create tx_analytics_site_settings_main', 'acquire', 'release'], $this->lockEvents);
+    }
+
+    #[Test]
+    public function provisionIfNeededCreatesAndWritesApiKeyWhileHoldingLock(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['apiKeyId' => AnalyticsIds::API_KEY_ID, 'apiKey' => 'v'], JSON_THROW_ON_ERROR)));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function (): array {
+            $this->lockEvents[] = 'load';
+            return [];
+        });
+        $this->siteSettingsService->method('writeSettings')->willReturnCallback(function (): void {
+            $this->lockEvents[] = 'write after ' . count($this->httpHistory) . ' request';
+        });
+
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        self::assertSame(['create tx_analytics_site_settings_main', 'acquire', 'load', 'write after 1 request', 'release'], $this->lockEvents);
+    }
+
+    #[Test]
+    public function provisionIfNeededDoesNothingWhenSettingsAreLocked(): void
+    {
+        $this->lockAvailable = false;
+        $this->mockHandler->append(new Response(200, [], json_encode(['apiKeyId' => AnalyticsIds::API_KEY_ID, 'apiKey' => 'v'], JSON_THROW_ON_ERROR)));
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        self::assertCount(0, $this->httpHistory);
+    }
+
 
     /** Helpers */
 
