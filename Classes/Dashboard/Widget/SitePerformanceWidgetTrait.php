@@ -83,12 +83,7 @@ trait SitePerformanceWidgetTrait
 
     private function buildShowAllUrl(string $siteIdentifier, int $days): string
     {
-        return $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute(
-                'site_analytics.dashboard',
-                ['siteIdentifier' => $siteIdentifier, 'days' => $days]
-            )
-            : '';
+        return $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days]);
     }
 
     private function createViewFactoryData(?ServerRequestInterface $request = null): ViewFactoryData

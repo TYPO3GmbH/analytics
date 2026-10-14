@@ -12,13 +12,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Service\AnalyticsDataClient;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\PagePerformanceBarBuilder;
 use T3G\Analytics\Service\TrendNote;
 use T3G\Analytics\View\SparklineRenderer;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
@@ -79,7 +79,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         return new PagePerformanceBarBuilder(
             new SparklineRenderer(),
             $siteFinder,
-            $this->createMock(UriBuilder::class),
+            $this->createMock(DashboardLinkBuilderInterface::class),
             $this->buildAnalyticsClient(),
             new CipherService(),
             $this->createMock(LoggerInterface::class),
