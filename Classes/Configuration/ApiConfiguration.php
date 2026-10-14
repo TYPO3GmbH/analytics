@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Configuration;
 
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 final readonly class ApiConfiguration
 {
@@ -12,6 +13,7 @@ final readonly class ApiConfiguration
     private const DEFAULT_INTP_ID = '28096317-d75a-43b7-af39-f0862b66afa3';
     private const DEFAULT_ANALYTICS_API_BASE_URL = 'https://api.analytics.typo3.com/api';
     private const DEFAULT_CONTACT_EMAIL = 'analytics@typo3.com';
+    private const DEFAULT_DASHBOARD_ORIGIN = 'https://dashboard.analytics.typo3.com';
 
     public function getIntpId(): string
     {
@@ -77,6 +79,25 @@ final readonly class ApiConfiguration
             return ['auth' => [$parts['user'], $parts['pass'] ?? '']];
         }
         return [];
+    }
+
+    /**
+     * Origins of the dashboard: the iframe in the backend module and the
+     * tracking script main.js in the frontend come from there.
+     *
+     * @return list<string>
+     */
+    public function getDashboardOrigins(): array
+    {
+        $origins = [self::DEFAULT_DASHBOARD_ORIGIN];
+        $additional = $this->load('TYPO3_ANALYTICS_ADDITIONAL_FRAME_SRC', 'additionalFrameSrc');
+        foreach (GeneralUtility::trimExplode(',', $additional, true) as $origin) {
+            // Only accept concrete http(s) origins; reject wildcards, scheme-only and CSP keyword values.
+            if (preg_match('#^https?://[a-z0-9.-]+(:\d+)?$#i', $origin)) {
+                $origins[] = $origin;
+            }
+        }
+        return $origins;
     }
 
     private function load(string $envVar, string $confVarsKey): string

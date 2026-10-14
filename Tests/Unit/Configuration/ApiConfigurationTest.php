@@ -10,6 +10,12 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class ApiConfigurationTest extends UnitTestCase
 {
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['additionalFrameSrc']);
+        parent::tearDown();
+    }
+
     private function buildSubject(string $apiBaseUrl = '', string $verifySsl = '1', string $intpId = '', string $analyticsApiBaseUrl = ''): ApiConfiguration
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['apiBaseUrl'] = $apiBaseUrl;
@@ -96,5 +102,32 @@ final class ApiConfigurationTest extends UnitTestCase
     {
         $subject = $this->buildSubject('https://user:secret@custom.example.com/api');
         self::assertSame(['auth' => ['user', 'secret']], $subject->getAuthOptions());
+    }
+
+    #[Test]
+    public function getDashboardOriginsReturnsLiveHostByDefault(): void
+    {
+        self::assertSame(['https://dashboard.analytics.typo3.com'], $this->buildSubject()->getDashboardOrigins());
+    }
+
+    #[Test]
+    public function getDashboardOriginsAddsConfiguredOrigins(): void
+    {
+        $subject = $this->buildSubject();
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['additionalFrameSrc'] = 'https://dashboard.example.com, https://other.example.com:8443';
+
+        self::assertSame(
+            ['https://dashboard.analytics.typo3.com', 'https://dashboard.example.com', 'https://other.example.com:8443'],
+            $subject->getDashboardOrigins()
+        );
+    }
+
+    #[Test]
+    public function getDashboardOriginsIgnoresWildcardsAndKeywords(): void
+    {
+        $subject = $this->buildSubject();
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['additionalFrameSrc'] = "*, https:, 'unsafe-inline', https://*.example.com, https://example.com/path";
+
+        self::assertSame(['https://dashboard.analytics.typo3.com'], $subject->getDashboardOrigins());
     }
 }
