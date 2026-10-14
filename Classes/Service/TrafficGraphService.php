@@ -31,10 +31,11 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $days = max(1, $days);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
+        $pageUrlFilter = $siteData['pageUrlFilter'];
 
         // Cache key has no date component — partial-day data is served from cache until TTL.
         // Consistent with TopPagesService and SitePerformanceService.
-        $cacheKey = 'traffic_graph_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'traffic_graph_' . md5($websiteId . '_' . implode('|', $pageUrlFilter) . '_' . $days);
 
         /** @var array{labels: list<string>, data: list<int>}|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -48,7 +49,7 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $from = $to->modify('-' . ($days - 1) . ' days');
 
         try {
-            $result = $this->analyticsClient->fetchSiteVisitsGraph($websiteId, $apiKey, $from, $to);
+            $result = $this->analyticsClient->fetchSiteVisitsGraph($websiteId, $apiKey, $from, $to, $pageUrlFilter);
             $data = [
                 'labels' => $result['labels'] ?? [],
                 'data' => $result['datasets'][0]['data'] ?? [],
@@ -71,8 +72,9 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $days = max(1, $days);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
+        $pageUrlFilter = $siteData['pageUrlFilter'];
 
-        $cacheKey = 'traffic_sessions_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'traffic_sessions_' . md5($websiteId . '_' . implode('|', $pageUrlFilter) . '_' . $days);
 
         /** @var array{labels: list<string>, data: list<int>}|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -84,7 +86,7 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $from = $to->modify('-' . ($days - 1) . ' days');
 
         try {
-            $result = $this->analyticsClient->fetchSiteSessionsGraph($websiteId, $apiKey, $from, $to);
+            $result = $this->analyticsClient->fetchSiteSessionsGraph($websiteId, $apiKey, $from, $to, $pageUrlFilter);
             $data = [
                 'labels' => $result['labels'] ?? [],
                 'data' => $result['datasets'][0]['data'] ?? [],
@@ -113,8 +115,9 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $days = max(1, $days);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
+        $pageUrlFilter = $siteData['pageUrlFilter'];
 
-        $cacheKey = 'traffic_visitors_breakdown_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'traffic_visitors_breakdown_' . md5($websiteId . '_' . implode('|', $pageUrlFilter) . '_' . $days);
 
         /** @var array{new: array{labels: list<string>, data: list<int>}, returning: array{labels: list<string>, data: list<int>}, overall: array{labels: list<string>, data: list<int>}}|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -126,7 +129,7 @@ final readonly class TrafficGraphService implements TrafficGraphServiceInterface
         $from = $to->modify('-' . ($days - 1) . ' days');
 
         try {
-            $result = $this->analyticsClient->fetchSiteVisitorsGraph($websiteId, $apiKey, $from, $to);
+            $result = $this->analyticsClient->fetchSiteVisitorsGraph($websiteId, $apiKey, $from, $to, $pageUrlFilter);
             $labels = $result['labels'] ?? [];
             $datasets = $result['datasets'] ?? [];
             $data = [

@@ -376,7 +376,7 @@ final class SitePerformanceServiceTest extends UnitTestCase
     private function subjectWith(AnalyticsDataClientInterface $client, FrontendInterface $cache): SitePerformanceService
     {
         $siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
-        $siteProvider->method('resolveAnalyticsSite')->willReturn(['site' => new Site('main', 1, []), 'websiteId' => 'w', 'apiKey' => 'k']);
+        $siteProvider->method('resolveAnalyticsSite')->willReturn(['site' => new Site('main', 1, []), 'websiteId' => 'w', 'apiKey' => 'k', 'pageUrlFilter' => ['://example.com']]);
         return new SitePerformanceService($client, $this->createMock(LoggerInterface::class), $cache, new MetricFormatter(), $siteProvider);
     }
 
