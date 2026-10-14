@@ -92,6 +92,10 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '') {
             throw new AnalyticsApiException('The selected site has no analytics credentials.', 0);
         }
+        // Only a site with own analytics can take other sites; the list stays flat.
+        if ((string)($targetSettings['attachedTo'] ?? '') !== '') {
+            throw new AnalyticsApiException('The selected site is itself attached to an active site.', 0);
+        }
 
         $this->writeGuard->assertDirectoryWritable($site);
 
@@ -124,7 +128,7 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         $instanceId = (string)($settings['instanceId'] ?? '');
         $encryptedSecret = (string)($settings['instanceSecret'] ?? '');
         if ((string)($settings['attachedTo'] ?? '') === '' || $websiteId === '' || $instanceId === '' || $encryptedSecret === '') {
-            throw new AnalyticsApiException('The site is not added to an active site.', 0);
+            throw new AnalyticsApiException('The site is not attached to an active site.', 0);
         }
 
         $this->writeGuard->assertDirectoryWritable($site);
