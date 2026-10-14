@@ -12,13 +12,34 @@
                 <source>Site not found.</source>
             </trans-unit>
             <trans-unit id="flash.attachFailed" resname="flash.attachFailed">
-                <source>The site could not be added to the active site: %s</source>
+                <source>The site could not be attached to the active site: %s</source>
             </trans-unit>
             <trans-unit id="flash.success.attached" resname="flash.success.attached">
-                <source>Site "%s" now uses the analytics of site "%s".</source>
+                <source>Site "%s" is now attached to site "%s".</source>
             </trans-unit>
             <trans-unit id="label.attachedTo" resname="label.attachedTo">
-                <source>Uses the analytics of</source>
+                <source>Attached to</source>
+            </trans-unit>
+            <trans-unit id="badge.attached" resname="badge.attached">
+                <source>Attached</source>
+            </trans-unit>
+            <trans-unit id="flash.success.attached.title" resname="flash.success.attached.title">
+                <source>Site attached</source>
+            </trans-unit>
+            <trans-unit id="badge.status.active" resname="badge.status.active">
+                <source>Active</source>
+            </trans-unit>
+            <trans-unit id="badge.status.pending" resname="badge.status.pending">
+                <source>Pending</source>
+            </trans-unit>
+            <trans-unit id="badge.status.inactive" resname="badge.status.inactive">
+                <source>Inactive</source>
+            </trans-unit>
+            <trans-unit id="badge.status.cancelled" resname="badge.status.cancelled">
+                <source>Cancelled</source>
+            </trans-unit>
+            <trans-unit id="flash.siteAttached" resname="flash.siteAttached">
+                <source>Site "%s" is attached to site "%s". Open the dashboard and the plan of that site.</source>
             </trans-unit>
             <trans-unit id="flash.detachFailed" resname="flash.detachFailed">
                 <source>The site could not be detached: %s</source>
@@ -27,7 +48,7 @@
                 <source>Site detached</source>
             </trans-unit>
             <trans-unit id="flash.success.detached" resname="flash.success.detached">
-                <source>Site "%s" no longer uses the analytics of the active site.</source>
+                <source>Site "%s" is no longer attached to an active site.</source>
             </trans-unit>
             <trans-unit id="button.detach" resname="button.detach">
                 <source>Detach</source>
@@ -39,7 +60,13 @@
                 <source>Detach "%s"?</source>
             </trans-unit>
             <trans-unit id="modal.detach.message" resname="modal.detach.message">
-                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or add it to an active site again later.</source>
+                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
+            </trans-unit>
+            <trans-unit id="modal.attach.title" resname="modal.attach.title">
+                <source>Attach "%1$s" to site "%2$s"?</source>
+            </trans-unit>
+            <trans-unit id="modal.attach.message" resname="modal.attach.message">
+                <source>Site "%1$s" sends its data to the analytics of site "%2$s". You cannot move this data to separate analytics later. You can detach the site again. The data from before the detach stays in the analytics of site "%2$s".</source>
             </trans-unit>
             <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
                 <source>Registration failed: %s</source>
@@ -117,13 +144,13 @@
                 <source>Valid until</source>
             </trans-unit>
             <trans-unit id="label.resetsAt" resname="label.resetsAt">
-                <source>resets at</source>
+                <source>Resets at</source>
             </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
-                <source>exhausted</source>
+                <source>Exhausted</source>
             </trans-unit>
             <trans-unit id="badge.lowCredits" resname="badge.lowCredits">
-                <source>low credits</source>
+                <source>Low credits</source>
             </trans-unit>
             <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
                 <source>Your credits have been used up. Add more credits via</source>
@@ -135,7 +162,7 @@
                 <source>Dashboard</source>
             </trans-unit>
             <trans-unit id="button.managePlan" resname="button.managePlan">
-                <source>Manage Plan</source>
+                <source>Manage plan</source>
             </trans-unit>
             <trans-unit id="button.subscribePlan" resname="button.subscribePlan">
                 <source>Subscribe plan</source>
@@ -156,7 +183,7 @@
                 <source>Register as a new site</source>
             </trans-unit>
             <trans-unit id="label.attachToSite" resname="label.attachToSite">
-                <source>Add to an existing active site</source>
+                <source>Attach to an active site</source>
             </trans-unit>
             <trans-unit id="label.attachTarget" resname="label.attachTarget">
                 <source>Active site</source>
@@ -165,7 +192,7 @@
                 <source>Select an active site</source>
             </trans-unit>
             <trans-unit id="button.attach" resname="button.attach">
-                <source>Add</source>
+                <source>Attach</source>
             </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
@@ -174,10 +201,10 @@
                 <source>Back to overview</source>
             </trans-unit>
             <trans-unit id="label.availablePlans" resname="label.availablePlans">
-                <source>Available Plans</source>
+                <source>Available plans</source>
             </trans-unit>
             <trans-unit id="label.plans.heading" resname="label.plans.heading">
-                <source>Our Plans</source>
+                <source>Our plans</source>
             </trans-unit>
             <trans-unit id="label.plans.hide" resname="label.plans.hide">
                 <source>Hide price info</source>
@@ -225,7 +252,7 @@
                 <source>Contact us</source>
             </trans-unit>
             <trans-unit id="label.plans.custom.emailSubject" resname="label.plans.custom.emailSubject">
-                <source>Custom Plan Inquiry</source>
+                <source>Custom plan inquiry</source>
             </trans-unit>
             <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
                 <source>More credits / month</source>
@@ -606,7 +633,7 @@
                 <source>Shows the geographic distribution of your website visitors.</source>
             </trans-unit>
             <trans-unit id="dashboard.analyticsOverview.title" resname="dashboard.analyticsOverview.title">
-                <source>Analytics Overview</source>
+                <source>Analytics overview</source>
             </trans-unit>
             <trans-unit id="dashboard.analyticsOverview.description" resname="dashboard.analyticsOverview.description">
                 <source>Site performance, top pages, traffic graph and traffic sources (channel, devices, browser, countries).</source>

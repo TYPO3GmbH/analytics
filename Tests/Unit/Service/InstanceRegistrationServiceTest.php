@@ -278,6 +278,22 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->subject->attach($this->buildNamedSite('second', 'https://second.example.com'), $this->buildNamedSite('target', 'https://example.com'));
     }
 
+    #[Test]
+    public function attachFailsWhenTheTargetIsItselfAttachedToAnActiveSite(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+            'websiteId' => 'w-1',
+            'instanceId' => 'i-1',
+            'instanceSecret' => $this->cipherService->encrypt('s'),
+            'attachedTo' => 'main',
+        ]);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->attach($this->buildNamedSite('third', 'https://third.example.com'), $this->buildNamedSite('second', 'https://second.example.com'));
+    }
+
     /** detach */
 
     #[Test]

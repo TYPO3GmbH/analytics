@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\ApiKeyServiceInterface;
+use T3G\Analytics\Service\SiteAttachment;
 use T3G\Analytics\Service\SiteDataProviderInterface;
 use T3G\Analytics\Service\AnalyticsStatusServiceInterface;
 use T3G\Analytics\Service\InstanceRegistrationServiceInterface;
@@ -68,7 +69,8 @@ final readonly class BackendModuleController
 
         $moduleTemplate->assignMultiple([
             'sites' => $sites,
-            'siteGroups' => $this->groupSitesByAnalyticsStatus($sites),
+            'siteGroups' => $this->groupSitesByAnalyticsStatus($this->nestAttachedSites($sites)),
+            'attachTargets' => $this->attachTargets($sites),
             'registerUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.register'),
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
             'detachUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.detach'),
@@ -187,7 +189,7 @@ final readonly class BackendModuleController
 
         return new JsonResponse([
             'success' => true,
-            'title' => $this->translate('flash.success.title'),
+            'title' => $this->translate('flash.success.attached.title'),
             'message' => $this->translate('flash.success.attached', [$siteIdentifier, $targetSiteIdentifier]),
         ]);
     }
@@ -418,6 +420,13 @@ final readonly class BackendModuleController
             return new RedirectResponse($indexUri);
         }
 
+        // The dashboard and the plan of a site attached to an active site belong to the active site.
+        $attachedTo = SiteAttachment::attachedTo($site);
+        if ($attachedTo !== '') {
+            $this->addFlashMessage('flash.siteAttached', '', ContextualFeedbackSeverity::INFO, [$siteIdentifier, $attachedTo]);
+            return new RedirectResponse($indexUri);
+        }
+
         $pageName = $this->siteDataProvider->getRootPageTitle($site->getRootPageId());
         $siteLabel = $this->siteDataProvider->siteLabel($pageName, $site->getIdentifier());
 
@@ -547,6 +556,51 @@ final readonly class BackendModuleController
                 'sites' => $inactiveSites,
             ],
         ];
+    }
+
+    /**
+     * Moves each site attached to an active site into the "attachedSiteRows" of that site, so the
+     * module shows it below the active site. A site whose active site is not in the list, for
+     * example without access to it, keeps its own row.
+     *
+     * @param list<array<string, mixed>> $sites
+     * @return list<array<string, mixed>>
+     */
+    private function nestAttachedSites(array $sites): array
+    {
+        $positions = [];
+        foreach ($sites as $index => $site) {
+            $positions[(string)($site['identifier'] ?? '')] = $index;
+            $sites[$index]['attachedSiteRows'] = [];
+        }
+
+        $nested = [];
+        foreach ($sites as $index => $site) {
+            $attachedTo = (string)($site['attachedTo'] ?? '');
+            if ($attachedTo === '' || !isset($positions[$attachedTo]) || $positions[$attachedTo] === $index) {
+                continue;
+            }
+            $sites[$positions[$attachedTo]]['attachedSiteRows'][] = $site;
+            $nested[$index] = true;
+        }
+
+        return array_values(array_diff_key($sites, $nested));
+    }
+
+    /**
+     * Active sites with own analytics. A site attached to an active site cannot take other sites.
+     *
+     * @param list<array<string, mixed>> $sites
+     * @return list<array<string, mixed>>
+     */
+    private function attachTargets(array $sites): array
+    {
+        return array_values(array_filter(
+            $sites,
+            static fn (array $site): bool => ($site['attachedTo'] ?? '') === ''
+                && is_array($site['status'] ?? null)
+                && ($site['status']['status'] ?? '') === 'active'
+        ));
     }
 
     /** @param list<mixed> $arguments */

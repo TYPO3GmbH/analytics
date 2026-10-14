@@ -10,13 +10,15 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 interface SiteDataProviderInterface
 {
     /**
-     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
+     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, attachedTo: string, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
      * @throws RouteNotFoundException
      * @throws Exception
      */
     public function fetchSites(): array;
 
     /**
+     * Registered sites with own analytics. Sites attached to an active site are not in the list.
+     *
      * @return list<array{identifier: string, label: string}>
      * @throws Exception
      */

@@ -571,7 +571,62 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(RedirectResponse::class, $response);
     }
 
+    #[Test]
+    public function dashboardActionRedirectsForASiteAttachedToAnActiveSite(): void
+    {
+        $site = $this->buildSiteMock('second', 'https://second.example.com', ['websiteId' => 'w-1', 'attachedTo' => 'main']);
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'second']);
+
+        $response = $this->subject->dashboardAction($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame([], $this->httpHistory);
+    }
+
+    /** nestAttachedSites */
+
+    #[Test]
+    public function nestAttachedSitesMovesAddedSitesBelowTheirActiveSite(): void
+    {
+        $result = $this->nestAttachedSites([
+            ['identifier' => 'main', 'attachedTo' => ''],
+            ['identifier' => 'second', 'attachedTo' => 'main'],
+            ['identifier' => 'other', 'attachedTo' => ''],
+            ['identifier' => 'third', 'attachedTo' => 'main'],
+        ]);
+
+        self::assertSame(['main', 'other'], array_column($result, 'identifier'));
+        self::assertSame(['second', 'third'], array_column($result[0]['attachedSiteRows'], 'identifier'));
+        self::assertSame([], $result[1]['attachedSiteRows']);
+    }
+
+    #[Test]
+    public function nestAttachedSitesKeepsAnAddedSiteWhoseActiveSiteIsNotInTheList(): void
+    {
+        $result = $this->nestAttachedSites([
+            ['identifier' => 'second', 'attachedTo' => 'inaccessible'],
+        ]);
+
+        self::assertSame(['second'], array_column($result, 'identifier'));
+        self::assertSame([], $result[0]['attachedSiteRows']);
+    }
+
     /** Helpers */
+
+    /**
+     * @param list<array<string, mixed>> $sites
+     * @return list<array<string, mixed>>
+     */
+    private function nestAttachedSites(array $sites): array
+    {
+        return (new \ReflectionMethod($this->subject, 'nestAttachedSites'))->invoke($this->subject, $sites);
+    }
 
     private function buildRequest(array $body): \Psr\Http\Message\ServerRequestInterface
     {
