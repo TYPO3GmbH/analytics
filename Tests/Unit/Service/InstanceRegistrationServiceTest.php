@@ -218,6 +218,147 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
 
     /** Helpers */
 
+    /** attach */
+
+    #[Test]
+    public function attachWhitelistsDomainAndCopiesCredentialsOfTheTarget(): void
+    {
+        $targetSettings = [
+            'websiteId' => 'w-1',
+            'instanceId' => 'i-1',
+            'instanceSecret' => $this->cipherService->encrypt('target-secret'),
+            'externalWebsiteId' => 'ext-1',
+            'apiKeyId' => 'k-1',
+            'apiKey' => 'encrypted-key',
+            'trackingCode' => '<script></script>',
+            'status' => 'active',
+            'unrelated' => 'not copied',
+        ];
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnMap([
+            ['target', $targetSettings],
+            ['second', ['own' => 'kept']],
+        ]);
+        $this->mockHandler->append(new Response(200, [], '{"domains":["second.example.com"]}'));
+
+        $this->siteSettingsService->expects(self::once())->method('writeSettings')->with(
+            self::anything(),
+            ['own' => 'kept', 'websiteId' => 'w-1', 'instanceId' => 'i-1', 'instanceSecret' => $targetSettings['instanceSecret'], 'externalWebsiteId' => 'ext-1', 'apiKeyId' => 'k-1', 'apiKey' => 'encrypted-key', 'trackingCode' => '<script></script>', 'status' => 'active', 'attachedTo' => 'target']
+        );
+
+        $this->subject->attach($this->buildNamedSite('second', 'https://second.example.com'), $this->buildNamedSite('target', 'https://example.com'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertStringEndsWith('/website/w-1/whitelisted-domains', $request->getUri()->getPath());
+        self::assertSame(['domain' => 'https://second.example.com'], json_decode((string)$request->getBody(), true));
+        self::assertStringStartsWith('HMAC i-1:', $request->getHeaderLine('Authorization'));
+    }
+
+    #[Test]
+    public function attachWritesNothingWhenTheApiRejectsTheDomain(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+            'websiteId' => 'w-1', 'instanceId' => 'i-1', 'instanceSecret' => $this->cipherService->encrypt('s'),
+        ]);
+        $this->mockHandler->append(new Response(400, [], '{"detail":"The domain is the primary domain of the website."}'));
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->attach($this->buildNamedSite('second', 'https://second.example.com'), $this->buildNamedSite('target', 'https://example.com'));
+    }
+
+    #[Test]
+    public function attachFailsWithoutCredentialsOfTheTarget(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-1']);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->attach($this->buildNamedSite('second', 'https://second.example.com'), $this->buildNamedSite('target', 'https://example.com'));
+    }
+
+    #[Test]
+    public function attachFailsWhenTheTargetIsItselfAttachedToAnActiveSite(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+            'websiteId' => 'w-1',
+            'instanceId' => 'i-1',
+            'instanceSecret' => $this->cipherService->encrypt('s'),
+            'attachedTo' => 'main',
+        ]);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->attach($this->buildNamedSite('third', 'https://third.example.com'), $this->buildNamedSite('second', 'https://second.example.com'));
+    }
+
+    /** detach */
+
+    #[Test]
+    public function detachRemovesDomainAndCopiedCredentials(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+            'own' => 'kept',
+            'websiteId' => 'w-1',
+            'instanceId' => 'i-1',
+            'instanceSecret' => $this->cipherService->encrypt('target-secret'),
+            'externalWebsiteId' => 'ext-1',
+            'apiKeyId' => 'k-1',
+            'apiKey' => 'encrypted-key',
+            'trackingCode' => '<script></script>',
+            'status' => 'active',
+            'attachedTo' => 'target',
+        ]);
+        $this->mockHandler->append(new Response(204));
+
+        $this->siteSettingsService->expects(self::once())->method('writeSettings')->with(self::anything(), ['own' => 'kept']);
+
+        $this->subject->detach($this->buildNamedSite('second', 'https://second.example.com/'));
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('DELETE', $request->getMethod());
+        self::assertStringEndsWith('/website/w-1/whitelisted-domains/second.example.com', $request->getUri()->getPath());
+        self::assertStringStartsWith('HMAC i-1:', $request->getHeaderLine('Authorization'));
+    }
+
+    #[Test]
+    public function detachFailsForSiteThatIsNotAttached(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+            'websiteId' => 'w-1', 'instanceId' => 'i-1', 'instanceSecret' => $this->cipherService->encrypt('s'),
+        ]);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->detach($this->buildNamedSite('main', 'https://example.com'));
+    }
+
+    #[Test]
+    public function detachKeepsSettingsWhenTheApiFails(): void
+    {
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+            'websiteId' => 'w-1', 'instanceId' => 'i-1', 'instanceSecret' => $this->cipherService->encrypt('s'), 'attachedTo' => 'target',
+        ]);
+        $this->mockHandler->append(new Response(400, [], '{"detail":"error"}'));
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->detach($this->buildNamedSite('second', 'https://second.example.com'));
+    }
+
+    private function buildNamedSite(string $identifier, string $base): Site
+    {
+        $site = $this->createMock(Site::class);
+        $site->method('getIdentifier')->willReturn($identifier);
+        $site->method('getBase')->willReturn(new Uri($base));
+        $site->method('getSettings')->willReturn(new SiteSettings(new Settings([]), [], []));
+        return $site;
+    }
+
     private function buildSite(): Site
     {
         $site = $this->createMock(Site::class);

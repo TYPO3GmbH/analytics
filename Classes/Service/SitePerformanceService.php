@@ -37,8 +37,9 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
         $days = max(1, $days);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
+        $pageUrlFilter = $siteData['pageUrlFilter'];
 
-        $cacheKey = 'site_performance_v2_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'site_performance_v2_' . md5($websiteId . '_' . implode('|', $pageUrlFilter) . '_' . $days);
 
         /** @var array{current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int}, previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int}|null, series: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgTimeOnPage: list<int>}}|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -51,7 +52,7 @@ final readonly class SitePerformanceService implements SitePerformanceServiceInt
         $prevTo = $from->modify('-1 day');
         $prevFrom = $prevTo->modify('-' . ($days - 1) . ' days');
 
-        $result = $this->analyticsClient->fetchSitePerformance($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo);
+        $result = $this->analyticsClient->fetchSitePerformance($websiteId, $apiKey, $from, $to, $prevFrom, $prevTo, $pageUrlFilter);
         $failures = $result['failures'];
         if ($failures !== []) {
             $this->logger->warning('SitePerformanceService: Failed to fetch performance data.', ['failures' => $failures]);

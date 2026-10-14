@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\ApiKeyServiceInterface;
+use T3G\Analytics\Service\SiteAttachment;
 use T3G\Analytics\Service\SiteDataProviderInterface;
 use T3G\Analytics\Service\AnalyticsStatusServiceInterface;
 use T3G\Analytics\Service\InstanceRegistrationServiceInterface;
@@ -68,9 +69,11 @@ final readonly class BackendModuleController
 
         $moduleTemplate->assignMultiple([
             'sites' => $sites,
-            'siteGroups' => $this->groupSitesByAnalyticsStatus($sites),
+            'siteGroups' => $this->groupSitesByAnalyticsStatus($this->nestAttachedSites($sites)),
+            'attachTargets' => $this->attachTargets($sites),
             'registerUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.register'),
             'statusUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.status'),
+            'detachUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.detach'),
             'isManager' => $this->isAnalyticsManager(),
             'logoSvg' => $this->readLogoSvg(),
             'plansUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_analytics_plans_content'),
@@ -96,6 +99,9 @@ final readonly class BackendModuleController
         }
 
         $siteIdentifier = (string)($body['siteIdentifier'] ?? '');
+        if (($body['mode'] ?? '') === 'attach') {
+            return $this->attachSite($siteIdentifier, (string)($body['targetSiteIdentifier'] ?? ''));
+        }
         $email = (string)($body['email'] ?? '');
 
         if ($siteIdentifier === '' || $email === '') {
@@ -133,6 +139,58 @@ final readonly class BackendModuleController
             'title' => $this->translate('flash.success.title'),
             'message' => $this->translate('flash.success.registered', [$site->getIdentifier()]),
             'dashboardUri' => (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier]),
+        ]);
+    }
+
+    /**
+     * Lets an unregistered site use the analytics of an active site (form mode "attach").
+     */
+    private function attachSite(string $siteIdentifier, string $targetSiteIdentifier): ResponseInterface
+    {
+        if ($siteIdentifier === '' || $targetSiteIdentifier === '' || $siteIdentifier === $targetSiteIdentifier) {
+            $this->logger->warning('Attach called with missing or equal site identifiers.');
+            return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
+        }
+
+        try {
+            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+            $target = $this->siteFinder->getSiteByIdentifier($targetSiteIdentifier);
+        } catch (SiteNotFoundException) {
+            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier, 'target' => $targetSiteIdentifier]);
+            return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
+        }
+
+        // The site must be unregistered; the target must be a registered site the user can access and that is active.
+        $accessibleRegistered = array_column($this->siteDataProvider->registeredSiteOptions(), 'identifier');
+        $targetStatus = in_array($targetSiteIdentifier, $accessibleRegistered, true)
+            ? $this->analyticsStatusService->getStatus($target)
+            : null;
+        if ((string)$site->getSettings()->get('websiteId', '') !== '' || ($targetStatus['status'] ?? '') !== 'active') {
+            $this->logger->warning('Attach rejected.', ['siteIdentifier' => $siteIdentifier, 'target' => $targetSiteIdentifier]);
+            return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
+        }
+
+        try {
+            $this->registrationService->attach($site, $target);
+        } catch (AnalyticsApiException $e) {
+            return new JsonResponse($this->errorPayload('flash.attachFailed', [$e->getMessage()]), 500);
+        }
+
+        // Re-load the site so the copied credentials are visible, then store its status.
+        try {
+            $attachedSite = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+            $status = $this->analyticsStatusService->getStatus($attachedSite, forceRefresh: true);
+            if ($status !== null) {
+                $this->analyticsStatusService->syncSiteSettingsFromStatus($attachedSite, $status);
+            }
+        } catch (SiteNotFoundException) {
+            // Non-fatal: the status is synced on the next manual refresh.
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'title' => $this->translate('flash.success.attached.title'),
+            'message' => $this->translate('flash.success.attached', [$siteIdentifier, $targetSiteIdentifier]),
         ]);
     }
 
@@ -277,6 +335,43 @@ final readonly class BackendModuleController
         ]);
     }
 
+    /**
+     * Stops an attached site from using the analytics of the active site.
+     */
+    public function detachAction(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->isAnalyticsManager()) {
+            return new JsonResponse($this->errorPayload('flash.accessDenied'), 403);
+        }
+
+        $body = $request->getParsedBody();
+        $siteIdentifier = is_array($body) ? (string)($body['siteIdentifier'] ?? '') : '';
+        if ($siteIdentifier === '') {
+            $this->logger->warning('Detach action called without siteIdentifier.');
+            return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
+        }
+
+        try {
+            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+        } catch (SiteNotFoundException) {
+            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+            return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
+        }
+
+        try {
+            $this->registrationService->detach($site);
+        } catch (AnalyticsApiException $e) {
+            return new JsonResponse($this->errorPayload('flash.detachFailed', [$e->getMessage()]), 500);
+        }
+        $this->analyticsStatusService->clearCache($site);
+
+        return new JsonResponse([
+            'success' => true,
+            'title' => $this->translate('flash.success.detached.title'),
+            'message' => $this->translate('flash.success.detached', [$siteIdentifier]),
+        ]);
+    }
+
     public function invalidateStatusCacheAction(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->isAnalyticsManager()) {
@@ -322,6 +417,13 @@ final readonly class BackendModuleController
 
         $site = $this->resolveSite($siteIdentifier);
         if (!$site instanceof Site) {
+            return new RedirectResponse($indexUri);
+        }
+
+        // The dashboard and the plan of a site attached to an active site belong to the active site.
+        $attachedTo = SiteAttachment::attachedTo($site);
+        if ($attachedTo !== '') {
+            $this->addFlashMessage('flash.siteAttached', '', ContextualFeedbackSeverity::INFO, [$siteIdentifier, $attachedTo]);
             return new RedirectResponse($indexUri);
         }
 
@@ -454,6 +556,51 @@ final readonly class BackendModuleController
                 'sites' => $inactiveSites,
             ],
         ];
+    }
+
+    /**
+     * Moves each site attached to an active site into the "attachedSiteRows" of that site, so the
+     * module shows it below the active site. A site whose active site is not in the list, for
+     * example without access to it, keeps its own row.
+     *
+     * @param list<array<string, mixed>> $sites
+     * @return list<array<string, mixed>>
+     */
+    private function nestAttachedSites(array $sites): array
+    {
+        $positions = [];
+        foreach ($sites as $index => $site) {
+            $positions[(string)($site['identifier'] ?? '')] = $index;
+            $sites[$index]['attachedSiteRows'] = [];
+        }
+
+        $nested = [];
+        foreach ($sites as $index => $site) {
+            $attachedTo = (string)($site['attachedTo'] ?? '');
+            if ($attachedTo === '' || !isset($positions[$attachedTo]) || $positions[$attachedTo] === $index) {
+                continue;
+            }
+            $sites[$positions[$attachedTo]]['attachedSiteRows'][] = $site;
+            $nested[$index] = true;
+        }
+
+        return array_values(array_diff_key($sites, $nested));
+    }
+
+    /**
+     * Active sites with own analytics. A site attached to an active site cannot take other sites.
+     *
+     * @param list<array<string, mixed>> $sites
+     * @return list<array<string, mixed>>
+     */
+    private function attachTargets(array $sites): array
+    {
+        return array_values(array_filter(
+            $sites,
+            static fn (array $site): bool => ($site['attachedTo'] ?? '') === ''
+                && is_array($site['status'] ?? null)
+                && ($site['status']['status'] ?? '') === 'active'
+        ));
     }
 
     /** @param list<mixed> $arguments */

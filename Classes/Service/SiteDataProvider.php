@@ -27,7 +27,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
     }
 
     /**
-     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
+     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, attachedTo: string, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
      * @throws RouteNotFoundException
      * @throws Exception
      */
@@ -47,6 +47,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 $websiteId = null;
             }
             $registered = $websiteId !== null;
+            $attachedTo = SiteAttachment::attachedTo($site);
 
             $status = $registered ? $this->analyticsStatusService->getStatus($site) : null;
 
@@ -57,6 +58,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 'domain' => rtrim($site->getBase()->__toString(), '/'),
                 'websiteId' => $websiteId,
                 'registered' => $registered,
+                'attachedTo' => $attachedTo,
                 'status' => $status,
                 'panelClass' => $this->resolvePanelClass($status),
                 'dashboardUri' => $registered ? (string)$this->uriBuilder->buildUriFromRoute(
@@ -92,7 +94,8 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'exception' => $e]);
                 $websiteId = null;
             }
-            if ($websiteId === null) {
+            // A site attached to an active site has no own analytics, so only the active site is offered.
+            if ($websiteId === null || SiteAttachment::isAttached($site)) {
                 continue;
             }
 

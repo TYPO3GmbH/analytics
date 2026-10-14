@@ -25,6 +25,10 @@ return [
                 'target' => BackendModuleController::class . '::statusAction',
                 'methods' => ['POST'],
             ],
+            'detach' => [
+                'target' => BackendModuleController::class . '::detachAction',
+                'methods' => ['POST'],
+            ],
             'dashboard' => [
                 'target' => BackendModuleController::class . '::dashboardAction',
                 'methods' => ['GET'],

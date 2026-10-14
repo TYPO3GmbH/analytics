@@ -86,6 +86,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     /**
      * Fetches top pages ordered by visit count (no page-URL filter).
      *
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return list<array<string, mixed>>
      * @throws AnalyticsApiException
      */
@@ -97,13 +98,14 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $previousFrom,
         \DateTimeImmutable $previousTo,
         int $limit = 10,
+        array $pageUrlFilter = [],
     ): array {
         $payload = [
             'metrics' => ['visitCount', 'previousVisitCount', 'visitPercentOfTotal', 'visitCountPercentageChange'],
             'dimensions' => ['pageUrl'],
             'order' => [['member' => 'visitCount', 'direction' => 'desc']],
             'pagination' => ['page' => 1, 'pageSize' => $limit],
-            'where' => ['and' => []],
+            'where' => $this->buildPageUrlWhere($pageUrlFilter),
             'dateRange' => [
                 'start' => $from->format('Y-m-d\T00:00:00.000P'),
                 'end' => $to->format('Y-m-d\T23:59:59.999P'),
@@ -306,6 +308,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -314,6 +317,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         $query = '?' . http_build_query([
             'from' => $from->format('Y-m-d\T00:00:00.000P'),
@@ -329,7 +333,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => ['and' => []]],
+                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -349,6 +353,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -357,6 +362,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         $query = '?' . http_build_query([
             'from' => $from->format('Y-m-d\T00:00:00.000P'),
@@ -372,7 +378,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => ['and' => []]],
+                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -392,6 +398,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -400,6 +407,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         $query = '?' . http_build_query([
             'from' => $from->format('Y-m-d\T00:00:00.000P'),
@@ -415,7 +423,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => ['and' => []]],
+                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -435,6 +443,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -443,6 +452,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         $query = '?' . http_build_query([
             'from' => $from->format('Y-m-d\T00:00:00.000P'),
@@ -457,7 +467,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => ['and' => []]],
+                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -476,6 +486,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -486,13 +497,15 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
         ?\DateTimeImmutable $previousTo = null,
+        array $pageUrlFilter = [],
     ): array {
         /** @var list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}> $result */
-        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'devices', 'deviceType', $from, $to, $previousFrom, $previousTo, 12);
+        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'devices', 'deviceType', $from, $to, $previousFrom, $previousTo, 12, $pageUrlFilter);
         return $result;
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -503,13 +516,15 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
         ?\DateTimeImmutable $previousTo = null,
+        array $pageUrlFilter = [],
     ): array {
         /** @var list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}> $result */
-        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'browsers', 'browserName', $from, $to, $previousFrom, $previousTo, 6);
+        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'browsers', 'browserName', $from, $to, $previousFrom, $previousTo, 6, $pageUrlFilter);
         return $result;
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -520,13 +535,15 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
         ?\DateTimeImmutable $previousTo = null,
+        array $pageUrlFilter = [],
     ): array {
         /** @var list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}> $result */
-        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'countryCode', 'countryCode', $from, $to, $previousFrom, $previousTo, 6);
+        $result = $this->fetchSessionsWithDimension($websiteId, $apiKey, 'countryCode', 'countryCode', $from, $to, $previousFrom, $previousTo, 6, $pageUrlFilter);
         return $result;
     }
 
     /**
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return list<array<string, mixed>>
      * @throws AnalyticsApiException
      */
@@ -540,10 +557,11 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         ?\DateTimeImmutable $previousFrom,
         ?\DateTimeImmutable $previousTo,
         int $pageSize,
+        array $pageUrlFilter = [],
     ): array {
         $metrics = ['sessionCount', 'sessionPercentOfTotal'];
         $json = [
-            'where' => ['and' => []],
+            'where' => $this->buildPageUrlWhere($pageUrlFilter),
             'metrics' => $metrics,
             'dimensions' => [$dimension],
             'order' => [['member' => 'sessionPercentOfTotal', 'direction' => 'desc']],
@@ -595,6 +613,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
      * A failed request leaves its values at 0 (or the series empty) and adds its key to
      * "failures": current, previous, series, currentTimeOnPage, previousTimeOnPage.
      *
+     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
@@ -609,14 +628,15 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         \DateTimeImmutable $previousFrom,
         \DateTimeImmutable $previousTo,
+        array $pageUrlFilter = [],
     ): array {
         $buildSessionsOptions = fn (\DateTimeImmutable $f, \DateTimeImmutable $t, array $dimensions = []): array => $this->buildRequestOptions($apiKey, [
-            'where' => ['and' => []],
+            'where' => $this->buildPageUrlWhere($pageUrlFilter),
             'metrics' => self::SITE_SESSION_METRICS,
             ...$dimensions,
             'dateRange' => $this->buildUtcDayRange($f, $t),
         ]);
-        $timeOnPageOptions = $this->buildRequestOptions($apiKey, ['where' => ['and' => []]]);
+        $timeOnPageOptions = $this->buildRequestOptions($apiKey, ['where' => $this->buildPageUrlWhere($pageUrlFilter)]);
 
         $client = $this->guzzleClientFactory->getClient();
         $promises = [
@@ -650,6 +670,22 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'series' => $this->buildDailySeries($bodies['series'] ?? [], $currentTimeOnPage),
             'failures' => $failures,
         ];
+    }
+
+    /**
+     * Limits a query to the pages of one site when several sites track into the same website.
+     * The API compares each value of the "in" operator as a part of the page URL, so
+     * "://example.com" matches all pages on that host, for http and https.
+     *
+     * @param list<string> $pageUrlFilter
+     * @return array{and: list<array{member: string, operator: string, values: list<string>}>}
+     */
+    private function buildPageUrlWhere(array $pageUrlFilter): array
+    {
+        if ($pageUrlFilter === []) {
+            return ['and' => []];
+        }
+        return ['and' => [['member' => 'pageUrl', 'operator' => 'in', 'values' => $pageUrlFilter]]];
     }
 
     private function buildSessionsUrl(string $websiteId, string $trace): string

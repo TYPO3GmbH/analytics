@@ -164,4 +164,55 @@ final class AnalyticsApiClientTest extends UnitTestCase
 
         self::assertNull($this->subject->fetchDashboardUrl('w-123', 'i-456', 'my-secret'));
     }
+
+    #[Test]
+    public function addWhitelistedDomainSignsTheBodyAndReturnsDomains(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"domains":["site6.example.com"]}'));
+
+        $result = $this->subject->addWhitelistedDomain('w-123', 'i-456', 'my-secret', 'https://site6.example.com');
+
+        self::assertSame(['site6.example.com'], $result);
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('POST', $request->getMethod());
+        self::assertStringEndsWith('/website/w-123/whitelisted-domains', $request->getUri()->getPath());
+        self::assertSame('{"domain":"https:\\/\\/site6.example.com"}', (string)$request->getBody());
+        // The middleware checks the content hash of the body against the signed hash.
+        self::assertSame(hash('sha256', (string)$request->getBody()), $request->getHeaderLine('X-Content-Hash'));
+        self::assertStringStartsWith('HMAC i-456:', $request->getHeaderLine('Authorization'));
+    }
+
+    #[Test]
+    public function addWhitelistedDomainThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(400, [], '{"detail":"The domain is the primary domain of the website."}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->addWhitelistedDomain('w-123', 'i-456', 'my-secret', 'https://example.com');
+    }
+
+    #[Test]
+    public function removeWhitelistedDomainSendsSignedDeleteWithHostInPath(): void
+    {
+        $this->mockHandler->append(new Response(204));
+
+        $this->subject->removeWhitelistedDomain('w-123', 'i-456', 'my-secret', 'site6.example.com');
+
+        $request = $this->httpHistory[0]['request'];
+        self::assertSame('DELETE', $request->getMethod());
+        self::assertStringEndsWith('/website/w-123/whitelisted-domains/site6.example.com', $request->getUri()->getPath());
+        self::assertSame(hash('sha256', ''), $request->getHeaderLine('X-Content-Hash'));
+        self::assertStringStartsWith('HMAC i-456:', $request->getHeaderLine('Authorization'));
+    }
+
+    #[Test]
+    public function removeWhitelistedDomainThrowsOnHttpError(): void
+    {
+        $this->mockHandler->append(new Response(400, [], '{"detail":"error"}'));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->removeWhitelistedDomain('w-123', 'i-456', 'my-secret', 'site6.example.com');
+    }
 }

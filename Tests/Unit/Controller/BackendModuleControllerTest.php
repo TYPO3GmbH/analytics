@@ -9,6 +9,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
@@ -287,6 +288,104 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertTrue($this->decodeJson($response)['success']);
     }
 
+    /** registerAction — mode "attach" */
+
+    /**
+     * @return iterable<string, array{array<string, string>}>
+     */
+    public static function invalidAttachRequests(): iterable
+    {
+        yield 'missing target' => [['siteIdentifier' => 'second', 'mode' => 'attach', 'targetSiteIdentifier' => '']];
+        yield 'missing site' => [['siteIdentifier' => '', 'mode' => 'attach', 'targetSiteIdentifier' => 'main']];
+        yield 'site is the target' => [['siteIdentifier' => 'main', 'mode' => 'attach', 'targetSiteIdentifier' => 'main']];
+    }
+
+    #[Test]
+    #[DataProvider('invalidAttachRequests')]
+    public function registerActionRejectsInvalidAttachRequests(array $body): void
+    {
+        $response = $this->subject->registerAction($this->buildRequest($body));
+
+        self::assertSame(400, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        self::assertSame([], $this->httpHistory);
+    }
+
+    #[Test]
+    public function registerActionAttachDoesNotNeedAnEmail(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')->willThrowException(new SiteNotFoundException('not found', 1));
+
+        $response = $this->subject->registerAction($this->buildRequest(['siteIdentifier' => 'second', 'mode' => 'attach', 'targetSiteIdentifier' => 'main']));
+
+        // Without the attach branch, the missing e-mail would return 400; the site lookup comes first here.
+        self::assertSame(404, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function registerActionRejectsAttachToASiteTheUserCannotAccess(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')->willReturnMap([
+            ['second', $this->buildSiteMock('second', 'https://second.example.com')],
+            ['main', $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-1'])],
+        ]);
+        $this->siteFinder->method('getAllSites')->willReturn([]);
+
+        $response = $this->subject->registerAction($this->buildRequest(['siteIdentifier' => 'second', 'mode' => 'attach', 'targetSiteIdentifier' => 'main']));
+
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame([], $this->httpHistory);
+    }
+
+    #[Test]
+    public function registerActionRejectsAttachOfARegisteredSite(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')->willReturnMap([
+            ['second', $this->buildSiteMock('second', 'https://second.example.com', ['websiteId' => 'w-2'])],
+            ['main', $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-1'])],
+        ]);
+        $this->siteFinder->method('getAllSites')->willReturn([]);
+
+        $response = $this->subject->registerAction($this->buildRequest(['siteIdentifier' => 'second', 'mode' => 'attach', 'targetSiteIdentifier' => 'main']));
+
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame([], $this->httpHistory);
+    }
+
+    /** detachAction */
+
+    #[Test]
+    public function detachActionReturnsErrorJsonWhenSiteIdentifierMissing(): void
+    {
+        $response = $this->subject->detachAction($this->buildRequest(['siteIdentifier' => '']));
+
+        self::assertSame(400, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+    }
+
+    #[Test]
+    public function detachActionReturnsErrorJsonWhenSiteNotFound(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')->willThrowException(new SiteNotFoundException('not found', 1));
+
+        $response = $this->subject->detachAction($this->buildRequest(['siteIdentifier' => 'second']));
+
+        self::assertSame(404, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function detachActionReturnsErrorJsonForSiteThatIsNotAttached(): void
+    {
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main', 'https://example.com'));
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-1']);
+
+        $response = $this->subject->detachAction($this->buildRequest(['siteIdentifier' => 'main']));
+
+        self::assertSame(500, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        self::assertSame([], $this->httpHistory);
+    }
+
     /** statusAction */
 
     #[Test]
@@ -472,7 +571,62 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(RedirectResponse::class, $response);
     }
 
+    #[Test]
+    public function dashboardActionRedirectsForASiteAttachedToAnActiveSite(): void
+    {
+        $site = $this->buildSiteMock('second', 'https://second.example.com', ['websiteId' => 'w-1', 'attachedTo' => 'main']);
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'second']);
+
+        $response = $this->subject->dashboardAction($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame([], $this->httpHistory);
+    }
+
+    /** nestAttachedSites */
+
+    #[Test]
+    public function nestAttachedSitesMovesAddedSitesBelowTheirActiveSite(): void
+    {
+        $result = $this->nestAttachedSites([
+            ['identifier' => 'main', 'attachedTo' => ''],
+            ['identifier' => 'second', 'attachedTo' => 'main'],
+            ['identifier' => 'other', 'attachedTo' => ''],
+            ['identifier' => 'third', 'attachedTo' => 'main'],
+        ]);
+
+        self::assertSame(['main', 'other'], array_column($result, 'identifier'));
+        self::assertSame(['second', 'third'], array_column($result[0]['attachedSiteRows'], 'identifier'));
+        self::assertSame([], $result[1]['attachedSiteRows']);
+    }
+
+    #[Test]
+    public function nestAttachedSitesKeepsAnAddedSiteWhoseActiveSiteIsNotInTheList(): void
+    {
+        $result = $this->nestAttachedSites([
+            ['identifier' => 'second', 'attachedTo' => 'inaccessible'],
+        ]);
+
+        self::assertSame(['second'], array_column($result, 'identifier'));
+        self::assertSame([], $result[0]['attachedSiteRows']);
+    }
+
     /** Helpers */
+
+    /**
+     * @param list<array<string, mixed>> $sites
+     * @return list<array<string, mixed>>
+     */
+    private function nestAttachedSites(array $sites): array
+    {
+        return (new \ReflectionMethod($this->subject, 'nestAttachedSites'))->invoke($this->subject, $sites);
+    }
 
     private function buildRequest(array $body): \Psr\Http\Message\ServerRequestInterface
     {

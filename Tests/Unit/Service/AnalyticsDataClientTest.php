@@ -8,6 +8,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
@@ -117,6 +118,51 @@ final class AnalyticsDataClientTest extends UnitTestCase
 
         $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
         self::assertSame(['and' => []], $body['where']);
+    }
+
+    /**
+     * @return \Generator<string, array{string, int, string}>
+     */
+    public static function pageUrlFilterRequestProvider(): \Generator
+    {
+        yield 'top pages' => ['fetchTopPages', 4, '{"payload":[]}'];
+        yield 'visits graph' => ['fetchSiteVisitsGraph', 2, '{"payload":{"labels":[],"datasets":[]}}'];
+        yield 'sessions graph' => ['fetchSiteSessionsGraph', 2, '{"payload":{"labels":[],"datasets":[]}}'];
+        yield 'visitors graph' => ['fetchSiteVisitorsGraph', 2, '{"payload":{"labels":[],"datasets":[]}}'];
+        yield 'traffic share' => ['fetchTrafficShareInDepth', 2, '{"labels":[],"datasets":[]}'];
+        yield 'device sessions' => ['fetchDeviceSessions', 2, '{"payload":[]}'];
+        yield 'browser sessions' => ['fetchBrowserSessions', 2, '{"payload":[]}'];
+        yield 'country sessions' => ['fetchCountrySessions', 2, '{"payload":[]}'];
+    }
+
+    #[Test]
+    #[DataProvider('pageUrlFilterRequestProvider')]
+    public function siteQueriesLimitThePagesToThePageUrlFilter(string $method, int $dateCount, string $responseBody): void
+    {
+        $this->mockHandler->append(new Response(200, [], $responseBody));
+        $dates = array_fill(0, $dateCount, $this->date('2026-06-01'));
+
+        $this->subject->{$method}('w-123', 'api-key', ...$dates, pageUrlFilter: ['://example.com', '://example.ch']);
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(
+            ['and' => [['member' => 'pageUrl', 'operator' => 'in', 'values' => ['://example.com', '://example.ch']]]],
+            $body['where']
+        );
+    }
+
+    #[Test]
+    public function fetchSitePerformanceLimitsAllRequestsToThePageUrlFilter(): void
+    {
+        $this->appendSitePerformanceResponses();
+
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'), ['://example.com']);
+
+        $expected = ['and' => [['member' => 'pageUrl', 'operator' => 'in', 'values' => ['://example.com']]]];
+        self::assertCount(5, $this->httpHistory);
+        foreach ($this->httpHistory as $transaction) {
+            self::assertSame($expected, json_decode((string)$transaction['request']->getBody(), true)['where']);
+        }
     }
 
     #[Test]

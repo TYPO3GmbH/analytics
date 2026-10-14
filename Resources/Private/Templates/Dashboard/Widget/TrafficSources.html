@@ -35,10 +35,9 @@
 
 </f:section>
 <f:section name="footer">
-    <f:if condition="{showAllUrl}">
-        <a class="widget-cta" href="{showAllUrl}" aria-label="{showAllLabel}">
-            {showAllLabel}
-        </a>
-    </f:if>
+    <f:comment>Always rendered: switching the site reloads the content, and the link appears or disappears with it.</f:comment>
+    <a class="widget-cta" href="{showAllUrl}" aria-label="{showAllLabel}" {f:if(condition: showAllUrl, else: 'hidden')}>
+        {showAllLabel}
+    </a>
 </f:section>
 </html>

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Controller;
 
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -21,7 +21,7 @@ final readonly class TrafficGraphAjaxController
     public function __construct(
         private TrafficGraphServiceInterface $trafficGraphService,
         private TrafficChartDataBuilder $chartDataBuilder,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
     }
@@ -61,9 +61,7 @@ final readonly class TrafficGraphAjaxController
         ]);
         $html = $view->render('Dashboard/Widget/TrafficGraphChart');
 
-        $showAllUrl = $siteIdentifier !== ''
-            ? (string) $this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier, 'days' => $days])
-            : '';
+        $showAllUrl = $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days]);
 
         return new JsonResponse(['status' => 'ok', 'html' => $html, 'showAllUrl' => $showAllUrl]);
     }

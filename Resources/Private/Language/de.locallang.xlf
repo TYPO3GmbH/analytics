@@ -14,6 +14,82 @@
                 <source>Site not found.</source>
                 <target>Site nicht gefunden.</target>
             </trans-unit>
+            <trans-unit id="flash.attachFailed" resname="flash.attachFailed">
+                <source>The site could not be attached to the active site: %s</source>
+                <target>Die Site konnte nicht an die aktive Site angehängt werden: %s</target>
+            </trans-unit>
+            <trans-unit id="flash.success.attached" resname="flash.success.attached">
+                <source>Site "%s" is now attached to site "%s".</source>
+                <target>Die Site „%s“ ist jetzt an die Site „%s“ angehängt.</target>
+            </trans-unit>
+            <trans-unit id="label.attachedTo" resname="label.attachedTo">
+                <source>Attached to</source>
+                <target>Angehängt an</target>
+            </trans-unit>
+            <trans-unit id="badge.attached" resname="badge.attached">
+                <source>Attached</source>
+                <target>Angehängt</target>
+            </trans-unit>
+            <trans-unit id="flash.success.attached.title" resname="flash.success.attached.title">
+                <source>Site attached</source>
+                <target>Site angehängt</target>
+            </trans-unit>
+            <trans-unit id="badge.status.active" resname="badge.status.active">
+                <source>Active</source>
+                <target>Aktiv</target>
+            </trans-unit>
+            <trans-unit id="badge.status.pending" resname="badge.status.pending">
+                <source>Pending</source>
+                <target>Ausstehend</target>
+            </trans-unit>
+            <trans-unit id="badge.status.inactive" resname="badge.status.inactive">
+                <source>Inactive</source>
+                <target>Inaktiv</target>
+            </trans-unit>
+            <trans-unit id="badge.status.cancelled" resname="badge.status.cancelled">
+                <source>Cancelled</source>
+                <target>Gekündigt</target>
+            </trans-unit>
+            <trans-unit id="flash.siteAttached" resname="flash.siteAttached">
+                <source>Site "%s" is attached to site "%s". Open the dashboard and the plan of that site.</source>
+                <target>Die Site „%s“ ist an die Site „%s“ angehängt. Öffnen Sie das Dashboard und den Plan dieser Site.</target>
+            </trans-unit>
+            <trans-unit id="flash.detachFailed" resname="flash.detachFailed">
+                <source>The site could not be detached: %s</source>
+                <target>Die Site konnte nicht gelöst werden: %s</target>
+            </trans-unit>
+            <trans-unit id="flash.success.detached.title" resname="flash.success.detached.title">
+                <source>Site detached</source>
+                <target>Site gelöst</target>
+            </trans-unit>
+            <trans-unit id="flash.success.detached" resname="flash.success.detached">
+                <source>Site "%s" is no longer attached to an active site.</source>
+                <target>Die Site „%s“ ist nicht mehr an eine aktive Site angehängt.</target>
+            </trans-unit>
+            <trans-unit id="button.detach" resname="button.detach">
+                <source>Detach</source>
+                <target>Lösen</target>
+            </trans-unit>
+            <trans-unit id="button.cancel" resname="button.cancel">
+                <source>Cancel</source>
+                <target>Abbrechen</target>
+            </trans-unit>
+            <trans-unit id="modal.detach.title" resname="modal.detach.title">
+                <source>Detach "%s"?</source>
+                <target>„%s“ lösen?</target>
+            </trans-unit>
+            <trans-unit id="modal.detach.message" resname="modal.detach.message">
+                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
+                <target>Die Site erfasst keine Daten mehr. Ihre Domain wird aus den freigegebenen Domains der Site „%s“ entfernt. Sie können die Site später neu registrieren oder wieder an eine aktive Site anhängen.</target>
+            </trans-unit>
+            <trans-unit id="modal.attach.title" resname="modal.attach.title">
+                <source>Attach "%1$s" to site "%2$s"?</source>
+                <target>„%1$s“ an die Site „%2$s“ anhängen?</target>
+            </trans-unit>
+            <trans-unit id="modal.attach.message" resname="modal.attach.message">
+                <source>Site "%1$s" sends its data to the analytics of site "%2$s". You cannot move this data to separate analytics later. You can detach the site again. The data from before the detach stays in the analytics of site "%2$s".</source>
+                <target>Die Site „%1$s“ erfasst ihre Daten ab jetzt in der Analytics der Site „%2$s“. Diese Daten können später nicht in eine eigene Analytics übernommen werden. Sie können die Site wieder lösen. Die bis dahin erfassten Daten bleiben aber bei der Site „%2$s“.</target>
+            </trans-unit>
             <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
                 <source>Registration failed: %s</source>
                 <target>Registrierung fehlgeschlagen: %s</target>
@@ -24,7 +100,7 @@
             </trans-unit>
             <trans-unit id="flash.statusFetchFailed" resname="flash.statusFetchFailed">
                 <source>Status query failed. Please check the registration.</source>
-                <target>Statusabfrage fehlgeschlagen. Bitte prüfe die Registrierung.</target>
+                <target>Statusabfrage fehlgeschlagen. Bitte prüfen Sie die Registrierung.</target>
             </trans-unit>
             <trans-unit id="flash.dashboardUrlUnavailable" resname="flash.dashboardUrlUnavailable">
                 <source>Dashboard URL could not be retrieved.</source>
@@ -41,18 +117,6 @@
             <trans-unit id="flash.success.registered" resname="flash.success.registered">
                 <source>Site "%s" successfully registered.</source>
                 <target>Site „%s" erfolgreich registriert.</target>
-            </trans-unit>
-            <trans-unit id="flash.accessDenied" resname="flash.accessDenied">
-                <source>Access denied. You do not have the Analytics Manager permission.</source>
-                <target>Zugriff verweigert. Du verfügst nicht über die Berechtigung für den Analytics Manager.</target>
-            </trans-unit>
-            <trans-unit id="be_groups.custom_options.analytics" resname="be_groups.custom_options.analytics">
-                <source>TYPO3 Analytics</source>
-                <target>TYPO3 Analytics</target>
-            </trans-unit>
-            <trans-unit id="be_groups.custom_options.analytics.manager" resname="be_groups.custom_options.analytics.manager">
-                <source>Analytics Manager (full access: registration, status, plan management)</source>
-                <target>Analytics Manager (vollständiger Zugriff: Registrierung, Status, Planverwaltung)</target>
             </trans-unit>
             <trans-unit id="backend.headline" resname="backend.headline">
                 <source>TYPO3 Analytics</source>
@@ -108,7 +172,7 @@
             </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
-                <target>Website ID</target>
+                <target>Website-ID</target>
             </trans-unit>
             <trans-unit id="label.status" resname="label.status">
                 <source>Status</source>
@@ -131,19 +195,19 @@
                 <target>Gültig bis</target>
             </trans-unit>
             <trans-unit id="label.resetsAt" resname="label.resetsAt">
-                <source>resets at</source>
+                <source>Resets at</source>
                 <target>Reset am</target>
             </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
-                <source>exhausted</source>
-                <target>erschöpft</target>
+                <source>Exhausted</source>
+                <target>Erschöpft</target>
             </trans-unit>
             <trans-unit id="badge.lowCredits" resname="badge.lowCredits">
-                <source>low credits</source>
-                <target>wenig Credits</target>
+                <source>Low credits</source>
+                <target>Wenig Credits</target>
             </trans-unit>
             <trans-unit id="label.plans.heading" resname="label.plans.heading">
-                <source>Our Plans</source>
+                <source>Our plans</source>
                 <target>Unsere Pläne</target>
             </trans-unit>
             <trans-unit id="label.plans.hide" resname="label.plans.hide">
@@ -163,7 +227,7 @@
                 <target>Kostenlos</target>
             </trans-unit>
             <trans-unit id="label.availablePlans" resname="label.availablePlans">
-                <source>Available Plans</source>
+                <source>Available plans</source>
                 <target>Verfügbare Pläne</target>
             </trans-unit>
             <trans-unit id="label.plans.monthly" resname="label.plans.monthly">
@@ -207,7 +271,7 @@
                 <target>Kontakt aufnehmen</target>
             </trans-unit>
             <trans-unit id="label.plans.custom.emailSubject" resname="label.plans.custom.emailSubject">
-                <source>Custom Plan Inquiry</source>
+                <source>Custom plan inquiry</source>
                 <target>Anfrage Custom Plan</target>
             </trans-unit>
             <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
@@ -220,18 +284,18 @@
             </trans-unit>
             <trans-unit id="message.touchpointsExhausted" resname="message.touchpointsExhausted">
                 <source>Your credits have been used up. Add more credits via</source>
-                <target>Deine Credits sind aufgebraucht. Weitere Credits erhältst du über</target>
+                <target>Ihre Credits sind aufgebraucht. Weitere Credits erhalten Sie über</target>
             </trans-unit>
             <trans-unit id="message.touchpointsLow" resname="message.touchpointsLow">
                 <source>Your credits are running low. Add more credits via</source>
-                <target>Deine Credits werden knapp. Weitere Credits erhältst du über</target>
+                <target>Ihre Credits werden knapp. Weitere Credits erhalten Sie über</target>
             </trans-unit>
             <trans-unit id="button.dashboard" resname="button.dashboard">
                 <source>Dashboard</source>
                 <target>Dashboard</target>
             </trans-unit>
             <trans-unit id="button.managePlan" resname="button.managePlan">
-                <source>Manage Plan</source>
+                <source>Manage plan</source>
                 <target>Plan verwalten</target>
             </trans-unit>
             <trans-unit id="button.subscribePlan" resname="button.subscribePlan">
@@ -249,6 +313,30 @@
             <trans-unit id="placeholder.registrationEmail" resname="placeholder.registrationEmail">
                 <source>Email address for registration</source>
                 <target>E-Mail-Adresse für Registrierung</target>
+            </trans-unit>
+            <trans-unit id="label.registrationMode" resname="label.registrationMode">
+                <source>What would you like to do with this site?</source>
+                <target>Was möchten Sie mit dieser Site tun?</target>
+            </trans-unit>
+            <trans-unit id="label.registerNewSite" resname="label.registerNewSite">
+                <source>Register as a new site</source>
+                <target>Als neue Site registrieren</target>
+            </trans-unit>
+            <trans-unit id="label.attachToSite" resname="label.attachToSite">
+                <source>Attach to an active site</source>
+                <target>An eine aktive Site anhängen</target>
+            </trans-unit>
+            <trans-unit id="label.attachTarget" resname="label.attachTarget">
+                <source>Active site</source>
+                <target>Aktive Site</target>
+            </trans-unit>
+            <trans-unit id="placeholder.attachTarget" resname="placeholder.attachTarget">
+                <source>Select an active site</source>
+                <target>Aktive Site auswählen</target>
+            </trans-unit>
+            <trans-unit id="button.attach" resname="button.attach">
+                <source>Attach</source>
+                <target>Anhängen</target>
             </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
@@ -268,7 +356,7 @@
             </trans-unit>
             <trans-unit id="notification.subscriptionUpgraded.message" resname="notification.subscriptionUpgraded.message">
                 <source>Your plan has been successfully upgraded.</source>
-                <target>Dein Plan wurde erfolgreich aktualisiert.</target>
+                <target>Ihr Plan wurde erfolgreich aktualisiert.</target>
             </trans-unit>
             <trans-unit id="pagePerformance.ariaLabel" resname="pagePerformance.ariaLabel">
                 <source>Page performance</source>
@@ -358,26 +446,6 @@
                 <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
                 <target>Der Prozentsatz der Besucher, die nach dem Aufrufen dieser Seite weiter gesurft haben. Berechnet als 100 % minus Absprungrate.</target>
             </trans-unit>
-            <trans-unit id="dashboard.analyticsOverview.title" resname="dashboard.analyticsOverview.title">
-                <source>Analytics Overview</source>
-                <target>Analytics-Übersicht</target>
-            </trans-unit>
-            <trans-unit id="dashboard.analyticsOverview.description" resname="dashboard.analyticsOverview.description">
-                <source>Site performance, top pages, traffic graph and traffic sources (channel, devices, browser, countries).</source>
-                <target>Site-Performance, Top-Seiten, Traffic-Verlauf und Traffic-Quellen (Kanal, Geräte, Browser, Länder).</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.setting.title.label" resname="dashboardWidget.setting.title.label">
-                <source>Title</source>
-                <target>Titel</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.setting.showMeta.label" resname="dashboardWidget.setting.showMeta.label">
-                <source>Show site &amp; period in title</source>
-                <target>Site &amp; Zeitraum im Titel anzeigen</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
-                <source>Analytics</source>
-                <target>Analytics</target>
-            </trans-unit>
             <trans-unit id="dashboardWidget.topPages.title" resname="dashboardWidget.topPages.title">
                 <source>Analytics: Top pages</source>
                 <target>Analytics: Top-Seiten</target>
@@ -421,10 +489,6 @@
             <trans-unit id="dashboardWidget.topPages.openInPageModule" resname="dashboardWidget.topPages.openInPageModule">
                 <source>Open in page module</source>
                 <target>Im Seitenmodul öffnen</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
-                <source>Analytics</source>
-                <target>Analytics</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.title" resname="dashboardWidget.sitePerformance.title">
                 <source>Analytics: Site performance</source>
@@ -502,10 +566,6 @@
                 <source>How long visitors view a page of this site on average.</source>
                 <target>Wie lange Besucher eine Seite dieser Site durchschnittlich ansehen.</target>
             </trans-unit>
-            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
-                <source>TYPO3 Analytics</source>
-                <target>TYPO3 Analytics</target>
-            </trans-unit>
             <trans-unit id="dashboardWidget.trafficGraph.title" resname="dashboardWidget.trafficGraph.title">
                 <source>Analytics: Traffic Graph</source>
                 <target>Analytics: Traffic-Verlauf</target>
@@ -557,38 +617,6 @@
             <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors" resname="dashboardWidget.trafficGraph.chartLabel.visitors">
                 <source>Unique visitors</source>
                 <target>Eindeutige Besucher</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.new" resname="dashboardWidget.trafficGraph.chartLabel.visitors.new">
-                <source>New visitors</source>
-                <target>Neue Besucher</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.overall" resname="dashboardWidget.trafficGraph.chartLabel.visitors.overall">
-                <source>Total visitors</source>
-                <target>Besucher gesamt</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.chartLabel.visitors.returning" resname="dashboardWidget.trafficGraph.chartLabel.visitors.returning">
-                <source>Returning visitors</source>
-                <target>Wiederkehrende Besucher</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.allMetricsHidden" resname="dashboardWidget.trafficGraph.allMetricsHidden">
-                <source>Please enable at least one metric to display the chart.</source>
-                <target>Bitte aktiviere mindestens eine Metrik, um das Diagramm anzuzeigen.</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessions" resname="dashboardWidget.trafficGraph.yAxisTitle.sessions">
-                <source>Sessions</source>
-                <target>Sitzungen</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors" resname="dashboardWidget.trafficGraph.yAxisTitle.sessionsAndVisitors">
-                <source>Sessions / Visitors</source>
-                <target>Sitzungen / Besucher</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visitors" resname="dashboardWidget.trafficGraph.yAxisTitle.visitors">
-                <source>Visitors</source>
-                <target>Besucher</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficGraph.yAxisTitle.visits" resname="dashboardWidget.trafficGraph.yAxisTitle.visits">
-                <source>Visits</source>
-                <target>Besuche</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
                 <source>TYPO3 Analytics</source>
@@ -666,50 +694,6 @@
                 <source>Unknown</source>
                 <target>Unbekannt</target>
             </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.device.phone" resname="dashboardWidget.trafficSources.device.phone">
-                <source>Phone</source>
-                <target>Handy</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.device.undefined" resname="dashboardWidget.trafficSources.device.undefined">
-                <source>Other</source>
-                <target>Sonstige</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.browsers" resname="dashboardWidget.trafficSources.browsers">
-                <source>Browser</source>
-                <target>Browser</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.countries" resname="dashboardWidget.trafficSources.countries">
-                <source>Countries</source>
-                <target>Länder</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.other" resname="dashboardWidget.trafficSources.other">
-                <source>Other</source>
-                <target>Sonstige</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.sessions" resname="dashboardWidget.trafficSources.sessions">
-                <source>Sessions</source>
-                <target>Sitzungen</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.totalSessions" resname="dashboardWidget.trafficSources.totalSessions">
-                <source>Total Sessions</source>
-                <target>Sitzungen gesamt</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.comparedToPreviousPeriod" resname="dashboardWidget.trafficSources.comparedToPreviousPeriod">
-                <source>Compared to previous period</source>
-                <target>Verglichen mit dem vorherigen Zeitraum</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.showAll" resname="dashboardWidget.trafficSources.showAll">
-                <source>Show in Analytics</source>
-                <target>In Analytics anzeigen</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.setting.chartType.label" resname="dashboardWidget.trafficSources.setting.chartType.label">
-                <source>Chart type</source>
-                <target>Diagrammtyp</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSources.setting.section.label" resname="dashboardWidget.trafficSources.setting.section.label">
-                <source>Section</source>
-                <target>Abschnitt</target>
-            </trans-unit>
             <trans-unit id="dashboardWidget.trafficSources.tooltip.share" resname="dashboardWidget.trafficSources.tooltip.share">
                 <source>% from all</source>
                 <target>% von allen</target>
@@ -717,38 +701,6 @@
             <trans-unit id="dashboardWidget.trafficSources.tooltip.change" resname="dashboardWidget.trafficSources.tooltip.change">
                 <source>Change</source>
                 <target>Änderung</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesBrowser.title" resname="dashboardWidget.trafficSourcesBrowser.title">
-                <source>Traffic Sources: Browser</source>
-                <target>Traffic-Quellen: Browser</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesBrowser.description" resname="dashboardWidget.trafficSourcesBrowser.description">
-                <source>Shows the browser distribution of your website visitors.</source>
-                <target>Zeigt die Browser-Verteilung deiner Website-Besucher.</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesChannel.title" resname="dashboardWidget.trafficSourcesChannel.title">
-                <source>Traffic Sources: Channel</source>
-                <target>Traffic-Quellen: Kanal</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesChannel.description" resname="dashboardWidget.trafficSourcesChannel.description">
-                <source>Shows the traffic channel distribution of your website visitors.</source>
-                <target>Zeigt die Kanalverteilung des Traffics deiner Website-Besucher.</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesCountries.title" resname="dashboardWidget.trafficSourcesCountries.title">
-                <source>Traffic Sources: Countries</source>
-                <target>Traffic-Quellen: Länder</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesCountries.description" resname="dashboardWidget.trafficSourcesCountries.description">
-                <source>Shows the geographic distribution of your website visitors.</source>
-                <target>Zeigt die geografische Verteilung deiner Website-Besucher.</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesDevices.title" resname="dashboardWidget.trafficSourcesDevices.title">
-                <source>Traffic Sources: Devices</source>
-                <target>Traffic-Quellen: Geräte</target>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.trafficSourcesDevices.description" resname="dashboardWidget.trafficSourcesDevices.description">
-                <source>Shows the device distribution of your website visitors.</source>
-                <target>Zeigt die Geräteverteilung deiner Website-Besucher.</target>
             </trans-unit>
             <trans-unit id="dashboardWidget.noDataForPeriod" resname="dashboardWidget.noDataForPeriod">
                 <source>No data available for the period: %s.</source>

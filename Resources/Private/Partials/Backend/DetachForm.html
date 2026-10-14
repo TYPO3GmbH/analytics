@@ -1,0 +1,18 @@
+{namespace core=TYPO3\CMS\Core\ViewHelpers}
+
+<f:comment>Button to detach a site from the active site. activeSiteName names the active site in the confirmation.</f:comment>
+<form
+    method="post"
+    action="{detachUri}"
+    class="tx-analytics-detach-form"
+    data-confirm-title="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:modal.detach.title', arguments: {0: site.pageName})}"
+    data-confirm-message="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:modal.detach.message', arguments: {0: activeSiteName})}"
+    data-confirm-ok="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.detach')}"
+    data-confirm-cancel="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.cancel')}"
+>
+    <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
+    <button type="submit" class="btn btn-default">
+        <core:icon identifier="actions-unlink" size="small" />
+        <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.detach" />
+    </button>
+</form>

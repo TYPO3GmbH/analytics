@@ -174,4 +174,57 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
             throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
         }
     }
+
+    /**
+     * @return list<string>
+     * @throws AnalyticsApiException
+     */
+    public function addWhitelistedDomain(string $websiteId, string $instanceId, string $instanceSecret, string $domain): array
+    {
+        $path = '/api/website/' . $websiteId . '/whitelisted-domains';
+        // The HMAC signature covers the body, so the request sends exactly this string.
+        $body = json_encode(['domain' => $domain], JSON_THROW_ON_ERROR);
+        try {
+            $response = $this->requestFactory->request(
+                $this->apiConfiguration->getBaseUrl() . '/website/' . $websiteId . '/whitelisted-domains',
+                'POST',
+                array_merge($this->apiConfiguration->getRequestOptions(), [
+                    'headers' => array_merge(
+                        $this->hmacSigner->buildHeaders('POST', $path, $instanceId, $instanceSecret, $body),
+                        ['Content-Type' => 'application/json', 'Accept' => 'application/json']
+                    ),
+                    'body' => $body,
+                ])
+            );
+            /** @var array<string, mixed> $data */
+            $data = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $domains = is_array($data['domains'] ?? null) ? $data['domains'] : [];
+            return array_values(array_map('strval', array_filter($domains, 'is_string')));
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
+     * @throws AnalyticsApiException
+     */
+    public function removeWhitelistedDomain(string $websiteId, string $instanceId, string $instanceSecret, string $host): void
+    {
+        $suffix = '/website/' . $websiteId . '/whitelisted-domains/' . rawurlencode($host);
+        try {
+            $this->requestFactory->request(
+                $this->apiConfiguration->getBaseUrl() . $suffix,
+                'DELETE',
+                array_merge($this->apiConfiguration->getRequestOptions(), [
+                    'headers' => $this->hmacSigner->buildHeaders('DELETE', '/api' . $suffix, $instanceId, $instanceSecret),
+                ])
+            );
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
 }

@@ -49,7 +49,7 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
     }
 
     /**
-     * @return array{site: Site, websiteId: string, apiKey: string}|null
+     * @return array{site: Site, websiteId: string, apiKey: string, pageUrlFilter: list<string>}|null
      */
     public function resolveAnalyticsSite(string $siteIdentifier): ?array
     {
@@ -80,7 +80,9 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
     }
 
     /**
-     * @return array{site: Site, websiteId: string, apiKey: string}|null
+     * A site attached to an active site has the copied credentials of that site.
+     *
+     * @return array{site: Site, websiteId: string, apiKey: string, pageUrlFilter: list<string>}|null
      */
     private function extractSiteCredentials(Site $site): ?array
     {
@@ -92,9 +94,42 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
                 return null;
             }
             $apiKey = $this->cipherService->decrypt($encryptedApiKey);
-            return ['site' => $site, 'websiteId' => $websiteId, 'apiKey' => $apiKey];
+            return ['site' => $site, 'websiteId' => $websiteId, 'apiKey' => $apiKey, 'pageUrlFilter' => $this->buildPageUrlFilter($site)];
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Several sites can track into one website (see SiteAttachment), so every query is limited
+     * to the bases of the site and its languages. A value starts with "://", so it matches
+     * http and https, but no other host that only ends with the same name. A value with a
+     * path that the value of its host already covers is left out.
+     *
+     * @return list<string>
+     */
+    private function buildPageUrlFilter(Site $site): array
+    {
+        $values = [];
+        foreach ([$site->getBase(), ...array_map(static fn ($language) => $language->getBase(), $site->getAllLanguages())] as $base) {
+            if ($base->getHost() === '') {
+                continue;
+            }
+            $port = $base->getPort();
+            $values[] = '://' . $base->getHost() . ($port !== null ? ':' . $port : '') . rtrim($base->getPath(), '/');
+        }
+        $values = array_unique($values);
+        sort($values);
+
+        $filter = [];
+        foreach ($values as $value) {
+            foreach ($filter as $shorter) {
+                if (str_starts_with($value, $shorter . '/')) {
+                    continue 2;
+                }
+            }
+            $filter[] = $value;
+        }
+        return $filter;
     }
 }
