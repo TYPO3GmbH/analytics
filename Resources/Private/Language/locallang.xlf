@@ -335,9 +335,6 @@
             <trans-unit id="pagePerformance.tooltip.description.continuationRate" resname="pagePerformance.tooltip.description.continuationRate">
                 <source>The percentage of visitors who continued browsing after viewing this page. Calculated as 100% minus the bounce rate.</source>
             </trans-unit>
-            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
-                <source>Analytics</source>
-            </trans-unit>
             <trans-unit id="dashboardWidget.topPages.title" resname="dashboardWidget.topPages.title">
                 <source>Analytics: Top pages</source>
             </trans-unit>
@@ -370,9 +367,6 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.topPages.openInPageModule" resname="dashboardWidget.topPages.openInPageModule">
                 <source>Open in page module</source>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
-                <source>Analytics</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.title" resname="dashboardWidget.sitePerformance.title">
                 <source>Analytics: Site performance</source>
@@ -430,9 +424,6 @@
             </trans-unit>
             <trans-unit id="dashboardWidget.sitePerformance.description.avg-duration" resname="dashboardWidget.sitePerformance.description.avg-duration">
                 <source>How long visitors view a page of this site on average.</source>
-            </trans-unit>
-            <trans-unit id="dashboardWidget.group.analytics" resname="dashboardWidget.group.analytics">
-                <source>TYPO3 Analytics</source>
             </trans-unit>
             <trans-unit id="dashboardWidget.trafficGraph.title" resname="dashboardWidget.trafficGraph.title">
                 <source>Analytics: Traffic Graph</source>
