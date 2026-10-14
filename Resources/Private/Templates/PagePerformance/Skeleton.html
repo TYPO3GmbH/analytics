@@ -1,0 +1,16 @@
+<f:comment>Placeholder in the page module. page-performance.js loads the bar into it.</f:comment>
+<f:spaceless>
+<section
+    class="tx-analytics-performance-bar tx-analytics-performance-bar--loading"
+    aria-label="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.ariaLabel')}"
+    aria-busy="true"
+    data-page-id="{pageId}"
+    data-language-id="{languageId}"
+    data-days="{days}"
+>
+    <div class="tx-analytics-performance-loading-overlay" aria-live="polite">
+        <span class="tx-analytics-performance-loading-spinner" aria-hidden="true"></span>
+        <span><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.loading" /></span>
+    </div>
+</section>
+</f:spaceless>
