@@ -9,9 +9,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Dashboard\Widget\TrafficSourcesWidget;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Core\View\ViewInterface;
 use TYPO3\CMS\Dashboard\Widgets\WidgetConfigurationInterface;
@@ -25,7 +25,7 @@ final class TrafficSourcesWidgetTest extends UnitTestCase
     private AnalyticsSiteProviderInterface&MockObject $siteProvider;
     private TrafficSourcesServiceInterface&MockObject $trafficSourcesService;
     private MetricFormatterInterface&MockObject $formatter;
-    private UriBuilder&MockObject $uriBuilder;
+    private DashboardLinkBuilderInterface&MockObject $dashboardLinkBuilder;
     private ViewFactoryInterface&MockObject $viewFactory;
     private ViewInterface&MockObject $view;
 
@@ -67,10 +67,8 @@ final class TrafficSourcesWidgetTest extends UnitTestCase
         $this->formatter->method('formatShare')->willReturn('0.00');
         $this->formatter->method('formatPercentageChange')->willReturn(null);
 
-        $mockUri = $this->createMock(\Psr\Http\Message\UriInterface::class);
-        $mockUri->method('__toString')->willReturn('');
-        $this->uriBuilder = $this->createMock(UriBuilder::class);
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn($mockUri);
+        $this->dashboardLinkBuilder = $this->createMock(DashboardLinkBuilderInterface::class);
+        $this->dashboardLinkBuilder->method('build')->willReturn('');
 
         $this->view = $this->createMock(ViewInterface::class);
         $this->view->method('assignMultiple')->willReturnSelf();
@@ -87,7 +85,7 @@ final class TrafficSourcesWidgetTest extends UnitTestCase
             $this->siteProvider,
             $this->trafficSourcesService,
             $this->formatter,
-            $this->uriBuilder,
+            $this->dashboardLinkBuilder,
             $this->viewFactory,
             $options,
         );

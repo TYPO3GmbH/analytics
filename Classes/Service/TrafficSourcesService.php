@@ -31,8 +31,9 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
         $days = max(1, $days);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
+        $pageUrlFilter = $siteData['pageUrlFilter'];
 
-        $cacheKey = 'traffic_sources_' . md5($websiteId . '_' . $days);
+        $cacheKey = 'traffic_sources_' . md5($websiteId . '_' . implode('|', $pageUrlFilter) . '_' . $days);
 
         /** @var array<string, array{current: int, previous: int}>|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -46,7 +47,7 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
         $previousFrom = $previousTo->modify('-' . ($days - 1) . ' days');
 
         try {
-            $currentResult = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $from, $to);
+            $currentResult = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $from, $to, $pageUrlFilter);
             $data = [];
             foreach ($currentResult['datasets'] as $dataset) {
                 $label = (string)($dataset['label'] ?? '');
@@ -56,7 +57,7 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
             }
 
             try {
-                $previousResult = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $previousFrom, $previousTo);
+                $previousResult = $this->analyticsClient->fetchTrafficShareInDepth($websiteId, $apiKey, $previousFrom, $previousTo, $pageUrlFilter);
                 foreach ($previousResult['datasets'] as $dataset) {
                     $label = (string)($dataset['label'] ?? '');
                     if ($label !== '' && isset($data[$label])) {
@@ -85,8 +86,8 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
             $siteIdentifier,
             $days,
             'traffic_devices_',
-            fn (\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $pFrom, \DateTimeImmutable $pTo, string $wid, string $key): array
-                => $this->analyticsClient->fetchDeviceSessions($wid, $key, $from, $to, $pFrom, $pTo),
+            fn (\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $pFrom, \DateTimeImmutable $pTo, string $wid, string $key, array $filter): array
+                => $this->analyticsClient->fetchDeviceSessions($wid, $key, $from, $to, $pFrom, $pTo, $filter),
         );
         return $result;
     }
@@ -101,8 +102,8 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
             $siteIdentifier,
             $days,
             'traffic_browsers_',
-            fn (\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $pFrom, \DateTimeImmutable $pTo, string $wid, string $key): array
-                => $this->analyticsClient->fetchBrowserSessions($wid, $key, $from, $to, $pFrom, $pTo),
+            fn (\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $pFrom, \DateTimeImmutable $pTo, string $wid, string $key, array $filter): array
+                => $this->analyticsClient->fetchBrowserSessions($wid, $key, $from, $to, $pFrom, $pTo, $filter),
         );
         return $result;
     }
@@ -117,14 +118,14 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
             $siteIdentifier,
             $days,
             'traffic_countries_',
-            fn (\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $pFrom, \DateTimeImmutable $pTo, string $wid, string $key): array
-                => $this->analyticsClient->fetchCountrySessions($wid, $key, $from, $to, $pFrom, $pTo),
+            fn (\DateTimeImmutable $from, \DateTimeImmutable $to, \DateTimeImmutable $pFrom, \DateTimeImmutable $pTo, string $wid, string $key, array $filter): array
+                => $this->analyticsClient->fetchCountrySessions($wid, $key, $from, $to, $pFrom, $pTo, $filter),
         );
         return $result;
     }
 
     /**
-     * @param callable(\DateTimeImmutable, \DateTimeImmutable, \DateTimeImmutable, \DateTimeImmutable, string, string): list<array<string, mixed>> $fetcher
+     * @param callable(\DateTimeImmutable, \DateTimeImmutable, \DateTimeImmutable, \DateTimeImmutable, string, string, list<string>): list<array<string, mixed>> $fetcher
      * @return list<array<string, mixed>>|null
      */
     private function loadSessionData(string $siteIdentifier, int $days, string $cacheKeyPrefix, callable $fetcher): ?array
@@ -137,8 +138,9 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
         $days = max(1, $days);
         $websiteId = $siteData['websiteId'];
         $apiKey = $siteData['apiKey'];
+        $pageUrlFilter = $siteData['pageUrlFilter'];
 
-        $cacheKey = $cacheKeyPrefix . md5($websiteId . '_' . $days);
+        $cacheKey = $cacheKeyPrefix . md5($websiteId . '_' . implode('|', $pageUrlFilter) . '_' . $days);
 
         /** @var list<array<string, mixed>>|false $cached */
         $cached = $this->cache->get($cacheKey);
@@ -152,7 +154,7 @@ final readonly class TrafficSourcesService implements TrafficSourcesServiceInter
         $previousFrom = $previousTo->modify('-' . ($days - 1) . ' days');
 
         try {
-            $data = $fetcher($from, $to, $previousFrom, $previousTo, $websiteId, $apiKey);
+            $data = $fetcher($from, $to, $previousFrom, $previousTo, $websiteId, $apiKey, $pageUrlFilter);
             $this->cache->set($cacheKey, $data);
             return $data;
         } catch (AnalyticsApiException $e) {

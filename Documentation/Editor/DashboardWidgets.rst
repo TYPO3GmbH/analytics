@@ -31,6 +31,24 @@ All v14+ widgets share two common settings:
         -   Appends the site name and period in parentheses to the title,
             e.g. :guilabel:`Traffic Sources (My Site · 7 days)`.
 
+..  _widgets-shared-analytics:
+
+Data of the selected site
+=========================
+
+A site can use the analytics of an active site. See
+:ref:`backend-module`. Then the analytics of the active site contain the data
+of both sites. Each widget shows only the data of the pages on the domains of
+the selected site. The widget uses the base of the site and the bases of all
+site languages.
+
+The :guilabel:`Show in Analytics` link of a widget works like this:
+
+-   For an active site, the link opens the dashboard of this site. The widget
+    shows the link only when you have access to the root page of the site.
+-   For an attached site, the widget shows no link. The analytics dashboard
+    cannot show only the data of one domain.
+
 
 ..  _widget-traffic-graph:
 

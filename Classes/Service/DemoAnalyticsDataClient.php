@@ -65,6 +65,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $previousFrom,
         \DateTimeImmutable $previousTo,
         int $limit = 10,
+        array $pageUrlFilter = [],
     ): array {
         $base = $this->siteBaseForWebsiteId($websiteId);
         return array_slice([
@@ -108,6 +109,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         return $this->graphPayload('Visits', $from, $to, $this->series($from, $to, 420, 60));
     }
@@ -117,6 +119,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         return $this->graphPayload('Sessions', $from, $to, $this->series($from, $to, 310, 42));
     }
@@ -126,6 +129,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         $newVisitors = $this->series($from, $to, 160, 22);
         $returningVisitors = $this->series($from, $to, 42, 18, 5);
@@ -146,6 +150,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
+        array $pageUrlFilter = [],
     ): array {
         $isPrevious = $to < new \DateTimeImmutable('today 00:00:00');
         $totals = $isPrevious
@@ -169,6 +174,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
         ?\DateTimeImmutable $previousTo = null,
+        array $pageUrlFilter = [],
     ): array {
         return [
             ['deviceType' => 'desktop', 'sessionCount' => 920, 'sessionPercentOfTotal' => 54.1, 'previousSessionCount' => 760],
@@ -184,6 +190,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
         ?\DateTimeImmutable $previousTo = null,
+        array $pageUrlFilter = [],
     ): array {
         return [
             ['browserName' => 'Chrome', 'sessionCount' => 780, 'sessionPercentOfTotal' => 45.9, 'previousSessionCount' => 690],
@@ -201,6 +208,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
         ?\DateTimeImmutable $previousTo = null,
+        array $pageUrlFilter = [],
     ): array {
         return [
             ['countryCode' => 'DE', 'sessionCount' => 620, 'sessionPercentOfTotal' => 36.5, 'previousSessionCount' => 510],
@@ -219,6 +227,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $to,
         \DateTimeImmutable $previousFrom,
         \DateTimeImmutable $previousTo,
+        array $pageUrlFilter = [],
     ): array {
         $visits = $this->series($from, $to, 420, 60);
         return [

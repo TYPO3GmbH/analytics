@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Controller;
 
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
@@ -11,7 +12,6 @@ use T3G\Analytics\Dashboard\Widget\TrafficSourcesItemsTrait;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -25,7 +25,7 @@ final readonly class TrafficSourcesAjaxController
         private TrafficSourcesServiceInterface $trafficSourcesService,
         private AnalyticsSiteProviderInterface $siteProvider,
         private MetricFormatterInterface $formatter,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
     }
@@ -92,13 +92,7 @@ final readonly class TrafficSourcesAjaxController
         ]);
         $html = $view->render('Dashboard/Widget/TrafficSourcesSections');
 
-        $showAllUrl = $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', [
-                'siteIdentifier' => $siteIdentifier,
-                'days' => $days,
-                'dashboardPath' => 'traffic/share',
-            ])
-            : '';
+        $showAllUrl = $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days, 'dashboardPath' => 'traffic/share']);
 
         return new JsonResponse(['status' => 'ok', 'html' => $html, 'showAllUrl' => $showAllUrl]);
     }

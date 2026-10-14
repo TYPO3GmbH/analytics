@@ -68,13 +68,7 @@ trait TrafficSourcesWidgetTrait
 
     private function buildDashboardUrl(string $siteIdentifier, int $days, string $dashboardPath): string
     {
-        if ($siteIdentifier === '') {
-            return '';
-        }
-        return (string)$this->uriBuilder->buildUriFromRoute(
-            'site_analytics.dashboard',
-            ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => $dashboardPath]
-        );
+        return $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days, 'dashboardPath' => $dashboardPath]);
     }
 
     /**

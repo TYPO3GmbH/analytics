@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Controller;
 
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\SitePerformanceServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -19,7 +19,7 @@ final readonly class SitePerformanceAjaxController
 {
     public function __construct(
         private SitePerformanceServiceInterface $sitePerformanceService,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
     }
@@ -54,9 +54,7 @@ final readonly class SitePerformanceAjaxController
         ]);
         $html = $view->render('Dashboard/Widget/SitePerformanceMetrics');
 
-        $showAllUrl = $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier, 'days' => $days])
-            : '';
+        $showAllUrl = $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days]);
 
         return new JsonResponse(['status' => 'ok', 'html' => $html, 'showAllUrl' => $showAllUrl]);
     }

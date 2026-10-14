@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Controller;
 
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\TopPagesServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -19,7 +19,7 @@ final readonly class TopPagesAjaxController
 {
     public function __construct(
         private TopPagesServiceInterface $topPagesService,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private ViewFactoryInterface $viewFactory,
     ) {
     }
@@ -35,9 +35,7 @@ final readonly class TopPagesAjaxController
         $trendLabel = $this->translate('dashboardWidget.topPages.comparedToPreviousPeriod');
         $pages = $pages !== null ? $this->topPagesService->buildPageItems($pages, $trendLabel) : [];
 
-        $showAllUrl = $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => 'dashboard/pages'])
-            : '';
+        $showAllUrl = $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days, 'dashboardPath' => 'dashboard/pages']);
 
         $view = $this->viewFactory->create(new ViewFactoryData(
             templateRootPaths: [GeneralUtility::getFileAbsFileName('EXT:analytics/Resources/Private/Templates')],
