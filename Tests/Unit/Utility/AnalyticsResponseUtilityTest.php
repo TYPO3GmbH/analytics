@@ -93,11 +93,27 @@ final class AnalyticsResponseUtilityTest extends UnitTestCase
     #[Test]
     public function timeSeriesDataReadsTheFirstDataset(): void
     {
-        $rawBody = '{"payload":{"labels":["2026-06-01","2026-06-02"],"datasets":[{"data":[3,"4.5"]},{"data":[9,9]}]}}';
+        $body = ['payload' => ['labels' => ['2026-06-01', '2026-06-02'], 'datasets' => [['data' => [3, '4.5']], ['data' => [9, 9]]]]];
 
         self::assertSame(
             ['data' => [3.0, 4.5], 'labels' => ['2026-06-01', '2026-06-02']],
-            AnalyticsResponseUtility::timeSeriesData($rawBody)
+            AnalyticsResponseUtility::timeSeriesData($body)
         );
+    }
+
+    /** graph */
+
+    #[Test]
+    public function graphReadsLabelsAndAllDatasets(): void
+    {
+        $payload = ['labels' => ['2026-06-01'], 'datasets' => [['label' => 'Visits', 'data' => [3], 'total' => 3]]];
+
+        self::assertSame($payload, AnalyticsResponseUtility::graph($payload));
+    }
+
+    #[Test]
+    public function graphIsEmptyWithoutPayload(): void
+    {
+        self::assertSame(['labels' => [], 'datasets' => []], AnalyticsResponseUtility::graph(null));
     }
 }

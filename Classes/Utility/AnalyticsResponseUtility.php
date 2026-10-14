@@ -99,13 +99,11 @@ final class AnalyticsResponseUtility
     /**
      * Reads the first dataset of a graph response.
      *
+     * @param array<string, mixed> $body
      * @return array{data: list<int|float>, labels: list<string>}
-     * @throws \JsonException
      */
-    public static function timeSeriesData(string $rawBody): array
+    public static function timeSeriesData(array $body): array
     {
-        /** @var array<string, mixed> $body */
-        $body = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
         $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
         $datasets = is_array($payload['datasets'] ?? null) ? $payload['datasets'] : [];
         $rawData = is_array($datasets[0]['data'] ?? null) ? $datasets[0]['data'] : [];
@@ -114,5 +112,20 @@ final class AnalyticsResponseUtility
             'data' => array_values(array_map(static fn (mixed $v): int|float => is_numeric($v) ? (float)$v : 0, $rawData)),
             'labels' => array_values(array_map(static fn (mixed $v): string => (string)$v, $rawLabels)),
         ];
+    }
+
+    /**
+     * Reads the labels and all datasets of a graph response.
+     *
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     */
+    public static function graph(mixed $payload): array
+    {
+        $payload = is_array($payload) ? $payload : [];
+        /** @var list<string> $labels */
+        $labels = is_array($payload['labels'] ?? null) ? array_values($payload['labels']) : [];
+        /** @var list<array{label: string, data: list<int>, total: int}> $datasets */
+        $datasets = is_array($payload['datasets'] ?? null) ? array_values($payload['datasets']) : [];
+        return ['labels' => $labels, 'datasets' => $datasets];
     }
 }

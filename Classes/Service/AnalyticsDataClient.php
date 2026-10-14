@@ -59,30 +59,9 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'dateRange' => AnalyticsQueryUtility::utcDayRange($from, $to),
         ];
 
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/analytics/pages?trace=pagesDashboard',
-                'POST',
-                array_merge(
-                    [
-                        'headers' => [
-                            'X-Api-Key' => $apiKey,
-                            'Accept' => 'application/json',
-                        ],
-                        'json' => $payload,
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array<string, mixed> $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
-            return $rows[0] ?? null;
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        $body = $this->postJson($this->websiteUrl($websiteId, 'analytics/pages?trace=pagesDashboard'), $apiKey, $payload);
+        $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+        return $rows[0] ?? null;
     }
 
     /**
@@ -118,30 +97,9 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             ],
         ];
 
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/analytics/pages?trace=topPagesDashboard',
-                'POST',
-                array_merge(
-                    [
-                        'headers' => [
-                            'X-Api-Key' => $apiKey,
-                            'Accept' => 'application/json',
-                        ],
-                        'json' => $payload,
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array<string, mixed> $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
-            return array_values($rows);
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        $body = $this->postJson($this->websiteUrl($websiteId, 'analytics/pages?trace=topPagesDashboard'), $apiKey, $payload);
+        $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+        return array_values($rows);
     }
 
     /**
@@ -210,24 +168,16 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        $websiteBase = $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/';
         $query = AnalyticsQueryUtility::utcDayGraphQuery($from, $to);
-        $body = ['where' => ['and' => [
+        $options = $this->buildRequestOptions($apiKey, ['where' => ['and' => [
             ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
-        ]]];
-        $options = array_merge(
-            [
-                'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                'json' => $body,
-            ],
-            $this->apiConfiguration->getRequestOptions()
-        );
+        ]]]);
 
         $client = $this->guzzleClientFactory->getClient();
         $promises = [
-            'visits' => $client->requestAsync('POST', $websiteBase . 'visits/graph' . $query, $options),
-            'bounceRate' => $client->requestAsync('POST', $websiteBase . 'stats/bounce-rate/graph' . $query, $options),
-            'avgDuration' => $client->requestAsync('POST', $websiteBase . 'stats/average-page-view-duration/graph' . $query, $options),
+            'visits' => $client->requestAsync('POST', $this->websiteUrl($websiteId, 'visits/graph' . $query), $options),
+            'bounceRate' => $client->requestAsync('POST', $this->websiteUrl($websiteId, 'stats/bounce-rate/graph' . $query), $options),
+            'avgDuration' => $client->requestAsync('POST', $this->websiteUrl($websiteId, 'stats/average-page-view-duration/graph' . $query), $options),
         ];
 
         /** @var array<string, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}> $settled */
@@ -240,15 +190,8 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         $failures = [];
 
         foreach ($settled as $key => $result) {
-            if ($result['state'] !== 'fulfilled') {
-                $failures[$key] = $this->exceptionExtractor->extractReason($result['reason'] ?? new \RuntimeException('Unknown error'));
-                continue;
-            }
             try {
-                if (!isset($result['value'])) {
-                    throw new \RuntimeException('Fulfilled without response body');
-                }
-                $parsed = AnalyticsResponseUtility::timeSeriesData((string)$result['value']->getBody());
+                $parsed = AnalyticsResponseUtility::timeSeriesData(AnalyticsResponseUtility::decodeSettledResponse($result));
                 if ($dates === []) {
                     $dates = $parsed['labels'];
                 }
@@ -289,24 +232,8 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
         ]]];
 
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/' . $graphPath . $query,
-                'POST',
-                array_merge(
-                    [
-                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => $body,
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            return AnalyticsResponseUtility::timeSeriesData((string)$response->getBody())['data'];
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        $response = $this->postJson($this->websiteUrl($websiteId, $graphPath . $query), $apiKey, $body);
+        return AnalyticsResponseUtility::timeSeriesData($response)['data'];
     }
 
     /**
@@ -321,37 +248,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         array $pageUrlFilter = [],
     ): array {
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
-
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/visits/graph' . $query,
-                'POST',
-                array_merge(
-                    [
-                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array{payload?: array{labels?: list<string>, datasets?: list<array{label: string, data: list<int>, total: int}>}} $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $payload = $body['payload'] ?? [];
-            return [
-                'labels' => $payload['labels'] ?? [],
-                'datasets' => $payload['datasets'] ?? [],
-            ];
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        return $this->fetchGraph($websiteId, $apiKey, 'visits/graph', $from, $to, $pageUrlFilter);
     }
 
     /**
@@ -366,37 +263,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         array $pageUrlFilter = [],
     ): array {
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
-
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/sessions/all/graph' . $query,
-                'POST',
-                array_merge(
-                    [
-                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array{payload?: array{labels?: list<string>, datasets?: list<array{label: string, data: list<int>, total: int}>}} $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $payload = $body['payload'] ?? [];
-            return [
-                'labels' => $payload['labels'] ?? [],
-                'datasets' => $payload['datasets'] ?? [],
-            ];
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        return $this->fetchGraph($websiteId, $apiKey, 'sessions/all/graph', $from, $to, $pageUrlFilter);
     }
 
     /**
@@ -411,37 +278,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
         array $pageUrlFilter = [],
     ): array {
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
-
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/visitors/all/graph' . $query,
-                'POST',
-                array_merge(
-                    [
-                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array{payload?: array{labels?: list<string>, datasets?: list<array{label: string, data: list<int>, total: int}>}} $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $payload = $body['payload'] ?? [];
-            return [
-                'labels' => $payload['labels'] ?? [],
-                'datasets' => $payload['datasets'] ?? [],
-            ];
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        return $this->fetchGraph($websiteId, $apiKey, 'visitors/all/graph', $from, $to, $pageUrlFilter);
     }
 
     /**
@@ -461,30 +298,13 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'until' => $to->format('Y-m-d\T23:59:59.999P'),
             'unit' => 'day',
         ]);
-
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/traffic-api/traffic-share/in-depth' . $query,
-                'POST',
-                array_merge(
-                    [
-                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array{labels?: list<string>, datasets?: list<array{label: string, data: list<int>, total: int}>} $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            return [
-                'labels' => $body['labels'] ?? [],
-                'datasets' => $body['datasets'] ?? [],
-            ];
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        $body = $this->postJson(
+            $this->websiteUrl($websiteId, 'traffic-api/traffic-share/in-depth' . $query),
+            $apiKey,
+            ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)]
+        );
+        // Unlike the other graph endpoints, this endpoint has no "payload" wrapper.
+        return AnalyticsResponseUtility::graph($body);
     }
 
     /**
@@ -582,27 +402,9 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             ];
         }
 
-        try {
-            $response = $this->requestFactory->request(
-                $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/analytics/sessions?trace=' . $traceParam,
-                'POST',
-                array_merge(
-                    [
-                        'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => $json,
-                    ],
-                    $this->apiConfiguration->getRequestOptions()
-                )
-            );
-            /** @var array{payload?: list<array<string, mixed>>} $body */
-            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
-            return array_values($rows);
-        } catch (AnalyticsApiException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
-        }
+        $body = $this->postJson($this->websiteUrl($websiteId, 'analytics/sessions?trace=' . $traceParam), $apiKey, $json);
+        $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+        return array_values($rows);
     }
 
     /**
@@ -674,11 +476,66 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         ];
     }
 
+    /**
+     * Daily graph of a website, for example "visits/graph".
+     *
+     * @param list<string> $pageUrlFilter
+     * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
+     * @throws AnalyticsApiException
+     */
+    private function fetchGraph(
+        string $websiteId,
+        string $apiKey,
+        string $graphPath,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        array $pageUrlFilter,
+    ): array {
+        $query = '?' . http_build_query([
+            'from' => $from->format('Y-m-d\T00:00:00.000P'),
+            'until' => $to->format('Y-m-d\T23:59:59.999P'),
+            'type' => 'time-series',
+            'unit' => 'day',
+        ]);
+        $body = $this->postJson(
+            $this->websiteUrl($websiteId, $graphPath . $query),
+            $apiKey,
+            ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)]
+        );
+        return AnalyticsResponseUtility::graph($body['payload'] ?? null);
+    }
+
+    /**
+     * Sends a POST request with a JSON body and decodes the JSON response.
+     *
+     * @param array<string, mixed> $json
+     * @return array<string, mixed>
+     * @throws AnalyticsApiException
+     */
+    private function postJson(string $url, string $apiKey, array $json): array
+    {
+        try {
+            $response = $this->requestFactory->request($url, 'POST', $this->buildRequestOptions($apiKey, $json));
+            $body = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            return is_array($body) ? $body : [];
+        } catch (AnalyticsApiException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
+     * @param string $path Path below the website, with query if needed, for example "visits/graph?…"
+     */
+    private function websiteUrl(string $websiteId, string $path): string
+    {
+        return $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/' . $path;
+    }
+
     private function buildSessionsUrl(string $websiteId, string $trace): string
     {
-        return $this->apiConfiguration->getAnalyticsApiBaseUrl()
-            . '/v2/websites/' . rawurlencode($websiteId)
-            . '/analytics/sessions?trace=' . rawurlencode($trace);
+        return $this->websiteUrl($websiteId, 'analytics/sessions?trace=' . rawurlencode($trace));
     }
 
     /**
@@ -687,9 +544,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
      */
     private function buildTimeOnPageUrl(string $websiteId, \DateTimeImmutable $from, \DateTimeImmutable $to): string
     {
-        return $this->apiConfiguration->getAnalyticsApiBaseUrl()
-            . '/v2/websites/' . rawurlencode($websiteId)
-            . '/stats/average-page-view-duration/graph' . AnalyticsQueryUtility::utcDayGraphQuery($from, $to);
+        return $this->websiteUrl($websiteId, 'stats/average-page-view-duration/graph' . AnalyticsQueryUtility::utcDayGraphQuery($from, $to));
     }
 
     /**
