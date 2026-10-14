@@ -15,16 +15,44 @@
                 <target>Site nicht gefunden.</target>
             </trans-unit>
             <trans-unit id="flash.attachFailed" resname="flash.attachFailed">
-                <source>The site could not be added to the active site: %s</source>
-                <target>Die Site konnte nicht zur aktiven Site hinzugefügt werden: %s</target>
+                <source>The site could not be attached to the active site: %s</source>
+                <target>Die Site konnte nicht an die aktive Site angehängt werden: %s</target>
             </trans-unit>
             <trans-unit id="flash.success.attached" resname="flash.success.attached">
-                <source>Site "%s" now uses the analytics of site "%s".</source>
-                <target>Die Site „%s“ nutzt jetzt die Analytics der Site „%s“.</target>
+                <source>Site "%s" is now attached to site "%s".</source>
+                <target>Die Site „%s“ ist jetzt an die Site „%s“ angehängt.</target>
             </trans-unit>
             <trans-unit id="label.attachedTo" resname="label.attachedTo">
-                <source>Uses the analytics of</source>
-                <target>Nutzt die Analytics von</target>
+                <source>Attached to</source>
+                <target>Angehängt an</target>
+            </trans-unit>
+            <trans-unit id="badge.attached" resname="badge.attached">
+                <source>Attached</source>
+                <target>Angehängt</target>
+            </trans-unit>
+            <trans-unit id="flash.success.attached.title" resname="flash.success.attached.title">
+                <source>Site attached</source>
+                <target>Site angehängt</target>
+            </trans-unit>
+            <trans-unit id="badge.status.active" resname="badge.status.active">
+                <source>Active</source>
+                <target>Aktiv</target>
+            </trans-unit>
+            <trans-unit id="badge.status.pending" resname="badge.status.pending">
+                <source>Pending</source>
+                <target>Ausstehend</target>
+            </trans-unit>
+            <trans-unit id="badge.status.inactive" resname="badge.status.inactive">
+                <source>Inactive</source>
+                <target>Inaktiv</target>
+            </trans-unit>
+            <trans-unit id="badge.status.cancelled" resname="badge.status.cancelled">
+                <source>Cancelled</source>
+                <target>Gekündigt</target>
+            </trans-unit>
+            <trans-unit id="flash.siteAttached" resname="flash.siteAttached">
+                <source>Site "%s" is attached to site "%s". Open the dashboard and the plan of that site.</source>
+                <target>Die Site „%s“ ist an die Site „%s“ angehängt. Öffnen Sie das Dashboard und den Plan dieser Site.</target>
             </trans-unit>
             <trans-unit id="flash.detachFailed" resname="flash.detachFailed">
                 <source>The site could not be detached: %s</source>
@@ -35,8 +63,8 @@
                 <target>Site gelöst</target>
             </trans-unit>
             <trans-unit id="flash.success.detached" resname="flash.success.detached">
-                <source>Site "%s" no longer uses the analytics of the active site.</source>
-                <target>Die Site „%s“ nutzt die Analytics der aktiven Site nicht mehr.</target>
+                <source>Site "%s" is no longer attached to an active site.</source>
+                <target>Die Site „%s“ ist nicht mehr an eine aktive Site angehängt.</target>
             </trans-unit>
             <trans-unit id="button.detach" resname="button.detach">
                 <source>Detach</source>
@@ -51,8 +79,16 @@
                 <target>„%s“ lösen?</target>
             </trans-unit>
             <trans-unit id="modal.detach.message" resname="modal.detach.message">
-                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or add it to an active site again later.</source>
-                <target>Die Site erfasst keine Daten mehr. Ihre Domain wird aus den freigegebenen Domains der Site „%s“ entfernt. Sie können die Site später neu registrieren oder wieder zu einer aktiven Site hinzufügen.</target>
+                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
+                <target>Die Site erfasst keine Daten mehr. Ihre Domain wird aus den freigegebenen Domains der Site „%s“ entfernt. Sie können die Site später neu registrieren oder wieder an eine aktive Site anhängen.</target>
+            </trans-unit>
+            <trans-unit id="modal.attach.title" resname="modal.attach.title">
+                <source>Attach "%1$s" to site "%2$s"?</source>
+                <target>„%1$s“ an die Site „%2$s“ anhängen?</target>
+            </trans-unit>
+            <trans-unit id="modal.attach.message" resname="modal.attach.message">
+                <source>Site "%1$s" sends its data to the analytics of site "%2$s". You cannot move this data to separate analytics later. You can detach the site again. The data from before the detach stays in the analytics of site "%2$s".</source>
+                <target>Die Site „%1$s“ erfasst ihre Daten ab jetzt in der Analytics der Site „%2$s“. Diese Daten können später nicht in eine eigene Analytics übernommen werden. Sie können die Site wieder lösen. Die bis dahin erfassten Daten bleiben aber bei der Site „%2$s“.</target>
             </trans-unit>
             <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
                 <source>Registration failed: %s</source>
@@ -148,7 +184,7 @@
             </trans-unit>
             <trans-unit id="label.websiteId" resname="label.websiteId">
                 <source>Website ID</source>
-                <target>Website ID</target>
+                <target>Website-ID</target>
             </trans-unit>
             <trans-unit id="label.status" resname="label.status">
                 <source>Status</source>
@@ -171,19 +207,19 @@
                 <target>Gültig bis</target>
             </trans-unit>
             <trans-unit id="label.resetsAt" resname="label.resetsAt">
-                <source>resets at</source>
+                <source>Resets at</source>
                 <target>Reset am</target>
             </trans-unit>
             <trans-unit id="badge.exhausted" resname="badge.exhausted">
-                <source>exhausted</source>
-                <target>erschöpft</target>
+                <source>Exhausted</source>
+                <target>Erschöpft</target>
             </trans-unit>
             <trans-unit id="badge.lowCredits" resname="badge.lowCredits">
-                <source>low credits</source>
-                <target>wenig Credits</target>
+                <source>Low credits</source>
+                <target>Wenig Credits</target>
             </trans-unit>
             <trans-unit id="label.plans.heading" resname="label.plans.heading">
-                <source>Our Plans</source>
+                <source>Our plans</source>
                 <target>Unsere Pläne</target>
             </trans-unit>
             <trans-unit id="label.plans.hide" resname="label.plans.hide">
@@ -203,7 +239,7 @@
                 <target>Kostenlos</target>
             </trans-unit>
             <trans-unit id="label.availablePlans" resname="label.availablePlans">
-                <source>Available Plans</source>
+                <source>Available plans</source>
                 <target>Verfügbare Pläne</target>
             </trans-unit>
             <trans-unit id="label.plans.monthly" resname="label.plans.monthly">
@@ -247,7 +283,7 @@
                 <target>Kontakt aufnehmen</target>
             </trans-unit>
             <trans-unit id="label.plans.custom.emailSubject" resname="label.plans.custom.emailSubject">
-                <source>Custom Plan Inquiry</source>
+                <source>Custom plan inquiry</source>
                 <target>Anfrage Custom Plan</target>
             </trans-unit>
             <trans-unit id="label.plans.custom.credits" resname="label.plans.custom.credits">
@@ -271,7 +307,7 @@
                 <target>Dashboard</target>
             </trans-unit>
             <trans-unit id="button.managePlan" resname="button.managePlan">
-                <source>Manage Plan</source>
+                <source>Manage plan</source>
                 <target>Plan verwalten</target>
             </trans-unit>
             <trans-unit id="button.subscribePlan" resname="button.subscribePlan">
@@ -299,8 +335,8 @@
                 <target>Als neue Site registrieren</target>
             </trans-unit>
             <trans-unit id="label.attachToSite" resname="label.attachToSite">
-                <source>Add to an existing active site</source>
-                <target>Zu einer bestehenden aktiven Site hinzufügen</target>
+                <source>Attach to an active site</source>
+                <target>An eine aktive Site anhängen</target>
             </trans-unit>
             <trans-unit id="label.attachTarget" resname="label.attachTarget">
                 <source>Active site</source>
@@ -311,8 +347,8 @@
                 <target>Aktive Site auswählen</target>
             </trans-unit>
             <trans-unit id="button.attach" resname="button.attach">
-                <source>Add</source>
-                <target>Hinzufügen</target>
+                <source>Attach</source>
+                <target>Anhängen</target>
             </trans-unit>
             <trans-unit id="button.refresh" resname="button.refresh">
                 <source>Refresh</source>
@@ -423,7 +459,7 @@
                 <target>Der Prozentsatz der Besucher, die nach dem Aufrufen dieser Seite weiter gesurft haben. Berechnet als 100 % minus Absprungrate.</target>
             </trans-unit>
             <trans-unit id="dashboard.analyticsOverview.title" resname="dashboard.analyticsOverview.title">
-                <source>Analytics Overview</source>
+                <source>Analytics overview</source>
                 <target>Analytics-Übersicht</target>
             </trans-unit>
             <trans-unit id="dashboard.analyticsOverview.description" resname="dashboard.analyticsOverview.description">

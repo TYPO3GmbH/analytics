@@ -56,7 +56,34 @@ async function submitFormAjax(form, submitter, getNotificationData) {
 document.addEventListener('submit', function (e) {
     const form = e.target;
     if (form.classList.contains('tx-analytics-registration-form')) {
-        handleFormAjax(e, (data) => ({ title: data.title ?? '', message: data.message ?? '', dashboardUri: data.dashboardUri ?? null }));
+        const getNotificationData = (data) => ({ title: data.title ?? '', message: data.message ?? '', dashboardUri: data.dashboardUri ?? null });
+        const mode = form.querySelector('.t3js-analytics-registration-mode:checked')?.value;
+        if (mode !== 'attach') {
+            handleFormAjax(e, getNotificationData);
+            return;
+        }
+        // The data of the site goes into the analytics of the active site for good, so the user confirms first.
+        e.preventDefault();
+        const submitter = e.submitter;
+        const siteName = form.dataset.siteName ?? '';
+        const targetName = form.querySelector('select[name="targetSiteIdentifier"] option:checked')?.dataset.siteName ?? '';
+        Modal.confirm(
+            fillPlaceholders(form.dataset.attachConfirmTitle, siteName, targetName),
+            fillPlaceholders(form.dataset.attachConfirmMessage, siteName, targetName),
+            SeverityEnum.error,
+            [
+                { text: form.dataset.attachConfirmCancel ?? 'Cancel', active: true, btnClass: 'btn-default', name: 'cancel', trigger: (event, modal) => modal.hideModal() },
+                {
+                    text: form.dataset.attachConfirmOk ?? 'OK',
+                    btnClass: 'btn-danger',
+                    name: 'ok',
+                    trigger: (event, modal) => {
+                        modal.hideModal();
+                        submitFormAjax(form, submitter, getNotificationData);
+                    },
+                },
+            ]
+        );
     } else if (form.classList.contains('tx-analytics-status-form')) {
         handleFormAjax(e, (data) => ({ title: data.title ?? '', message: '' }));
     } else if (form.classList.contains('tx-analytics-detach-form')) {
@@ -79,6 +106,12 @@ document.addEventListener('submit', function (e) {
 });
 
 showPendingNotification();
+
+// Fills the numbered placeholders %1$s (site) and %2$s (active site) of a label.
+function fillPlaceholders(label, siteName, targetName) {
+    // Replacement functions keep a "$" in a site name literal.
+    return String(label ?? '').replaceAll('%1$s', () => siteName).replaceAll('%2$s', () => targetName);
+}
 
 // Disabled fieldsets keep the inactive mode's required fields out of validation and FormData.
 document.addEventListener('change', function (e) {

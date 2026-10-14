@@ -200,6 +200,21 @@ final class SiteDataProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function fetchSitesReturnsTheActiveSiteOfAnAddedSite(): void
+    {
+        $this->siteFinder->method('getAllSites')->willReturn([
+            $this->buildSiteMock('main', 'https://example.com', []),
+            $this->buildSiteMock('second', 'https://second.example.com', ['attachedTo' => 'main']),
+        ]);
+        $this->queryResult->method('fetchAssociative')->willReturn(false);
+
+        $result = $this->subject->fetchSites();
+
+        self::assertSame('', $result[0]['attachedTo']);
+        self::assertSame('main', $result[1]['attachedTo']);
+    }
+
+    #[Test]
     public function fetchSitesPopulatesPageNameFromDatabase(): void
     {
         $this->siteFinder->method('getAllSites')->willReturn([
@@ -262,6 +277,20 @@ final class SiteDataProviderTest extends UnitTestCase
 
         self::assertCount(1, $result);
         self::assertSame('registered', $result[0]['identifier']);
+    }
+
+    #[Test]
+    public function registeredSiteOptionsFiltersOutSitesAttachedToAnActiveSite(): void
+    {
+        $this->siteFinder->method('getAllSites')->willReturn([
+            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-1']),
+            $this->buildSiteMock('second', 'https://second.example.com', ['websiteId' => 'w-1', 'attachedTo' => 'main']),
+        ]);
+        $this->queryResult->method('fetchAssociative')->willReturn(false);
+
+        $result = $this->subject->registeredSiteOptions();
+
+        self::assertSame(['main'], array_column($result, 'identifier'));
     }
 
     #[Test]
