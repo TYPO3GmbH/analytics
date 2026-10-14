@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Dashboard\Widget\TrafficSourcesItemsTrait;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -21,17 +22,26 @@ use TYPO3\CMS\Core\View\ViewFactoryInterface;
 final readonly class TrafficSourcesAjaxController
 {
     use TrafficSourcesItemsTrait;
+
+    // Only the TYPO3 13 widget loads this route. The TYPO3 14 section variants render on the server.
+    private const WIDGET_IDENTIFIER = 'analyticsTrafficSources';
+
     public function __construct(
         private TrafficSourcesServiceInterface $trafficSourcesService,
         private AnalyticsSiteProviderInterface $siteProvider,
         private MetricFormatterInterface $formatter,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
+        private BackendWidgetAccessCheckerInterface $widgetAccessChecker,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->widgetAccessChecker->userCanAccessWidget(self::WIDGET_IDENTIFIER)) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
         $params = $request->getQueryParams();
         $siteIdentifier = (string)($params['site'] ?? '');
         $requestedDays = (int)($params['days'] ?? 30);

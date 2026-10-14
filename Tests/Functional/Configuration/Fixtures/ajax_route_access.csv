@@ -1,0 +1,4 @@
+"be_users"
+,"uid","pid","username","password","admin","usergroup","userMods"
+,1,0,"without-modules","",0,"",""
+,2,0,"with-modules","",0,"","dashboard,web_layout,site_analytics"

@@ -62,6 +62,6 @@ Requirements
     *   -   PHP
         -   ^8.2
     *   -   TYPO3
-        -   ^13.4 or ^14.0
+        -   ^13.4.18 or ^14.0
     *   -   libsodium
         -   PHP extension (bundled since PHP 7.2)
