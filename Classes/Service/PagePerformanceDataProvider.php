@@ -9,20 +9,20 @@ use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Exception\AnalyticsApiException;
-use T3G\Analytics\View\SparklineRenderer;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
-use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Routing\RouterInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 
-final readonly class PagePerformanceBarBuilder
+/**
+ * Data of the page performance bar: the site of a page, the page URL, the link to the dashboard
+ * and the metrics. The labels are label keys, PagePerformanceBarRenderer renders the bar.
+ */
+final readonly class PagePerformanceDataProvider
 {
     public function __construct(
-        private SparklineRenderer $sparklineRenderer,
         private SiteFinder $siteFinder,
         private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private AnalyticsDataClientInterface $analyticsClient,
@@ -31,111 +31,6 @@ final readonly class PagePerformanceBarBuilder
         private FrontendInterface $pageAnalyticsCache,
         private MetricFormatterInterface $formatter,
     ) {
-    }
-
-    public function buildSkeletonHtml(int $pageId, int $languageId, int $days): string
-    {
-        return '<section class="tx-analytics-performance-bar tx-analytics-performance-bar--loading"'
-            . ' aria-label="' . $this->escape($this->translate('pagePerformance.ariaLabel')) . '"'
-            . ' aria-busy="true"'
-            . ' data-page-id="' . $pageId . '"'
-            . ' data-language-id="' . $languageId . '"'
-            . ' data-days="' . $days . '">'
-            . '<div class="tx-analytics-performance-loading-overlay" aria-live="polite">'
-            . '<span class="tx-analytics-performance-loading-spinner" aria-hidden="true"></span>'
-            . '<span>' . $this->escape($this->translate('pagePerformance.loading')) . '</span>'
-            . '</div>'
-            . '</section>';
-    }
-
-    /**
-     * @param array<string, mixed> $queryParams
-     */
-    public function buildHtml(int $pageId, ?Site $site, ?SiteLanguage $language, int $days, array $queryParams, string $detailsUri): string
-    {
-        $metrics = $this->buildMetrics($pageId, $site, $language, $days);
-        $detailsId = 'tx-analytics-performance-details-' . $pageId;
-        $expanded = $this->isDetailsExpanded();
-
-        $html = '<section class="tx-analytics-performance-bar' . ($expanded ? ' tx-analytics-performance-bar--expanded' : '') . '"'
-            . ' aria-label="' . $this->escape($this->translate('pagePerformance.ariaLabel')) . '"'
-            . ' data-page-id="' . $pageId . '"'
-            . ' data-language-id="' . ($language?->getLanguageId() ?? 0) . '">';
-
-        foreach ($metrics as $metric) {
-            $html .= '<div class="tx-analytics-performance-metric tx-analytics-performance-metric-' . $this->escape($metric['tone']) . '" tabindex="0">';
-            $html .= '<div class="tx-analytics-performance-metric-body">';
-            $html .= '<span class="tx-analytics-performance-icon tx-analytics-performance-icon-' . $this->escape($metric['icon']) . '" aria-hidden="true"></span>';
-            $html .= '<span class="tx-analytics-performance-value-row">';
-            $html .= '<span class="tx-analytics-performance-value">' . $this->escape($metric['value']) . '</span>';
-            if ($metric['trend'] !== null) {
-                $html .= '<span class="tx-analytics-performance-trend tx-analytics-performance-trend-' . $this->escape((string)$metric['trendDirection']) . '">';
-                $html .= '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-arrow-trend-' . $this->escape((string)$metric['trendDirection']) . '" aria-hidden="true"></span>';
-                $html .= $this->escape((string)$metric['trend']);
-                $html .= '<span class="visually-hidden"> ' . $this->escape($this->translate(
-                    in_array($metric['key'], ['bounceRate', 'continuationRate'], true)
-                        ? 'dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints'
-                        : 'dashboardWidget.sitePerformance.comparedToPreviousPeriod'
-                )) . '</span>';
-                $html .= '</span>';
-            } elseif (($metric['trendNote'] ?? null) !== null) {
-                // The metric already opens the details tooltip, which holds the note as text, so the icon has no tooltip of its own.
-                $html .= '<span class="tx-analytics-performance-trend tx-analytics-performance-trend-neutral">';
-                $html .= '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-circle-info" aria-hidden="true"></span>';
-                $html .= '<span class="visually-hidden">' . $this->escape($this->translate('trendNote.' . $metric['trendNote'])) . '</span>';
-                $html .= '</span>';
-            }
-            $html .= '</span>';
-            $html .= '<span class="tx-analytics-performance-label">' . $this->escape($metric['label']) . '</span>';
-            $html .= '<div class="tx-analytics-performance-tooltip" role="tooltip">' . $this->renderMetricDetails($metric) . '</div>';
-            $html .= '</div>';
-            $html .= '</div>';
-        }
-
-        $html .= '<div class="tx-analytics-performance-loading-overlay" aria-live="polite" aria-hidden="true">';
-        $html .= '<span class="tx-analytics-performance-loading-spinner" aria-hidden="true"></span>';
-        $html .= '<span>' . $this->escape($this->translate('pagePerformance.loading')) . '</span>';
-        $html .= '</div>';
-
-        $html .= '<div class="tx-analytics-performance-meta">';
-        $html .= '<div class="tx-analytics-performance-meta-item tx-analytics-performance-period">';
-        $html .= '<span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-calendar-days" aria-hidden="true"></span>';
-        $html .= '<form class="tx-analytics-performance-period-form" method="get">';
-        foreach ($this->hiddenQueryFields($queryParams, $pageId) as $name => $value) {
-            $html .= '<input type="hidden" name="' . $this->escape($name) . '" value="' . $this->escape($value) . '">';
-        }
-        $html .= '<label class="visually-hidden" for="tx-analytics-period-select">' . $this->escape($this->translate('pagePerformance.period')) . '</label>';
-        $html .= '<select id="tx-analytics-period-select" class="form-select form-select-sm" name="tx_analytics_period">';
-        foreach (DashboardPeriods::periods() as $period) {
-            $selected = $period === $days ? ' selected' : '';
-            $html .= '<option value="' . $period . '"' . $selected . '>' . $this->escape($this->translate('pagePerformance.days', [$period])) . '</option>';
-        }
-        $html .= '</select></form></div>';
-        $html .= '<button type="button" class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link tx-analytics-performance-details-toggle"'
-            . ' aria-expanded="' . ($expanded ? 'true' : 'false') . '"'
-            . ' aria-controls="' . $detailsId . '"'
-            . ' data-label-show="' . $this->escape($this->translate('pagePerformance.showAllDetails')) . '"'
-            . ' data-label-hide="' . $this->escape($this->translate('pagePerformance.hideAllDetails')) . '">';
-        $html .= '<span class="tx-analytics-performance-details-toggle-icon" aria-hidden="true"></span>';
-        $html .= '<span class="tx-analytics-performance-details-toggle-label">'
-            . $this->escape($this->translate($expanded ? 'pagePerformance.hideAllDetails' : 'pagePerformance.showAllDetails'))
-            . '</span>';
-        $html .= '</button>';
-        if ($detailsUri !== '') {
-            $html .= '<a class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link" href="' . $this->escape($detailsUri) . '">';
-            $html .= '<span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-circle-plus" aria-hidden="true"></span>';
-            $html .= '<span>' . $this->escape($this->translate('pagePerformance.showInAnalytics')) . '</span>';
-            $html .= '</a>';
-        }
-        $html .= '</div>';
-
-        $html .= '<div id="' . $detailsId . '" class="tx-analytics-performance-details"' . ($expanded ? '' : ' hidden') . '>';
-        foreach ($metrics as $metric) {
-            $html .= '<div class="tx-analytics-performance-detail">' . $this->renderMetricDetails($metric) . '</div>';
-        }
-        $html .= '</div></section>';
-
-        return $html;
     }
 
     public function trySite(int $pageId): ?Site
@@ -188,9 +83,11 @@ final readonly class PagePerformanceBarBuilder
     }
 
     /**
+     * Metrics of the bar. Without analytics data the values are placeholders.
+     *
      * @return list<array<string, mixed>>
      */
-    private function buildMetrics(int $pageId, ?Site $site, ?SiteLanguage $language, int $days): array
+    public function getMetrics(int $pageId, ?Site $site, ?SiteLanguage $language, int $days): array
     {
         $analyticsData = $this->loadPageData($pageId, $site, $language, $days);
 
@@ -245,8 +142,9 @@ final readonly class PagePerformanceBarBuilder
         return [
             [
                 'key' => 'visitCount',
-                'label' => $this->translate('pagePerformance.views'),
-                'description' => $this->translate('pagePerformance.tooltip.description.views'),
+                'labelKey' => 'pagePerformance.views',
+                'descriptionKey' => 'pagePerformance.tooltip.description.views',
+                'trendContextKey' => 'dashboardWidget.sitePerformance.comparedToPreviousPeriod',
                 'icon' => 'eye',
                 'tone' => 'visits',
                 'value' => number_format($visitCount, 0, '.', "\u{202F}"),
@@ -267,8 +165,9 @@ final readonly class PagePerformanceBarBuilder
             ],
             [
                 'key' => 'bounceRate',
-                'label' => $this->translate('pagePerformance.bounceRate'),
-                'description' => $this->translate('pagePerformance.tooltip.description.bounceRate'),
+                'labelKey' => 'pagePerformance.bounceRate',
+                'descriptionKey' => 'pagePerformance.tooltip.description.bounceRate',
+                'trendContextKey' => 'dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints',
                 'icon' => 'arrow-right-from-bracket',
                 'tone' => 'bounce-rate',
                 'value' => number_format($bounceRate, 2) . '%',
@@ -289,8 +188,9 @@ final readonly class PagePerformanceBarBuilder
             ],
             [
                 'key' => 'averageVisitDuration',
-                'label' => $this->translate('pagePerformance.averageTimeOnPage'),
-                'description' => $this->translate('pagePerformance.tooltip.description.averageTimeOnPage'),
+                'labelKey' => 'pagePerformance.averageTimeOnPage',
+                'descriptionKey' => 'pagePerformance.tooltip.description.averageTimeOnPage',
+                'trendContextKey' => 'dashboardWidget.sitePerformance.comparedToPreviousPeriod',
                 'icon' => 'clock',
                 'tone' => 'avg-duration',
                 'value' => $this->formatDuration($avgDuration),
@@ -311,8 +211,9 @@ final readonly class PagePerformanceBarBuilder
             ],
             [
                 'key' => 'continuationRate',
-                'label' => $this->translate('pagePerformance.continuationRate'),
-                'description' => $this->translate('pagePerformance.tooltip.description.continuationRate'),
+                'labelKey' => 'pagePerformance.continuationRate',
+                'descriptionKey' => 'pagePerformance.tooltip.description.continuationRate',
+                'trendContextKey' => 'dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints',
                 'icon' => 'right-to-bracket',
                 'tone' => 'continuation-rate',
                 'value' => number_format($continuationRate, 2) . '%',
@@ -340,23 +241,19 @@ final readonly class PagePerformanceBarBuilder
     private function buildPlaceholderMetrics(): array
     {
         $placeholders = [
-            ['visitCount', $this->translate('pagePerformance.views'), 'eye', 'visits'],
-            ['bounceRate', $this->translate('pagePerformance.bounceRate'), 'arrow-right-from-bracket', 'bounce-rate'],
-            ['averageVisitDuration', $this->translate('pagePerformance.averageTimeOnPage'), 'clock', 'avg-duration'],
-            ['continuationRate', $this->translate('pagePerformance.continuationRate'), 'right-to-bracket', 'continuation-rate'],
+            ['visitCount', 'pagePerformance.views', 'pagePerformance.tooltip.description.views', 'eye', 'visits'],
+            ['bounceRate', 'pagePerformance.bounceRate', 'pagePerformance.tooltip.description.bounceRate', 'arrow-right-from-bracket', 'bounce-rate'],
+            ['averageVisitDuration', 'pagePerformance.averageTimeOnPage', 'pagePerformance.tooltip.description.averageTimeOnPage', 'clock', 'avg-duration'],
+            ['continuationRate', 'pagePerformance.continuationRate', 'pagePerformance.tooltip.description.continuationRate', 'right-to-bracket', 'continuation-rate'],
         ];
 
         $metrics = [];
-        foreach ($placeholders as [$key, $label, $icon, $tone]) {
+        foreach ($placeholders as [$key, $labelKey, $descriptionKey, $icon, $tone]) {
             $metrics[] = [
                 'key' => $key,
-                'label' => $label,
-                'description' => $this->translate('pagePerformance.tooltip.description.' . match ($key) {
-                    'visitCount' => 'views',
-                    'bounceRate' => 'bounceRate',
-                    'averageVisitDuration' => 'averageTimeOnPage',
-                    default => 'continuationRate',
-                }),
+                'labelKey' => $labelKey,
+                'descriptionKey' => $descriptionKey,
+                'trendContextKey' => '',
                 'icon' => $icon,
                 'tone' => $tone,
                 'value' => '-',
@@ -365,6 +262,7 @@ final readonly class PagePerformanceBarBuilder
                 'trendNote' => null,
                 'details' => ['-', '-', '-'],
                 'chart' => [],
+                'chartLabels' => [],
                 'chartLegend' => ['-', '-'],
             ];
         }
@@ -412,7 +310,7 @@ final readonly class PagePerformanceBarBuilder
                 $cached = $this->fetchFromApi($websiteId, $apiKey, $pageUrl, $days);
                 $this->pageAnalyticsCache->set($cacheKey, $cached);
             } catch (AnalyticsApiException $e) {
-                $this->logger->warning('PagePerformanceBarBuilder: Page analytics call failed.', [
+                $this->logger->warning('PagePerformanceDataProvider: Page analytics call failed.', [
                     'websiteId' => $websiteId,
                     'reason' => $e->reason,
                 ]);
@@ -447,7 +345,7 @@ final readonly class PagePerformanceBarBuilder
 
         $seriesResult = $this->analyticsClient->fetchAllTimeSeries($websiteId, $apiKey, $pageUrl, $from, $to);
         foreach ($seriesResult['failures'] as $key => $reason) {
-            $this->logger->warning('PagePerformanceBarBuilder: Time series call failed.', [
+            $this->logger->warning('PagePerformanceDataProvider: Time series call failed.', [
                 'websiteId' => $websiteId,
                 'series' => $key,
                 'reason' => $reason,
@@ -505,107 +403,5 @@ final readonly class PagePerformanceBarBuilder
         }
         $total = (int)round($seconds);
         return intdiv($total, 60) . ':' . str_pad((string)($total % 60), 2, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * @param array<string, mixed> $metric
-     */
-    private function renderMetricDetails(array $metric): string
-    {
-        $detailLabels = [
-            $this->translate('pagePerformance.tooltip.today'),
-            $this->translate('pagePerformance.tooltip.yesterday'),
-            $this->translate('pagePerformance.tooltip.peak'),
-        ];
-
-        $html = '<div class="tx-analytics-performance-tooltip-title">' . $this->escape($metric['label']) . '</div>';
-        // Description and chart are always rendered so the rows line up across metrics.
-        // The note stays inside the description: the details panel is a subgrid with one row per part.
-        $html .= '<p class="tx-analytics-performance-tooltip-description">' . $this->escape((string)($metric['description'] ?? ''));
-        if (($metric['trendNote'] ?? null) !== null) {
-            $html .= '<span class="tx-analytics-performance-tooltip-note">'
-                . '<span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-circle-info" aria-hidden="true"></span>'
-                . $this->escape($this->translate('trendNote.' . $metric['trendNote']))
-                . '</span>';
-        }
-        $html .= '</p>';
-        $html .= '<dl class="tx-analytics-performance-tooltip-data">';
-        foreach ($detailLabels as $index => $label) {
-            $html .= '<div><dt>' . $this->escape($label) . '</dt><dd>' . $this->escape($metric['details'][$index] ?? '-') . '</dd></div>';
-        }
-        $html .= '</dl>';
-        $html .= '<div class="tx-analytics-performance-tooltip-chart">';
-        if ($metric['chart'] !== []) {
-            $html .= $this->sparklineRenderer->render($metric['chart'], [
-                'label' => $this->translate('pagePerformance.tooltip.chart') . ': ' . $metric['label'],
-                'class' => 'tx-analytics-performance-sparkline',
-                'tone' => $metric['tone'],
-                'labels' => $metric['chartLabels'] ?? [],
-                'smooth' => true,
-                'axes' => true,
-                // The bottom axis is drawn at yMin, so it has to be zero to read as one.
-                'yMin' => 0.0,
-            ]);
-        }
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    /**
-     * @param array<string, mixed> $queryParams
-     * @return array<string, string>
-     */
-    private function hiddenQueryFields(array $queryParams, int $pageId): array
-    {
-        $fields = ['id' => (string)$pageId];
-        foreach ($queryParams as $name => $value) {
-            if ($name === 'id' || $name === 'tx_analytics_period') {
-                continue;
-            }
-            if (is_array($value)) {
-                foreach ($value as $k => $v) {
-                    if (is_scalar($v)) {
-                        $fields[$name . '[' . $k . ']'] = (string)$v;
-                    }
-                }
-            } elseif (is_scalar($value)) {
-                $fields[$name] = (string)$value;
-            }
-        }
-        return $fields;
-    }
-
-    private function escape(string $value): string
-    {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    }
-
-    /**
-     * @param list<int|string> $arguments
-     */
-    private function translate(string $key, array $arguments = []): string
-    {
-        $label = $this->getLanguageService()->sL(
-            'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:' . $key
-        );
-        if ($label === '') {
-            return $key;
-        }
-        return $arguments === [] ? $label : sprintf($label, ...$arguments);
-    }
-
-    private function isDetailsExpanded(): bool
-    {
-        $backendUser = $GLOBALS['BE_USER'] ?? null;
-        if (!$backendUser instanceof BackendUserAuthentication) {
-            return false;
-        }
-        return (bool)($backendUser->uc['tx_analytics']['pagePerformanceExpanded'] ?? false);
-    }
-
-    private function getLanguageService(): LanguageService
-    {
-        return $GLOBALS['LANG'];
     }
 }

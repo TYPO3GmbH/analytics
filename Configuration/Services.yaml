@@ -149,7 +149,7 @@ services:
     arguments:
       $cache: '@cache.tx_analytics_traffic_sources'
 
-  T3G\Analytics\Service\PagePerformanceBarBuilder:
+  T3G\Analytics\Service\PagePerformanceDataProvider:
     arguments:
       $pageAnalyticsCache: '@cache.tx_analytics_pages'
 
