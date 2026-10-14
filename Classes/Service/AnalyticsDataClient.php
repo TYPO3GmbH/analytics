@@ -9,6 +9,8 @@ use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
+use T3G\Analytics\Utility\AnalyticsQueryUtility;
+use T3G\Analytics\Utility\AnalyticsResponseUtility;
 
 readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
 {
@@ -54,7 +56,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'where' => ['and' => [
                 ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
             ]],
-            'dateRange' => $this->buildUtcDayRange($from, $to),
+            'dateRange' => AnalyticsQueryUtility::utcDayRange($from, $to),
         ];
 
         try {
@@ -86,7 +88,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     /**
      * Fetches top pages ordered by visit count (no page-URL filter).
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array<string, mixed>>
      * @throws AnalyticsApiException
      */
@@ -105,7 +107,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'dimensions' => ['pageUrl'],
             'order' => [['member' => 'visitCount', 'direction' => 'desc']],
             'pagination' => ['page' => 1, 'pageSize' => $limit],
-            'where' => $this->buildPageUrlWhere($pageUrlFilter),
+            'where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter),
             'dateRange' => [
                 'start' => $from->format('Y-m-d\T00:00:00.000P'),
                 'end' => $to->format('Y-m-d\T23:59:59.999P'),
@@ -209,7 +211,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
     ): array {
         $websiteBase = $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/';
-        $query = $this->buildUtcDayGraphQuery($from, $to);
+        $query = AnalyticsQueryUtility::utcDayGraphQuery($from, $to);
         $body = ['where' => ['and' => [
             ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
         ]]];
@@ -246,7 +248,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 if (!isset($result['value'])) {
                     throw new \RuntimeException('Fulfilled without response body');
                 }
-                $parsed = $this->parseTimeSeriesData((string)$result['value']->getBody());
+                $parsed = AnalyticsResponseUtility::timeSeriesData((string)$result['value']->getBody());
                 if ($dates === []) {
                     $dates = $parsed['labels'];
                 }
@@ -282,7 +284,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        $query = $this->buildUtcDayGraphQuery($from, $to);
+        $query = AnalyticsQueryUtility::utcDayGraphQuery($from, $to);
         $body = ['where' => ['and' => [
             ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
         ]]];
@@ -299,7 +301,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                     $this->apiConfiguration->getRequestOptions()
                 )
             );
-            return $this->parseTimeSeriesData((string)$response->getBody())['data'];
+            return AnalyticsResponseUtility::timeSeriesData((string)$response->getBody())['data'];
         } catch (AnalyticsApiException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -308,7 +310,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -333,7 +335,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
+                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -353,7 +355,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -378,7 +380,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
+                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -398,7 +400,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -423,7 +425,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
+                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -443,7 +445,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -467,7 +469,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
                 array_merge(
                     [
                         'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                        'json' => ['where' => $this->buildPageUrlWhere($pageUrlFilter)],
+                        'json' => ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)],
                     ],
                     $this->apiConfiguration->getRequestOptions()
                 )
@@ -486,7 +488,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -505,7 +507,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -524,7 +526,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -543,7 +545,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array<string, mixed>>
      * @throws AnalyticsApiException
      */
@@ -561,7 +563,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     ): array {
         $metrics = ['sessionCount', 'sessionPercentOfTotal'];
         $json = [
-            'where' => $this->buildPageUrlWhere($pageUrlFilter),
+            'where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter),
             'metrics' => $metrics,
             'dimensions' => [$dimension],
             'order' => [['member' => 'sessionPercentOfTotal', 'direction' => 'desc']],
@@ -613,7 +615,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
      * A failed request leaves its values at 0 (or the series empty) and adds its key to
      * "failures": current, previous, series, currentTimeOnPage, previousTimeOnPage.
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
@@ -631,12 +633,12 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         array $pageUrlFilter = [],
     ): array {
         $buildSessionsOptions = fn (\DateTimeImmutable $f, \DateTimeImmutable $t, array $dimensions = []): array => $this->buildRequestOptions($apiKey, [
-            'where' => $this->buildPageUrlWhere($pageUrlFilter),
+            'where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter),
             'metrics' => self::SITE_SESSION_METRICS,
             ...$dimensions,
-            'dateRange' => $this->buildUtcDayRange($f, $t),
+            'dateRange' => AnalyticsQueryUtility::utcDayRange($f, $t),
         ]);
-        $timeOnPageOptions = $this->buildRequestOptions($apiKey, ['where' => $this->buildPageUrlWhere($pageUrlFilter)]);
+        $timeOnPageOptions = $this->buildRequestOptions($apiKey, ['where' => AnalyticsQueryUtility::pageUrlWhere($pageUrlFilter)]);
 
         $client = $this->guzzleClientFactory->getClient();
         $promises = [
@@ -654,38 +656,22 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         $failures = [];
         foreach ($settled as $key => $result) {
             try {
-                $bodies[$key] = $this->decodeSettledResponse($result);
+                $bodies[$key] = AnalyticsResponseUtility::decodeSettledResponse($result);
             } catch (\Throwable $e) {
                 $failures[$key] = $this->exceptionExtractor->extractReason($e);
             }
         }
 
         $empty = ['visitCount' => 0, 'visitorCount' => 0, 'bounceRate' => 0.0];
-        $currentTimeOnPage = isset($bodies['currentTimeOnPage']) ? $this->parseTimeOnPageGraph($bodies['currentTimeOnPage']) : null;
-        $previousTimeOnPage = isset($bodies['previousTimeOnPage']) ? $this->parseTimeOnPageGraph($bodies['previousTimeOnPage']) : null;
+        $currentTimeOnPage = isset($bodies['currentTimeOnPage']) ? AnalyticsResponseUtility::timeOnPageGraph($bodies['currentTimeOnPage']) : null;
+        $previousTimeOnPage = isset($bodies['previousTimeOnPage']) ? AnalyticsResponseUtility::timeOnPageGraph($bodies['previousTimeOnPage']) : null;
 
         return [
-            'current' => (isset($bodies['current']) ? $this->parseSessionTotals($bodies['current']) : $empty) + ['avgTimeOnPage' => $currentTimeOnPage['average'] ?? 0],
-            'previous' => (isset($bodies['previous']) ? $this->parseSessionTotals($bodies['previous']) : $empty) + ['avgTimeOnPage' => $previousTimeOnPage['average'] ?? 0],
-            'series' => $this->buildDailySeries($bodies['series'] ?? [], $currentTimeOnPage),
+            'current' => (isset($bodies['current']) ? AnalyticsResponseUtility::sessionTotals($bodies['current']) : $empty) + ['avgTimeOnPage' => $currentTimeOnPage['average'] ?? 0],
+            'previous' => (isset($bodies['previous']) ? AnalyticsResponseUtility::sessionTotals($bodies['previous']) : $empty) + ['avgTimeOnPage' => $previousTimeOnPage['average'] ?? 0],
+            'series' => AnalyticsResponseUtility::dailySeries($bodies['series'] ?? [], $currentTimeOnPage),
             'failures' => $failures,
         ];
-    }
-
-    /**
-     * Limits a query to the pages of one site when several sites track into the same website.
-     * The API compares each value of the "in" operator as a part of the page URL, so
-     * "://example.com" matches all pages on that host, for http and https.
-     *
-     * @param list<string> $pageUrlFilter
-     * @return array{and: list<array{member: string, operator: string, values: list<string>}>}
-     */
-    private function buildPageUrlWhere(array $pageUrlFilter): array
-    {
-        if ($pageUrlFilter === []) {
-            return ['and' => []];
-        }
-        return ['and' => [['member' => 'pageUrl', 'operator' => 'in', 'values' => $pageUrlFilter]]];
     }
 
     private function buildSessionsUrl(string $websiteId, string $trace): string
@@ -703,36 +689,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     {
         return $this->apiConfiguration->getAnalyticsApiBaseUrl()
             . '/v2/websites/' . rawurlencode($websiteId)
-            . '/stats/average-page-view-duration/graph' . $this->buildUtcDayGraphQuery($from, $to);
-    }
-
-    /**
-     * The analytics and graph endpoints bucket by UTC day. A range with a local offset
-     * adds a partial first bucket, so the range uses full UTC days. Totals use the same
-     * range, so they match the daily series.
-     *
-     * @return array{start: string, end: string}
-     */
-    private function buildUtcDayRange(\DateTimeImmutable $from, \DateTimeImmutable $to): array
-    {
-        return [
-            'start' => $from->format('Y-m-d\T00:00:00.000\Z'),
-            'end' => $to->format('Y-m-d\T23:59:59.999\Z'),
-        ];
-    }
-
-    /**
-     * Query of a daily graph endpoint over full UTC days, see buildUtcDayRange().
-     */
-    private function buildUtcDayGraphQuery(\DateTimeImmutable $from, \DateTimeImmutable $to): string
-    {
-        $range = $this->buildUtcDayRange($from, $to);
-        return '?' . http_build_query([
-            'from' => $range['start'],
-            'until' => $range['end'],
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
+            . '/stats/average-page-view-duration/graph' . AnalyticsQueryUtility::utcDayGraphQuery($from, $to);
     }
 
     /**
@@ -748,106 +705,5 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             ],
             $this->apiConfiguration->getRequestOptions()
         );
-    }
-
-    /**
-     * @param array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable} $result
-     * @return array<string, mixed>
-     * @throws \Throwable
-     */
-    private function decodeSettledResponse(array $result): array
-    {
-        if ($result['state'] !== 'fulfilled' || !isset($result['value'])) {
-            throw $result['reason'] ?? new \RuntimeException('Unknown error');
-        }
-        $body = json_decode((string)$result['value']->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        return is_array($body) ? $body : [];
-    }
-
-    /**
-     * Without dimensions the payload holds one row with the totals of the range.
-     *
-     * @param array<string, mixed> $body
-     * @return array{visitCount: int, visitorCount: int, bounceRate: float}
-     */
-    private function parseSessionTotals(array $body): array
-    {
-        $row = is_array($body['payload'] ?? null) ? ($body['payload'][0] ?? []) : [];
-        return $this->parseSessionMetrics(is_array($row) ? $row : []);
-    }
-
-    /**
-     * @param array<string, mixed> $sessionsBody
-     * @param array{dates: list<string>, values: list<int>, average: int}|null $timeOnPage
-     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgTimeOnPage: list<int>}
-     */
-    private function buildDailySeries(array $sessionsBody, ?array $timeOnPage): array
-    {
-        $series = ['dates' => [], 'visits' => [], 'visitors' => [], 'bounceRate' => [], 'avgTimeOnPage' => []];
-        // Both endpoints bucket by UTC day, so the date is the common key of the two series.
-        $timeOnPageByDate = $timeOnPage !== null ? array_combine($timeOnPage['dates'], $timeOnPage['values']) : [];
-
-        foreach (is_array($sessionsBody['payload'] ?? null) ? $sessionsBody['payload'] : [] as $row) {
-            if (!is_array($row) || !is_string($row['date'] ?? null)) {
-                continue;
-            }
-            $date = substr($row['date'], 0, 10);
-            $metrics = $this->parseSessionMetrics($row);
-            $series['dates'][] = $date;
-            $series['visits'][] = $metrics['visitCount'];
-            $series['visitors'][] = $metrics['visitorCount'];
-            $series['bounceRate'][] = $metrics['bounceRate'];
-            $series['avgTimeOnPage'][] = $timeOnPageByDate[$date] ?? 0;
-        }
-        return $series;
-    }
-
-    /**
-     * @param array<mixed> $row
-     * @return array{visitCount: int, visitorCount: int, bounceRate: float}
-     */
-    private function parseSessionMetrics(array $row): array
-    {
-        return [
-            'visitCount' => (int)($row['visitCount'] ?? 0),
-            'visitorCount' => (int)($row['visitorCount'] ?? 0),
-            'bounceRate' => (float)($row['bounceRate'] ?? 0),
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $body
-     * @return array{dates: list<string>, values: list<int>, average: int}
-     */
-    private function parseTimeOnPageGraph(array $body): array
-    {
-        $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
-        $dataset = is_array($payload['datasets'][0] ?? null) ? $payload['datasets'][0] : [];
-        $labels = is_array($payload['labels'] ?? null) ? array_values($payload['labels']) : [];
-        $data = is_array($dataset['data'] ?? null) ? array_values($dataset['data']) : [];
-        $count = min(count($labels), count($data));
-        return [
-            'dates' => array_map(static fn (mixed $label): string => substr((string)$label, 0, 10), array_slice($labels, 0, $count)),
-            'values' => array_map(static fn (mixed $value): int => (int)round(is_numeric($value) ? (float)$value : 0.0), array_slice($data, 0, $count)),
-            'average' => (int)round(is_numeric($dataset['totalAverage'] ?? null) ? (float)$dataset['totalAverage'] : 0.0),
-        ];
-    }
-
-    /** @return list<int|float> */
-    /**
-     * @return array{data: list<int|float>, labels: list<string>}
-     */
-    private function parseTimeSeriesData(string $rawBody): array
-    {
-        /** @var array<string, mixed> $body */
-        $body = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
-        $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
-        $datasets = is_array($payload['datasets'] ?? null) ? $payload['datasets'] : [];
-        $rawData = is_array($datasets[0]['data'] ?? null) ? $datasets[0]['data'] : [];
-        $rawLabels = is_array($payload['labels'] ?? null) ? $payload['labels'] : [];
-        return [
-            'data' => array_values(array_map(static fn (mixed $v): int|float => is_numeric($v) ? (float)$v : 0, $rawData)),
-            'labels' => array_values(array_map(static fn (mixed $v): string => (string)$v, $rawLabels)),
-        ];
     }
 }
