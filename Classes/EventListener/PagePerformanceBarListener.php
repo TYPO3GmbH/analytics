@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\EventListener;
 
-use T3G\Analytics\Service\PagePerformanceBarBuilder;
+use T3G\Analytics\Service\PagePerformanceBarRenderer;
+use T3G\Analytics\Service\PagePerformanceDataProvider;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Page\PageRenderer;
@@ -16,7 +17,8 @@ final readonly class PagePerformanceBarListener
     public function __construct(
         private PageRenderer $pageRenderer,
         private AssetCollector $assetCollector,
-        private PagePerformanceBarBuilder $builder,
+        private PagePerformanceDataProvider $dataProvider,
+        private PagePerformanceBarRenderer $renderer,
     ) {
     }
 
@@ -35,7 +37,7 @@ final readonly class PagePerformanceBarListener
 
         $languagesParam = $queryParams['languages'] ?? [];
         $languageId = is_array($languagesParam) ? (int)($languagesParam[0] ?? 0) : 0;
-        $days = $this->builder->normalizeDays((int)($queryParams['tx_analytics_period'] ?? 7));
+        $days = $this->dataProvider->normalizeDays((int)($queryParams['tx_analytics_period'] ?? 7));
 
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/AnalyticsColors.css');
         $this->pageRenderer->addCssFile('EXT:analytics/Resources/Public/Css/PagePerformance.css');
@@ -47,7 +49,7 @@ final readonly class PagePerformanceBarListener
         );
 
         $event->addHeaderContent(
-            $this->builder->buildSkeletonHtml($pageId, $languageId, $days)
+            $this->renderer->renderSkeleton($pageId, $languageId, $days)
         );
     }
 

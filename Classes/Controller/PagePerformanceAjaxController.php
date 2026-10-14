@@ -7,13 +7,15 @@ namespace T3G\Analytics\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
-use T3G\Analytics\Service\PagePerformanceBarBuilder;
+use T3G\Analytics\Service\PagePerformanceBarRenderer;
+use T3G\Analytics\Service\PagePerformanceDataProvider;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
 final readonly class PagePerformanceAjaxController
 {
     public function __construct(
-        private PagePerformanceBarBuilder $builder,
+        private PagePerformanceDataProvider $dataProvider,
+        private PagePerformanceBarRenderer $renderer,
         private BackendPageAccessCheckerInterface $pageAccessChecker,
     ) {
     }
@@ -22,7 +24,7 @@ final readonly class PagePerformanceAjaxController
     {
         $params = $request->getQueryParams();
         $pageId = (int)($params['pageId'] ?? 0);
-        $days = $this->builder->normalizeDays((int)($params['days'] ?? 7));
+        $days = $this->dataProvider->normalizeDays((int)($params['days'] ?? 7));
         $languageId = (int)($params['languageId'] ?? 0);
 
         if ($pageId <= 0) {
@@ -33,13 +35,14 @@ final readonly class PagePerformanceAjaxController
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
-        $site = $this->builder->trySite($pageId);
-        $language = $this->builder->trySiteLanguage($site, $languageId);
-        $pageUrl = $site !== null ? $this->builder->resolvePageUrl($site, $pageId, $language) : '';
-        $detailsUri = $this->builder->buildDetailsUri($site, $days, $pageUrl);
+        $site = $this->dataProvider->trySite($pageId);
+        $language = $this->dataProvider->trySiteLanguage($site, $languageId);
+        $pageUrl = $site !== null ? $this->dataProvider->resolvePageUrl($site, $pageId, $language) : '';
+        $detailsUri = $this->dataProvider->buildDetailsUri($site, $days, $pageUrl);
 
         $queryParams = $languageId !== 0 ? ['languages' => [$languageId]] : [];
-        $html = $this->builder->buildHtml($pageId, $site, $language, $days, $queryParams, $detailsUri);
+        $metrics = $this->dataProvider->getMetrics($pageId, $site, $language, $days);
+        $html = $this->renderer->renderBar($pageId, $language?->getLanguageId() ?? 0, $days, $metrics, $queryParams, $detailsUri);
 
         return new JsonResponse(['html' => $html]);
     }

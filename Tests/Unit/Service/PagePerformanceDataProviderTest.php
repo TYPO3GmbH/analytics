@@ -16,10 +16,8 @@ use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\MetricFormatter;
-use T3G\Analytics\Service\PagePerformanceBarBuilder;
+use T3G\Analytics\Service\PagePerformanceDataProvider;
 use T3G\Analytics\Service\TrendNote;
-use T3G\Analytics\View\SparklineRenderer;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -33,7 +31,7 @@ use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-final class PagePerformanceBarBuilderTest extends UnitTestCase
+final class PagePerformanceDataProviderTest extends UnitTestCase
 {
     protected bool $resetSingletonInstances = true;
 
@@ -74,10 +72,9 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         );
     }
 
-    private function buildSubject(SiteFinder $siteFinder): PagePerformanceBarBuilder
+    private function buildSubject(SiteFinder $siteFinder): PagePerformanceDataProvider
     {
-        return new PagePerformanceBarBuilder(
-            new SparklineRenderer(),
+        return new PagePerformanceDataProvider(
             $siteFinder,
             $this->createMock(DashboardLinkBuilderInterface::class),
             $this->buildAnalyticsClient(),
@@ -104,7 +101,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         return $site;
     }
 
-    private function callLoadPageData(PagePerformanceBarBuilder $subject, int $pageId = 1, int $days = 7): mixed
+    private function callLoadPageData(PagePerformanceDataProvider $subject, int $pageId = 1, int $days = 7): mixed
     {
         $site = $subject->trySite($pageId);
         return (new \ReflectionMethod($subject, 'loadPageData'))->invoke($subject, $pageId, $site, null, $days);
@@ -113,10 +110,10 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
     /**
      * @return list<array<string, mixed>>
      */
-    private function callBuildMetrics(PagePerformanceBarBuilder $subject, int $pageId = 1, int $days = 7): array
+    private function callBuildMetrics(PagePerformanceDataProvider $subject, int $pageId = 1, int $days = 7): array
     {
         $site = $subject->trySite($pageId);
-        return (new \ReflectionMethod($subject, 'buildMetrics'))->invoke($subject, $pageId, $site, null, $days);
+        return $subject->getMetrics($pageId, $site, null, $days);
     }
 
     private function pageApiResponse(int $visitCount, float $bounceRate = 0.0, float $avgDuration = 0.0): Response
@@ -145,7 +142,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         return $siteFinder;
     }
 
-    /** buildMetrics — null previous period */
+    /** getMetrics — null previous period */
 
     #[Test]
     public function buildMetricsComparesViewsWithZeroWhenPreviousPeriodHasNoVisits(): void
@@ -203,27 +200,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         self::assertSame(['neutral', 'neutral', 'neutral', 'neutral'], array_column($metrics, 'trendDirection'));
     }
 
-    #[Test]
-    public function buildHtmlRendersTrendNoteWithoutOwnTooltip(): void
-    {
-        $this->mockHandler->append(
-            $this->pageApiResponse(21, 50.0, 30.0),
-            $this->emptyPageApiResponse(),
-            $this->emptySeriesResponse(),
-            $this->emptySeriesResponse(),
-        );
-        $this->cache->method('get')->willReturn(false);
-        $subject = $this->buildSubject($this->siteFinder());
-
-        $html = $subject->buildHtml(1, $subject->trySite(1), null, 7, [], '');
-
-        // Three rates with a note: icon in the value row plus text in the tooltip and in the details panel.
-        self::assertSame(3 * 3, substr_count($html, 'tx-analytics-performance-icon-circle-info'));
-        self::assertSame(3 * 2, substr_count($html, 'tx-analytics-performance-tooltip-note'));
-        self::assertStringNotContainsString('data-tx-analytics-tooltip', $html);
-    }
-
-    /** buildMetrics — bounce rate direction (inverted: lower bounce = better) */
+    /** getMetrics — bounce rate direction (inverted: lower bounce = better) */
 
     #[Test]
     public function buildMetricsBounceRateTrendDirectionIsUpWhenBounceRateDecreased(): void
@@ -359,40 +336,5 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
 
         self::assertIsArray($result);
         self::assertSame($pageRow, $result['page']);
-    }
-
-    /** buildHtml — details panel */
-
-    #[Test]
-    public function buildHtmlRendersCollapsedDetailsPanelByDefault(): void
-    {
-        $html = $this->buildSubject($this->siteFinder())->buildHtml(5, null, null, 7, [], '');
-
-        self::assertStringContainsString('aria-expanded="false" aria-controls="tx-analytics-performance-details-5"', $html);
-        self::assertStringContainsString('<div id="tx-analytics-performance-details-5" class="tx-analytics-performance-details" hidden>', $html);
-        self::assertStringNotContainsString('tx-analytics-performance-bar--expanded', $html);
-        self::assertSame(4, substr_count($html, 'class="tx-analytics-performance-detail"'));
-    }
-
-    #[Test]
-    public function buildHtmlLeavesChartLabelToTheSvg(): void
-    {
-        $html = $this->buildSubject($this->siteFinder())->buildHtml(5, null, null, 7, [], '');
-
-        self::assertStringContainsString('<div class="tx-analytics-performance-tooltip-chart">', $html);
-    }
-
-    #[Test]
-    public function buildHtmlRendersExpandedDetailsPanelWhenStoredInUserSettings(): void
-    {
-        $backendUser = $this->createMock(BackendUserAuthentication::class);
-        $backendUser->uc = ['tx_analytics' => ['pagePerformanceExpanded' => '1']];
-        $GLOBALS['BE_USER'] = $backendUser;
-
-        $html = $this->buildSubject($this->siteFinder())->buildHtml(5, null, null, 7, [], '');
-
-        self::assertStringContainsString('aria-expanded="true" aria-controls="tx-analytics-performance-details-5"', $html);
-        self::assertStringContainsString('<div id="tx-analytics-performance-details-5" class="tx-analytics-performance-details">', $html);
-        self::assertStringContainsString('tx-analytics-performance-bar--expanded', $html);
     }
 }
