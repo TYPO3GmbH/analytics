@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\MetricFormatterInterface;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
@@ -32,7 +32,7 @@ final readonly class TrafficSourcesWidget implements WidgetInterface, Additional
         private AnalyticsSiteProviderInterface $siteProvider,
         private TrafficSourcesServiceInterface $trafficSourcesService,
         private MetricFormatterInterface $formatter,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private ViewFactoryInterface $viewFactory,
         array $options = [],
     ) {

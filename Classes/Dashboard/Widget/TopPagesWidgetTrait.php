@@ -25,12 +25,7 @@ trait TopPagesWidgetTrait
 
     private function buildShowAllUrl(string $siteIdentifier, int $days): string
     {
-        return $siteIdentifier !== ''
-            ? (string)$this->uriBuilder->buildUriFromRoute(
-                'site_analytics.dashboard',
-                ['siteIdentifier' => $siteIdentifier, 'days' => $days, 'dashboardPath' => 'dashboard/pages']
-            )
-            : '';
+        return $this->dashboardLinkBuilder->build($siteIdentifier, ['days' => $days, 'dashboardPath' => 'dashboard/pages']);
     }
 
     /**

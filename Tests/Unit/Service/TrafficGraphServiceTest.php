@@ -55,7 +55,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     public function loadGraphDataReturnsCachedDataOnCacheHit(): void
     {
         $cached = ['labels' => ['2024-01-01'], 'data' => [5]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchSiteVisitsGraph');
 
@@ -67,7 +67,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadGraphDataFetchesAndCachesDataOnCacheMiss(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitsGraph')->willReturn([
             'labels' => ['2024-01-01', '2024-01-02'],
@@ -87,7 +87,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadGraphDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitsGraph')->willThrowException(
             new AnalyticsApiException('API error', 500),
@@ -102,11 +102,11 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadGraphDataNormalizesDaysToAtLeastOne(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitsGraph')->willReturn(['labels' => [], 'datasets' => []]);
         $this->cache->expects(self::once())->method('set')->with(
-            'traffic_graph_' . md5('w1_1'),
+            'traffic_graph_' . md5('w1_://example.com_1'),
             self::anything(),
         );
 
@@ -127,7 +127,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     public function loadSessionsDataReturnsCachedDataOnCacheHit(): void
     {
         $cached = ['labels' => ['2024-01-01'], 'data' => [5]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchSiteSessionsGraph');
 
@@ -139,7 +139,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadSessionsDataFetchesAndCachesDataOnCacheMiss(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteSessionsGraph')->willReturn([
             'labels' => ['2024-01-01', '2024-01-02'],
@@ -159,7 +159,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadSessionsDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteSessionsGraph')->willThrowException(
             new AnalyticsApiException('API error', 500),
@@ -191,7 +191,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
             'returning' => ['labels' => $labels, 'data' => [2]],
             'overall' => $overall,
         ];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchSiteVisitorsGraph');
 
@@ -204,7 +204,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     public function loadVisitorsDataFetchesAndCachesDataOnCacheMiss(): void
     {
         $labels = ['2024-01-01', '2024-01-02'];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitorsGraph')->willReturn([
             'labels' => $labels,
@@ -232,7 +232,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadVisitorsDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitorsGraph')->willThrowException(
             new AnalyticsApiException('API error', 500),
@@ -263,7 +263,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
             'returning' => ['labels' => $labels, 'data' => [2]],
             'overall' => ['labels' => $labels, 'data' => [5]],
         ];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchSiteVisitorsGraph');
 
@@ -276,7 +276,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     public function loadVisitorsBreakdownDataFetchesAndCachesAllThreeDatasets(): void
     {
         $labels = ['2024-01-01', '2024-01-02'];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitorsGraph')->willReturn([
             'labels' => $labels,
@@ -304,7 +304,7 @@ final class TrafficGraphServiceTest extends UnitTestCase
     #[Test]
     public function loadVisitorsBreakdownDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchSiteVisitorsGraph')->willThrowException(
             new AnalyticsApiException('API error', 500),
