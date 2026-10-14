@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use T3G\Analytics\Dashboard\Widget\TrafficSourcesWidgetV14;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 
 /**
  * Replaces dashboard.widget.analyticsTrafficSources with four section-locked variants on
@@ -31,7 +31,7 @@ final class TrafficSourcesWidgetV14Pass implements CompilerPassInterface
         $definition = $container->getDefinition('dashboard.widget.analyticsTrafficSources');
         $definition->setClass(TrafficSourcesWidgetV14::class)
             ->setAutowired(true)
-            ->setArgument('$uriBuilder', new Reference(UriBuilder::class));
+            ->setArgument('$dashboardLinkBuilder', new Reference(DashboardLinkBuilderInterface::class));
 
         $tags = $definition->getTag('dashboard.widget');
 
@@ -67,7 +67,7 @@ final class TrafficSourcesWidgetV14Pass implements CompilerPassInterface
         foreach ($sectionVariants as $suffix => $config) {
             $variantDef = new Definition(TrafficSourcesWidgetV14::class);
             $variantDef->setAutowired(true)
-                ->setArgument('$uriBuilder', new Reference(UriBuilder::class))
+                ->setArgument('$dashboardLinkBuilder', new Reference(DashboardLinkBuilderInterface::class))
                 ->setArgument('$section', $config['section'])
                 ->setArgument('$chartType', $config['chartType'] ?? 'list');
 
