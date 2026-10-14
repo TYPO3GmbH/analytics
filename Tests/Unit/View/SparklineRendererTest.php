@@ -47,6 +47,27 @@ final class SparklineRendererTest extends UnitTestCase
         self::assertStringContainsString('cx="100" cy="2"', $html);
     }
 
+    #[Test]
+    public function renderPlacesFlatZeroSeriesOnBaselineWithExplicitYMin(): void
+    {
+        $subject = new SparklineRenderer();
+
+        $html = $subject->render([0, 0, 0], ['yMin' => 0.0, 'showLastPoint' => false]);
+
+        // Baseline: VIEW_BOX_HEIGHT 32 - PADDING 2 = 30
+        self::assertStringContainsString('d="M0 30 L50 30 L100 30"', $html);
+    }
+
+    #[Test]
+    public function renderKeepsFlatSeriesCenteredWithoutExplicitYMin(): void
+    {
+        $subject = new SparklineRenderer();
+
+        $html = $subject->render([5, 5, 5], ['showLastPoint' => false]);
+
+        self::assertStringContainsString('d="M0 16 L50 16 L100 16"', $html);
+    }
+
     // (b) Single value: point placed at centerX=50, centerY=16; fill suppressed (zero-area shape)
     #[Test]
     public function renderSingleValuePlacesPointAtCenter(): void
@@ -70,6 +91,25 @@ final class SparklineRendererTest extends UnitTestCase
         $html = $subject->render([10, 20, 15]);
 
         self::assertStringContainsString('d="M0 30 L50 2 L100 16 L100 30 L0 30 Z"', $html);
+    }
+
+    #[Test]
+    public function renderDrawsBottomAndLeftAxisWhenAxesIsSet(): void
+    {
+        $subject = new SparklineRenderer();
+
+        $html = $subject->render([10, 20, 15], ['axes' => true]);
+
+        self::assertStringContainsString('<line class="tx-analytics-sparkline-axis" x1="0" y1="30" x2="100" y2="30"/>', $html);
+        self::assertStringContainsString('<line class="tx-analytics-sparkline-axis" x1="0" y1="0" x2="0" y2="30"/>', $html);
+    }
+
+    #[Test]
+    public function renderDrawsNoAxesByDefault(): void
+    {
+        $subject = new SparklineRenderer();
+
+        self::assertStringNotContainsString('tx-analytics-sparkline-axis', $subject->render([10, 20, 15]));
     }
 
     #[Test]

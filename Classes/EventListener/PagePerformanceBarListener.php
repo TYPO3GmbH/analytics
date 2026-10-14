@@ -58,6 +58,7 @@ final readonly class PagePerformanceBarListener
             'arrow-trend-down',
             'arrow-trend-up',
             'calendar-days',
+            'circle-info',
             'circle-plus',
             'clock',
             'eye',

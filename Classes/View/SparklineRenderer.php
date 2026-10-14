@@ -20,6 +20,7 @@ final class SparklineRenderer
      *     tone?: string,
      *     showLastPoint?: bool,
      *     fill?: bool,
+     *     axes?: bool,
      *     yMin?: float,
      *     yMax?: float,
      *     gridLines?: list<int|float>,
@@ -37,7 +38,9 @@ final class SparklineRenderer
 
         $yMin = isset($options['yMin']) ? (float)$options['yMin'] : min($numericValues);
         $yMax = isset($options['yMax']) ? (float)$options['yMax'] : max($numericValues);
-        $points = $this->buildPoints($numericValues, $yMin, $yMax);
+        // Only an explicit yMin is a zero line a flat series can sit on; otherwise a flat series stays centered.
+        $flatOnBaseline = isset($options['yMin']);
+        $points = $this->buildPoints($numericValues, $yMin, $yMax, $flatOnBaseline);
         if ($points === []) {
             return '';
         }
@@ -50,6 +53,7 @@ final class SparklineRenderer
         $lastPoint = $points[array_key_last($points)];
         $showLastPoint = (bool)($options['showLastPoint'] ?? true);
         $showFill = (bool)($options['fill'] ?? true) && count($points) > 1;
+        $showAxes = (bool)($options['axes'] ?? false);
         $gridLines = (array)($options['gridLines'] ?? []);
         $preserveAspectRatio = trim((string)($options['preserveAspectRatio'] ?? ''));
         $pointLabels = (array)($options['labels'] ?? []);
@@ -68,10 +72,16 @@ final class SparklineRenderer
         $html .= ' focusable="false">';
 
         foreach ($gridLines as $gridValue) {
-            $y = $this->valueToY((float)$gridValue, $yMin, $yMax);
+            $y = $this->valueToY((float)$gridValue, $yMin, $yMax, $flatOnBaseline);
             $html .= '<line class="tx-analytics-sparkline-grid-line" x1="0" y1="' . $this->formatNumber($y) . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $this->formatNumber($y) . '"/>';
         }
 
+        if ($showAxes) {
+            // Bottom axis on the baseline the fill closes at, left axis along the first value.
+            $baseline = $this->formatNumber(self::VIEW_BOX_HEIGHT - self::PADDING);
+            $html .= '<line class="tx-analytics-sparkline-axis" x1="0" y1="' . $baseline . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $baseline . '"/>';
+            $html .= '<line class="tx-analytics-sparkline-axis" x1="0" y1="0" x2="0" y2="' . $baseline . '"/>';
+        }
         if ($showFill) {
             $html .= '<path class="tx-analytics-sparkline-fill" d="' . $this->buildFillPath($points, $linePath) . '"></path>';
         }
@@ -149,7 +159,8 @@ final class SparklineRenderer
         $pointSets = [];
         foreach ($active as $index => $ds) {
             $dsYMax = $ds['axis'] === 1 ? $yMaxRight : $yMaxLeft;
-            $points = $this->buildPoints($ds['numeric'], $yMin, $dsYMax);
+            // The multi-series chart always starts at yMin (0 by default), so a flat series sits on the baseline.
+            $points = $this->buildPoints($ds['numeric'], $yMin, $dsYMax, true);
             if ($points === []) {
                 continue;
             }
@@ -188,7 +199,7 @@ final class SparklineRenderer
         $html .= '</defs>';
 
         foreach ($gridLines as $gridValue) {
-            $y = $this->valueToY((float)$gridValue, $yMin, $yMaxLeft);
+            $y = $this->valueToY((float)$gridValue, $yMin, $yMaxLeft, true);
             $html .= '<line class="tx-analytics-sparkline-grid-line" x1="0" y1="' . $this->formatNumber($y) . '" x2="' . self::VIEW_BOX_WIDTH . '" y2="' . $this->formatNumber($y) . '"/>';
         }
 
@@ -263,7 +274,7 @@ final class SparklineRenderer
      * @param list<float> $numericValues
      * @return list<array{0: float, 1: float}>
      */
-    private function buildPoints(array $numericValues, float $yMin, float $yMax): array
+    private function buildPoints(array $numericValues, float $yMin, float $yMax, bool $flatOnBaseline = false): array
     {
         $count = count($numericValues);
         if ($count === 0) {
@@ -274,28 +285,37 @@ final class SparklineRenderer
         $usableHeight = self::VIEW_BOX_HEIGHT - (self::PADDING * 2);
         $step = $count > 1 ? self::VIEW_BOX_WIDTH / ($count - 1) : 0.0;
         $centerX = self::VIEW_BOX_WIDTH / 2;
-        $centerY = self::VIEW_BOX_HEIGHT / 2;
 
         $points = [];
         foreach ($numericValues as $index => $value) {
             $x = $count > 1 ? $index * $step : $centerX;
             $y = $range > 0.0
                 ? self::PADDING + (($yMax - $value) / $range) * $usableHeight
-                : $centerY;
+                : $this->flatY($value, $yMin, $flatOnBaseline);
             $points[] = [$x, $y];
         }
 
         return $points;
     }
 
-    private function valueToY(float $value, float $yMin, float $yMax): float
+    private function valueToY(float $value, float $yMin, float $yMax, bool $flatOnBaseline = false): float
     {
         $range = $yMax - $yMin;
         if ($range <= 0.0) {
-            return self::VIEW_BOX_HEIGHT / 2;
+            return $this->flatY($value, $yMin, $flatOnBaseline);
         }
         $usableHeight = self::VIEW_BOX_HEIGHT - (self::PADDING * 2);
         return self::PADDING + (($yMax - $value) / $range) * $usableHeight;
+    }
+
+    /**
+     * Y of a value when the series has no range: on the baseline when it is the zero line, else centered.
+     */
+    private function flatY(float $value, float $yMin, bool $flatOnBaseline): float
+    {
+        return $flatOnBaseline && $value <= $yMin
+            ? self::VIEW_BOX_HEIGHT - self::PADDING
+            : self::VIEW_BOX_HEIGHT / 2;
     }
 
     /**

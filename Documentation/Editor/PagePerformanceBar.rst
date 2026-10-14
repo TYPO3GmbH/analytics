@@ -62,17 +62,35 @@ Page Performance Bar
             :align: center
             :class: with-shadow
 
-The Page Performance Bar appears above the page content in the
-:guilabel:`Web → Page` module. It shows analytics metrics for the currently
-viewed page:
+The Page Performance Bar is above the page content in the
+:guilabel:`Web → Page` module. The bar shows these metrics of the current
+page:
 
--   **Page views** with sparkline and trend vs. previous period
--   **Bounce rate** with sparkline and trend
--   **Average time on page** with sparkline and trend
--   **Continuation rate** (100 − bounce rate) with sparkline and trend
+-   **Views**
+-   **Bounce rate**
+-   **Avg. time on page**
+-   **Continuation rate**: 100 % minus the bounce rate
 
-A period selector and a direct link to the full analytics dashboard are
-included in the bar.
+Each metric shows its value and the trend compared to the previous period.
+The trend uses the same rules as the :ref:`Site Performance widget
+<widget-site-performance>`:
+
+-   **+n** or **−n**: the value went up or down.
+-   **±0**: the value did not change.
+-   An info icon: there is no value to compare with, because the previous
+    period had no visits.
+
+Move the pointer onto a metric or select it with the keyboard to show a
+tooltip. The tooltip shows a description, the values of today and yesterday,
+the peak value and a chart with one value for each day.
+
+The bar also has these controls:
+
+-   A period selector
+-   :guilabel:`Show all details`: shows the details of all metrics in a panel
+    below the bar. Click :guilabel:`Hide all details` to close the panel. The
+    bar keeps this state for each backend user.
+-   :guilabel:`Show in Analytics`: opens the analytics dashboard for the page.
 
 The bar loads asynchronously — a lightweight skeleton is shown immediately,
 and the actual data is fetched via AJAX once the page has loaded. The bar is
