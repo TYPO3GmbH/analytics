@@ -19,6 +19,7 @@ use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -93,7 +94,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'pending']);
 
         self::assertCount(0, $this->httpHistory);
@@ -104,7 +105,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite('', AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         self::assertCount(0, $this->httpHistory);
@@ -115,7 +116,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('w-123', '', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, '', $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         self::assertCount(0, $this->httpHistory);
@@ -126,7 +127,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('w-123', 'i-456', '');
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, '');
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         self::assertCount(0, $this->httpHistory);
@@ -137,7 +138,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret, apiKeyId: 'existing-key-id');
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret, 'existing-key-id');
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         self::assertCount(0, $this->httpHistory);
@@ -163,7 +164,7 @@ final class ApiKeyServiceTest extends UnitTestCase
                 })
             );
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
     }
 
@@ -173,14 +174,14 @@ final class ApiKeyServiceTest extends UnitTestCase
         $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"k","apiKey":"v"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         self::assertCount(1, $this->httpHistory);
         $request = $this->httpHistory[0]['request'];
         self::assertSame('POST', $request->getMethod());
-        self::assertStringContainsString('/api-keys/w-123', (string)$request->getUri());
-        self::assertStringStartsWith('HMAC i-456:', $request->getHeaderLine('Authorization'));
+        self::assertStringContainsString('/api-keys/' . AnalyticsIds::WEBSITE_ID, (string)$request->getUri());
+        self::assertStringStartsWith('HMAC ' . AnalyticsIds::INSTANCE_ID . ':', $request->getHeaderLine('Authorization'));
     }
 
     #[Test]
@@ -189,7 +190,7 @@ final class ApiKeyServiceTest extends UnitTestCase
         $this->mockHandler->append(new \RuntimeException('connection refused'));
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
     }
 
@@ -199,7 +200,7 @@ final class ApiKeyServiceTest extends UnitTestCase
         $this->mockHandler->append(new Response(200, [], '{}'));
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
     }
 
@@ -212,7 +213,7 @@ final class ApiKeyServiceTest extends UnitTestCase
             ->method('writeSettings')
             ->willThrowException(new SiteConfigurationWriteException('disk full', 1590487411));
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         $this->expectNotToPerformAssertions();
@@ -227,7 +228,7 @@ final class ApiKeyServiceTest extends UnitTestCase
             ->method('assertSettingsPersisted')
             ->willThrowException(new AnalyticsApiException('Credentials could not be written.', 0));
 
-        $site = $this->buildSite('w-123', 'i-456', $this->encryptedSecret);
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
         $this->subject->provisionIfNeeded($site, ['status' => 'active']);
 
         // No exception thrown — the service returns silently and logs an error.

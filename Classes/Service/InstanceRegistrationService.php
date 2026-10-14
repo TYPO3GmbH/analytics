@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Uid\UuidV4;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -50,6 +51,11 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
             // Log only the response shape, never the values — $data may still hold the plaintext instanceSecret.
             $this->logger->error('Registration: API response incomplete.', ['siteIdentifier' => $siteIdentifier, 'receivedKeys' => array_keys($data)]);
             throw new AnalyticsApiException('API response is missing websiteId or instanceId.', 0);
+        }
+
+        if (!UuidV4::isValid($websiteId) || !UuidV4::isValid($instanceId)) {
+            $this->logger->error('Registration: API response contains an invalid websiteId or instanceId.', ['siteIdentifier' => $siteIdentifier]);
+            throw new AnalyticsApiException('API response contains an invalid websiteId or instanceId.', 0);
         }
 
         $encryptedSecret = $instanceSecret !== '' ? $this->cipherService->encrypt($instanceSecret) : '';

@@ -7,6 +7,7 @@ namespace T3G\Analytics\Service;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Uid\Uuid;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
@@ -103,7 +104,9 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         if ($newStatus !== '' && $newStatus !== $existingStatus) {
             $update['status'] = $newStatus;
         }
-        if ($newExternalWebsiteId !== '' && $newExternalWebsiteId !== $existingExternalWebsiteId) {
+        if ($newExternalWebsiteId !== '' && !Uuid::isValid($newExternalWebsiteId)) {
+            $this->logger->warning('syncSiteSettingsFromStatus: ignored invalid externalWebsiteId.', ['siteIdentifier' => $siteIdentifier]);
+        } elseif ($newExternalWebsiteId !== '' && $newExternalWebsiteId !== $existingExternalWebsiteId) {
             $update['externalWebsiteId'] = $newExternalWebsiteId;
         }
 

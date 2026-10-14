@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
+use Symfony\Component\Uid\UuidV4;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -53,10 +54,12 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
      */
     public function fetchStatus(string $websiteId, string $instanceId, string $instanceSecret): array
     {
-        $path = '/api/status/' . $websiteId;
+        $this->assertValidIds($websiteId, $instanceId);
+        $encodedId = rawurlencode($websiteId);
+        $path = '/api/status/' . $encodedId;
         try {
             $response = $this->requestFactory->request(
-                $this->apiConfiguration->getBaseUrl() . '/status/' . $websiteId,
+                $this->apiConfiguration->getBaseUrl() . '/status/' . $encodedId,
                 'GET',
                 array_merge($this->apiConfiguration->getRequestOptions(), [
                     'headers' => $this->hmacSigner->buildHeaders('GET', $path, $instanceId, $instanceSecret),
@@ -77,8 +80,10 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
      */
     public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string
     {
-        $path = '/api/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
-        $url = $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
+        $this->assertValidIds($websiteId, $instanceId);
+        $encodedId = rawurlencode($websiteId);
+        $path = '/api/dashboard-url/' . $encodedId . ($watcher ? '?role=watcher' : '');
+        $url = $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $encodedId . ($watcher ? '?role=watcher' : '');
         try {
             $response = $this->requestFactory->request(
                 $url,
@@ -106,10 +111,12 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
      */
     public function createApiKey(string $websiteId, string $instanceId, string $instanceSecret): array
     {
-        $path = '/api/api-keys/' . $websiteId;
+        $this->assertValidIds($websiteId, $instanceId);
+        $encodedId = rawurlencode($websiteId);
+        $path = '/api/api-keys/' . $encodedId;
         try {
             $response = $this->requestFactory->request(
-                $this->apiConfiguration->getBaseUrl() . '/api-keys/' . $websiteId,
+                $this->apiConfiguration->getBaseUrl() . '/api-keys/' . $encodedId,
                 'POST',
                 array_merge($this->apiConfiguration->getRequestOptions(), [
                     'headers' => $this->hmacSigner->buildHeaders('POST', $path, $instanceId, $instanceSecret),
@@ -156,10 +163,12 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
      */
     public function fetchCheckoutUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string
     {
-        $path = '/api/checkout-url/' . $websiteId;
+        $this->assertValidIds($websiteId, $instanceId);
+        $encodedId = rawurlencode($websiteId);
+        $path = '/api/checkout-url/' . $encodedId;
         try {
             $response = $this->requestFactory->request(
-                $this->apiConfiguration->getBaseUrl() . '/checkout-url/' . $websiteId,
+                $this->apiConfiguration->getBaseUrl() . '/checkout-url/' . $encodedId,
                 'GET',
                 array_merge($this->apiConfiguration->getRequestOptions(), [
                     'headers' => $this->hmacSigner->buildHeaders('GET', $path, $instanceId, $instanceSecret),
@@ -172,6 +181,19 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
             throw $e;
         } catch (\Throwable $e) {
             throw new AnalyticsApiException($this->exceptionExtractor->extractReason($e), null, $e);
+        }
+    }
+
+    /**
+     * The middleware creates both ids as UUIDv4. The websiteId goes into the URL and the signed path,
+     * the instanceId into the Authorization header.
+     *
+     * @throws AnalyticsApiException
+     */
+    private function assertValidIds(string $websiteId, string $instanceId): void
+    {
+        if (!UuidV4::isValid($websiteId) || !UuidV4::isValid($instanceId)) {
+            throw new AnalyticsApiException('The websiteId or the instanceId is not a valid UUIDv4.');
         }
     }
 }
