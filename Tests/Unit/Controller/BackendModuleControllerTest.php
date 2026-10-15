@@ -26,6 +26,7 @@ use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -76,6 +77,8 @@ final class BackendModuleControllerTest extends UnitTestCase
     private FlashMessageQueue&MockObject $flashMessageQueue;
     private SiteFinder&MockObject $siteFinder;
     private LoggerInterface&MockObject $logger;
+    private AnalyticsStatusService $analyticsStatusService;
+    private bool $userCanAccessPage = true;
 
     private string $encryptedTestSecret;
 
@@ -130,6 +133,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             ? new TransientMemoryBackend() // @phpstan-ignore argument.count
             : new TransientMemoryBackend('production');
         $statusCache = new VariableFrontend('analytics_status', $backend);
+        $this->userCanAccessPage = true;
         $analyticsStatusService = new AnalyticsStatusService(
             $statusCache,
             $apiClient,
@@ -139,6 +143,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
+        $this->analyticsStatusService = $analyticsStatusService;
 
         $registrationService = new InstanceRegistrationService(
             $apiClient,
@@ -203,6 +208,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $moduleHelper,
             $siteDataProvider,
             $this->logger,
+            $this->buildPageAccessChecker(),
         );
     }
 
@@ -303,8 +309,8 @@ final class BackendModuleControllerTest extends UnitTestCase
     public function statusActionReturnsSuccessJsonWhenStatusFetchSucceeds(): void
     {
         $site = $this->buildSiteMock('main', 'https://example.com', [
-            'websiteId' => 'w-123',
-            'instanceId' => 'i-456',
+            'websiteId' => AnalyticsIds::WEBSITE_ID,
+            'instanceId' => AnalyticsIds::INSTANCE_ID,
             'instanceSecret' => $this->encryptedTestSecret,
         ]);
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
@@ -472,6 +478,101 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(RedirectResponse::class, $response);
     }
 
+    /** Page access check */
+
+    #[Test]
+    public function registerActionReturnsNotFoundWhenUserCannotAccessSite(): void
+    {
+        $this->userCanAccessPage = false;
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($this->buildSiteMock('main', 'https://example.com'));
+        $this->siteSettingsService->expects(self::never())->method(self::anything());
+
+        $response = $this->subject->registerAction(
+            $this->buildRequest(['siteIdentifier' => 'main', 'email' => 'user@example.com'])
+        );
+
+        self::assertSame(404, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        self::assertCount(0, $this->httpHistory);
+    }
+
+    #[Test]
+    public function statusActionReturnsNotFoundWhenUserCannotAccessSite(): void
+    {
+        $this->userCanAccessPage = false;
+        $this->siteFinder->method('getSiteByIdentifier')
+            ->willReturn($this->buildSiteMock('main', 'https://example.com', $this->credentials()));
+
+        $response = $this->subject->statusAction($this->buildRequest(['siteIdentifier' => 'main']));
+
+        self::assertSame(404, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        self::assertCount(0, $this->httpHistory);
+    }
+
+    #[Test]
+    public function invalidateStatusCacheActionDoesNotClearCacheWhenUserCannotAccessSite(): void
+    {
+        $site = $this->buildSiteMock('main', 'https://example.com', $this->credentials());
+        $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
+        $this->mockHandler->append(new Response(200, [], '{"status":"active","consumption":{}}'));
+        // Fill the status cache. This uses the one queued API response.
+        self::assertNotNull($this->analyticsStatusService->getStatus($site));
+
+        $this->userCanAccessPage = false;
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'main']);
+
+        $response = $this->subject->invalidateStatusCacheAction($request);
+
+        self::assertSame(404, $response->getStatusCode());
+        // The cache entry must still exist: no new API request is made.
+        self::assertNotNull($this->analyticsStatusService->getStatus($site));
+        self::assertCount(1, $this->httpHistory);
+    }
+
+    #[Test]
+    public function managePlanActionRedirectsWithErrorWhenUserCannotAccessSite(): void
+    {
+        $this->userCanAccessPage = false;
+        // A valid API response: without the access check, the action would use it.
+        $this->mockHandler->append(new Response(200, [], '{"checkoutUrl":"https://example.com/checkout?token=test"}'));
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')
+            ->willReturn($this->buildSiteMock('main', 'https://example.com', $this->credentials()));
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'main']);
+
+        $response = $this->subject->managePlanAction($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertCount(0, $this->httpHistory);
+    }
+
+    #[Test]
+    public function dashboardActionRedirectsWithErrorWhenUserCannotAccessSite(): void
+    {
+        $this->userCanAccessPage = false;
+        // A valid API response: without the access check, the action would use it.
+        $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://example.com/dashboard?token=test"}'));
+        $this->uriBuilder->method('buildUriFromRoute')->willReturn(new Uri('/module/site/analytics'));
+        $this->siteFinder->method('getSiteByIdentifier')
+            ->willReturn($this->buildSiteMock('main', 'https://example.com', $this->credentials()));
+
+        $this->flashMessageQueue->expects(self::once())->method('addMessage');
+
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getQueryParams')->willReturn(['siteIdentifier' => 'main']);
+
+        $response = $this->subject->dashboardAction($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertCount(0, $this->httpHistory);
+    }
+
     /** Helpers */
 
     private function buildRequest(array $body): \Psr\Http\Message\ServerRequestInterface
@@ -496,5 +597,22 @@ final class BackendModuleControllerTest extends UnitTestCase
     private function decodeJson(\Psr\Http\Message\ResponseInterface $response): array
     {
         return json_decode((string)$response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    private function buildPageAccessChecker(): BackendPageAccessCheckerInterface
+    {
+        $checker = $this->createMock(BackendPageAccessCheckerInterface::class);
+        $checker->method('userCanAccessPage')->willReturnCallback(fn (): bool => $this->userCanAccessPage);
+        return $checker;
+    }
+
+    /** @return array<string, mixed> */
+    private function credentials(): array
+    {
+        return [
+            'websiteId' => AnalyticsIds::WEBSITE_ID,
+            'instanceId' => AnalyticsIds::INSTANCE_ID,
+            'instanceSecret' => $this->encryptedTestSecret,
+        ];
     }
 }

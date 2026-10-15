@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\ApiKeyServiceInterface;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\SiteDataProviderInterface;
 use T3G\Analytics\Service\AnalyticsStatusServiceInterface;
 use T3G\Analytics\Service\InstanceRegistrationServiceInterface;
@@ -47,6 +48,7 @@ final readonly class BackendModuleController
         private ModuleConfigurator $moduleHelper,
         private SiteDataProviderInterface $siteDataProvider,
         private LoggerInterface $logger,
+        private BackendPageAccessCheckerInterface $pageAccessChecker,
     ) {
     }
 
@@ -101,10 +103,8 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+        $site = $this->findAccessibleSite($siteIdentifier);
+        if (!$site instanceof Site) {
             return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
@@ -253,10 +253,8 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+        $site = $this->findAccessibleSite($siteIdentifier);
+        if (!$site instanceof Site) {
             return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
@@ -287,9 +285,8 @@ final readonly class BackendModuleController
             return new JsonResponse(['success' => false], 400);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
+        $site = $this->findAccessibleSite($siteIdentifier);
+        if (!$site instanceof Site) {
             return new JsonResponse(['success' => false], 404);
         }
 
@@ -397,13 +394,30 @@ final readonly class BackendModuleController
 
     private function resolveSite(string $siteIdentifier): ?Site
     {
+        return $this->findAccessibleSite($siteIdentifier, true);
+    }
+
+    private function findAccessibleSite(string $siteIdentifier, bool $addFlashMessage = false): ?Site
+    {
         try {
-            return $this->siteFinder->getSiteByIdentifier($siteIdentifier);
+            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
         } catch (SiteNotFoundException) {
             $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
-            $this->addFlashMessage('flash.siteNotFound', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
+            if ($addFlashMessage) {
+                $this->addFlashMessage('flash.siteNotFound', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
+            }
             return null;
         }
+
+        if (!$this->pageAccessChecker->userCanAccessPage($site->getRootPageId())) {
+            $this->logger->warning('Site access denied.', ['siteIdentifier' => $siteIdentifier]);
+            if ($addFlashMessage) {
+                $this->addFlashMessage('flash.siteNotFound', 'flash.error.title', ContextualFeedbackSeverity::ERROR);
+            }
+            return null;
+        }
+
+        return $site;
     }
 
     /**
