@@ -15,8 +15,8 @@
                interlink-shortcode="t3g/analytics"
     />
     <project title="TYPO3 Analytics"
-             release="1.1.0"
-             version="1.0"
+             release="1.1.1"
+             version="1.1"
              copyright="TYPO3 GmbH"
     />
     <inventory id="t3coreapi"
