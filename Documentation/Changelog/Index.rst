@@ -6,6 +6,18 @@
 Changelog
 =========
 
+..  _changelog-1.1.1:
+
+1.1.1
+=====
+
+*   [SECURITY] Check module and widget access in AJAX routes
+*   [SECURITY] Check site access in BackendModuleController
+*   [DOCS] Introduction page language check
+*   [DOCS] Use screenshots from demo site
+*   [DOCS] Add extra screenshots to make information clearer for Editors
+
+
 ..  _changelog-1.1.0:
 
 1.1.0
