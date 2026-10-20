@@ -29,7 +29,6 @@ final readonly class TrafficSourcesWidgetV14 implements WidgetRendererInterface,
     use TrafficSourcesWidgetTrait;
 
     public function __construct(
-        /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private AnalyticsSiteProviderInterface $siteProvider,
         private TrafficSourcesServiceInterface $trafficSourcesService,
