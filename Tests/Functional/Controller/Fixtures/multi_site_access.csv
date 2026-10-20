@@ -1,0 +1,11 @@
+"pages"
+,"uid","pid","title","is_siteroot","doktype","perms_userid","perms_groupid","perms_user","perms_group","perms_everybody"
+,1,0,"Site A",1,1,0,0,31,31,1
+,2,0,"Site B",1,1,0,0,31,31,1
+"be_groups"
+,"uid","pid","title","custom_options"
+,1,0,"Analytics managers","tx_analytics:manager"
+"be_users"
+,"uid","pid","username","password","admin","usergroup","db_mountpoints","options"
+,1,0,"editor","",0,"","1",0
+,2,0,"manager","",0,"1","1",0

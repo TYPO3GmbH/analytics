@@ -419,10 +419,13 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
 
+        $pageAccessChecker = $this->createMock(BackendPageAccessCheckerInterface::class);
+        $pageAccessChecker->method('userCanAccessPage')->willReturn(true);
+
         $siteDataProvider = new SiteDataProvider(
             $resolvedSiteFinder,
             $statusService,
-            $this->createMock(BackendPageAccessCheckerInterface::class),
+            $pageAccessChecker,
             $this->get(ConnectionPool::class),
             $this->get(UriBuilder::class),
             new NullLogger(),
@@ -462,6 +465,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $moduleHelper,
             $siteDataProvider,
             $this->createMock(LoggerInterface::class),
+            $pageAccessChecker,
         );
     }
 

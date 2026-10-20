@@ -7,6 +7,7 @@ namespace T3G\Analytics\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
+use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
 use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -17,15 +18,22 @@ use TYPO3\CMS\Core\View\ViewFactoryInterface;
 
 final readonly class SitePerformanceAjaxController
 {
+    private const WIDGET_IDENTIFIER = 'analyticsSitePerformance';
+
     public function __construct(
         private SitePerformanceServiceInterface $sitePerformanceService,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
+        private BackendWidgetAccessCheckerInterface $widgetAccessChecker,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->widgetAccessChecker->userCanAccessWidget(self::WIDGET_IDENTIFIER)) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
         $params = $request->getQueryParams();
         $siteIdentifier = (string)($params['site'] ?? '');
         $requestedDays = (int)($params['days'] ?? 7);

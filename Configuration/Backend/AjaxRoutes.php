@@ -7,30 +7,36 @@ return [
         'path' => '/analytics/top-pages/content',
         'target' => \T3G\Analytics\Controller\TopPagesAjaxController::class . '::handle',
         'access' => 'user',
+        'inheritAccessFromModule' => 'dashboard',
     ],
     'analytics_site_performance_content' => [
         'path' => '/analytics/site-performance/content',
         'target' => \T3G\Analytics\Controller\SitePerformanceAjaxController::class . '::handle',
         'access' => 'user',
+        'inheritAccessFromModule' => 'dashboard',
     ],
     'analytics_traffic_graph_content' => [
         'path' => '/analytics/traffic-graph/content',
         'target' => \T3G\Analytics\Controller\TrafficGraphAjaxController::class . '::handle',
         'access' => 'user',
+        'inheritAccessFromModule' => 'dashboard',
     ],
     'analytics_traffic_sources_content' => [
         'path' => '/analytics/traffic-sources/content',
         'target' => \T3G\Analytics\Controller\TrafficSourcesAjaxController::class . '::handle',
         'access' => 'user',
+        'inheritAccessFromModule' => 'dashboard',
     ],
     'analytics_page_performance_content' => [
         'path' => '/analytics/page-performance/content',
         'target' => \T3G\Analytics\Controller\PagePerformanceAjaxController::class . '::handle',
         'access' => 'user',
+        'inheritAccessFromModule' => 'web_layout',
     ],
     'analytics_plans_content' => [
         'path' => '/analytics/plans',
         'target' => \T3G\Analytics\Controller\PlansAjaxController::class . '::handle',
         'access' => 'user',
+        'inheritAccessFromModule' => 'site_analytics',
     ],
 ];

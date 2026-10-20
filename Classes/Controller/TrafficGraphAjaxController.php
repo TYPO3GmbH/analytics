@@ -7,6 +7,7 @@ namespace T3G\Analytics\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
+use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -18,16 +19,23 @@ use TYPO3\CMS\Core\View\ViewFactoryInterface;
 
 final readonly class TrafficGraphAjaxController
 {
+    private const WIDGET_IDENTIFIER = 'analyticsTrafficGraph';
+
     public function __construct(
         private TrafficGraphServiceInterface $trafficGraphService,
         private TrafficChartDataBuilder $chartDataBuilder,
         private UriBuilder $uriBuilder,
         private ViewFactoryInterface $viewFactory,
+        private BackendWidgetAccessCheckerInterface $widgetAccessChecker,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->widgetAccessChecker->userCanAccessWidget(self::WIDGET_IDENTIFIER)) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
         $params = $request->getQueryParams();
         $siteIdentifier = (string) ($params['site'] ?? '');
         // Default matches the widget's configured default (30 days); JS always sends the value

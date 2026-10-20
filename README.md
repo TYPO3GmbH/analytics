@@ -24,7 +24,7 @@ A TYPO3 backend extension that integrates **TYPO3 Analytics** into the TYPO3 sit
 | Component | Version |
 |-----------|---------|
 | PHP | ^8.2 |
-| TYPO3 | ^13.4 or ^14.0 |
+| TYPO3 | ^13.4.18 or ^14.0 |
 | libsodium | PHP extension (bundled since PHP 7.2) |
 
 ## What the extension does

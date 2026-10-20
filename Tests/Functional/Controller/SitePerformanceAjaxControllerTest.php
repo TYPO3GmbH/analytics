@@ -6,10 +6,11 @@ namespace T3G\Analytics\Tests\Functional\Controller;
 
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Controller\SitePerformanceAjaxController;
+use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
 use T3G\Analytics\Service\SitePerformanceServiceInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use T3G\Analytics\Tests\Functional\Fixtures\WidgetAccessUsers;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
@@ -36,12 +37,8 @@ final class SitePerformanceAjaxControllerTest extends FunctionalTestCase
         parent::setUp();
 
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
-
-        $backendUser = $this->getMockBuilder(BackendUserAuthentication::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $backendUser->method('getModuleData')->willReturn([]);
-        $GLOBALS['BE_USER'] = $backendUser;
+        $this->importCSVDataSet(WidgetAccessUsers::CSV);
+        $this->setUpBackendUser(WidgetAccessUsers::V13_WIDGETS);
     }
 
     #[Test]
@@ -62,6 +59,7 @@ final class SitePerformanceAjaxControllerTest extends FunctionalTestCase
             $service,
             $this->get(UriBuilder::class),
             $this->get(ViewFactoryInterface::class),
+            $this->get(BackendWidgetAccessCheckerInterface::class),
         );
 
         $request = (new ServerRequest(new Uri('https://example.com/ajax'), 'GET'))
@@ -78,6 +76,26 @@ final class SitePerformanceAjaxControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function handleReturns403WhenUserCannotAccessWidget(): void
+    {
+        // The user may use another widget, so the controller must check its own widget.
+        $this->setUpBackendUser(WidgetAccessUsers::TOP_PAGES_ONLY);
+        $service = $this->createMock(SitePerformanceServiceInterface::class);
+        $service->expects(self::never())->method('loadPerformanceData');
+
+        $controller = new SitePerformanceAjaxController(
+            $service,
+            $this->get(UriBuilder::class),
+            $this->get(ViewFactoryInterface::class),
+            $this->get(BackendWidgetAccessCheckerInterface::class),
+        );
+
+        $response = $controller->handle(new ServerRequest(new Uri('https://example.com/ajax'), 'GET'));
+
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    #[Test]
     public function handleReturnsShowAllUrlContainingSiteIdentifier(): void
     {
         $service = $this->createMock(SitePerformanceServiceInterface::class);
@@ -87,6 +105,7 @@ final class SitePerformanceAjaxControllerTest extends FunctionalTestCase
             $service,
             $this->get(UriBuilder::class),
             $this->get(ViewFactoryInterface::class),
+            $this->get(BackendWidgetAccessCheckerInterface::class),
         );
 
         $request = (new ServerRequest(new Uri('https://example.com/ajax'), 'GET'))

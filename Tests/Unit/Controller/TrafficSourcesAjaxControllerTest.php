@@ -7,6 +7,7 @@ namespace T3G\Analytics\Tests\Unit\Controller;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Controller\TrafficSourcesAjaxController;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
 use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TrafficSourcesServiceInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -29,6 +30,7 @@ final class TrafficSourcesAjaxControllerTest extends UnitTestCase
             new MetricFormatter(),
             $this->createMock(UriBuilder::class),
             $this->createMock(ViewFactoryInterface::class),
+            $this->createMock(BackendWidgetAccessCheckerInterface::class),
         );
     }
 
