@@ -29,7 +29,6 @@ final readonly class TopPagesWidgetV14 implements WidgetRendererInterface, Addit
     use TopPagesWidgetTrait;
 
     public function __construct(
-        /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private TopPagesServiceInterface $topPagesService,
         private AnalyticsSiteProviderInterface $siteProvider,

@@ -1,2 +1,61 @@
 parameters:
-	ignoreErrors: []
+	ignoreErrors:
+		-
+			message: '#^Call to function method_exists\(\) with TYPO3\\CMS\\Backend\\Template\\Components\\DocHeaderComponent and ''addBreadcrumbSuffix…'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../Classes/Backend/ModuleConfigurator.php
+
+		-
+			message: '#^Call to function method_exists\(\) with TYPO3\\CMS\\Backend\\Template\\Components\\DocHeaderComponent and ''setShortcutContext'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../Classes/Backend/ModuleConfigurator.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\SitePerformanceWidget\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/SitePerformanceWidget.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\SitePerformanceWidgetV14\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/SitePerformanceWidgetV14.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\TopPagesWidget\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/TopPagesWidget.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\TopPagesWidgetV14\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/TopPagesWidgetV14.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\TrafficGraphWidget\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/TrafficGraphWidget.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\TrafficGraphWidgetV14\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/TrafficGraphWidgetV14.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\TrafficSourcesWidget\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/TrafficSourcesWidget.php
+
+		-
+			message: '#^Property T3G\\Analytics\\Dashboard\\Widget\\TrafficSourcesWidgetV14\:\:\$configuration is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: ../Classes/Dashboard/Widget/TrafficSourcesWidgetV14.php

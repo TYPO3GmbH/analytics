@@ -5,6 +5,7 @@ includes:
 parameters:
     level: 8
     treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: true
 
     paths:
         - %currentWorkingDirectory%/Classes/
