@@ -7,21 +7,34 @@ namespace T3G\Analytics\Tests\Unit\Service;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Exception\SiteSettingsLockedException;
 use T3G\Analytics\Service\SiteSettingsLock;
-use TYPO3\CMS\Core\Locking\Exception\LockAcquireWouldBlockException;
+use T3G\Analytics\Tests\Fixtures\SiteSettingsLockTrait;
 use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Locking\LockingStrategyInterface;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class SiteSettingsLockTest extends UnitTestCase
 {
+    use SiteSettingsLockTrait;
+
+    protected function tearDown(): void
+    {
+        $this->releaseSiteSettingsLockOfOtherRequest();
+        parent::tearDown();
+    }
+
     #[Test]
     public function runReturnsResultOfCallbackAndReleasesLock(): void
     {
-        $locker = $this->createMock(LockingStrategyInterface::class);
-        $locker->method('acquire')->willReturn(true);
-        $locker->expects(self::once())->method('release');
+        $lockedDuringCallback = null;
 
-        self::assertSame('result', $this->buildSubject($locker)->run('main', static fn (): string => 'result'));
+        $result = (new SiteSettingsLock(new LockFactory()))->run('main', function () use (&$lockedDuringCallback): string {
+            $lockedDuringCallback = $this->isSiteSettingsLocked();
+            return 'result';
+        });
+
+        self::assertSame('result', $result);
+        self::assertTrue($lockedDuringCallback);
+        self::assertFalse($this->isSiteSettingsLocked());
     }
 
     #[Test]
@@ -39,28 +52,26 @@ final class SiteSettingsLockTest extends UnitTestCase
     #[Test]
     public function runReleasesLockWhenCallbackThrows(): void
     {
-        $locker = $this->createMock(LockingStrategyInterface::class);
-        $locker->method('acquire')->willReturn(true);
-        $locker->expects(self::once())->method('release');
+        try {
+            (new SiteSettingsLock(new LockFactory()))->run('main', static function (): never {
+                throw new \RuntimeException('callback failed', 1760521400);
+            });
+            self::fail('RuntimeException expected.');
+        } catch (\RuntimeException $e) {
+            self::assertSame('callback failed', $e->getMessage());
+        }
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('callback failed');
-
-        $this->buildSubject($locker)->run('main', static function (): never {
-            throw new \RuntimeException('callback failed', 1760521400);
-        });
+        self::assertFalse($this->isSiteSettingsLocked());
     }
 
     #[Test]
     public function runThrowsWithoutCallingCallbackWhenLockIsHeld(): void
     {
-        $locker = $this->createMock(LockingStrategyInterface::class);
-        $locker->method('acquire')->willThrowException(new LockAcquireWouldBlockException('Locked.', 1760521401));
-        $locker->expects(self::never())->method('release');
+        $this->lockSiteSettingsInOtherRequest();
         $called = false;
 
         try {
-            $this->buildSubject($locker)->run('main', static function () use (&$called): void {
+            (new SiteSettingsLock(new LockFactory()))->run('main', static function () use (&$called): void {
                 $called = true;
             });
             self::fail('SiteSettingsLockedException expected.');
@@ -76,10 +87,12 @@ final class SiteSettingsLockTest extends UnitTestCase
         $locker = $this->createMock(LockingStrategyInterface::class);
         $locker->method('acquire')->willReturn(false);
         $locker->expects(self::never())->method('release');
+        $lockFactory = $this->createMock(LockFactory::class);
+        $lockFactory->method('createLocker')->willReturn($locker);
         $called = false;
 
         try {
-            $this->buildSubject($locker)->run('main', static function () use (&$called): void {
+            (new SiteSettingsLock($lockFactory))->run('main', static function () use (&$called): void {
                 $called = true;
             });
             self::fail('SiteSettingsLockedException expected.');
@@ -87,12 +100,5 @@ final class SiteSettingsLockTest extends UnitTestCase
         }
 
         self::assertFalse($called);
-    }
-
-    private function buildSubject(LockingStrategyInterface $locker): SiteSettingsLock
-    {
-        $lockFactory = $this->createMock(LockFactory::class);
-        $lockFactory->method('createLocker')->willReturn($locker);
-        return new SiteSettingsLock($lockFactory);
     }
 }
