@@ -323,6 +323,39 @@ rm -rf .Build/dummy-typo3
 ddev restart
 ```
 
+### Run an additional environment in parallel
+
+You can run an additional environment next to the existing one, for example to test with another TYPO3 version.
+Use another checkout of the repository for this, for example a clone or a `git worktree`.
+
+Two DDEV projects with the same name cannot run at the same time.
+The project name in `.ddev/config.yaml` is `analytics`.
+Do not change `.ddev/config.yaml`.
+Set a different name in a local override file instead.
+
+1. In the other checkout, create the file `.ddev/config.local.yaml`:
+
+   ```yaml
+   name: analytics-v14
+   override_config: true
+   additional_fqdns:
+       - site1.analytics-v14.ddev.site
+       - site2.analytics-v14.ddev.site
+       - site3.analytics-v14.ddev.site
+       - site4.analytics-v14.ddev.site
+       - site5.analytics-v14.ddev.site
+   ```
+
+   `override_config: true` replaces the list `additional_fqdns`.
+   Without it, DDEV adds the new host names to the host names from `.ddev/config.yaml`.
+
+2. Run `ddev start` in the other checkout.
+3. Select the TYPO3 version when the setup script asks for it.
+
+The setup script reads the host name from DDEV.
+Thus, the URLs of the additional environment use the new name, for example `https://analytics-v14.ddev.site/typo3`.
+Git ignores the file `.ddev/config.local.yaml`.
+
 ### Documentation preview
 
 The [ddev-typo3-docs](https://github.com/TYPO3-Documentation/ddev-typo3-docs) add-on renders the `.rst` files in `Documentation/` with the same renderer used by docs.typo3.org. It starts automatically with `ddev start`/`ddev restart` and watches for changes.
