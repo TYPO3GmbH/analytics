@@ -11,6 +11,8 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use T3G\Analytics\Middleware\TrackingCodeMiddleware;
 use T3G\Analytics\Service\TrackingCodeResolver;
+use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -136,21 +138,31 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
     {
         // $0, $1 and backslashes have a meaning in regular expression replacements.
         $trackingCode = '<script>var a = "$0 $1 \\1 \\\\";</script>';
-        $response = $this->buildHtmlResponse('<html><body><p>Hello</p></BODY></html>');
-        $capturedBody = null;
-        $response->method('withBody')->willReturnCallback(
-            static function ($newBody) use ($response, &$capturedBody): ResponseInterface {
-                $capturedBody = $newBody;
-                return $response;
-            }
+        $site = new Site('main', 1, ['base' => 'https://example.com/', 'settings' => ['trackingCode' => $trackingCode, 'status' => 'active']]);
+        $request = (new ServerRequest('https://example.com/', 'GET'))->withAttribute('site', $site);
+
+        $response = $this->subject->process(
+            $request,
+            $this->buildHandler(new HtmlResponse('<html><body><p>Hello</p></body></html>'))
         );
 
-        $this->subject->process(
-            $this->buildRequestWithSite(['trackingCode' => $trackingCode, 'status' => 'active']),
-            $this->buildHandler($response)
+        self::assertSame("<html><body><p>Hello</p>\n" . $trackingCode . "\n</body></html>", (string)$response->getBody());
+    }
+
+    #[Test]
+    public function processInjectsTrackingCodeBeforeClosingBodyTagInAnyCase(): void
+    {
+        $trackingCode = '<script>va()</script>';
+        $site = new Site('main', 1, ['base' => 'https://example.com/', 'settings' => ['trackingCode' => $trackingCode, 'status' => 'active']]);
+        $request = (new ServerRequest('https://example.com/', 'GET'))->withAttribute('site', $site);
+
+        $response = $this->subject->process(
+            $request,
+            $this->buildHandler(new HtmlResponse('<html><body><p>Hello</p></BODY></html>'))
         );
 
-        self::assertSame("<html><body><p>Hello</p>\n" . $trackingCode . "\n</BODY></html>", (string)$capturedBody);
+        // The tag keeps its original case.
+        self::assertSame("<html><body><p>Hello</p>\n" . $trackingCode . "\n</BODY></html>", (string)$response->getBody());
     }
 
     #[Test]
