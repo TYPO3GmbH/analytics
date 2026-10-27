@@ -17,6 +17,7 @@ composer.lock
 # DDEV
 /.ddev/.gitignore
 /.ddev/.*.yaml
+/.ddev/config.local.yaml
 
 # OS
 .DS_Store
