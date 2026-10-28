@@ -1,0 +1,14 @@
+"pages"
+,"uid","pid","title","is_siteroot","doktype","perms_userid","perms_groupid","perms_user","perms_group","perms_everybody"
+,1,0,"Active Site",1,1,0,0,31,31,1
+,2,0,"Low Credits Site",1,1,0,0,31,31,1
+,3,0,"Exhausted Site",1,1,0,0,31,31,1
+,4,0,"Unregistered Site",1,1,0,0,31,31,1
+"be_groups"
+,"uid","pid","title","custom_options"
+,1,0,"Analytics managers","tx_analytics:manager"
+"be_users"
+,"uid","pid","username","password","admin","usergroup","db_mountpoints","options"
+,1,0,"admin","",1,"","",0
+,2,0,"editor","",0,"","1,2,3,4",0
+,3,0,"manager","",0,"1","1,2,3,4",0
