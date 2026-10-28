@@ -166,12 +166,25 @@ final readonly class TopPagesService implements TopPagesServiceInterface
         $bestLength = 0;
         foreach ($site->getLanguages() as $siteLanguage) {
             $base = $this->absoluteLanguageBase($site, $siteLanguage);
-            if ($base !== '' && str_starts_with($normalizedUrl, $base) && strlen($base) > $bestLength) {
+            if ($base !== '' && $this->urlStartsWithBase($normalizedUrl, $base) && strlen($base) > $bestLength) {
                 $bestMatch = $siteLanguage;
                 $bestLength = strlen($base);
             }
         }
         return $bestMatch;
+    }
+
+    /**
+     * The base must end at a host, path or query boundary of the URL.
+     * Thus, "https://example.com/de" does not match "https://example.com/demo"
+     * and "https://example.com" does not match "https://example.com.example.org".
+     */
+    private function urlStartsWithBase(string $url, string $base): bool
+    {
+        if (!str_starts_with($url, $base)) {
+            return false;
+        }
+        return strlen($url) === strlen($base) || in_array($url[strlen($base)], ['/', '?', '#'], true);
     }
 
     private function resolvePageArguments(Site $site, \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language, string $url): ?PageArguments
