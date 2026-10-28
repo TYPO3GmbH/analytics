@@ -17,6 +17,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -87,7 +88,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     #[Test]
     public function getStatusFetchesFromApiOnCacheMissAndStoresResult(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","packageName":"Pro"}'));
 
         $status = $this->subject->getStatus($site);
@@ -101,7 +102,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     #[Test]
     public function getStatusReturnsCachedValueWithoutApiCall(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active"}'));
 
         $first = $this->subject->getStatus($site);
@@ -114,7 +115,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     #[Test]
     public function getStatusWithForceRefreshBypassesCache(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active"}'));
         $this->mockHandler->append(new Response(200, [], '{"status":"active"}'));
 
@@ -127,7 +128,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     #[Test]
     public function clearCacheRemovesCachedValue(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active"}'));
         $this->mockHandler->append(new Response(200, [], '{"status":"active"}'));
 
@@ -150,7 +151,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     #[Test]
     public function getDashboardUrlReturnsUrlFromApiResponse(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $expectedUrl = 'https://app-3as.visitor-analytics.io?intpc_token=jwt&externalWebsiteId=w-123';
         $this->mockHandler->append(new Response(200, [], json_encode(['dashboardUrl' => $expectedUrl])));
 
@@ -158,15 +159,15 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
 
         self::assertSame($expectedUrl, $result);
         self::assertCount(1, $this->httpHistory);
-        self::assertStringContainsString('/dashboard-url/w-123', (string)$this->httpHistory[0]['request']->getUri());
+        self::assertStringContainsString('/dashboard-url/' . AnalyticsIds::WEBSITE_ID, (string)$this->httpHistory[0]['request']->getUri());
         self::assertSame('GET', $this->httpHistory[0]['request']->getMethod());
-        self::assertStringStartsWith('HMAC i-456:', $this->httpHistory[0]['request']->getHeaderLine('Authorization'));
+        self::assertStringStartsWith('HMAC ' . AnalyticsIds::INSTANCE_ID . ':', $this->httpHistory[0]['request']->getHeaderLine('Authorization'));
     }
 
     #[Test]
     public function getDashboardUrlReturnsNullOnApiFailure(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new \RuntimeException('network error'));
 
         self::assertNull($this->subject->getDashboardUrl($site));
@@ -175,7 +176,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
     #[Test]
     public function getManagePlanUrlReturnsUrlFromApiResponse(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $expectedUrl = 'https://checkout.visitor-analytics.io/plan?token=abc123';
         $this->mockHandler->append(new Response(200, [], json_encode(['checkoutUrl' => $expectedUrl])));
 
@@ -183,15 +184,15 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
 
         self::assertSame($expectedUrl, $result);
         self::assertCount(1, $this->httpHistory);
-        self::assertStringContainsString('/checkout-url/w-123', (string)$this->httpHistory[0]['request']->getUri());
+        self::assertStringContainsString('/checkout-url/' . AnalyticsIds::WEBSITE_ID, (string)$this->httpHistory[0]['request']->getUri());
         self::assertSame('GET', $this->httpHistory[0]['request']->getMethod());
-        self::assertStringStartsWith('HMAC i-456:', $this->httpHistory[0]['request']->getHeaderLine('Authorization'));
+        self::assertStringStartsWith('HMAC ' . AnalyticsIds::INSTANCE_ID . ':', $this->httpHistory[0]['request']->getHeaderLine('Authorization'));
     }
 
     #[Test]
     public function getManagePlanUrlReturnsNullOnApiFailure(): void
     {
-        $site = $this->buildRegisteredSite('main', 'w-123', 'i-456');
+        $site = $this->buildRegisteredSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new \RuntimeException('network error'));
 
         self::assertNull($this->subject->getManagePlanUrl($site));

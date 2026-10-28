@@ -19,6 +19,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
@@ -105,7 +106,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getManagePlanUrlReturnsUrlFromApiResponse(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"checkoutUrl":"https://checkout.visitor-analytics.io/plan?token=jwt"}'));
 
         self::assertSame('https://checkout.visitor-analytics.io/plan?token=jwt', $this->subject->getManagePlanUrl($site));
@@ -114,7 +115,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getManagePlanUrlReturnsNullWhenApiResponseHasNoUrl(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{}'));
 
         self::assertNull($this->subject->getManagePlanUrl($site));
@@ -123,7 +124,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getManagePlanUrlReturnsNullWhenApiCallFails(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new \RuntimeException('connection refused'));
 
         self::assertNull($this->subject->getManagePlanUrl($site));
@@ -141,7 +142,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getDashboardUrlReturnsUrlFromApiResponse(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?intpc_token=jwt"}'));
 
         self::assertSame('https://dashboard.example.com?intpc_token=jwt', $this->subject->getDashboardUrl($site));
@@ -150,7 +151,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getDashboardUrlPassesWatcherFlagToApiClient(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"dashboardUrl":"https://dashboard.example.com?intpc_token=watcher-jwt"}'));
 
         $this->subject->getDashboardUrl($site, watcher: true);
@@ -169,7 +170,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function getDashboardUrlReturnsNullWhenApiCallFails(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new \RuntimeException('connection refused'));
 
         self::assertNull($this->subject->getDashboardUrl($site));
@@ -180,9 +181,9 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function syncSiteSettingsFromStatusPersistsTrackingCodeAndStatus(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => AnalyticsIds::WEBSITE_ID]);
 
         $this->siteSettingsService
             ->expects(self::once())
@@ -192,7 +193,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
                 self::callback(static function (array $settings): bool {
                     return $settings['trackingCode'] === 'tc-abc'
                         && $settings['status'] === 'active'
-                        && $settings['websiteId'] === 'w-123';
+                        && $settings['websiteId'] === AnalyticsIds::WEBSITE_ID;
                 })
             );
 
@@ -201,9 +202,33 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     }
 
     #[Test]
+    public function syncSiteSettingsFromStatusPersistsExternalWebsiteId(): void
+    {
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
+
+        $this->siteSettingsService
+            ->expects(self::once())
+            ->method('writeSettings')
+            ->with($site, ['externalWebsiteId' => AnalyticsIds::EXTERNAL_WEBSITE_ID]);
+
+        $this->subject->syncSiteSettingsFromStatus($site, ['externalWebsiteId' => AnalyticsIds::EXTERNAL_WEBSITE_ID]);
+    }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusIgnoresExternalWebsiteIdThatIsNoUuid(): void
+    {
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
+
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->subject->syncSiteSettingsFromStatus($site, ['externalWebsiteId' => '../x?y']);
+    }
+
+    #[Test]
     public function syncSiteSettingsFromStatusSkipsWriteWhenValuesUnchanged(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456', ['trackingCode' => 'tc-abc', 'status' => 'active']);
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, ['trackingCode' => 'tc-abc', 'status' => 'active']);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
@@ -215,7 +240,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function syncSiteSettingsFromStatusSkipsWriteWhenApiResponseHasNoTrackingIdOrStatus(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"packageName":"Pro"}'));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
@@ -227,7 +252,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function skipsApiCallOnCacheHit(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->cache->set('status_' . sha1('main'), ['status' => 'active', '_fetchedAt' => time()], [], 86400);
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
@@ -240,7 +265,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function syncSiteSettingsFromStatusLogsWarningWhenWriteSettingsThrows(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService
@@ -256,7 +281,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     #[Test]
     public function syncSiteSettingsFromStatusLogsWarningWhenSettingsCouldNotBePersisted(): void
     {
-        $site = $this->buildSite('main', 'w-123', 'i-456');
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->writeGuard

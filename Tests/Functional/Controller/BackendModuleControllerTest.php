@@ -25,6 +25,7 @@ use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -112,7 +113,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $this->mockHandler->append(new Response(200, [], json_encode(['dashboardUrl' => $dashboardUrl])));
 
         $siteFinder = $this->createMock(SiteFinder::class);
-        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
 
         $controller = $this->buildController(siteFinder: $siteFinder);
 
@@ -136,7 +137,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $this->mockHandler->append(new Response(200, [], json_encode(['checkoutUrl' => $managePlanUrl])));
 
         $siteFinder = $this->createMock(SiteFinder::class);
-        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
 
         $controller = $this->buildController(siteFinder: $siteFinder);
 
@@ -211,7 +212,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"key-uuid","apiKey":"key-value"}'));
 
         $siteFinder = $this->createMock(SiteFinder::class);
-        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
 
         $controller = $this->buildController(siteFinder: $siteFinder);
 
@@ -323,7 +324,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $this->mockHandler->append(new Response(200, [], '{"apiKeyId":"key-uuid","apiKey":"key-value"}'));
 
         $siteFinder = $this->createMock(SiteFinder::class);
-        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
 
         $controller = $this->buildController(siteFinder: $siteFinder);
         $request = (new ServerRequest(new Uri('https://example.com/module/site/analytics'), 'POST'))
@@ -345,7 +346,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $this->mockHandler->append(new Response(200, [], json_encode(['checkoutUrl' => $managePlanUrl])));
 
         $siteFinder = $this->createMock(SiteFinder::class);
-        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', 'w-123', 'i-456'));
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
 
         $controller = $this->buildController(siteFinder: $siteFinder);
         $request = $this->buildModuleRequest('GET', '/module/site/analytics/manage-plan')
