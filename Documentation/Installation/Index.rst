@@ -23,7 +23,7 @@ Install via TER (Classic mode)
 ===============================
 
 In a non-Composer TYPO3 installation, search for **analytics** in
-:guilabel:`Admin Tools > Extensions` and install it from there or download it
+:guilabel:`Admin Tools > Extensions` (TYPO3 v13) or :guilabel:`System > Extensions` (TYPO3 v14) and install it from there or download it
 from the `TYPO3 Extension Repository
 <https://extensions.typo3.org/extension/analytics>`__. Make sure the
 **Dashboard** system extension is active before installing it, as the extension

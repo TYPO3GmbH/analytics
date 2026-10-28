@@ -6,8 +6,10 @@
 Configuration
 =============
 
-The following settings can be configured in the TYPO3 Extension Manager, under
-:guilabel:`System > Settings > Extension Configuration`.
+Configure the following settings in the extension configuration:
+
+*   TYPO3 v13: :guilabel:`Admin Tools > Settings > Extension Configuration > analytics`
+*   TYPO3 v14: :guilabel:`System > Settings > Extension Configuration > analytics`
 
 Alternatively, you can set them in the configuration overrides file
 :file:`config/system/additional.php`:

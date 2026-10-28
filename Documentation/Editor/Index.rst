@@ -28,7 +28,7 @@ Analytics dashboard
 
 The extension ships a ready-made analytics dashboard that
 can be selected when creating a new TYPO3 dashboard. It populates the
-dashboard with four widgets:
+dashboard with four widget types:
 
 -   Traffic Graph
 -   Site Performance
@@ -82,4 +82,3 @@ dashboard creation wizard (below) to get started.
             :gallery: dashboard-preset-widgets
             :align: center
 
-Screenshot showing the analytics dashboard, with Traffic graph, Site performance and Top pages widgets visible.

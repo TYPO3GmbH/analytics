@@ -17,8 +17,9 @@ and users with **Analytics Manager** access:
 Granting the Analytics Manager option
 ======================================
 
-Open :guilabel:`System > Backend Users > Backend Groups`, edit the group that
-you want to give Analytics Manager access to, and switch to the :guilabel:`Custom Options` tab.
+Open :guilabel:`System > Backend Users > Backend user groups` (TYPO3 v13) or
+:guilabel:`Administration > Users > Backend user groups` (TYPO3 v14).
+Edit the group and open the :guilabel:`Custom Options` tab.
 Enable :guilabel:`Analytics > Analytics Manager`.
 
 ..  figure:: /Images/be-group-option.png

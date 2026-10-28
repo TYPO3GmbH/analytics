@@ -6,7 +6,7 @@
 Dashboard widgets
 =================
 
-The extension provides four widgets for the TYPO3 dashboard. Each widget
+The extension provides four widget types for the TYPO3 dashboard. Each widget
 is available in a TYPO3 v13 version (inline dropdowns, AJAX-driven) and a
 TYPO3 v14+ version (has a native widget settings panel).
 
@@ -362,8 +362,8 @@ Widget settings (v14+):
         -   Display as ``list`` (progress bars) or ``donut``
             (SVG donut chart, top 5 + aggregated "Other").
 
-In **TYPO3 v13**, all four sections are shown inside a single widget which are stacked
-vertically. Site and period are selected via inline dropdowns.
+In **TYPO3 v13**, the four sections are stacked vertically inside a single
+widget. Select the site and the period in the inline dropdowns.
 
 
 ..  _dashboard-presets:

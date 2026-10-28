@@ -47,9 +47,10 @@ Registration fails or returns an error
 "Access denied" flash message in the backend module
 ====================================================
 
-The action requires **Analytics Manager** access. Grant it by opening
-:guilabel:`System > Backend Users > Backend Groups`, editing the relevant group,
-switching to the :guilabel:`Custom Options` tab, and enabling
+The action requires **Analytics Manager** access. To grant the access, open
+:guilabel:`System > Backend Users > Backend user groups` (TYPO3 v13) or
+:guilabel:`Administration > Users > Backend user groups` (TYPO3 v14).
+Edit the group, open the :guilabel:`Custom Options` tab and enable
 :guilabel:`Analytics > Analytics Manager`.
 
 See :ref:`access-control` for the full list of restricted actions.
