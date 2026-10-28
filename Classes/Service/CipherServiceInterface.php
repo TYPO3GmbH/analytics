@@ -6,9 +6,9 @@ namespace T3G\Analytics\Service;
 
 interface CipherServiceInterface
 {
-    public function encrypt(string $plaintext): string;
+    public function encrypt(#[\SensitiveParameter] string $plaintext): string;
 
-    public function decrypt(string $encrypted): string;
+    public function decrypt(#[\SensitiveParameter] string $encrypted): string;
 
-    public function isLegacyFormat(string $encrypted): bool;
+    public function isLegacyFormat(#[\SensitiveParameter] string $encrypted): bool;
 }

@@ -35,7 +35,7 @@ class CipherService implements CipherServiceInterface
      */
     private const KEY_SEED = 'tx_analytics.instanceSecret';
 
-    public function encrypt(string $plaintext): string
+    public function encrypt(#[\SensitiveParameter] string $plaintext): string
     {
         if ($this->isCoreServiceAvailable()) {
             return $this->encryptWithCoreService($plaintext);
@@ -48,7 +48,7 @@ class CipherService implements CipherServiceInterface
      * @throws \RuntimeException|\JsonException when decryption or authentication fails
      * @throws \SodiumException
      */
-    public function decrypt(string $encrypted): string
+    public function decrypt(#[\SensitiveParameter] string $encrypted): string
     {
         if ($this->isCoreServiceAvailable()) {
             return $this->decryptWithCoreService($encrypted);
@@ -59,7 +59,7 @@ class CipherService implements CipherServiceInterface
 
     /** TYPO3 v14+ path */
 
-    private function encryptWithCoreService(string $plaintext): string
+    private function encryptWithCoreService(#[\SensitiveParameter] string $plaintext): string
     {
         // @phpstan-ignore argument.type (class-string not resolvable in v13 – v14 forward-compat code)
         $keyFactory = GeneralUtility::makeInstance(self::CORE_KEY_FACTORY);
@@ -72,7 +72,7 @@ class CipherService implements CipherServiceInterface
         return (string)$coreService->encrypt($plaintext, $key);
     }
 
-    private function decryptWithCoreService(string $encrypted): string
+    private function decryptWithCoreService(#[\SensitiveParameter] string $encrypted): string
     {
         // @phpstan-ignore argument.type (class-string not resolvable in v13 – v14 forward-compat code)
         $keyFactory = GeneralUtility::makeInstance(self::CORE_KEY_FACTORY);
@@ -100,7 +100,7 @@ class CipherService implements CipherServiceInterface
      * @throws \SodiumException
      */
 
-    private function encryptWithSodium(string $plaintext): string
+    private function encryptWithSodium(#[\SensitiveParameter] string $plaintext): string
     {
         $key = $this->deriveKey();
         $nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
@@ -127,7 +127,7 @@ class CipherService implements CipherServiceInterface
      * @throws \SodiumException
      * @throws \JsonException
      */
-    private function decryptWithSodium(string $encrypted): string
+    private function decryptWithSodium(#[\SensitiveParameter] string $encrypted): string
     {
         $key = $this->deriveKey();
 
@@ -159,7 +159,7 @@ class CipherService implements CipherServiceInterface
         return $plaintext;
     }
 
-    public function isLegacyFormat(string $encrypted): bool
+    public function isLegacyFormat(#[\SensitiveParameter] string $encrypted): bool
     {
         try {
             $decoded = json_decode(

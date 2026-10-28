@@ -14,7 +14,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchPageAnalytics(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -29,7 +29,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchVisitsTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -39,7 +39,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchBounceRateTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -49,7 +49,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchAvgDurationTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -59,7 +59,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchTopPages(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         \DateTimeImmutable $previousFrom,
@@ -89,7 +89,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchAllTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -105,7 +105,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchSiteVisitsGraph(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
@@ -114,7 +114,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchSiteSessionsGraph(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
@@ -123,7 +123,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchSiteVisitorsGraph(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
@@ -143,7 +143,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchTrafficShareInDepth(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
@@ -164,7 +164,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchDeviceSessions(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
@@ -179,7 +179,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchBrowserSessions(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
@@ -196,7 +196,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchCountrySessions(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
@@ -214,7 +214,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
 
     public function fetchSitePerformance(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         \DateTimeImmutable $previousFrom,
