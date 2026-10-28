@@ -13,16 +13,22 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Exception\SiteAlreadyRegisteredException;
+use T3G\Analytics\Exception\SiteSettingsLockedException;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteSettingsLock;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
+use T3G\Analytics\Tests\Fixtures\SiteSettingsLockTrait;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -32,6 +38,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class InstanceRegistrationServiceTest extends UnitTestCase
 {
+    use SiteSettingsLockTrait;
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -76,6 +84,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->writeGuard,
             new NullLogger(),
+            new SiteSettingsLock(new LockFactory()),
         );
     }
 
@@ -83,6 +92,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        $this->releaseSiteSettingsLockOfOtherRequest();
         parent::tearDown();
     }
 
@@ -214,6 +224,66 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->expectException(AnalyticsApiException::class);
 
         $this->subject->register($this->buildSite(), 'user@example.com');
+    }
+
+    #[Test]
+    public function registerCallsApiAndWritesSettingsWhileHoldingLock(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID], JSON_THROW_ON_ERROR)));
+        $events = [];
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function () use (&$events): array {
+            $events[] = ['load', 'locked' => $this->isSiteSettingsLocked(), 'requests' => count($this->httpHistory)];
+            return [];
+        });
+        $this->siteSettingsService->method('writeSettings')->willReturnCallback(function () use (&$events): void {
+            $events[] = ['write', 'locked' => $this->isSiteSettingsLocked(), 'requests' => count($this->httpHistory)];
+        });
+
+        $this->subject->register($this->buildSite(), 'user@example.com');
+
+        self::assertSame(
+            [['load', 'locked' => true, 'requests' => 0], ['write', 'locked' => true, 'requests' => 1]],
+            $events
+        );
+        self::assertFalse($this->isSiteSettingsLocked());
+    }
+
+    #[Test]
+    public function registerDoesNotCallApiWhenSettingsAreLocked(): void
+    {
+        $this->lockSiteSettingsInOtherRequest();
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID], JSON_THROW_ON_ERROR)));
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        try {
+            $this->subject->register($this->buildSite(), 'user@example.com');
+            self::fail('SiteSettingsLockedException expected.');
+        } catch (SiteSettingsLockedException) {
+        }
+
+        self::assertCount(0, $this->httpHistory);
+    }
+
+    #[Test]
+    public function registerDoesNotCallApiWhenSiteWasRegisteredByAnotherRequest(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID], JSON_THROW_ON_ERROR)));
+        $lockedDuringLoad = null;
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function () use (&$lockedDuringLoad): array {
+            $lockedDuringLoad = $this->isSiteSettingsLocked();
+            return ['websiteId' => AnalyticsIds::WEBSITE_ID];
+        });
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        try {
+            $this->subject->register($this->buildSite(), 'user@example.com');
+            self::fail('SiteAlreadyRegisteredException expected.');
+        } catch (SiteAlreadyRegisteredException) {
+        }
+
+        self::assertCount(0, $this->httpHistory);
+        self::assertTrue($lockedDuringLoad);
+        self::assertFalse($this->isSiteSettingsLocked());
     }
 
     /** Helpers */

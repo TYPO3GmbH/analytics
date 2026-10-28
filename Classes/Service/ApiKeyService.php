@@ -8,6 +8,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Exception\SiteSettingsLockedException;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
@@ -22,6 +23,7 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         private SiteSettingsFactory $siteSettingsFactory,
         private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
+        private SiteSettingsLock $siteSettingsLock,
     ) {
     }
 
@@ -77,6 +79,27 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         }
 
         try {
+            $this->siteSettingsLock->run($siteIdentifier, function () use ($site, $websiteId, $instanceId, $instanceSecret): void {
+                // Read the file, not the Site object: another request may have provisioned a key a moment before.
+                $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+                if ((string)($existing['apiKeyId'] ?? '') !== '') {
+                    return;
+                }
+                $this->createAndStoreApiKey($site, $existing, $websiteId, $instanceId, $instanceSecret);
+            });
+        } catch (SiteSettingsLockedException) {
+            $this->logger->info('ApiKeyService: skipped, another request changes the settings.', ['siteIdentifier' => $siteIdentifier]);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $existing the local settings, loaded while holding the lock
+     */
+    private function createAndStoreApiKey(Site $site, array $existing, string $websiteId, string $instanceId, string $instanceSecret): void
+    {
+        $siteIdentifier = $site->getIdentifier();
+
+        try {
             $result = $this->apiClient->createApiKey($websiteId, $instanceId, $instanceSecret);
         } catch (AnalyticsApiException $e) {
             $this->logger->error('ApiKeyService: API key creation failed.', [
@@ -103,7 +126,6 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
             return;
         }
 
-        $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
         try {
             $this->siteSettingsService->writeSettings($site, array_merge($existing, [
                 'apiKeyId' => $result['apiKeyId'],

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace T3G\Analytics\Upgrades;
 
 use Psr\Log\LoggerInterface;
+use T3G\Analytics\Exception\SiteSettingsLockedException;
 use T3G\Analytics\Service\CipherServiceInterface;
+use T3G\Analytics\Service\SiteSettingsLock;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -21,6 +24,7 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
         private readonly SiteSettingsService $siteSettingsService,
         private readonly SiteSettingsFactory $siteSettingsFactory,
         private readonly LoggerInterface $logger,
+        private readonly SiteSettingsLock $siteSettingsLock,
     ) {
     }
 
@@ -65,10 +69,15 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
                 continue;
             }
             try {
-                $plaintext = $this->cipherService->decrypt($encrypted);
-                $reEncrypted = $this->cipherService->encrypt($plaintext);
-                $existing = $this->siteSettingsFactory->loadLocalSettings($identifier) ?? [];
-                $this->siteSettingsService->writeSettings($site, array_merge($existing, ['instanceSecret' => $reEncrypted]));
+                $this->siteSettingsLock->run($identifier, function () use ($site): void {
+                    $this->migrateWhileLocked($site);
+                });
+            } catch (SiteSettingsLockedException) {
+                // Another request changes the settings. The secret stays in the legacy format, so the wizard runs again.
+                $this->logger->warning('InstanceSecretEncryptionMigrationWizard: settings are locked by another request.', [
+                    'siteIdentifier' => $identifier,
+                ]);
+                $success = false;
             } catch (\Throwable $e) {
                 $this->logger->error('InstanceSecretEncryptionMigrationWizard: migration failed.', [
                     'siteIdentifier' => $identifier,
@@ -78,6 +87,18 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
             }
         }
         return $success;
+    }
+
+    private function migrateWhileLocked(Site $site): void
+    {
+        // Read the file again: another request may have changed the secret before this request got the lock.
+        $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        $encrypted = (string)($existing['instanceSecret'] ?? '');
+        if ($encrypted === '' || !$this->cipherService->isLegacyFormat($encrypted)) {
+            return;
+        }
+        $reEncrypted = $this->cipherService->encrypt($this->cipherService->decrypt($encrypted));
+        $this->siteSettingsService->writeSettings($site, array_merge($existing, ['instanceSecret' => $reEncrypted]));
     }
 
 
