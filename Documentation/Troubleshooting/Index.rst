@@ -101,7 +101,7 @@ This means that no data will be shown if the site is unregistered or there are n
 recorded visits.
 
 *   Verify that the application context is set to ``Development``. One way to do
-    this is is to check the ``TYPO3_CONTEXT`` web server environment variable .
+    this is to check the ``TYPO3_CONTEXT`` web server environment variable.
 
 
 Further assistance
