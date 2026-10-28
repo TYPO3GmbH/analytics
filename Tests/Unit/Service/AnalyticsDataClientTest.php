@@ -182,6 +182,17 @@ final class AnalyticsDataClientTest extends UnitTestCase
     /** fetchPageAnalytics */
 
     #[Test]
+    public function fetchPageAnalyticsQueriesFullUtcDays(): void
+    {
+        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+
+        $this->subject->fetchPageAnalytics('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-07 23:59:59+02:00'));
+
+        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        self::assertSame(['start' => '2026-06-01T00:00:00.000Z', 'end' => '2026-06-07T23:59:59.999Z'], $body['dateRange']);
+    }
+
+    #[Test]
     public function fetchPageAnalyticsSendsPostToCorrectEndpoint(): void
     {
         $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
@@ -380,139 +391,176 @@ final class AnalyticsDataClientTest extends UnitTestCase
     /** fetchSitePerformance */
 
     #[Test]
-    public function fetchSitePerformanceSendsTwoPostRequests(): void
+    public function fetchSitePerformanceSendsFivePostRequests(): void
     {
-        $empty = '{"payload":[]}';
-        $this->mockHandler->append(new Response(200, [], $empty));
-        $this->mockHandler->append(new Response(200, [], $empty));
+        $this->appendSitePerformanceResponses();
 
         $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
 
-        self::assertCount(2, $this->httpHistory);
+        self::assertCount(5, $this->httpHistory);
         foreach ($this->httpHistory as $entry) {
             self::assertSame('POST', $entry['request']->getMethod());
+            self::assertSame('api-key', $entry['request']->getHeaderLine('X-Api-Key'));
         }
     }
 
     #[Test]
-    public function fetchSitePerformanceSendsPostToCorrectEndpoint(): void
+    public function fetchSitePerformanceRequestsSessionTotalsWithoutDimensions(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->appendSitePerformanceResponses();
 
-        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-07 23:59:59+02:00'), $this->date('2026-05-25 23:59:59+02:00'), $this->date('2026-05-31 23:59:59+02:00'));
 
         $uri = (string)$this->httpHistory[0]['request']->getUri();
-        self::assertStringContainsString('/v2/websites/w-123/analytics/pages', $uri);
+        self::assertStringContainsString('/v2/websites/w-123/analytics/sessions', $uri);
         self::assertStringContainsString('trace=sitePerformanceDashboard', $uri);
+        $current = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
+        $previous = json_decode((string)$this->httpHistory[1]['request']->getBody(), true);
+        self::assertSame(['visitCount', 'visitorCount', 'bounceRate'], $current['metrics']);
+        self::assertArrayNotHasKey('dimensions', $current);
+        self::assertSame(['start' => '2026-06-01T00:00:00.000Z', 'end' => '2026-06-07T23:59:59.999Z'], $current['dateRange']);
+        self::assertSame(['start' => '2026-05-25T00:00:00.000Z', 'end' => '2026-05-31T23:59:59.999Z'], $previous['dateRange']);
     }
 
     #[Test]
-    public function fetchSitePerformanceSendsXApiKeyHeader(): void
+    public function fetchSitePerformanceRequestsDailySessionsForCurrentPeriod(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->appendSitePerformanceResponses();
 
-        $this->subject->fetchSitePerformance('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-07 23:59:59+02:00'), $this->date('2026-05-25 23:59:59+02:00'), $this->date('2026-05-31 23:59:59+02:00'));
 
-        self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
-        self::assertSame('twpl-test-key', $this->httpHistory[1]['request']->getHeaderLine('X-Api-Key'));
+        self::assertStringContainsString('trace=sitePerformanceDaily', (string)$this->httpHistory[2]['request']->getUri());
+        $body = json_decode((string)$this->httpHistory[2]['request']->getBody(), true);
+        self::assertSame(['visitCount', 'visitorCount', 'bounceRate'], $body['metrics']);
+        self::assertSame(['date'], $body['dimensions']);
+        self::assertSame('day', $body['granularity']);
+        self::assertSame(['start' => '2026-06-01T00:00:00.000Z', 'end' => '2026-06-07T23:59:59.999Z'], $body['dateRange']);
     }
 
     #[Test]
-    public function fetchSitePerformanceRequestsRequiredMetrics(): void
+    public function fetchSitePerformanceRequestsPageViewDurationGraphForBothPeriods(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->appendSitePerformanceResponses();
 
-        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+        $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-07 23:59:59+02:00'), $this->date('2026-05-25 23:59:59+02:00'), $this->date('2026-05-31 23:59:59+02:00'));
 
-        $body = json_decode((string)$this->httpHistory[0]['request']->getBody(), true);
-        self::assertContains('visitCount', $body['metrics']);
-        self::assertContains('visitorCount', $body['metrics']);
-        self::assertContains('bounceRate', $body['metrics']);
-        self::assertContains('averageVisitDuration', $body['metrics']);
+        $current = $this->httpHistory[3]['request']->getUri();
+        $previous = $this->httpHistory[4]['request']->getUri();
+        self::assertStringContainsString('/v2/websites/w-123/stats/average-page-view-duration/graph', (string)$current);
+        parse_str($current->getQuery(), $currentQuery);
+        parse_str($previous->getQuery(), $previousQuery);
+        self::assertSame(['from' => '2026-06-01T00:00:00.000Z', 'until' => '2026-06-07T23:59:59.999Z', 'type' => 'time-series', 'unit' => 'day'], $currentQuery);
+        self::assertSame('2026-05-25T00:00:00.000Z', $previousQuery['from']);
+        self::assertSame(['where' => ['and' => []]], json_decode((string)$this->httpHistory[3]['request']->getBody(), true));
     }
 
     #[Test]
-    public function fetchSitePerformanceSumsVisitCountAcrossRows(): void
+    public function fetchSitePerformanceCombinesTotalsSeriesAndTimeOnPage(): void
     {
-        $payload = json_encode(['payload' => [
-            ['visitCount' => 10, 'visitorCount' => 8, 'bounceRate' => 50.0, 'averageVisitDuration' => 60.0],
-            ['visitCount' => 20, 'visitorCount' => 15, 'bounceRate' => 30.0, 'averageVisitDuration' => 90.0],
-        ]]);
-        $this->mockHandler->append(new Response(200, [], $payload));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->appendSitePerformanceResponses(
+            current: ['visitCount' => 30, 'visitorCount' => 23, 'bounceRate' => 41.5],
+            previous: ['visitCount' => 12, 'visitorCount' => 9, 'bounceRate' => 50],
+            daily: [
+                ['date' => '2026-06-01T00:00:00Z', 'visitCount' => 12, 'visitorCount' => 10, 'bounceRate' => 41.5],
+                ['date' => '2026-06-02T00:00:00Z', 'visitCount' => 18, 'visitorCount' => 13, 'bounceRate' => 0],
+            ],
+            currentTimeOnPage: $this->timeOnPageGraph(['2026-06-01', '2026-06-02'], [64.6, 3], 79.6),
+            previousTimeOnPage: $this->timeOnPageGraph([], [], 64),
+        );
 
-        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-02'), $this->date('2026-05-30'), $this->date('2026-05-31'));
 
-        self::assertSame(30, $result['current']['visitCount']);
-        self::assertSame(23, $result['current']['visitorCount']);
+        self::assertSame(['visitCount' => 30, 'visitorCount' => 23, 'bounceRate' => 41.5, 'avgTimeOnPage' => 80], $result['current']);
+        self::assertSame(['visitCount' => 12, 'visitorCount' => 9, 'bounceRate' => 50.0, 'avgTimeOnPage' => 64], $result['previous']);
+        self::assertSame([
+            'dates' => ['2026-06-01', '2026-06-02'],
+            'visits' => [12, 18],
+            'visitors' => [10, 13],
+            'bounceRate' => [41.5, 0.0],
+            'avgTimeOnPage' => [65, 3],
+        ], $result['series']);
+        self::assertSame([], $result['failures']);
     }
 
     #[Test]
-    public function fetchSitePerformanceComputesWeightedAverageBounceRate(): void
+    public function fetchSitePerformanceMatchesTimeOnPageByDate(): void
     {
-        // 10 visits @ 50% + 20 visits @ 20% = (500 + 400) / 30 = 30%
-        $payload = json_encode(['payload' => [
-            ['visitCount' => 10, 'visitorCount' => 10, 'bounceRate' => 50.0, 'averageVisitDuration' => 0.0],
-            ['visitCount' => 20, 'visitorCount' => 20, 'bounceRate' => 20.0, 'averageVisitDuration' => 0.0],
-        ]]);
-        $this->mockHandler->append(new Response(200, [], $payload));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
+        $this->appendSitePerformanceResponses(
+            daily: [
+                ['date' => '2026-06-01T00:00:00Z', 'visitCount' => 1, 'visitorCount' => 1, 'bounceRate' => 0],
+                ['date' => '2026-06-02T00:00:00Z', 'visitCount' => 1, 'visitorCount' => 1, 'bounceRate' => 0],
+                ['date' => '2026-06-03T00:00:00Z', 'visitCount' => 1, 'visitorCount' => 1, 'bounceRate' => 0],
+            ],
+            // The graph misses 2026-06-02, which must not shift the other values.
+            currentTimeOnPage: $this->timeOnPageGraph(['2026-06-01', '2026-06-03'], [10, 30], 20),
+        );
 
-        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-03'), $this->date('2026-05-29'), $this->date('2026-05-31'));
 
-        self::assertEqualsWithDelta(30.0, $result['current']['bounceRate'], 0.01);
+        self::assertSame([10, 0, 30], $result['series']['avgTimeOnPage']);
     }
 
     #[Test]
-    public function fetchSitePerformanceComputesWeightedAverageAvgDuration(): void
+    public function fetchSitePerformanceRecordsFailuresPerRequest(): void
     {
-        // 10 visits @ 60s + 20 visits @ 90s = (600 + 1800) / 30 = 80s
-        $payload = json_encode(['payload' => [
-            ['visitCount' => 10, 'visitorCount' => 10, 'bounceRate' => 0.0, 'averageVisitDuration' => 60.0],
-            ['visitCount' => 20, 'visitorCount' => 20, 'bounceRate' => 0.0, 'averageVisitDuration' => 90.0],
-        ]]);
-        $this->mockHandler->append(new Response(200, [], $payload));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
-
-        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
-
-        self::assertSame(80, $result['current']['avgDuration']);
-    }
-
-    #[Test]
-    public function fetchSitePerformanceReturnsZeroValuesOnEmptyPayload(): void
-    {
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
-        $this->mockHandler->append(new Response(200, [], '{"payload":[]}'));
-
-        $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
-
-        self::assertSame(0, $result['current']['visitCount']);
-        self::assertSame(0, $result['current']['visitorCount']);
-        self::assertSame(0.0, $result['current']['bounceRate']);
-        self::assertSame(0, $result['current']['avgDuration']);
-    }
-
-    #[Test]
-    public function fetchSitePerformanceRecordsFailureAndReturnsZerosOnHttpError(): void
-    {
-        $payload = json_encode(['payload' => [
-            ['visitCount' => 5, 'visitorCount' => 4, 'bounceRate' => 40.0, 'averageVisitDuration' => 30.0],
-        ]]);
-        $this->mockHandler->append(new Response(200, [], $payload));
+        $this->mockHandler->append(new Response(200, [], (string)json_encode(['payload' => [['visitCount' => 5, 'visitorCount' => 4, 'bounceRate' => 40.0]]])));
         $this->mockHandler->append(new Response(500, [], '{}'));
+        $this->mockHandler->append(new Response(500, [], '{}'));
+        $this->mockHandler->append(new Response(500, [], '{}'));
+        $this->mockHandler->append(new Response(200, [], $this->timeOnPageGraph([], [], 30)));
 
         $result = $this->subject->fetchSitePerformance('w-123', 'api-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
 
-        self::assertSame(5, $result['current']['visitCount']);
-        self::assertSame(0, $result['previous']['visitCount']);
-        self::assertArrayHasKey('previous', $result['failures']);
+        self::assertSame(['visitCount' => 5, 'visitorCount' => 4, 'bounceRate' => 40.0, 'avgTimeOnPage' => 0], $result['current']);
+        self::assertSame(['visitCount' => 0, 'visitorCount' => 0, 'bounceRate' => 0.0, 'avgTimeOnPage' => 30], $result['previous']);
+        self::assertSame([], $result['series']['dates']);
+        self::assertEqualsCanonicalizing(['previous', 'series', 'currentTimeOnPage'], array_keys($result['failures']));
+    }
+
+    /**
+     * @param array<string, int|float> $current
+     * @param array<string, int|float> $previous
+     * @param list<array<string, int|float|string>> $daily
+     */
+    private function appendSitePerformanceResponses(array $current = [], array $previous = [], array $daily = [], ?string $currentTimeOnPage = null, ?string $previousTimeOnPage = null): void
+    {
+        $this->mockHandler->append(new Response(200, [], (string)json_encode(['payload' => [$current]])));
+        $this->mockHandler->append(new Response(200, [], (string)json_encode(['payload' => [$previous]])));
+        $this->mockHandler->append(new Response(200, [], (string)json_encode(['payload' => $daily])));
+        $this->mockHandler->append(new Response(200, [], $currentTimeOnPage ?? $this->timeOnPageGraph([], [], 0)));
+        $this->mockHandler->append(new Response(200, [], $previousTimeOnPage ?? $this->timeOnPageGraph([], [], 0)));
+    }
+
+    /**
+     * @param list<string> $dates
+     * @param list<int|float> $values
+     */
+    private function timeOnPageGraph(array $dates, array $values, float $average): string
+    {
+        return (string)json_encode(['payload' => [
+            'labels' => array_map(static fn (string $date): string => $date . 'T00:00:00Z', $dates),
+            'datasets' => [['label' => 'Average Page View Duration', 'data' => $values, 'totalAverage' => $average]],
+        ]]);
     }
 
     /** fetchAllTimeSeries */
+
+    #[Test]
+    public function fetchAllTimeSeriesQueriesFullUtcDays(): void
+    {
+        $empty = '{"payload":{"labels":[],"datasets":[{"data":[]}]}}';
+        for ($i = 0; $i < 3; $i++) {
+            $this->mockHandler->append(new Response(200, [], $empty));
+        }
+
+        $this->subject->fetchAllTimeSeries('w-123', 'api-key', 'https://example.com/', $this->date('2026-06-01 23:59:59+02:00'), $this->date('2026-06-07 23:59:59+02:00'));
+
+        foreach ($this->httpHistory as $entry) {
+            parse_str($entry['request']->getUri()->getQuery(), $query);
+            self::assertSame('2026-06-01T00:00:00.000Z', $query['from']);
+            self::assertSame('2026-06-07T23:59:59.999Z', $query['until']);
+        }
+    }
 
     #[Test]
     public function fetchAllTimeSeriesSendsThreeParallelPostRequests(): void

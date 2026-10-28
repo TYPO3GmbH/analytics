@@ -2,6 +2,7 @@
     <section class="tx-analytics-site-group" id="tx-analytics-plans-section">
         <div id="tx-analytics-plans-root"
              data-plans-url="{plansUrl}"
+             data-collapsed="{f:if(condition: plansCollapsed, then: '1', else: '0')}"
              data-i18n-credits="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.touchpointsPerMonth')}"
              data-i18n-badge-trial="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.trial')}"
              data-i18n-hide="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.hide')}"
@@ -11,8 +12,8 @@
         <template id="tpl-plans-header">
             <div class="tx-analytics-plans-header">
                 <h2 class="tx-analytics-site-group-title" style="margin:0">
-                    <button type="button" class="tx-analytics-plans-collapse-toggle" aria-expanded="true">
-                        <span class="tx-analytics-plans-collapse-icon" aria-hidden="true"></span>
+                    <button type="button" class="tx-analytics-collapse-toggle" aria-expanded="true">
+                        <span class="tx-analytics-collapse-icon" aria-hidden="true"></span>
                         <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.plans.heading" />
                     </button>
                 </h2>

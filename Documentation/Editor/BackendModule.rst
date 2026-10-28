@@ -24,55 +24,79 @@ Backend module
             :gallery: backend-module
             :align: center
 
-The **Sites → TYPO3 Analytics** module provides an overview of all configured
-TYPO3 sites and their analytics status. Sites are grouped into **Active sites**
-and **Inactive sites**.
+The **Sites → TYPO3 Analytics** module shows all configured TYPO3 sites and
+their analytics status. The module puts the sites into two groups:
+
+-   **Active sites**
+-   **Inactive sites**
+
+Click the title of a group to collapse or expand the group. The group
+**Inactive sites** is collapsed by default. The module keeps the collapsed
+state for each backend user.
 
 Plans
 =====
 
-At the top of the module, available subscription plans are displayed with
-pricing and feature comparison. The toggle switches between monthly and yearly
-billing. Plans and pricing are fetched live from the TYPO3 Analytics API.
+The top of the module shows the available subscription plans with prices and
+features. Use the toggle to switch between monthly and yearly billing. The
+module gets the plans and prices live from the TYPO3 Analytics API.
+
+Click :guilabel:`Our Plans` or :guilabel:`Hide price info` to collapse the
+plans. The module keeps the collapsed state for each backend user.
 
 
-Site cards
-==========
+Site list
+=========
 
-Each site is shown as a card with the following information:
+Each group shows its sites in a table with these columns:
 
--   Site title and identifier
--   Domain
--   Current status (``active``, ``pending``, ``inactive``, or ``cancelled``)
--   Website ID and API key (once registered)
--   Subscribed package and expiry date
--   Credit usage and reset date
+-   **Site**: the site name and the site identifier
+-   **Domain**: the base URL of the site
+-   **Status**: ``active``, ``pending``, ``inactive`` or ``cancelled``
+-   **Credits**: the used and the available credits, if the plan has a limit
+
+Click the arrow in front of the site name to show the details of the site:
+
+-   Site title
+-   Website ID (once registered)
+-   Package
+-   :guilabel:`Valid until`
+-   Reset date of the credits
+-   Date and time of the last status update
+
+The module shows dates in the language of the backend user.
+
+When the credits of a site are low or used up, the row has a warning color.
+The details of this site are open by default and show a message with a link
+to :guilabel:`Manage Plan`.
 
 ..  tabs::
 
-    ..  tab:: Active site card Light
+    ..  tab:: Active site Light
 
         ..  figure:: /Images/active-site-card-light.png
-            :alt: Active site card information in light mode
+            :alt: Site list with the details of an active site in light mode
             :zoom: gallery
             :gallery: site-card
             :align: center
 
-    ..  tab:: Active site card Dark
+    ..  tab:: Active site Dark
 
         ..  figure:: /Images/active-site-card-dark.png
-            :alt: Active site card information in dark mode
+            :alt: Site list with the details of an active site in dark mode
             :zoom: gallery
             :gallery: site-card
             :align: center
 
-**Active sites** additionally show:
+The row of an **active site** also shows these buttons:
 
--   A :guilabel:`Dashboard` button that opens the analytics dashboard as an
-    embedded iframe inside the TYPO3 backend
--   A :guilabel:`Manage Plan` link for upgrading or changing the subscription
--   A :guilabel:`Refresh status` button to force a fresh status lookup from
-    the API (bypasses the 24-hour cache)
+-   :guilabel:`Dashboard`: opens the analytics dashboard in an iframe in the
+    TYPO3 backend.
+-   :guilabel:`Manage Plan`: opens the page to upgrade or change the
+    subscription. A site without an active plan shows
+    :guilabel:`Subscribe plan`.
+-   :guilabel:`Refresh status`: gets a new status from the API. This button
+    ignores the status cache of 24 hours.
 
 
 ..  note::
@@ -84,10 +108,17 @@ Each site is shown as a card with the following information:
 Registration
 ============
 
-Sites that are not yet registered show a registration form. Enter an e-mail
-address and click :guilabel:`Register` to connect the site with the TYPO3
-Analytics API. Once registration is confirmed, the tracking script is
-automatically injected into every frontend page of that site.
+To register a site, do these steps:
+
+#.  In the group **Inactive sites**, find the site.
+#.  Click :guilabel:`Register`. The details of the site open and show the
+    registration form.
+#.  Enter an e-mail address.
+#.  Click :guilabel:`Register`.
+
+The module connects the site with the TYPO3 Analytics API. After the
+confirmation, the extension adds the tracking script to all frontend pages of
+the site.
 
 ..  figure:: /Images/backend-module-registration.png
     :alt: The email address field and Register button in the analytics backend module
