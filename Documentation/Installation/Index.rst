@@ -34,8 +34,7 @@ Deployment note
 
 Site-specific data written by the extension (such as credentials, tracking code and API
 keys) are stored in the site's :file:`config/sites/<identifier>/settings.yaml` file.
-This file is separate from the  :file:`config.yaml` (more
-relevant to the structure of the site) and contains
-sensitive values that should not be committed to a repository. Therefore, in
-production, :file:`settings.yaml` should be kept in a shared folder
-outside the release directory and symlinked or copied on each deploy.
+This file is separate from :file:`config.yaml` and contains sensitive values.
+You must not commit these values to a repository. In production, keep
+:file:`settings.yaml` in a shared folder outside the release directory.
+Create a symlink to the file or copy it on each deploy.
