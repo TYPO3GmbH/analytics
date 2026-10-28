@@ -73,7 +73,7 @@ Dashboard iframe is blank or shows an error
 
 *   The iframe URL is retrieved from the TYPO3 Analytics API on each request.
     If the API is unreachable, the iframe cannot be loaded. Check
-    :guilabel:`Admin Tools > Log` for API errors.
+    :guilabel:`System > Log` (TYPO3 v13) or :guilabel:`Administration > Log` (TYPO3 v14) for API errors.
 *   Backend users without Analytics Manager access receive a read-only dashboard link.
     This is expected behaviour — they can view data but cannot change settings.
 
