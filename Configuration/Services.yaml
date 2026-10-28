@@ -158,6 +158,11 @@ services:
       - name: event.listener
         identifier: 'analytics/page-performance-bar'
 
+  T3G\Analytics\EventListener\TrackingCodeContentSecurityPolicyListener:
+    tags:
+      - name: event.listener
+        identifier: 'analytics/tracking-code-csp'
+
   dashboard.widget.analyticsSitePerformance:
     class: T3G\Analytics\Dashboard\Widget\SitePerformanceWidget
     tags:
