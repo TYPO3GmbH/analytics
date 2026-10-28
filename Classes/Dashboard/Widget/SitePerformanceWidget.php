@@ -25,7 +25,6 @@ final readonly class SitePerformanceWidget implements WidgetInterface, Additiona
      * @param array{site?: string, days?: int} $options
      */
     public function __construct(
-        /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private SitePerformanceServiceInterface $sitePerformanceService,
         private AnalyticsSiteProviderInterface $siteProvider,

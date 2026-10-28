@@ -61,24 +61,17 @@ class CipherService implements CipherServiceInterface
 
     private function encryptWithCoreService(string $plaintext): string
     {
-        // @phpstan-ignore argument.type (class-string not resolvable in v13 – v14 forward-compat code)
         $keyFactory = GeneralUtility::makeInstance(self::CORE_KEY_FACTORY);
-        // @phpstan-ignore argument.type (class-string not resolvable in v13 – v14 forward-compat code)
         $coreService = GeneralUtility::makeInstance(self::CORE_CIPHER_SERVICE);
-        // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\KeyFactory does not exist in v13)
         $key = $keyFactory->deriveSharedKeyFromEncryptionKey(self::KEY_SEED);
 
-        // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\CipherService does not exist in v13)
         return (string)$coreService->encrypt($plaintext, $key);
     }
 
     private function decryptWithCoreService(string $encrypted): string
     {
-        // @phpstan-ignore argument.type (class-string not resolvable in v13 – v14 forward-compat code)
         $keyFactory = GeneralUtility::makeInstance(self::CORE_KEY_FACTORY);
-        // @phpstan-ignore argument.type (class-string not resolvable in v13 – v14 forward-compat code)
         $coreService = GeneralUtility::makeInstance(self::CORE_CIPHER_SERVICE);
-        // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\KeyFactory does not exist in v13)
         $key = $keyFactory->deriveSharedKeyFromEncryptionKey(self::KEY_SEED);
 
         // Values written under v13 use "ciphertext" as JSON key — route them to the sodium
@@ -90,7 +83,6 @@ class CipherService implements CipherServiceInterface
         $cipherValueClass = 'TYPO3\\CMS\\Core\\Crypto\\Cipher\\CipherValue';
         $cipherValue = $cipherValueClass::fromSerialized($encrypted);
 
-        // @phpstan-ignore class.notFound (TYPO3\CMS\Core\Crypto\Cipher\CipherService does not exist in v13)
         return $coreService->decrypt($cipherValue, $key);
     }
 
