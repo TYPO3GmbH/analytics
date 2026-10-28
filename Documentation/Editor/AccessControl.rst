@@ -6,20 +6,21 @@
 Access control
 ==============
 
-Backend users with access to the **Sites → Analytics** module can open the
-module. However, the following actions are restricted to **backend
-administrators** and users who hold the **Analytics Manager** custom option:
+Backend users with access to the :guilabel:`Sites > Analytics` module can open
+the module. However, some actions are restricted to **backend administrators**
+and users with **Analytics Manager** access:
 
 -   Registering a new site with the Analytics API
 -   Subscribing to or managing a plan
--   Manually refreshing the registration status
+-   Manually refreshing registration status
 
 Granting the Analytics Manager option
 ======================================
 
-Open :guilabel:`System → Backend Users → Backend Groups`, edit the group that
-should have manager access, and switch to the :guilabel:`Custom Options` tab.
-Enable :guilabel:`Analytics → Analytics Manager`.
+Open :guilabel:`System > Backend Users > Backend user groups` (TYPO3 v13) or
+:guilabel:`Administration > Users > Backend user groups` (TYPO3 v14).
+Edit the group and open the :guilabel:`Custom Options` tab.
+Enable :guilabel:`Analytics > Analytics Manager`.
 
 ..  figure:: /Images/be-group-option.png
     :alt: The Analytics Manager option at the bottom of a backend user group "Module Permissions" page
@@ -47,10 +48,10 @@ module:
         -   The :guilabel:`Dashboard` module and the widget in the field
             :guilabel:`Allowed dashboard widgets` of the backend group
     *   -   Page performance bar
-        -   The page module: :guilabel:`Web → Page` in TYPO3 13,
-            :guilabel:`Content → Layout` in TYPO3 14
+        -   The page module: :guilabel:`Web > Page` in TYPO3 13,
+            :guilabel:`Content > Layout` in TYPO3 14
     *   -   Plan management
-        -   The :guilabel:`Sites → Analytics` module
+        -   The :guilabel:`Sites > Analytics` module
 
 The user also requires access to the root page of the site.
 

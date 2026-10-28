@@ -24,28 +24,28 @@ Backend module
             :gallery: backend-module
             :align: center
 
-The **Sites → TYPO3 Analytics** module provides an overview of all configured
-TYPO3 sites and their analytics status. Sites are grouped into **Active sites**
-and **Inactive sites**.
+The :guilabel:`Sites > TYPO3 Analytics` module provides an overview of all the sites
+configured in TYPO3 with their analytics status. Sites are grouped into
+**Active sites** and **Inactive sites**.
 
 Plans
 =====
 
-At the top of the module, available subscription plans are displayed with
-pricing and feature comparison. The toggle switches between monthly and yearly
+Subscription plans are displayed at the top of the module with
+a comparison of pricing and features. You can toggle between monthly and yearly
 billing. Plans and pricing are fetched live from the TYPO3 Analytics API.
 
 
 Site cards
 ==========
 
-Each site is shown as a card with the following information:
+Each site is displayed as a card with the following information:
 
 -   Site title and identifier
 -   Domain
 -   Current status (``active``, ``pending``, ``inactive``, or ``cancelled``)
 -   Website ID and API key (once registered)
--   Subscribed package and expiry date
+-   Package and expiry date
 -   Credit usage and reset date
 
 ..  tabs::
@@ -66,28 +66,28 @@ Each site is shown as a card with the following information:
             :gallery: site-card
             :align: center
 
-**Active sites** additionally show:
+**Active sites** also have:
 
 -   A :guilabel:`Dashboard` button that opens the analytics dashboard as an
     embedded iframe inside the TYPO3 backend
 -   A :guilabel:`Manage Plan` link for upgrading or changing the subscription
--   A :guilabel:`Refresh status` button to force a fresh status lookup from
-    the API (bypasses the 24-hour cache)
+-   A :guilabel:`Refresh status` button to force a status lookup from
+    the API (it bypasses the 24-hour cache)
 
 
 ..  note::
     The :guilabel:`Manage Plan` link and :guilabel:`Refresh status` button are
-    only available to backend administrators and users with the
-    **Analytics Manager** custom option. See :ref:`access-control`.
+    only available to backend administrators and users with
+    **Analytics Manager** access. See :ref:`access-control`.
 
 
 Registration
 ============
 
-Sites that are not yet registered show a registration form. Enter an e-mail
-address and click :guilabel:`Register` to connect the site with the TYPO3
-Analytics API. Once registration is confirmed, the tracking script is
-automatically injected into every frontend page of that site.
+Unregistered sites display a registration form.
+To register, enter an e-mail address and click :guilabel:`Register` to connect
+the site to the TYPO3 Analytics API. Once registration is confirmed, a
+tracking script is injected into every frontend page of the site.
 
 ..  figure:: /Images/backend-module-registration.png
     :alt: The email address field and Register button in the analytics backend module
@@ -96,16 +96,16 @@ automatically injected into every frontend page of that site.
     Enter an email address and click on the Register button
 
 ..  note::
-    Registration is only available to backend administrators and users with the
-    **Analytics Manager** custom option. See :ref:`access-control`.
+    Registration is only available to backend administrators and users with
+    **Analytics Manager** access. See :ref:`access-control`.
 
 
-Dashboard
-=========
+TYPO3 Analytics Web Dashboard
+=============================
 
-The :guilabel:`Dashboard` button opens the TYPO3 Analytics web dashboard as
-an embedded iframe inside the TYPO3 backend. All analytics data for the
-selected site is available here without leaving TYPO3.
+The :guilabel:`Dashboard` button opens the TYPO3 Analytics web dashboard. It is
+an embedded iframe inside the TYPO3 backend. Here you can see all the analytics data for a selected
+site without having to leave TYPO3.
 
 ..  figure:: /Images/analytics-web-dashboard.png
     :alt: The TYPO3 Analytics web dashboard
@@ -113,5 +113,5 @@ selected site is available here without leaving TYPO3.
 
     The TYPO3 Analytics web dashboard
 
-Non-manager users are granted a read-only watcher link — they can view the
+Users without Analytics Manager access are granted a read-only watcher link. They can view the
 dashboard but cannot make changes to the analytics configuration.

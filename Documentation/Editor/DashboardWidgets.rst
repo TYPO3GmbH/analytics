@@ -7,8 +7,8 @@ Dashboard widgets
 =================
 
 The extension provides four widget types for the TYPO3 dashboard. Each widget
-type is available in a TYPO3 v13 variant (inline dropdowns, AJAX-driven) and a
-TYPO3 v14+ variant (native widget settings panel).
+is available in a TYPO3 v13 version (inline dropdowns, AJAX-driven) and a
+TYPO3 v14+ version (has a native widget settings panel).
 
 All v14+ widgets share two common settings:
 
@@ -109,7 +109,7 @@ analytics dashboard.
 
 Each metric in the legend (**Visits**, **Sessions**, **New visitors**,
 **Returning visitors**, **Total visitors**) can be toggled on and off
-individually by clicking its legend button — useful for focusing on a single
+by clicking its legend button — useful for focusing on a single
 data series. The y-axis rescales automatically to the visible data range when
 series are toggled. Hovering over the chart reveals a tooltip with exact values
 for that date.
@@ -186,11 +186,11 @@ Traffic Sources
 
 Displays a breakdown of incoming traffic by channel, browser, device type, or
 country. Entries outside the top results are aggregated into an "Others" row.
-Donut chart variants support hover interaction: hovering over a segment pulls
+Donut charts support hover interaction: hovering over a segment pulls
 it out slightly and shows a tooltip with the session count, percentage, and
-comparison to the previous period.
+comparison with the previous period.
 
-On **TYPO3 v14+**, four separate widgets are registered — one per section:
+In **TYPO3 v14+**, four separate widgets are registered — one per section:
 
 ..  list-table::
     :header-rows: 1
@@ -362,8 +362,8 @@ Widget settings (v14+):
         -   Display as ``list`` (progress bars) or ``donut``
             (SVG donut chart, top 5 + aggregated "Other").
 
-On **TYPO3 v13**, all four sections are shown inside a single widget, stacked
-vertically. Site and period are selected via inline dropdowns.
+In **TYPO3 v13**, the four sections are stacked vertically inside a single
+widget. Select the site and the period in the inline dropdowns.
 
 
 ..  _dashboard-presets:
@@ -379,7 +379,7 @@ Dashboard presets
 
 The extension ships a ready-made dashboard preset called **Analytics Overview**.
 It can be selected when creating a new dashboard via the
-:guilabel:`Add dashboard` wizard and pre-populates the dashboard with all
+:guilabel:`Add dashboard` wizard. It pre-populates the dashboard with
 available analytics widgets:
 
 *   Traffic Graph
@@ -388,7 +388,7 @@ available analytics widgets:
 *   Traffic Sources (v13: combined widget; v14+: Channel, Devices, Browser,
     Countries)
 
-The preset is a convenience starting point — widgets can be removed, reordered,
+The preset is a convenient starting point. Widgets can be removed, reordered,
 or supplemented with other TYPO3 dashboard widgets after creation.
 
 

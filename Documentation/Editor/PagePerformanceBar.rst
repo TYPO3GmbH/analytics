@@ -62,8 +62,8 @@ Page Performance Bar
             :align: center
             :class: with-shadow
 
-The Page Performance Bar appears above the page content in the
-:guilabel:`Web → Page` module. It shows analytics metrics for the currently
+The Page Performance Bar appears above page content in the
+:guilabel:`Web > Page` module. It shows analytics metrics for the currently
 viewed page:
 
 -   **Page views** with sparkline and trend vs. previous period
@@ -74,10 +74,10 @@ viewed page:
 A period selector and a direct link to the full analytics dashboard are
 included in the bar.
 
-The bar loads asynchronously — a lightweight skeleton is shown immediately,
-and the actual data is fetched via AJAX once the page has loaded. The bar is
+The bar loads asynchronously. A lightweight skeleton is shown immediately
+and current data is fetched via AJAX once the page has loaded. The bar is
 hidden in language-comparison mode.
 
 ..  note::
     The period selector values come from the :confval:`dashboardPeriods`
-    Extension Manager setting.
+    setting.
