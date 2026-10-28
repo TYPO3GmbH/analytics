@@ -48,10 +48,10 @@ module:
         -   The :guilabel:`Dashboard` module and the widget in the field
             :guilabel:`Allowed dashboard widgets` of the backend group
     *   -   Page performance bar
-        -   The page module: :guilabel:`Web → Page` in TYPO3 13,
-            :guilabel:`Content → Layout` in TYPO3 14
+        -   The page module: :guilabel:`Web > Page` in TYPO3 13,
+            :guilabel:`Content > Layout` in TYPO3 14
     *   -   Plan management
-        -   The :guilabel:`Sites → Analytics` module
+        -   The :guilabel:`Sites > Analytics` module
 
 The user also requires access to the root page of the site.
 
