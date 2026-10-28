@@ -324,8 +324,9 @@ final readonly class BackendModuleController
         $siteLabel = $this->siteDataProvider->siteLabel($pageName, $site->getIdentifier());
 
         $url = $urlResolver($site);
-        if ($url === null) {
-            $this->logger->error($template . ' action: URL unavailable.', ['siteIdentifier' => $siteIdentifier]);
+        $iframeOrigin = $url !== null ? $this->buildIframeOrigin($url) : '';
+        if ($url === null || $iframeOrigin === '') {
+            $this->logger->error($template . ' action: URL unavailable or not https.', ['siteIdentifier' => $siteIdentifier]);
             $this->addFlashMessage($urlUnavailableKey, 'flash.error.title', ContextualFeedbackSeverity::ERROR);
             return new RedirectResponse($indexUri);
         }
@@ -356,7 +357,7 @@ final readonly class BackendModuleController
         $vars = array_merge(
             [
                 $urlVar => $url,
-                'iframeOrigin' => $this->buildIframeOrigin($url),
+                'iframeOrigin' => $iframeOrigin,
                 'invalidateStatusCacheUri' => (string)$this->uriBuilder->buildUriFromRoute(
                     'site_analytics.invalidate_status_cache',
                     ['siteIdentifier' => $siteIdentifier]
@@ -379,13 +380,16 @@ final readonly class BackendModuleController
         return 'startDate=' . $from->format('Y-m-d') . '&endDate=' . $now->format('Y-m-d');
     }
 
+    /**
+     * Returns an empty string when the URL is not an absolute https URL.
+     */
     private function buildIframeOrigin(string $url): string
     {
         $parsed = parse_url($url);
-        if ($parsed === false) {
+        if ($parsed === false || strtolower($parsed['scheme'] ?? '') !== 'https' || ($parsed['host'] ?? '') === '') {
             return '';
         }
-        $origin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+        $origin = 'https://' . strtolower($parsed['host']);
         if (isset($parsed['port'])) {
             $origin .= ':' . $parsed['port'];
         }
