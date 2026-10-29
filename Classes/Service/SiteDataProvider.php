@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace T3G\Analytics\Service;
 
 use Doctrine\DBAL\Exception;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
-use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Database\Connection;
@@ -22,7 +19,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         private BackendPageAccessCheckerInterface $pageAccessChecker,
         private ConnectionPool $connectionPool,
         private UriBuilder $uriBuilder,
-        private LoggerInterface $logger,
+        private SiteDataStorageInterface $siteDataStorage,
     ) {
     }
 
@@ -40,12 +37,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 continue;
             }
 
-            try {
-                $websiteId = $site->getSettings()->get('websiteId', '') ?: null;
-            } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-                $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'exception' => $e]);
-                $websiteId = null;
-            }
+            $websiteId = $this->siteDataStorage->get($site, 'websiteId') ?: null;
             $registered = $websiteId !== null;
 
             $status = $registered ? $this->analyticsStatusService->getStatus($site) : null;
@@ -86,12 +78,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 continue;
             }
 
-            try {
-                $websiteId = $site->getSettings()->get('websiteId', '') ?: null;
-            } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-                $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'exception' => $e]);
-                $websiteId = null;
-            }
+            $websiteId = $this->siteDataStorage->get($site, 'websiteId') ?: null;
             if ($websiteId === null) {
                 continue;
             }
