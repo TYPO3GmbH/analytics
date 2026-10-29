@@ -31,7 +31,7 @@ final class TrackingCodeMiddlewareTest extends FunctionalTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->subject = new TrackingCodeMiddleware();
+        $this->subject = $this->get(TrackingCodeMiddleware::class);
     }
 
     #[Test]

@@ -6,9 +6,8 @@ namespace T3G\Analytics\Upgrades;
 
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Service\CipherServiceInterface;
+use T3G\Analytics\Service\SiteDataStorageInterface;
 use TYPO3\CMS\Core\Site\SiteFinder;
-use TYPO3\CMS\Core\Site\SiteSettingsFactory;
-use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Install\Attribute\UpgradeWizard;
 use TYPO3\CMS\Install\Updates\UpgradeWizardInterface;
 
@@ -18,8 +17,7 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
     public function __construct(
         private readonly SiteFinder $siteFinder,
         private readonly CipherServiceInterface $cipherService,
-        private readonly SiteSettingsService $siteSettingsService,
-        private readonly SiteSettingsFactory $siteSettingsFactory,
+        private readonly SiteDataStorageInterface $siteDataStorage,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -31,7 +29,7 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
 
     public function getDescription(): string
     {
-        return 'Re-encrypts instanceSecret values stored in site settings from the TYPO3 v13 '
+        return 'Re-encrypts instanceSecret values stored in the site data from the TYPO3 v13 '
             . 'format ("ciphertext" key) to the TYPO3 v14 core cipher format ("cipher" key). '
             . 'Required after upgrading from TYPO3 v13 to v14.';
     }
@@ -39,13 +37,9 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
     public function updateNecessary(): bool
     {
         foreach ($this->siteFinder->getAllSites() as $site) {
-            try {
-                $secret = $site->getSettings()->get('instanceSecret', '');
-                if ($secret !== '' && $this->cipherService->isLegacyFormat($secret)) {
-                    return true;
-                }
-            } catch (\Throwable) {
-                continue;
+            $secret = $this->siteDataStorage->get($site, 'instanceSecret');
+            if ($secret !== '' && $this->cipherService->isLegacyFormat($secret)) {
+                return true;
             }
         }
         return false;
@@ -56,19 +50,14 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
         $success = true;
         foreach ($this->siteFinder->getAllSites() as $site) {
             $identifier = $site->getIdentifier();
-            try {
-                $encrypted = $site->getSettings()->get('instanceSecret', '');
-            } catch (\Throwable) {
-                continue;
-            }
+            $encrypted = $this->siteDataStorage->get($site, 'instanceSecret');
             if ($encrypted === '' || !$this->cipherService->isLegacyFormat($encrypted)) {
                 continue;
             }
             try {
                 $plaintext = $this->cipherService->decrypt($encrypted);
                 $reEncrypted = $this->cipherService->encrypt($plaintext);
-                $existing = $this->siteSettingsFactory->loadLocalSettings($identifier) ?? [];
-                $this->siteSettingsService->writeSettings($site, array_merge($existing, ['instanceSecret' => $reEncrypted]));
+                $this->siteDataStorage->write($site, ['instanceSecret' => $reEncrypted]);
             } catch (\Throwable $e) {
                 $this->logger->error('InstanceSecretEncryptionMigrationWizard: migration failed.', [
                     'siteIdentifier' => $identifier,

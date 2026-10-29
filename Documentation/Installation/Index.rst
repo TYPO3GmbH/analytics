@@ -32,9 +32,83 @@ depends on it.
 Deployment note
 ===============
 
-Site-specific data written by the extension (credentials, tracking code, API
-keys) is stored in each site's :file:`config/sites/<identifier>/settings.yaml`.
-This file is separate from the structural :file:`config.yaml` and contains
-sensitive values that must not be committed to the repository. In a
-deployment setup, :file:`settings.yaml` should be kept in a shared folder
-outside the release directory and symlinked or copied on each deploy.
+The extension writes data for each site: credentials, tracking code and API
+key. These values are sensitive. Do not commit them to the repository.
+
+By default, the extension writes the data into
+:file:`config/sites/<identifier>/settings.yaml`. In a deployment setup, keep
+this file in a shared folder outside the release directory.
+
+If other extensions also use :file:`settings.yaml`, the file must stay in the
+repository. In this case, set :confval:`siteDataPath`. We recommend
+:file:`config/analytics`. The extension then writes the data into
+:file:`config/analytics/<identifier>.yaml`.
+
+The extension always reads the data from the site settings. Thus you must
+import the file in the :file:`settings.yaml` of each site:
+
+..  code-block:: yaml
+    :caption: config/sites/<identifier>/settings.yaml
+
+    imports:
+      - { resource: '../../analytics/<identifier>.yaml', glob: true }
+
+    # Other site settings
+
+Commit :file:`settings.yaml` with the import. Keep only the directory
+:file:`config/analytics` in a shared folder.
+
+You must set ``glob: true``. The file does not exist before the first
+registration. With ``glob: true``, TYPO3 ignores a missing file. See
+:ref:`t3coreapi:yamlfileloader` for the glob option of the imports. Without
+``glob: true``, TYPO3 14.3.11 and later do not load a site with a missing
+import. TYPO3 also does not load the site when the file contains invalid YAML.
+
+*   Share the directory, not the single files. The extension replaces a file
+    on each write. This removes a symbolic link to a single file.
+*   The directory must be in the project root. TYPO3 does not import files
+    from outside the project root. A symbolic link to a shared folder is
+    possible.
+*   Set :confval:`siteDataPath` in the extension configuration. Then the
+    backend and the CLI use the same location. If you use the environment
+    variable instead, set it for the web server and for the CLI.
+*   In classic mode (no Composer), the project root is the web root. Deny web
+    access to the directory. The same applies to :file:`typo3conf/sites/`.
+
+The values in :file:`settings.yaml` have priority over the imported file.
+Thus :file:`settings.yaml` must not contain the values of the extension:
+
+*   ``websiteId``
+*   ``instanceId``
+*   ``instanceSecret``
+*   ``trackingCode``
+*   ``status``
+*   ``apiKeyId``
+*   ``apiKey``
+*   ``externalWebsiteId``
+
+The extension checks the import and ``glob: true`` before the registration.
+After each write, the extension makes sure that the site settings contain the
+new values.
+
+..  warning::
+    Do not save the site settings in the backend module :guilabel:`Site
+    Management > Settings`. The settings editor of TYPO3 writes all values,
+    also the imported values, into :file:`settings.yaml` and removes the
+    import. If this occurred, remove the values of the extension from
+    :file:`settings.yaml` and add the import again.
+
+Move an existing installation to a separate file
+------------------------------------------------
+
+#.  Copy the values of the extension from :file:`settings.yaml` into
+    :file:`config/analytics/<identifier>.yaml`.
+#.  Remove the values of the extension from :file:`settings.yaml`.
+#.  Add the import to :file:`settings.yaml`.
+#.  Set :confval:`siteDataPath` to :file:`config/analytics`.
+#.  Flush the TYPO3 caches.
+
+If you remove :confval:`siteDataPath` again, the extension writes into
+:file:`settings.yaml` again. The first write copies the imported values into
+:file:`settings.yaml` and removes the import. Then do not commit
+:file:`settings.yaml` any more.
