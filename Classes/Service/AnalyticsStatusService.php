@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\SiteSettingsFactory;
-use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
 {
@@ -24,8 +20,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         private AnalyticsApiClientInterface $apiClient,
         private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
-        private SiteSettingsService $siteSettingsService,
-        private SiteSettingsFactory $siteSettingsFactory,
+        private SiteDataStorageInterface $siteDataStorage,
         private SiteSettingsWriteVerifierInterface $writeGuard,
     ) {
     }
@@ -64,7 +59,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
     }
 
     /**
-     * Persists trackingCode and status from a status API response to the site settings.
+     * Persists trackingCode and status from a status API response to the site data.
      * Must be called explicitly after a successful status fetch — not on every read.
      *
      * @param array<string, mixed> $data
@@ -74,26 +69,9 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
         $newStatus = (string)($data['status'] ?? '');
         $newExternalWebsiteId = (string)($data['externalWebsiteId'] ?? '');
-        $siteIdentifier = $site->getIdentifier();
-        $settings = $site->getSettings();
-
-        try {
-            $existingTrackingCode = $settings->get('trackingCode', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('syncSiteSettingsFromStatus: failed to read trackingCode.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $existingTrackingCode = '';
-        }
-        try {
-            $existingStatus = $settings->get('status', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('syncSiteSettingsFromStatus: failed to read status.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $existingStatus = '';
-        }
-        try {
-            $existingExternalWebsiteId = (string)($settings->get('externalWebsiteId', '') ?: '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $existingExternalWebsiteId = '';
-        }
+        $existingTrackingCode = $this->siteDataStorage->get($site, 'trackingCode');
+        $existingStatus = $this->siteDataStorage->get($site, 'status');
+        $existingExternalWebsiteId = $this->siteDataStorage->get($site, 'externalWebsiteId');
 
         $update = [];
         if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
@@ -111,9 +89,8 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
             return;
         }
 
-        $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
         try {
-            $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
+            $this->siteDataStorage->write($site, $update);
         } catch (SiteConfigurationWriteException $e) {
             $this->logger->warning(
                 'syncSiteSettingsFromStatus: writeSettings threw. Check file system permissions.',
@@ -197,32 +174,16 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
     }
 
     /**
-     * Reads and decrypts credentials from site settings.
+     * Reads and decrypts credentials from the site data.
      *
      * @return array{0: string, 1: string, 2: string}|null  [websiteId, instanceId, instanceSecret]
      */
     private function resolveCredentials(Site $site): ?array
     {
         $siteIdentifier = $site->getIdentifier();
-        $settings = $site->getSettings();
-        try {
-            $websiteId = $settings->get('websiteId', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('resolveCredentials: failed to read websiteId.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $websiteId = '';
-        }
-        try {
-            $instanceId = $settings->get('instanceId', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('resolveCredentials: failed to read instanceId.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $instanceId = '';
-        }
-        try {
-            $encryptedSecret = $settings->get('instanceSecret', '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $e) {
-            $this->logger->warning('resolveCredentials: failed to read instanceSecret.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e]);
-            $encryptedSecret = '';
-        }
+        $websiteId = $this->siteDataStorage->get($site, 'websiteId');
+        $instanceId = $this->siteDataStorage->get($site, 'instanceId');
+        $encryptedSecret = $this->siteDataStorage->get($site, 'instanceSecret');
 
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '') {
             return null;
