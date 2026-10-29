@@ -70,7 +70,19 @@ In a non-Composer TYPO3 installation, search for **analytics** in **Admin Tools 
 
 ### Deployment note
 
-Site-specific data written by the extension (credentials, tracking code, API keys) is stored in each site's `config/sites/<identifier>/settings.yaml`. This file contains sensitive values and must not be committed to the repository. In a deployment setup, keep `settings.yaml` in a shared folder outside the release directory and symlink or copy it on each deploy.
+The extension writes data for each site: credentials, tracking code and API key. These values are sensitive. Do not commit them to the repository.
+
+By default, the extension writes the data into `config/sites/<identifier>/settings.yaml`. In a deployment setup, keep this file in a shared folder outside the release directory.
+
+If other extensions also use `settings.yaml`, the file must stay in the repository. In this case, set `siteDataPath`. We recommend `config/analytics`. The extension then writes the data into `config/analytics/<identifier>.yaml`. Keep only this directory in a shared folder.
+
+- Share the directory, not the single files. The extension replaces a file on each write. This removes a symbolic link to a single file.
+- Set `siteDataPath` in the extension configuration. Then the backend, the frontend and the CLI use the same location. If you use the environment variable instead, set it for the web server and for the CLI.
+- In classic mode (no Composer), the project root is the web root. Use an absolute path outside the web root, or deny web access to the directory. The same applies to `typo3conf/sites/`.
+
+An existing installation continues to work after you set `siteDataPath`. If a value is not in the separate file, the extension reads it from `settings.yaml`. The first write copies all values into the separate file. After this, you can remove the values of the extension from `settings.yaml`.
+
+If you remove `siteDataPath` again, the extension reads `settings.yaml` again. Old values in `settings.yaml` then apply. Copy the values from the separate file back into `settings.yaml` first.
 
 ## Configuration reference
 
@@ -105,6 +117,12 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod']
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
 ```
+
+### Site data settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `siteDataPath` | string | _(empty)_ | Directory for the site data files (`<siteDataPath>/<identifier>.yaml`). A relative path starts at the project root. Recommended: `config/analytics`. Leave empty to keep the data in `settings.yaml`. The environment variable `TYPO3_ANALYTICS_SITE_DATA_PATH` has priority. |
 
 ## Modules and widgets
 

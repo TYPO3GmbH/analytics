@@ -9,12 +9,15 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
@@ -71,9 +74,8 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             $this->cache,
             $apiClient,
             $this->cipherService,
-            new \Psr\Log\NullLogger(),
-            $this->createMock(SiteSettingsService::class),
-            $this->createMock(SiteSettingsFactory::class),
+            new NullLogger(),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
     }

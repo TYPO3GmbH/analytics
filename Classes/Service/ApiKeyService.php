@@ -4,22 +4,17 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\SiteSettingsFactory;
-use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 readonly class ApiKeyService implements ApiKeyServiceInterface
 {
     public function __construct(
         private AnalyticsApiClientInterface $apiClient,
         private CipherServiceInterface $cipherService,
-        private SiteSettingsService $siteSettingsService,
-        private SiteSettingsFactory $siteSettingsFactory,
+        private SiteDataStorageInterface $siteDataStorage,
         private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
     ) {
@@ -28,7 +23,7 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
     /**
      * Creates and stores a TYPO3 Analytics API key for the site when it is active, and
      * no key has been provisioned yet. The apiKey value is only returned once
-     * by the API and is stored encrypted in the site settings.
+     * by the API and is stored encrypted in the site data.
      *
      * @param array<string, mixed> $currentStatus the freshly fetched status response
      */
@@ -40,27 +35,10 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
             return;
         }
 
-        $settings = $site->getSettings();
-        try {
-            $websiteId = (string)($settings->get('websiteId', '') ?: '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface) {
-            $websiteId = '';
-        }
-        try {
-            $instanceId = (string)($settings->get('instanceId', '') ?: '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface) {
-            $instanceId = '';
-        }
-        try {
-            $encryptedSecret = (string)($settings->get('instanceSecret', '') ?: '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface) {
-            $encryptedSecret = '';
-        }
-        try {
-            $apiKeyId = (string)($settings->get('apiKeyId', '') ?: '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface) {
-            $apiKeyId = '';
-        }
+        $websiteId = $this->siteDataStorage->get($site, 'websiteId');
+        $instanceId = $this->siteDataStorage->get($site, 'instanceId');
+        $encryptedSecret = $this->siteDataStorage->get($site, 'instanceSecret');
+        $apiKeyId = $this->siteDataStorage->get($site, 'apiKeyId');
 
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '' || $apiKeyId !== '') {
             return;
@@ -103,14 +81,13 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
             return;
         }
 
-        $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
         try {
-            $this->siteSettingsService->writeSettings($site, array_merge($existing, [
+            $this->siteDataStorage->write($site, [
                 'apiKeyId' => $result['apiKeyId'],
                 'apiKey' => $encryptedApiKey,
-            ]));
+            ]);
         } catch (SiteConfigurationWriteException $e) {
-            $this->logger->error('ApiKeyService: Failed to write API key settings to site configuration.', [
+            $this->logger->error('ApiKeyService: Failed to write the API key to the site data.', [
                 'siteIdentifier' => $siteIdentifier,
                 'exception' => $e->getMessage(),
             ]);

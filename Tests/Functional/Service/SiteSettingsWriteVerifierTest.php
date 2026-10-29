@@ -6,7 +6,10 @@ namespace T3G\Analytics\Tests\Functional\Service;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\NullLogger;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifier;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Http\Uri;
@@ -14,6 +17,7 @@ use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
+use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
 {
@@ -34,7 +38,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
             'websiteId' => 'w-123',
             'instanceId' => 'i-456',
         ]);
-        $verifier = new SiteSettingsWriteVerifier($this->siteSettingsFactory);
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, new NullLogger()));
 
         $verifier->assertSettingsPersisted($this->buildSite(), ['websiteId' => 'w-123', 'instanceId' => 'i-456']);
     }
@@ -43,7 +47,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     public function assertSettingsPersistedThrowsWhenKeyIsAbsent(): void
     {
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
-        $verifier = new SiteSettingsWriteVerifier($this->siteSettingsFactory);
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, new NullLogger()));
 
         $this->expectException(AnalyticsApiException::class);
         $this->expectExceptionMessageMatches('/"main"/');
@@ -55,7 +59,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     public function assertSettingsPersistedThrowsWhenValueDoesNotMatch(): void
     {
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'other-id']);
-        $verifier = new SiteSettingsWriteVerifier($this->siteSettingsFactory);
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, new NullLogger()));
 
         $this->expectException(AnalyticsApiException::class);
 
@@ -66,7 +70,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     public function assertSettingsPersistedThrowsOnFirstFailingKey(): void
     {
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
-        $verifier = new SiteSettingsWriteVerifier($this->siteSettingsFactory);
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, new NullLogger()));
 
         $this->expectException(AnalyticsApiException::class);
 
@@ -81,7 +85,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
             ->method('loadLocalSettings')
             ->willReturn(['websiteId' => 'w-123', 'instanceId' => 'i-456']);
 
-        $verifier = new SiteSettingsWriteVerifier($this->siteSettingsFactory);
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, new NullLogger()));
         $verifier->assertSettingsPersisted($this->buildSite(), ['websiteId' => 'w-123', 'instanceId' => 'i-456']);
     }
 

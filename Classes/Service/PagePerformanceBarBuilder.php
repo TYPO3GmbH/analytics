@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Exception\AnalyticsApiException;
@@ -30,6 +28,7 @@ final readonly class PagePerformanceBarBuilder
         private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
         private FrontendInterface $pageAnalyticsCache,
+        private SiteDataStorageInterface $siteDataStorage,
     ) {
     }
 
@@ -346,13 +345,8 @@ final readonly class PagePerformanceBarBuilder
             return null;
         }
 
-        $settings = $site->getSettings();
-        try {
-            $websiteId = (string)($settings->get('externalWebsiteId', '') ?: '');
-            $encryptedApiKey = (string)($settings->get('apiKey', '') ?: '');
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface) {
-            return null;
-        }
+        $websiteId = $this->siteDataStorage->get($site, 'externalWebsiteId');
+        $encryptedApiKey = $this->siteDataStorage->get($site, 'apiKey');
 
         if ($websiteId === '' || $encryptedApiKey === '') {
             return null;

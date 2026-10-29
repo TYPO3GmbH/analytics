@@ -12,12 +12,14 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
@@ -72,8 +74,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->subject = new InstanceRegistrationService(
             $apiClient,
             $this->cipherService,
-            $this->siteSettingsService,
-            $this->siteSettingsFactory,
+            new SiteDataStorage(new SiteDataConfiguration(), $this->siteSettingsService, $this->siteSettingsFactory, new NullLogger()),
             $this->writeGuard,
             new NullLogger(),
         );
