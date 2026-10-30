@@ -96,12 +96,16 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         if ((string)($targetSettings['attachedTo'] ?? '') !== '') {
             throw new AnalyticsApiException('The selected site is itself attached to an active site.', 0);
         }
+        // The API whitelists host names. Detach removes the same host.
+        $host = $site->getBase()->getHost();
+        if ($host === '') {
+            throw new AnalyticsApiException('The site has no domain in its base.', 0);
+        }
 
         $this->writeGuard->assertDirectoryWritable($site);
 
-        $domain = rtrim($site->getBase()->__toString(), '/');
         try {
-            $this->apiClient->addWhitelistedDomain($websiteId, $instanceId, $this->cipherService->decrypt($encryptedSecret), $domain);
+            $this->apiClient->addWhitelistedDomain($websiteId, $instanceId, $this->cipherService->decrypt($encryptedSecret), $host);
         } catch (AnalyticsApiException $e) {
             $this->logger->error('Attach: API request failed.', ['siteIdentifier' => $siteIdentifier, 'target' => $target->getIdentifier(), 'reason' => $e->reason]);
             throw $e;
