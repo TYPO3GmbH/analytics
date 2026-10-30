@@ -152,11 +152,10 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-            $target = $this->siteFinder->getSiteByIdentifier($targetSiteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier, 'target' => $targetSiteIdentifier]);
+        // Attach changes the settings of both sites, so the user must have access to both.
+        $site = $this->findAccessibleSite($siteIdentifier);
+        $target = $this->findAccessibleSite($targetSiteIdentifier);
+        if (!$site instanceof Site || !$target instanceof Site) {
             return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
@@ -349,10 +348,9 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
-        try {
-            $site = $this->siteFinder->getSiteByIdentifier($siteIdentifier);
-        } catch (SiteNotFoundException) {
-            $this->logger->error('Site not found.', ['siteIdentifier' => $siteIdentifier]);
+        // Access to the site is enough: detach removes only the domain of this site from the active site.
+        $site = $this->findAccessibleSite($siteIdentifier);
+        if (!$site instanceof Site) {
             return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
