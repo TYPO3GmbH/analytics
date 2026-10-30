@@ -14,6 +14,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use T3G\Analytics\Controller\BackendModuleController;
+use T3G\Analytics\Service\AnalyticsStatusServiceInterface;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
@@ -26,6 +27,7 @@ use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 
 /**
@@ -141,6 +143,23 @@ final class BackendModuleSiteAttachTest extends FunctionalTestCase
         $response = $this->attach('site-second', 'site-main');
 
         self::assertSame(500, $response->getStatusCode());
+        self::assertSame(['customSetting' => 'second'], $this->localSettings('site-second'));
+    }
+
+    #[Test]
+    public function attachChangesNoSettingsWhenTheActiveSiteHasLostItsInstanceSecret(): void
+    {
+        $this->setUpBackendUser(self::MANAGER);
+        // The status of the active site stays in the cache for 24 hours, also without credentials.
+        self::assertNotNull($this->get(AnalyticsStatusServiceInterface::class)->getStatus($this->get(SiteFinder::class)->getSiteByIdentifier('site-main')));
+        $settings = [...$this->credentials, 'customSetting' => 'main'];
+        unset($settings['instanceSecret']);
+        $this->get(SiteWriter::class)->writeSettings('site-main', $settings);
+
+        $response = $this->attach('site-second', 'site-main');
+
+        self::assertSame(500, $response->getStatusCode());
+        self::assertSame([], $this->requestsTo('POST', '/whitelisted-domains'));
         self::assertSame(['customSetting' => 'second'], $this->localSettings('site-second'));
     }
 
