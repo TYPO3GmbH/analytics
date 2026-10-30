@@ -11,9 +11,10 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use T3G\Analytics\Configuration\ApiConfiguration;
-use T3G\Analytics\Controller\BackendModuleController;
 use T3G\Analytics\Backend\ModuleConfigurator;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
+use T3G\Analytics\Controller\BackendModuleController;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
@@ -24,17 +25,18 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
-use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
+use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
-use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -389,8 +391,7 @@ final class MultiSiteAccessTest extends FunctionalTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            $this->createMock(SiteSettingsService::class),
-            $this->createMock(SiteSettingsFactory::class),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
         $this->statusService = $statusService;
@@ -401,7 +402,7 @@ final class MultiSiteAccessTest extends FunctionalTestCase
             $pageAccessChecker,
             $this->get(ConnectionPool::class),
             $this->get(UriBuilder::class),
-            new NullLogger(),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
         );
 
         $moduleHelper = new ModuleConfigurator(
@@ -412,8 +413,7 @@ final class MultiSiteAccessTest extends FunctionalTestCase
         $registrationService = new InstanceRegistrationService(
             $apiClient,
             $cipherService,
-            $this->createMock(SiteSettingsService::class),
-            $this->createMock(SiteSettingsFactory::class),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
@@ -421,8 +421,7 @@ final class MultiSiteAccessTest extends FunctionalTestCase
         $apiKeyService = new ApiKeyService(
             $apiClient,
             $cipherService,
-            $this->createMock(SiteSettingsService::class),
-            $this->createMock(SiteSettingsFactory::class),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );

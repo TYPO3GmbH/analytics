@@ -11,25 +11,27 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
-use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
-use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
-use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteDataStorage;
+use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -102,8 +104,7 @@ final class SiteDataProviderTest extends UnitTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            $this->createMock(SiteSettingsService::class),
-            $this->createMock(SiteSettingsFactory::class),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
 
@@ -117,7 +118,7 @@ final class SiteDataProviderTest extends UnitTestCase
             $this->pageAccessChecker,
             $connectionPool,
             $this->uriBuilder,
-            new NullLogger(),
+            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger()),
         );
     }
 

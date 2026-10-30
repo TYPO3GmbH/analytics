@@ -15,6 +15,7 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
         private CipherServiceInterface $cipherService,
         private BackendPageAccessCheckerInterface $pageAccessChecker,
         private LoggerInterface $logger,
+        private SiteDataStorageInterface $siteDataStorage,
     ) {
     }
 
@@ -85,9 +86,8 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
     private function extractSiteCredentials(Site $site): ?array
     {
         try {
-            $settings = $site->getSettings();
-            $websiteId = (string)($settings->get('externalWebsiteId', '') ?: '');
-            $encryptedApiKey = (string)($settings->get('apiKey', '') ?: '');
+            $websiteId = $this->siteDataStorage->get($site, 'externalWebsiteId');
+            $encryptedApiKey = $this->siteDataStorage->get($site, 'apiKey');
             if ($websiteId === '' || $encryptedApiKey === '') {
                 return null;
             }

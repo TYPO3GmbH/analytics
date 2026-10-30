@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Middleware;
 
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use T3G\Analytics\Service\SiteDataStorageInterface;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Site\Entity\Site;
 
-final class TrackingCodeMiddleware implements MiddlewareInterface
+final readonly class TrackingCodeMiddleware implements MiddlewareInterface
 {
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
+    public function __construct(
+        private SiteDataStorageInterface $siteDataStorage,
+    ) {
+    }
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);
@@ -32,8 +32,8 @@ final class TrackingCodeMiddleware implements MiddlewareInterface
             return $response;
         }
 
-        $trackingCode = $site->getSettings()->get('trackingCode', '');
-        if (empty($trackingCode) || $site->getSettings()->get('status', '') !== 'active') {
+        $trackingCode = $this->siteDataStorage->get($site, 'trackingCode');
+        if ($trackingCode === '' || $this->siteDataStorage->get($site, 'status') !== 'active') {
             return $response;
         }
 

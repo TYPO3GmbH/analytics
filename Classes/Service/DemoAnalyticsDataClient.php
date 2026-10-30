@@ -8,8 +8,10 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 
 final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInterface
 {
-    public function __construct(private SiteFinder $siteFinder)
-    {
+    public function __construct(
+        private SiteFinder $siteFinder,
+        private SiteDataStorageInterface $siteDataStorage,
+    ) {
     }
 
     public function fetchPageAnalytics(
@@ -80,7 +82,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
     private function siteBaseForWebsiteId(string $websiteId): string
     {
         foreach ($this->siteFinder->getAllSites() as $site) {
-            if ((string)$site->getSettings()->get('externalWebsiteId', '') === $websiteId) {
+            if ($this->siteDataStorage->get($site, 'externalWebsiteId') === $websiteId) {
                 return rtrim((string)$site->getBase(), '/');
             }
         }

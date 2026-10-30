@@ -9,3 +9,6 @@ demoData = 0
 
 # cat = Cache; type = int+; label = Analytics data cache lifetime in seconds (default: 3600)
 pageAnalyticsCacheTtl = 3600
+
+# cat = Site data; type = string; label = Directory for the site data files (credentials, tracking code, API key). Recommended: config/analytics. A relative path starts at the project root. Leave empty to keep the data in config/sites/<identifier>/settings.yaml
+siteDataPath =

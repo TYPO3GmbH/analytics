@@ -8,16 +8,13 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\SiteSettingsFactory;
-use TYPO3\CMS\Core\Site\SiteSettingsService;
 
 readonly class InstanceRegistrationService implements InstanceRegistrationServiceInterface
 {
     public function __construct(
         private AnalyticsApiClientInterface $apiClient,
         private CipherServiceInterface $cipherService,
-        private SiteSettingsService $siteSettingsService,
-        private SiteSettingsFactory $siteSettingsFactory,
+        private SiteDataStorageInterface $siteDataStorage,
         private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
     ) {
@@ -25,7 +22,7 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
 
     /**
      * Registers a site instance with the Analytics API and persists the
-     * returned credentials to site settings.
+     * returned credentials to the site data.
      *
      * @throws AnalyticsApiException when the API call fails or the response is incomplete
      */
@@ -54,16 +51,15 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
 
         $encryptedSecret = $instanceSecret !== '' ? $this->cipherService->encrypt($instanceSecret) : '';
 
-        $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
         try {
-            $this->siteSettingsService->writeSettings($site, array_merge($existing, [
+            $this->siteDataStorage->write($site, [
                 'websiteId' => $websiteId,
                 'instanceId' => $instanceId,
                 'instanceSecret' => $encryptedSecret,
-            ]));
+            ]);
         } catch (SiteConfigurationWriteException $e) {
             $this->logger->error('Registration: writeSettings threw.', ['siteIdentifier' => $siteIdentifier, 'exception' => $e->getMessage()]);
-            throw new AnalyticsApiException('Settings could not be written to config/sites/' . $siteIdentifier . '/settings.yaml. Check file system permissions for this directory.', 0);
+            throw new AnalyticsApiException('Settings could not be written to ' . $this->siteDataStorage->getLocation($site) . '. Check file system permissions for this directory.', 0);
         }
 
         try {
