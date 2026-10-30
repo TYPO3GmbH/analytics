@@ -6,7 +6,8 @@ namespace T3G\Analytics\Tests\Functional\Fixtures;
 
 /**
  * Backend users in widget_access.csv. The groups grant the widgets in the
- * be_groups.availableWidgets field, as TYPO3 does.
+ * be_groups.availableWidgets field, as TYPO3 does. The users that are not admins
+ * have the root pages of WidgetSitesTrait as DB mounts.
  */
 final class WidgetAccessUsers
 {

@@ -7,24 +7,19 @@ namespace T3G\Analytics\Tests\Functional\Controller;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Controller\TrafficGraphAjaxController;
 use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use T3G\Analytics\Tests\Functional\Fixtures\WidgetAccessUsers;
+use T3G\Analytics\Tests\Functional\Fixtures\WidgetSitesTrait;
 use T3G\Analytics\View\SparklineRenderer;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
-use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
-use T3G\Analytics\Service\DashboardLinkBuilder;
-use TYPO3\CMS\Core\Settings\Settings;
-use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\Entity\SiteSettings;
-use TYPO3\CMS\Core\Site\SiteFinder;
 
 /**
  * Functional tests for TrafficGraphAjaxController.
@@ -35,6 +30,8 @@ use TYPO3\CMS\Core\Site\SiteFinder;
  */
 final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
 {
+    use WidgetSitesTrait;
+
     protected array $configurationToUseInTestInstance = [
         'SYS' => [
             'encryptionKey' => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
@@ -47,6 +44,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
 
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
         $this->importCSVDataSet(WidgetAccessUsers::CSV);
+        $this->setUpWidgetSites();
         $this->setUpBackendUser(WidgetAccessUsers::V13_WIDGETS);
     }
 
@@ -67,7 +65,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
         $controller = new TrafficGraphAjaxController(
             $service,
             new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
-            $this->buildDashboardLinkBuilder(),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );
@@ -96,7 +94,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
         $controller = new TrafficGraphAjaxController(
             $service,
             new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
-            $this->buildDashboardLinkBuilder(),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );
@@ -115,7 +113,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
         $controller = new TrafficGraphAjaxController(
             $service,
             new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
-            $this->buildDashboardLinkBuilder(),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );
@@ -145,7 +143,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
         $controller = new TrafficGraphAjaxController(
             $service,
             new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
-            $this->buildDashboardLinkBuilder(),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );
@@ -162,23 +160,5 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
         self::assertStringContainsString('tx-analytics-traffic-graph-y-label">6<', $html);
         self::assertStringContainsString('tx-analytics-traffic-graph-y-label">3<', $html);
         self::assertStringContainsString('tx-analytics-traffic-graph-y-label">0<', $html);
-    }
-
-    /**
-     * Real link builder for sites that the backend user can access.
-     */
-    private function buildDashboardLinkBuilder(): DashboardLinkBuilder
-    {
-        $siteFinder = $this->createMock(SiteFinder::class);
-        $siteFinder->method('getSiteByIdentifier')->willReturnCallback(function (string $identifier): Site {
-            $site = $this->createMock(Site::class);
-            $site->method('getIdentifier')->willReturn($identifier);
-            $site->method('getRootPageId')->willReturn(1);
-            $site->method('getSettings')->willReturn(new SiteSettings(new Settings([]), [], []));
-            return $site;
-        });
-        $pageAccessChecker = $this->createMock(BackendPageAccessCheckerInterface::class);
-        $pageAccessChecker->method('userCanAccessPage')->willReturn(true);
-        return new DashboardLinkBuilder($siteFinder, $pageAccessChecker, $this->get(UriBuilder::class));
     }
 }
