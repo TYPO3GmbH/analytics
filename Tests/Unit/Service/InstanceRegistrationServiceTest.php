@@ -249,7 +249,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
 
         $request = $this->httpHistory[0]['request'];
         self::assertStringEndsWith('/website/w-1/whitelisted-domains', $request->getUri()->getPath());
-        self::assertSame(['domain' => 'https://second.example.com'], json_decode((string)$request->getBody(), true));
+        self::assertSame(['domain' => 'second.example.com'], json_decode((string)$request->getBody(), true));
         self::assertStringStartsWith('HMAC i-1:', $request->getHeaderLine('Authorization'));
     }
 
