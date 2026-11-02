@@ -2,6 +2,8 @@
 
 A TYPO3 backend extension that integrates **TYPO3 Analytics** into the TYPO3 site management panel. It lets editors register TYPO3 sites with the TYPO3 Analytics API, monitor registration status, and open the analytics dashboard without leaving the TYPO3 backend.
 
+For the full documentation, see [docs.typo3.org](https://docs.typo3.org/permalink/t3g-analytics:start).
+
 ## Contents
 
 - [Installation](#installation)
