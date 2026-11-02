@@ -34,7 +34,7 @@ vendor/bin/typo3 extension:setup analytics
 
 ### TER / Classic mode
 
-In a non-Composer TYPO3 installation, search for **analytics** in **Admin Tools → Extensions** and install it from there. 
+In a non-Composer TYPO3 installation, search for **analytics** in **Admin Tools > Extensions** (TYPO3 v13) or **System > Extensions** (TYPO3 v14) and install it from there.
 Make sure the **Dashboard** system extension is active before installing.
 
 ## Configuration
