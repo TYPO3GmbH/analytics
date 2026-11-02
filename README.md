@@ -12,12 +12,11 @@ For the full documentation, see [docs.typo3.org](https://docs.typo3.org/permalin
   - [Dashboard settings](#dashboard-settings)
 - [Local development with DDEV](#local-development-with-ddev)
 - [Compatibility notes](#compatibility-notes)
-
+## Compatibility notes
 
 ### Encryption
 
 Credentials are encrypted using XChaCha20-Poly1305 via libsodium. On TYPO3 v14+ the built-in `TYPO3\CMS\Core\Crypto\Cipher\CipherService` is used automatically; on v13 an equivalent custom implementation is used, ensuring values remain decryptable after upgrading.
-
 
 ## Installation
 
