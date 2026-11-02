@@ -10,6 +10,7 @@ For the full documentation, see [docs.typo3.org](https://docs.typo3.org/permalin
 - [Configuration](#configuration)
   - [Development settings](#development-settings)
   - [Dashboard settings](#dashboard-settings)
+  - [Cache settings](#cache-settings)
 - [Local development with DDEV](#local-development-with-ddev)
 - [Compatibility notes](#compatibility-notes)
 ## Compatibility notes
