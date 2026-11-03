@@ -18,6 +18,10 @@
                 <source>The site could not be attached to the active site: %s</source>
                 <target>Die Site konnte nicht an die aktive Site angehängt werden: %s</target>
             </trans-unit>
+            <trans-unit id="flash.siteNotAttachable" resname="flash.siteNotAttachable">
+                <source>Site "%s" cannot be attached. The site must have its own domain without a path. Register the site as a new site.</source>
+                <target>Die Site „%s“ kann nicht angehängt werden. Die Site braucht eine eigene Domain ohne Pfad. Registrieren Sie die Site als neue Site.</target>
+            </trans-unit>
             <trans-unit id="flash.success.attached" resname="flash.success.attached">
                 <source>Site "%s" is now attached to site "%s".</source>
                 <target>Die Site „%s“ ist jetzt an die Site „%s“ angehängt.</target>
@@ -79,8 +83,8 @@
                 <target>„%s“ lösen?</target>
             </trans-unit>
             <trans-unit id="modal.detach.message" resname="modal.detach.message">
-                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
-                <target>Die Site erfasst keine Daten mehr. Ihre Domain wird aus den freigegebenen Domains der Site „%s“ entfernt. Sie können die Site später neu registrieren oder wieder an eine aktive Site anhängen.</target>
+                <source>The site stops tracking. The module removes the domains of the site from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
+                <target>Die Site erfasst keine Daten mehr. Das Modul entfernt die Domains der Site aus den freigegebenen Domains der Site „%s“. Sie können die Site später neu registrieren oder wieder an eine aktive Site anhängen.</target>
             </trans-unit>
             <trans-unit id="modal.attach.title" resname="modal.attach.title">
                 <source>Attach "%1$s" to site "%2$s"?</source>
@@ -325,6 +329,10 @@
             <trans-unit id="label.attachToSite" resname="label.attachToSite">
                 <source>Attach to an active site</source>
                 <target>An eine aktive Site anhängen</target>
+            </trans-unit>
+            <trans-unit id="label.siteNotAttachable" resname="label.siteNotAttachable">
+                <source>You cannot attach this site to an active site. The site must have its own domain without a path, for example https://shop.example.com/. Register the site as a new site with its own tracking code.</source>
+                <target>Sie können diese Site nicht an eine aktive Site anhängen. Die Site braucht eine eigene Domain ohne Pfad, zum Beispiel https://shop.example.com/. Registrieren Sie die Site als neue Site mit eigenem Tracking-Code.</target>
             </trans-unit>
             <trans-unit id="label.attachTarget" resname="label.attachTarget">
                 <source>Active site</source>

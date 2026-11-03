@@ -91,8 +91,8 @@ The bar also has these controls:
     below the bar. Click :guilabel:`Hide all details` to close the panel. The
     bar keeps this state for each backend user.
 -   :guilabel:`Show in Analytics`: opens the analytics dashboard for the page.
-    For a page of a site that uses the analytics of an active site, the link
-    opens the dashboard of the active site. The bar shows the link only when
+    For a page of an attached site, the link opens the dashboard of the
+    active site. See :ref:`backend-module`. The bar shows the link only when
     you have access to the root page of the site whose dashboard opens.
 
 The bar loads asynchronously — a lightweight skeleton is shown immediately,

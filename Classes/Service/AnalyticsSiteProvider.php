@@ -106,6 +106,10 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
      * http and https, but no other host that only ends with the same name. A value with a
      * path that the value of its host already covers is left out.
      *
+     * The API compares each value as "contains", and it stores the start page without a slash at
+     * the end. So "://example.com" also matches "://example.com.au" when both hosts track into one
+     * website. The documentation tells the editors not to attach such sites.
+     *
      * @return list<string>
      */
     private function buildPageUrlFilter(Site $site): array

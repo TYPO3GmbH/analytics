@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 
@@ -22,6 +23,7 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         private SiteSettingsFactory $siteSettingsFactory,
         private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
+        private SiteFinder $siteFinder,
     ) {
     }
 
@@ -30,6 +32,10 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
      * no key has been provisioned yet. The apiKey value is only returned once
      * by the API and is stored encrypted in the site settings.
      *
+     * A site attached to an active site uses the key of the active site and never creates a key.
+     * When the active site gets a key, its attached sites get the same key. When this write
+     * failed, the next call for the attached site copies the key of the active site.
+     *
      * @param array<string, mixed> $currentStatus the freshly fetched status response
      */
     public function provisionIfNeeded(Site $site, array $currentStatus): void
@@ -37,6 +43,10 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         $siteIdentifier = $site->getIdentifier();
 
         if (($currentStatus['status'] ?? '') !== 'active') {
+            return;
+        }
+        if (SiteAttachment::isAttached($site)) {
+            $this->copyApiKeyOfActiveSite($site);
             return;
         }
 
@@ -130,6 +140,61 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
         $this->logger->info('ApiKeyService: API key provisioned.', [
             'siteIdentifier' => $siteIdentifier,
             'apiKeyId' => $result['apiKeyId'],
+        ]);
+
+        $this->shareWithAttachedSites($siteIdentifier, ['apiKeyId' => $result['apiKeyId'], 'apiKey' => $encryptedApiKey]);
+    }
+
+    /**
+     * @param array{apiKeyId: string, apiKey: string} $apiKeySettings
+     */
+    private function shareWithAttachedSites(string $siteIdentifier, array $apiKeySettings): void
+    {
+        foreach ($this->siteFinder->getAllSites() as $attachedSite) {
+            if (SiteAttachment::attachedTo($attachedSite) === $siteIdentifier) {
+                $this->writeApiKeyOfActiveSite($attachedSite, $siteIdentifier, $apiKeySettings);
+            }
+        }
+    }
+
+    private function copyApiKeyOfActiveSite(Site $attachedSite): void
+    {
+        $settings = $this->siteSettingsFactory->loadLocalSettings($attachedSite->getIdentifier()) ?? [];
+        if ((string)($settings['apiKeyId'] ?? '') !== '') {
+            return;
+        }
+        $activeSiteIdentifier = SiteAttachment::attachedTo($attachedSite);
+        $activeSettings = $this->siteSettingsFactory->loadLocalSettings($activeSiteIdentifier) ?? [];
+        $apiKeyId = (string)($activeSettings['apiKeyId'] ?? '');
+        $apiKey = (string)($activeSettings['apiKey'] ?? '');
+        if ($apiKeyId === '' || $apiKey === '') {
+            return;
+        }
+        $this->writeApiKeyOfActiveSite($attachedSite, $activeSiteIdentifier, ['apiKeyId' => $apiKeyId, 'apiKey' => $apiKey]);
+    }
+
+    /**
+     * The core catches a failed write itself, so the method reads the settings back to find the error.
+     *
+     * @param array{apiKeyId: string, apiKey: string} $apiKeySettings
+     */
+    private function writeApiKeyOfActiveSite(Site $attachedSite, string $activeSiteIdentifier, array $apiKeySettings): void
+    {
+        $existing = $this->siteSettingsFactory->loadLocalSettings($attachedSite->getIdentifier()) ?? [];
+        try {
+            $this->siteSettingsService->writeSettings($attachedSite, array_merge($existing, $apiKeySettings));
+            $this->writeGuard->assertSettingsPersisted($attachedSite, ['apiKeyId' => $apiKeySettings['apiKeyId']]);
+        } catch (SiteConfigurationWriteException|AnalyticsApiException $e) {
+            $this->logger->error('ApiKeyService: Failed to write the API key to an attached site. The next status refresh of the site tries again.', [
+                'siteIdentifier' => $attachedSite->getIdentifier(),
+                'activeSiteIdentifier' => $activeSiteIdentifier,
+                'exception' => $e->getMessage(),
+            ]);
+            return;
+        }
+        $this->logger->info('ApiKeyService: API key of the active site written to an attached site.', [
+            'siteIdentifier' => $attachedSite->getIdentifier(),
+            'activeSiteIdentifier' => $activeSiteIdentifier,
         ]);
     }
 }

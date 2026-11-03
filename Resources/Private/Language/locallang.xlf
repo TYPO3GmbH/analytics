@@ -14,6 +14,9 @@
             <trans-unit id="flash.attachFailed" resname="flash.attachFailed">
                 <source>The site could not be attached to the active site: %s</source>
             </trans-unit>
+            <trans-unit id="flash.siteNotAttachable" resname="flash.siteNotAttachable">
+                <source>Site "%s" cannot be attached. The site must have its own domain without a path. Register the site as a new site.</source>
+            </trans-unit>
             <trans-unit id="flash.success.attached" resname="flash.success.attached">
                 <source>Site "%s" is now attached to site "%s".</source>
             </trans-unit>
@@ -60,7 +63,7 @@
                 <source>Detach "%s"?</source>
             </trans-unit>
             <trans-unit id="modal.detach.message" resname="modal.detach.message">
-                <source>The site stops tracking. Its domain is removed from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
+                <source>The site stops tracking. The module removes the domains of the site from the whitelisted domains of site "%s". You can register the site or attach it to an active site again later.</source>
             </trans-unit>
             <trans-unit id="modal.attach.title" resname="modal.attach.title">
                 <source>Attach "%1$s" to site "%2$s"?</source>
@@ -184,6 +187,9 @@
             </trans-unit>
             <trans-unit id="label.attachToSite" resname="label.attachToSite">
                 <source>Attach to an active site</source>
+            </trans-unit>
+            <trans-unit id="label.siteNotAttachable" resname="label.siteNotAttachable">
+                <source>You cannot attach this site to an active site. The site must have its own domain without a path, for example https://shop.example.com/. Register the site as a new site with its own tracking code.</source>
             </trans-unit>
             <trans-unit id="label.attachTarget" resname="label.attachTarget">
                 <source>Active site</source>

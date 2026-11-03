@@ -121,6 +121,46 @@ You can register a site in two ways:
 The module shows the choice only when there is an active site. Without an
 active site, the module shows the e-mail field directly.
 
+You can attach only a site with its own domain without a path, for example
+:samp:`https://shop.example.com/`. You cannot attach these sites:
+
+-   A site with a path in its base, for example :samp:`https://example.org/a/`.
+-   A site whose domain another site of the TYPO3 instance also uses. This
+    rule also applies to the domains of the languages of the site. The module
+    checks all sites, also the sites that you cannot access.
+
+For such a site, the module shows a hint and only the e-mail field. Register
+the site as a new site. The site then gets its own tracking code.
+
+Also do not attach a site when one domain is the start of another domain. This
+rule applies to the domains of the site, of the active site and of the other
+attached sites of the active site, in both directions. Examples:
+
+-   :samp:`example.com` and :samp:`example.com.au`
+-   :samp:`example.com` and :samp:`example.community`
+
+The module does not prevent this. See :ref:`widgets-shared-analytics`.
+
+..  _backend-module-domains:
+
+Domains of a site
+-----------------
+
+The module uses only the bases that are valid in the current application
+context:
+
+-   When you register a site as a new site, the module sends only the domain
+    of the site base. The module does not send the domains of the languages.
+-   When you attach a site, the module adds the domain of the site base and
+    the domains of the languages to the whitelisted domains of the active site.
+
+..  important::
+    The module does not use the ``baseVariants`` of the site or of its
+    languages. Example: you register a site in the ``Development`` context.
+    Then the module sends the domain of the development base, not the domain
+    of the live website. Register or attach a site only in the application
+    context of the live website.
+
 Register as a new site
 ----------------------
 
@@ -154,9 +194,13 @@ or a landing page.
     When you detach the site, the data from before the detach stays in the
     analytics of the active site.
 
-The module attaches the site: it adds the domain of the site to the
-whitelisted domains of the active site. The extension adds the tracking script of the active site to all
-frontend pages of the site.
+The module attaches the site: it adds the domain of the site and the domains
+of its languages to the whitelisted domains of the active site. The extension
+adds the tracking script of the active site to all frontend pages of the site.
+
+..  note::
+    The module keeps the domains from the time of the attach. If you add a
+    language with a new domain later, detach the site and attach it again.
 
 The attached site then shows in an indented row directly below the active site.
 The row shows the status :guilabel:`Attached` and the :guilabel:`Detach` button.
@@ -172,8 +216,8 @@ of the analytics of the active site:
     :guilabel:`Manage plan` button. Use the buttons of the active site.
 -   The site menu in the module header does not show the attached site.
 -   The dashboard widgets show the attached site. A widget shows only the data
-    of the pages on the domain of the selected site. The widgets of the added
-    site have no :guilabel:`Show in Analytics` link. See
+    of the pages on the domains of the selected site. The widgets of the
+    attached site have no :guilabel:`Show in Analytics` link. See
     :ref:`widgets-shared-analytics`.
 -   The page performance bar shows the data of each page of the attached site.
     :guilabel:`Show in Analytics` opens the dashboard of the active site.
@@ -193,7 +237,7 @@ steps:
 #.  In the row of the attached site, click :guilabel:`Detach`.
 #.  Click :guilabel:`Detach` in the confirmation dialog.
 
-The module removes the domain of the site from the whitelisted domains of the
+The module removes the domains of the site from the whitelisted domains of the
 active site and removes the analytics settings from the site. The site stops
 tracking and shows in the group **Inactive sites** again. You can register
 the site or attach it to an active site again later.

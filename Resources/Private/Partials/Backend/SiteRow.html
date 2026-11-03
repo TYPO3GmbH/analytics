@@ -204,7 +204,14 @@
                             data-attach-confirm-cancel="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:button.cancel')}"
                         >
                             <input type="hidden" name="siteIdentifier" value="{site.identifier}" />
-                            <f:if condition="{attachTargets}">
+                            <f:comment>Only a site with an own host without a path can be attached, because detach removes the host from the whitelist.</f:comment>
+                            <f:variable name="canAttach" value="{f:if(condition: '{attachTargets} && {site.attachable}', then: 1, else: 0)}" />
+                            <f:if condition="{attachTargets} && !{site.attachable}">
+                                <p class="form-text tx-analytics-site-not-attachable">
+                                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.siteNotAttachable" />
+                                </p>
+                            </f:if>
+                            <f:if condition="{canAttach}">
                                 <fieldset class="tx-analytics-registration-mode" tabindex="-1">
                                     <legend class="form-label">
                                         <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.registrationMode" />
@@ -223,7 +230,7 @@
                                     </div>
                                 </fieldset>
                             </f:if>
-                            <fieldset data-registration-mode="register" {f:if(condition: attachTargets, then: 'hidden disabled')}>
+                            <fieldset data-registration-mode="register" {f:if(condition: canAttach, then: 'hidden disabled')}>
                                 <div class="input-group">
                                     <input
                                         type="email"
@@ -237,7 +244,7 @@
                                     </button>
                                 </div>
                             </fieldset>
-                            <f:if condition="{attachTargets}">
+                            <f:if condition="{canAttach}">
                                 <fieldset data-registration-mode="attach" hidden disabled>
                                     <label class="visually-hidden" for="tx-analytics-attach-target-{site.identifier}">
                                         <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:label.attachTarget" />
