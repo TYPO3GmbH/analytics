@@ -159,6 +159,12 @@ final readonly class BackendModuleController
             return new JsonResponse($this->errorPayload('flash.siteNotFound'), 404);
         }
 
+        // Detach removes the host from the whitelist, so the host must belong to this site only.
+        if (!$this->siteDataProvider->isAttachable($site)) {
+            $this->logger->warning('Attach rejected: the site has no own host without a path.', ['siteIdentifier' => $siteIdentifier]);
+            return new JsonResponse($this->errorPayload('flash.siteNotAttachable', [$siteIdentifier]), 400);
+        }
+
         // The site must be unregistered; the target must be a registered site the user can access and that is active.
         $accessibleRegistered = array_column($this->siteDataProvider->registeredSiteOptions(), 'identifier');
         $targetStatus = in_array($targetSiteIdentifier, $accessibleRegistered, true)
