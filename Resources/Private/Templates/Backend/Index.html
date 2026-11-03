@@ -59,7 +59,7 @@
                                 </tr>
                             </thead>
                             <f:for each="{siteGroup.sites}" as="site">
-                                <f:render partial="Backend/SiteRow" arguments="{site: site, isManager: isManager, registerUri: registerUri, statusUri: statusUri}" />
+                                <f:render partial="Backend/SiteRow" arguments="{site: site, attachTargets: attachTargets, isManager: isManager, registerUri: registerUri, statusUri: statusUri, detachUri: detachUri}" />
                             </f:for>
                         </table>
                     </div>

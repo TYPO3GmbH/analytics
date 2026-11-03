@@ -85,7 +85,7 @@ visits are recorded until the credit balance resets or the plan is upgraded.
 The backend module shows a warning on the affected site card.
 
 *   Check the credit usage displayed on the site card.
-*   Use the :guilabel:`Manage Plan` link to upgrade the subscription or wait
+*   Use the :guilabel:`Manage plan` link to upgrade the subscription or wait
     for the monthly credit reset (the reset date is shown on the site card).
 *   Use the :guilabel:`Refresh status` button to fetch the current credit
     balance bypassing the 24-hour cache, for example to check whether a reset

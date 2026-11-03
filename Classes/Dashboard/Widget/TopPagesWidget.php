@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Dashboard\Widget;
 
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
 use T3G\Analytics\Service\TopPagesServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Dashboard\Widgets\AdditionalCssInterface;
@@ -30,7 +30,7 @@ final readonly class TopPagesWidget implements WidgetInterface, AdditionalCssInt
         private WidgetConfigurationInterface $configuration,
         private TopPagesServiceInterface $topPagesService,
         private AnalyticsSiteProviderInterface $siteProvider,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private ViewFactoryInterface $viewFactory,
         array $options = [],
     ) {

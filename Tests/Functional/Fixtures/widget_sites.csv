@@ -1,0 +1,4 @@
+"pages"
+,"uid","pid","title","is_siteroot","doktype","perms_userid","perms_groupid","perms_user","perms_group","perms_everybody"
+,10,0,"My Site",1,1,0,0,31,31,1
+,11,0,"Fallback Site",1,1,0,0,31,31,1

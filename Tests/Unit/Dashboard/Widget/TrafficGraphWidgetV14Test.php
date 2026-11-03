@@ -9,11 +9,11 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\Widget\TrafficGraphWidgetV14;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use T3G\Analytics\View\SparklineRenderer;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\Settings\SettingsInterface;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -31,7 +31,7 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
     private WidgetConfigurationInterface&MockObject $configuration;
     private TrafficGraphServiceInterface&MockObject $trafficGraphService;
     private AnalyticsSiteProviderInterface&MockObject $siteProvider;
-    private UriBuilder&MockObject $uriBuilder;
+    private DashboardLinkBuilderInterface&MockObject $dashboardLinkBuilder;
     private TrafficChartDataBuilder $chartDataBuilder;
     private ViewFactoryInterface&MockObject $viewFactory;
     private ViewInterface&MockObject $view;
@@ -76,10 +76,8 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
 
         $this->siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
 
-        $mockUri = $this->createMock(\Psr\Http\Message\UriInterface::class);
-        $mockUri->method('__toString')->willReturn('');
-        $this->uriBuilder = $this->createMock(UriBuilder::class);
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn($mockUri);
+        $this->dashboardLinkBuilder = $this->createMock(DashboardLinkBuilderInterface::class);
+        $this->dashboardLinkBuilder->method('build')->willReturn('');
 
         $this->chartDataBuilder = new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter());
 
@@ -97,7 +95,7 @@ final class TrafficGraphWidgetV14Test extends UnitTestCase
             $this->configuration,
             $this->trafficGraphService,
             $this->siteProvider,
-            $this->uriBuilder,
+            $this->dashboardLinkBuilder,
             $this->chartDataBuilder,
             $this->viewFactory,
         );

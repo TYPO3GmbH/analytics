@@ -9,8 +9,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\Analytics\Dashboard\Widget\TopPagesWidgetV14;
 use T3G\Analytics\Service\AnalyticsSiteProviderInterface;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\TopPagesServiceInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Settings\SettingDefinition;
 use TYPO3\CMS\Core\Settings\SettingsInterface;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -28,7 +28,7 @@ final class TopPagesWidgetV14Test extends UnitTestCase
     private WidgetConfigurationInterface&MockObject $configuration;
     private TopPagesServiceInterface&MockObject $topPagesService;
     private AnalyticsSiteProviderInterface&MockObject $siteProvider;
-    private UriBuilder&MockObject $uriBuilder;
+    private DashboardLinkBuilderInterface&MockObject $dashboardLinkBuilder;
     private ViewFactoryInterface&MockObject $viewFactory;
     private ViewInterface&MockObject $view;
 
@@ -70,10 +70,8 @@ final class TopPagesWidgetV14Test extends UnitTestCase
 
         $this->siteProvider = $this->createMock(AnalyticsSiteProviderInterface::class);
 
-        $mockUri = $this->createMock(\Psr\Http\Message\UriInterface::class);
-        $mockUri->method('__toString')->willReturn('');
-        $this->uriBuilder = $this->createMock(UriBuilder::class);
-        $this->uriBuilder->method('buildUriFromRoute')->willReturn($mockUri);
+        $this->dashboardLinkBuilder = $this->createMock(DashboardLinkBuilderInterface::class);
+        $this->dashboardLinkBuilder->method('build')->willReturn('');
 
         $this->view = $this->createMock(ViewInterface::class);
         $this->view->method('assignMultiple')->willReturnSelf();
@@ -89,7 +87,7 @@ final class TopPagesWidgetV14Test extends UnitTestCase
             $this->configuration,
             $this->topPagesService,
             $this->siteProvider,
-            $this->uriBuilder,
+            $this->dashboardLinkBuilder,
             $this->viewFactory,
         );
     }

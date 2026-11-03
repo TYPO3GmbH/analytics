@@ -61,3 +61,17 @@ settings:
     default: ''
     category: typo3_analytics
     readonly: true
+  attachedTo:
+    label: 'Attached to site'
+    description: 'Identifier of the active site whose analytics this site uses. Set automatically when the site is attached to an active site.'
+    type: string
+    default: ''
+    category: typo3_analytics
+    readonly: true
+  attachedHosts:
+    label: 'Whitelisted hosts of the attached site'
+    description: 'Hosts of the site and its languages on the whitelist of the active site. Set automatically on attach. Detach removes these hosts.'
+    type: stringlist
+    default: []
+    category: typo3_analytics
+    readonly: true

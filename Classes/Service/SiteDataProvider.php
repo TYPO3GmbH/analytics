@@ -12,6 +12,7 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 
 readonly class SiteDataProvider implements SiteDataProviderInterface
@@ -27,13 +28,14 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
     }
 
     /**
-     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
+     * @return list<array{identifier: string, title: string, pageName: string, domain: string, websiteId: string|null, registered: bool, attachedTo: string, attachable: bool, status: array<string, mixed>|null, panelClass: string, dashboardUri: string, managePlanUri: string}>
      * @throws RouteNotFoundException
      * @throws Exception
      */
     public function fetchSites(): array
     {
         $sites = [];
+        $hostCounts = $this->countHosts();
 
         foreach ($this->siteFinder->getAllSites() as $site) {
             if (!$this->pageAccessChecker->userCanAccessPage($site->getRootPageId())) {
@@ -47,6 +49,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 $websiteId = null;
             }
             $registered = $websiteId !== null;
+            $attachedTo = SiteAttachment::attachedTo($site);
 
             $status = $registered ? $this->analyticsStatusService->getStatus($site) : null;
 
@@ -57,6 +60,8 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 'domain' => rtrim($site->getBase()->__toString(), '/'),
                 'websiteId' => $websiteId,
                 'registered' => $registered,
+                'attachedTo' => $attachedTo,
+                'attachable' => self::hasOwnHost($site, $hostCounts),
                 'status' => $status,
                 'panelClass' => $this->resolvePanelClass($status),
                 'dashboardUri' => $registered ? (string)$this->uriBuilder->buildUriFromRoute(
@@ -92,7 +97,8 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'exception' => $e]);
                 $websiteId = null;
             }
-            if ($websiteId === null) {
+            // A site attached to an active site has no own analytics, so only the active site is offered.
+            if ($websiteId === null || SiteAttachment::isAttached($site)) {
                 continue;
             }
 
@@ -106,6 +112,44 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
         }
 
         return $sites;
+    }
+
+    public function isAttachable(Site $site): bool
+    {
+        return self::hasOwnHost($site, $this->countHosts());
+    }
+
+    /**
+     * @param array<string, int> $hostCounts
+     */
+    private static function hasOwnHost(Site $site, array $hostCounts): bool
+    {
+        if ($site->getBase()->getHost() === '' || !in_array($site->getBase()->getPath(), ['', '/'], true)) {
+            return false;
+        }
+        foreach (SiteAttachment::hosts($site) as $host) {
+            if (($hostCounts[$host] ?? 0) !== 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Counts the sites per host. The hosts of a site include the hosts of its languages. The count
+     * includes all sites, also the sites that the user cannot access.
+     *
+     * @return array<string, int>
+     */
+    private function countHosts(): array
+    {
+        $counts = [];
+        foreach ($this->siteFinder->getAllSites() as $site) {
+            foreach (SiteAttachment::hosts($site) as $host) {
+                $counts[$host] = ($counts[$host] ?? 0) + 1;
+            }
+        }
+        return $counts;
     }
 
     /**

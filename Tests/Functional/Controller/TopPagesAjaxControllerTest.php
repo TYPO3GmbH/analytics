@@ -7,10 +7,11 @@ namespace T3G\Analytics\Tests\Functional\Controller;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Controller\TopPagesAjaxController;
 use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
+use T3G\Analytics\Service\DashboardLinkBuilderInterface;
 use T3G\Analytics\Service\TopPagesServiceInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use T3G\Analytics\Tests\Functional\Fixtures\WidgetAccessUsers;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
+use T3G\Analytics\Tests\Functional\Fixtures\WidgetSitesTrait;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
@@ -26,6 +27,8 @@ use TYPO3\CMS\Core\View\ViewFactoryInterface;
  */
 final class TopPagesAjaxControllerTest extends FunctionalTestCase
 {
+    use WidgetSitesTrait;
+
     protected array $configurationToUseInTestInstance = [
         'SYS' => [
             'encryptionKey' => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
@@ -38,6 +41,7 @@ final class TopPagesAjaxControllerTest extends FunctionalTestCase
 
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
         $this->importCSVDataSet(WidgetAccessUsers::CSV);
+        $this->setUpWidgetSites();
         $this->setUpBackendUser(WidgetAccessUsers::V13_WIDGETS);
     }
 
@@ -57,7 +61,7 @@ final class TopPagesAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TopPagesAjaxController(
             $topPagesService,
-            $this->get(UriBuilder::class),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );
@@ -85,7 +89,7 @@ final class TopPagesAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TopPagesAjaxController(
             $topPagesService,
-            $this->get(UriBuilder::class),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );
@@ -103,7 +107,7 @@ final class TopPagesAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TopPagesAjaxController(
             $topPagesService,
-            $this->get(UriBuilder::class),
+            $this->get(DashboardLinkBuilderInterface::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
         );

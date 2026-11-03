@@ -14,7 +14,7 @@ interface AnalyticsSiteProviderInterface
     public function siteOptions(): array;
 
     /**
-     * @return array{site: Site, websiteId: string, apiKey: string}|null
+     * @return array{site: Site, websiteId: string, apiKey: string, pageUrlFilter: list<string>}|null
      */
     public function resolveAnalyticsSite(string $siteIdentifier): ?array;
 }
