@@ -68,3 +68,10 @@ settings:
     default: ''
     category: typo3_analytics
     readonly: true
+  attachedHosts:
+    label: 'Whitelisted hosts of the attached site'
+    description: 'Hosts of the site and its languages on the whitelist of the active site. Set automatically on attach. Detach removes these hosts.'
+    type: stringlist
+    default: []
+    category: typo3_analytics
+    readonly: true

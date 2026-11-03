@@ -452,6 +452,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $this->createMock(SiteSettingsFactory::class),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
+            $this->createMock(SiteFinder::class),
         );
 
         return new BackendModuleController(
