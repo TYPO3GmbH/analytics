@@ -133,12 +133,13 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
             ->with(
                 $site,
                 self::callback(static function (array $settings) use ($cipherService): bool {
-                    return $settings['websiteId'] === 'w-123'
-                        && $settings['instanceId'] === 'i-456'
-                        && $settings['instanceSecret'] !== ''
-                        && $cipherService->decrypt($settings['instanceSecret']) === 's3cr3t'
+                    $values = $settings['plugin']['tx_analytics']['settings'];
+                    return $values['websiteId'] === 'w-123'
+                        && $values['instanceId'] === 'i-456'
+                        && $values['instanceSecret'] !== ''
+                        && $cipherService->decrypt($values['instanceSecret']) === 's3cr3t'
                         && $settings['existingKey'] === 'val'
-                        && !array_key_exists('checkoutUrl', $settings);
+                        && !array_key_exists('checkoutUrl', $values);
                 })
             );
 
@@ -170,7 +171,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->siteSettingsService
             ->expects(self::once())
             ->method('writeSettings')
-            ->with($this->buildSite(), self::callback(static fn (array $s): bool => $s['instanceSecret'] === ''));
+            ->with($this->buildSite(), self::callback(static fn (array $s): bool => $s['plugin']['tx_analytics']['settings']['instanceSecret'] === ''));
 
         $this->subject->register($this->buildSite(), 'user@example.com');
     }

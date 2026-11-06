@@ -106,12 +106,13 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
 
         $this->subject->register($this->buildSite(), 'user@example.com');
 
-        self::assertSame('w-123', $writtenSettings['websiteId']);
-        self::assertSame('i-456', $writtenSettings['instanceId']);
+        $values = $writtenSettings['plugin']['tx_analytics']['settings'];
+        self::assertSame('w-123', $values['websiteId']);
+        self::assertSame('i-456', $values['instanceId']);
         // Secret must be stored encrypted, not as plain text
-        self::assertNotSame('plain-secret', $writtenSettings['instanceSecret']);
+        self::assertNotSame('plain-secret', $values['instanceSecret']);
         // But must be decryptable back to the original value
-        self::assertSame('plain-secret', $this->cipherService->decrypt($writtenSettings['instanceSecret']));
+        self::assertSame('plain-secret', $this->cipherService->decrypt($values['instanceSecret']));
     }
 
     #[Test]
@@ -132,7 +133,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $this->subject->register($this->buildSite(), 'user@example.com');
 
         self::assertSame('existingValue', $writtenSettings['existingKey']);
-        self::assertSame('w-123', $writtenSettings['websiteId']);
+        self::assertSame('w-123', $writtenSettings['plugin']['tx_analytics']['settings']['websiteId']);
     }
 
     #[Test]

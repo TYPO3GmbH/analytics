@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Functional\Middleware;
 
+use Symfony\Component\Yaml\Yaml;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Configuration\SiteWriter;
@@ -51,7 +53,7 @@ abstract class AbstractTrackingCodeFrontendTestCase extends FunctionalTestCase
      */
     protected function writeSettingsYaml(array $settings): void
     {
-        $this->get(SiteWriter::class)->writeSettings(self::SITE, $settings);
+        $this->get(SiteWriter::class)->writeSettings(self::SITE, SiteDataSettings::tree($settings));
         $this->flushSiteSettingsCache();
     }
 
@@ -61,8 +63,8 @@ abstract class AbstractTrackingCodeFrontendTestCase extends FunctionalTestCase
     protected function writeSettingsYamlWithImport(array $settings = []): void
     {
         $yaml = "imports:\n  - { resource: '../../../" . self::DATA_PATH . '/' . self::SITE . ".yaml', glob: true }\n";
-        foreach ($settings as $key => $value) {
-            $yaml .= $key . ': ' . json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . "\n";
+        if ($settings !== []) {
+            $yaml .= Yaml::dump(SiteDataSettings::tree($settings), 99, 2);
         }
         file_put_contents(Environment::getConfigPath() . '/sites/' . self::SITE . '/settings.yaml', $yaml);
         $this->flushSiteSettingsCache();
@@ -83,11 +85,7 @@ abstract class AbstractTrackingCodeFrontendTestCase extends FunctionalTestCase
     {
         $directory = $this->dataDirectory();
         GeneralUtility::mkdir_deep($directory);
-        $yaml = '';
-        foreach ($data as $key => $value) {
-            $yaml .= $key . ': ' . json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . "\n";
-        }
-        file_put_contents($directory . '/' . self::SITE . '.yaml', $yaml);
+        file_put_contents($directory . '/' . self::SITE . '.yaml', Yaml::dump(SiteDataSettings::tree($data), 99, 2));
     }
 
     protected function fetchPage(): string

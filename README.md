@@ -74,6 +74,18 @@ The extension writes data for each site: credentials, tracking code and API key.
 
 By default, the extension writes the data into `config/sites/<identifier>/settings.yaml`. In a deployment setup, keep this file in a shared folder outside the release directory.
 
+The extension writes the values as a tree below `plugin.tx_analytics.settings`:
+
+```yaml
+# config/sites/<identifier>/settings.yaml
+plugin:
+  tx_analytics:
+    settings:
+      websiteId: '...'
+      instanceId: '...'
+      instanceSecret: '...'
+```
+
 If other extensions also use `settings.yaml`, the file must stay in the repository. In this case, set `siteDataPath`. We recommend `config/analytics`. The extension then writes the data into `config/analytics/<identifier>.yaml`.
 
 The extension always reads the data from the site settings. Thus you must import the file in the `settings.yaml` of each site:
@@ -95,7 +107,7 @@ You must set `glob: true`. The file does not exist before the first registration
 - Set `siteDataPath` in the extension configuration. Then the backend and the CLI use the same location. If you use the environment variable instead, set it for the web server and for the CLI.
 - In classic mode (no Composer), the project root is the web root. Deny web access to the directory. The same applies to `typo3conf/sites/`.
 
-The values in `settings.yaml` have priority over the imported file. Thus `settings.yaml` must not contain the values of the extension: `websiteId`, `instanceId`, `instanceSecret`, `trackingCode`, `status`, `apiKeyId`, `apiKey` and `externalWebsiteId`.
+The values in `settings.yaml` have priority over the imported file. Thus `settings.yaml` must not contain values below `plugin.tx_analytics.settings`.
 
 The extension checks the import and `glob: true` before the registration. After each write, the extension makes sure that the site settings contain the new values.
 
@@ -104,13 +116,35 @@ The extension checks the import and `glob: true` before the registration. After 
 
 To move an existing installation to a separate file:
 
-1. Copy the values of the extension from `settings.yaml` into `config/analytics/<identifier>.yaml`.
-2. Remove the values of the extension from `settings.yaml`.
+1. Copy the values below `plugin.tx_analytics.settings` from `settings.yaml` into `config/analytics/<identifier>.yaml`. Keep the tree.
+2. Remove the values below `plugin.tx_analytics.settings` from `settings.yaml`.
 3. Add the import to `settings.yaml`.
 4. Set `siteDataPath` to `config/analytics`.
 5. Flush the TYPO3 caches.
 
+If `settings.yaml` contains the values in the old format (see [Update from version 1.1 or earlier](#update-from-version-11-or-earlier)), do steps 3 and 4. Then run the upgrade wizard. The wizard moves the values into the separate file.
+
 If you remove `siteDataPath` again, the extension writes into `settings.yaml` again. The first write copies the imported values into `settings.yaml` and removes the import. Then do not commit `settings.yaml` any more.
+
+### Update from version 1.1 or earlier
+
+Version 1.1 and earlier wrote the values on the top level of `settings.yaml`, for example `websiteId`. The extension now writes the values below `plugin.tx_analytics.settings`.
+
+Until you run the upgrade wizard, the extension also reads the values on the top level. Thus the tracking and the backend module continue to work. The **Analytics** module shows a reminder for each site with values on the top level.
+
+Run the upgrade wizard **Analytics: Move the site data to plugin.tx_analytics.settings**:
+
+```bash
+vendor/bin/typo3 upgrade:run analytics_siteDataNamespaceMigration
+```
+
+The wizard does these steps for each site:
+
+- It moves the values into the tree below `plugin.tx_analytics.settings`. With `siteDataPath`, it moves the values into the separate file and removes them from `settings.yaml`.
+- It keeps a value that already exists below `plugin.tx_analytics.settings`.
+- It keeps imports, placeholders and the settings of other extensions.
+
+Then run the wizard **Analytics: Migrate instance secret encryption (v13 → v14)**, if it is necessary.
 
 ## Configuration reference
 

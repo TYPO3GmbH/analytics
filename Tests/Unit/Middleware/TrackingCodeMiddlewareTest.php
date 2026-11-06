@@ -14,13 +14,13 @@ use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Middleware\TrackingCodeMiddleware;
 use T3G\Analytics\Service\SiteDataStorage;
 use TYPO3\CMS\Core\Http\Uri;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 final class TrackingCodeMiddlewareTest extends UnitTestCase
 {
@@ -174,7 +174,7 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
 
     private function buildRequestWithSite(array $siteSettings): ServerRequestInterface
     {
-        $settings = new SiteSettings(new Settings($siteSettings), [], []);
+        $settings = new SiteSettings(SiteDataSettings::settings($siteSettings), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getSettings')->willReturn($settings);

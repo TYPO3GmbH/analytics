@@ -9,6 +9,11 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 
 interface SiteDataStorageInterface
 {
+    public const SETTINGS_PATH = 'plugin.tx_analytics.settings';
+
+    /**
+     * Keys below SETTINGS_PATH.
+     */
     public const KEYS = [
         'websiteId',
         'instanceId',
@@ -22,6 +27,7 @@ interface SiteDataStorageInterface
 
     /**
      * Reads the value from the site settings. Empty string when not set.
+     * Falls back to the key on the top level (version 1.1 and earlier) until the upgrade wizard ran.
      */
     public function get(Site $site, string $key): string;
 
@@ -35,6 +41,7 @@ interface SiteDataStorageInterface
 
     /**
      * Reads the local site settings again from the disk, with imports.
+     * Returns the values below SETTINGS_PATH with the keys of KEYS.
      *
      * @return array<string, mixed>
      */

@@ -28,13 +28,13 @@ use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Information\Typo3Version;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 final class AnalyticsStatusServiceTest extends UnitTestCase
 {
@@ -184,7 +184,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         $site = $this->buildSite('main', 'w-123', 'i-456');
         $this->mockHandler->append(new Response(200, [], '{"status":"active","maxPrivacyModeTrackingCode":"tc-abc"}'));
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(SiteDataSettings::tree(['websiteId' => 'w-123']));
 
         $this->siteSettingsService
             ->expects(self::once())
@@ -192,9 +192,10 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
             ->with(
                 $site,
                 self::callback(static function (array $settings): bool {
-                    return $settings['trackingCode'] === 'tc-abc'
-                        && $settings['status'] === 'active'
-                        && $settings['websiteId'] === 'w-123';
+                    $values = $settings['plugin']['tx_analytics']['settings'];
+                    return $values['trackingCode'] === 'tc-abc'
+                        && $values['status'] === 'active'
+                        && $values['websiteId'] === 'w-123';
                 })
             );
 
@@ -281,7 +282,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
         $site->method('getIdentifier')->willReturn($identifier);
         $site->method('getBase')->willReturn(new Uri('https://example.com'));
         $site->method('getSettings')->willReturn(new SiteSettings(
-            new Settings(array_merge(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $instanceSecret], $extraSettings)),
+            SiteDataSettings::settings(array_merge(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $instanceSecret], $extraSettings)),
             [],
             []
         ));

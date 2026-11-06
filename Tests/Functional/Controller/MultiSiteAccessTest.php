@@ -44,13 +44,16 @@ use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
+use T3G\Analytics\Service\SiteDataNamespaceMigration;
+use T3G\Analytics\Service\SiteDataStorageInterface;
+use TYPO3\CMS\Core\Configuration\SiteWriter;
 
 /**
  * Multi-site access control tests for BackendModuleController.
@@ -439,6 +442,7 @@ final class MultiSiteAccessTest extends FunctionalTestCase
             $siteDataProvider,
             $this->createMock(LoggerInterface::class),
             $pageAccessChecker,
+            new SiteDataNamespaceMigration($this->get(SiteDataStorageInterface::class), $this->get(SiteWriter::class)),
         );
     }
 
@@ -461,11 +465,7 @@ final class MultiSiteAccessTest extends FunctionalTestCase
     private function buildRegisteredSite(string $identifier, int $rootPageId, string $websiteId, string $instanceId): Site
     {
         $encryptedSecret = (new CipherService())->encrypt('test-instance-secret');
-        $siteSettings = new SiteSettings(
-            new Settings([]),
-            ['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $encryptedSecret],
-            [],
-        );
+        $siteSettings = new SiteSettings(SiteDataSettings::settings(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $encryptedSecret]), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);

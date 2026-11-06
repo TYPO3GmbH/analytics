@@ -46,7 +46,6 @@ use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -54,6 +53,9 @@ use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
+use T3G\Analytics\Service\SiteDataNamespaceMigration;
+use TYPO3\CMS\Core\Configuration\SiteWriter;
 
 /**
  * Unit tests for BackendModuleController.
@@ -209,6 +211,10 @@ final class BackendModuleControllerTest extends UnitTestCase
             $siteDataProvider,
             $this->logger,
             $this->buildPageAccessChecker(),
+            new SiteDataNamespaceMigration(
+                new SiteDataStorage(new SiteDataConfiguration(), $this->siteSettingsService, $this->siteSettingsFactory, new NullLogger(), new NullFrontend('core')),
+                $this->createMock(SiteWriter::class),
+            ),
         );
     }
 
@@ -589,7 +595,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $site->method('getBase')->willReturn(new Uri($baseUrl));
         $site->method('getConfiguration')->willReturn(['websiteTitle' => ucfirst($identifier)]);
         $site->method('getRootPageId')->willReturn(1);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings($siteSettings), [], []));
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings($siteSettings), [], []));
         return $site;
     }
 
