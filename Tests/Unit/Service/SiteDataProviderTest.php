@@ -32,7 +32,6 @@ use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Information\Typo3Version;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -40,6 +39,7 @@ use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 final class SiteDataProviderTest extends UnitTestCase
 {
@@ -380,7 +380,7 @@ final class SiteDataProviderTest extends UnitTestCase
         $site->method('getBase')->willReturn(new Uri($baseUrl));
         $site->method('getConfiguration')->willReturn(['websiteTitle' => $websiteTitle]);
         $site->method('getRootPageId')->willReturn(1);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings($settings), [], []));
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings($settings), [], []));
         return $site;
     }
 }

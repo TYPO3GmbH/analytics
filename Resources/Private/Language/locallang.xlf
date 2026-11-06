@@ -380,6 +380,12 @@
             <trans-unit id="flash.accessDenied" resname="flash.accessDenied">
                 <source>Access denied. You do not have the Analytics Manager permission.</source>
             </trans-unit>
+            <trans-unit id="flash.legacySiteData.title" resname="flash.legacySiteData.title">
+                <source>Run the upgrade wizard</source>
+            </trans-unit>
+            <trans-unit id="flash.legacySiteData" resname="flash.legacySiteData">
+                <source>These sites store the analytics data in an old format: %s. An administrator must run the upgrade wizard "Analytics: Move the site data to plugin.tx_analytics.settings" in Admin Tools &gt; Upgrade.</source>
+            </trans-unit>
             <trans-unit id="dashboardWidget.trafficGraph.allMetricsHidden" resname="dashboardWidget.trafficGraph.allMetricsHidden">
                 <source>Please enable at least one metric to display the chart.</source>
             </trans-unit>

@@ -10,6 +10,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Yaml\Yaml;
 use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Service\SiteDataStorage;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
@@ -26,14 +27,15 @@ final class SiteDataStorageTest extends FunctionalTestCase
     private const SITE = 'main';
     private const DATA_PATH = 'analytics-data';
 
-    private const EXISTING_SETTINGS = [
+    private const EXISTING_VALUES = [
         'websiteId' => 'f2dddfbb-a7c5-4503-b461-5a6022d91522',
         'instanceId' => 'ae518ea5-9ca5-4270-84d3-23fc87c241d3',
         'instanceSecret' => 'encrypted-instance-secret',
         'trackingCode' => '<script>track()</script>',
         'status' => 'active',
-        'otherExtension' => ['setting' => 'keep-me'],
     ];
+
+    private const OTHER_SETTINGS = ['otherExtension' => ['setting' => 'keep-me']];
 
     private string $settingsFileName;
 
@@ -52,7 +54,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
                 ['languageId' => 0, 'title' => 'English', 'locale' => 'en_US.UTF-8', 'base' => '/', 'enabled' => true],
             ],
         ]);
-        $siteWriter->writeSettings(self::SITE, self::EXISTING_SETTINGS);
+        $siteWriter->writeSettings(self::SITE, SiteDataSettings::tree(self::EXISTING_VALUES, self::OTHER_SETTINGS));
         $this->settingsFileName = Environment::getConfigPath() . '/sites/' . self::SITE . '/settings.yaml';
     }
 
@@ -84,12 +86,9 @@ final class SiteDataStorageTest extends FunctionalTestCase
 
         $subject->write($this->site(), ['status' => 'inactive', 'apiKeyId' => 'key-1']);
 
-        $persisted = Yaml::parseFile($this->settingsFileName);
-        self::assertSame('inactive', $persisted['status']);
-        self::assertSame('key-1', $persisted['apiKeyId']);
-        self::assertSame(self::EXISTING_SETTINGS['websiteId'], $persisted['websiteId']);
-        self::assertSame(['setting' => 'keep-me'], $persisted['otherExtension']);
-        self::assertSame($persisted, $subject->loadPersisted($this->site()));
+        $expected = ['status' => 'inactive', 'apiKeyId' => 'key-1'] + self::EXISTING_VALUES;
+        self::assertEquals(SiteDataSettings::tree($expected, self::OTHER_SETTINGS), Yaml::parseFile($this->settingsFileName));
+        self::assertEquals($expected, $subject->loadPersisted($this->site()));
         self::assertDirectoryDoesNotExist($this->dataDirectory());
         self::assertSame('typo3conf/sites/main/settings.yaml', $subject->getLocation($this->site()));
     }
@@ -103,7 +102,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $subject->write($this->site(), ['apiKeyId' => 'key-1', 'apiKey' => 'encrypted-api-key']);
 
         self::assertSame($settingsYaml, file_get_contents($this->settingsFileName));
-        self::assertSame(['apiKeyId' => 'key-1', 'apiKey' => 'encrypted-api-key'], $this->readDataFile());
+        self::assertSame(SiteDataSettings::tree(['apiKeyId' => 'key-1', 'apiKey' => 'encrypted-api-key']), $this->readDataFile());
         self::assertSame($this->dataLocation('main.yaml'), $subject->getLocation($this->site()));
         self::assertSame('typo3conf/sites/main/settings.yaml', $subject->getSettingsLocation($this->site()));
         self::assertTrue($subject->usesSeparateFile());
@@ -124,9 +123,9 @@ final class SiteDataStorageTest extends FunctionalTestCase
     #[Test]
     public function withSeparateFileTheSiteSettingsContainTheValuesOfTheFileWhenTheSettingsYamlImportsTheFile(): void
     {
-        $settings = self::EXISTING_SETTINGS;
-        unset($settings['status'], $settings['trackingCode']);
-        $this->writeSettingsYamlWithImport($settings);
+        $values = self::EXISTING_VALUES;
+        unset($values['status'], $values['trackingCode']);
+        $this->writeSettingsYamlWithImport(SiteDataSettings::tree($values, self::OTHER_SETTINGS));
         $subject = $this->buildSubject(self::DATA_PATH);
 
         $subject->write($this->site(), ['status' => 'cancelled', 'trackingCode' => '']);
@@ -134,15 +133,16 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $persisted = $subject->loadPersisted($this->site());
         self::assertSame('cancelled', $persisted['status']);
         self::assertSame('', $persisted['trackingCode']);
-        self::assertSame(self::EXISTING_SETTINGS['websiteId'], $persisted['websiteId']);
-        self::assertSame(['setting' => 'keep-me'], $persisted['otherExtension']);
-        self::assertArrayNotHasKey('imports', $persisted);
+        self::assertSame(self::EXISTING_VALUES['websiteId'], $persisted['websiteId']);
+        $localSettings = $this->get(SiteSettingsFactory::class)->loadLocalSettings(self::SITE);
+        self::assertSame(['setting' => 'keep-me'], $localSettings['otherExtension']);
+        self::assertArrayNotHasKey('imports', $localSettings);
     }
 
     #[Test]
     public function withSeparateFileTheValuesOfTheSettingsYamlHavePriorityOverTheImportedFile(): void
     {
-        $this->writeSettingsYamlWithImport(self::EXISTING_SETTINGS);
+        $this->writeSettingsYamlWithImport(SiteDataSettings::tree(self::EXISTING_VALUES));
         $subject = $this->buildSubject(self::DATA_PATH);
 
         $subject->write($this->site(), ['status' => 'cancelled']);
@@ -272,17 +272,20 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $requestB->write($this->site(), ['apiKeyId' => 'key-1']);
         $requestA->write($this->site(), ['status' => 'inactive']);
 
-        self::assertSame(['status' => 'inactive', 'apiKeyId' => 'key-1'], $this->readDataFile());
+        self::assertSame(SiteDataSettings::tree(['status' => 'inactive', 'apiKeyId' => 'key-1']), $this->readDataFile());
     }
 
     #[Test]
     public function withSeparateFileAWriteKeepsUnknownValues(): void
     {
-        $this->writeDataFile("status: active\naddedByANewerVersion: keep-me\n");
+        $this->writeDataFile(Yaml::dump(SiteDataSettings::tree(['status' => 'active', 'addedByANewerVersion' => 'keep-me'], ['other' => 'keep-me-too']), 99, 2));
 
         $this->buildSubject(self::DATA_PATH)->write($this->site(), ['status' => 'inactive']);
 
-        self::assertSame(['status' => 'inactive', 'addedByANewerVersion' => 'keep-me'], $this->readDataFile());
+        self::assertSame(
+            SiteDataSettings::tree(['status' => 'inactive', 'addedByANewerVersion' => 'keep-me'], ['other' => 'keep-me-too']),
+            $this->readDataFile()
+        );
     }
 
     #[Test]
@@ -295,7 +298,59 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $subject->write($this->site(), ['status' => 'active']);
         self::assertTrue($subject->isWritable($this->site()));
 
-        self::assertSame(['status' => 'active'], $this->readDataFile());
+        self::assertSame(SiteDataSettings::tree(['status' => 'active']), $this->readDataFile());
+    }
+
+    #[Test]
+    public function theStorageReadsAValueOnTheTopLevelUntilTheUpgradeWizardRan(): void
+    {
+        $this->get(SiteWriter::class)->writeSettings(self::SITE, SiteDataSettings::tree(['status' => 'active'], [
+            'trackingCode' => '<script>legacy()</script>',
+            'status' => 'cancelled',
+        ]));
+        $this->get(CacheManager::class)->getCache('core')->flush();
+        $subject = $this->buildSubject('');
+
+        self::assertSame('<script>legacy()</script>', $subject->get($this->site(), 'trackingCode'));
+        self::assertSame('active', $subject->get($this->site(), 'status'), 'The value of the tree has priority');
+    }
+
+    #[Test]
+    public function withoutConfigurationAWriteMovesTheValuesOfTheTopLevelIntoTheTree(): void
+    {
+        $this->get(SiteWriter::class)->writeSettings(self::SITE, SiteDataSettings::tree(['status' => 'active'], [
+            'trackingCode' => '<script>legacy()</script>',
+            'status' => 'cancelled',
+            'otherExtension' => ['setting' => 'keep-me'],
+        ]));
+
+        $this->buildSubject('')->write($this->site(), ['apiKeyId' => 'key-1']);
+
+        self::assertSame(
+            SiteDataSettings::tree(
+                ['status' => 'active', 'trackingCode' => '<script>legacy()</script>', 'apiKeyId' => 'key-1'],
+                ['otherExtension' => ['setting' => 'keep-me']]
+            ),
+            Yaml::parseFile($this->settingsFileName)
+        );
+    }
+
+    #[Test]
+    public function withoutConfigurationTheStorageReadsAndReplacesAValueThatTheSettingsEditorWroteAsAMap(): void
+    {
+        $this->get(SiteWriter::class)->writeSettings(self::SITE, [
+            'plugin.tx_analytics.settings.status' => 'cancelled',
+            'plugin.tx_analytics.settings.websiteId' => 'map-website-id',
+        ]);
+        $subject = $this->buildSubject('');
+        self::assertSame(['websiteId' => 'map-website-id', 'status' => 'cancelled'], $subject->loadPersisted($this->site()));
+
+        $subject->write($this->site(), ['status' => 'active']);
+
+        self::assertSame(
+            SiteDataSettings::tree(['status' => 'active'], ['plugin.tx_analytics.settings.websiteId' => 'map-website-id']),
+            Yaml::parseFile($this->settingsFileName)
+        );
     }
 
     #[Test]

@@ -24,12 +24,12 @@ use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 /**
  * Tests caching behaviour of AnalyticsStatusService using the real
@@ -216,15 +216,11 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
         $instanceSecret = 'plain-secret-for-test';
         $encryptedSecret = $this->cipherService->encrypt($instanceSecret);
 
-        $siteSettings = new SiteSettings(
-            new Settings([]),
-            [
+        $siteSettings = new SiteSettings(SiteDataSettings::settings([
                 'websiteId' => $websiteId,
                 'instanceId' => $instanceId,
                 'instanceSecret' => $encryptedSecret,
-            ],
-            []
-        );
+            ]), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);
@@ -234,7 +230,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
 
     private function buildUnregisteredSite(string $identifier): Site
     {
-        $siteSettings = new SiteSettings(new Settings([]), [], []);
+        $siteSettings = new SiteSettings(SiteDataSettings::settings([]), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);

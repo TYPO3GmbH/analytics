@@ -41,13 +41,18 @@ use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
+use T3G\Analytics\Service\SiteDataNamespaceMigration;
+use T3G\Analytics\Service\SiteDataStorageInterface;
+use TYPO3\CMS\Core\Configuration\SiteWriter;
+use Symfony\Component\Yaml\Yaml;
+use TYPO3\CMS\Core\Core\Environment;
 
 /**
  * Functional tests for BackendModuleController.
@@ -104,6 +109,27 @@ final class BackendModuleControllerTest extends FunctionalTestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('text/html', $response->getHeaderLine('Content-Type'));
+    }
+
+    #[Test]
+    public function indexActionRemindsTheUserToRunTheUpgradeWizardForASiteWithValuesOnTheTopLevel(): void
+    {
+        $this->writeSite('legacy', "status: inactive\n");
+        $this->writeSite('current', Yaml::dump(SiteDataSettings::tree(['status' => 'inactive']), 99, 2));
+
+        $body = (string)$this->buildController()->indexAction($this->buildModuleRequest('GET', '/module/site/analytics'))->getBody();
+
+        self::assertStringContainsString('These sites store the analytics data in an old format: legacy.', $body);
+    }
+
+    #[Test]
+    public function indexActionDoesNotShowTheUpgradeWizardMessageWithoutValuesOnTheTopLevel(): void
+    {
+        $this->writeSite('current', Yaml::dump(SiteDataSettings::tree(['status' => 'inactive']), 99, 2));
+
+        $body = (string)$this->buildController()->indexAction($this->buildModuleRequest('GET', '/module/site/analytics'))->getBody();
+
+        self::assertStringNotContainsString('old format', $body);
     }
 
     /** dashboardAction – happy path */
@@ -397,6 +423,18 @@ final class BackendModuleControllerTest extends FunctionalTestCase
 
     /** Helpers */
 
+    private function writeSite(string $identifier, string $settingsYaml): void
+    {
+        $this->get(SiteWriter::class)->write($identifier, [
+            'rootPageId' => 1,
+            'base' => 'https://' . $identifier . '.example.com/',
+            'languages' => [
+                ['languageId' => 0, 'title' => 'English', 'locale' => 'en_US.UTF-8', 'base' => '/', 'enabled' => true],
+            ],
+        ]);
+        file_put_contents(Environment::getConfigPath() . '/sites/' . $identifier . '/settings.yaml', $settingsYaml);
+    }
+
     private function buildController(
         ?SiteFinder $siteFinder = null,
     ): BackendModuleController {
@@ -466,6 +504,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $siteDataProvider,
             $this->createMock(LoggerInterface::class),
             $pageAccessChecker,
+            new SiteDataNamespaceMigration($this->get(SiteDataStorageInterface::class), $this->get(SiteWriter::class)),
         );
     }
 
@@ -524,11 +563,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
     {
         $encryptedSecret = (new CipherService())->encrypt('test-instance-secret');
 
-        $siteSettings = new SiteSettings(
-            new Settings([]),
-            ['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $encryptedSecret],
-            []
-        );
+        $siteSettings = new SiteSettings(SiteDataSettings::settings(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => $encryptedSecret]), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn($identifier);
@@ -546,7 +581,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $site->method('getBase')->willReturn(new Uri('https://example.com'));
         $site->method('getConfiguration')->willReturn(['websiteTitle' => 'Example']);
         $site->method('getRootPageId')->willReturn(1);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings([]), [], []));
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings([]), [], []));
         return $site;
     }
 }

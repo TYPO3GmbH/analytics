@@ -27,7 +27,6 @@ use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Routing\RouterInterface;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -35,6 +34,7 @@ use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 final class PagePerformanceBarBuilderTest extends UnitTestCase
 {
@@ -97,7 +97,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         $router->method('generateUri')->willReturn(new Uri('https://example.com/page'));
 
         $site = $this->createMock(Site::class);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings([
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings([
             'externalWebsiteId' => 'test-website-id',
             'apiKey' => $this->encryptedApiKey,
         ]), [], []));
