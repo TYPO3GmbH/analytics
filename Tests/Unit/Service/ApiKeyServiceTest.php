@@ -21,13 +21,13 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Locking\LockFactory;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
@@ -162,9 +162,10 @@ final class ApiKeyServiceTest extends UnitTestCase
             ->with(
                 self::anything(),
                 self::callback(static function (array $settings) use ($cipherService): bool {
-                    return $settings['apiKeyId'] === 'new-key-uuid'
-                        && $settings['apiKey'] !== ''
-                        && $cipherService->decrypt($settings['apiKey']) === 'new-api-key'
+                    $values = $settings['plugin']['tx_analytics']['settings'];
+                    return $values['apiKeyId'] === 'new-key-uuid'
+                        && $values['apiKey'] !== ''
+                        && $cipherService->decrypt($values['apiKey']) === 'new-api-key'
                         && $settings['existingKey'] === 'keep-me';
                 })
             );
@@ -251,7 +252,7 @@ final class ApiKeyServiceTest extends UnitTestCase
         $site = $this->createMock(Site::class);
         $site->method('getIdentifier')->willReturn('main');
         $site->method('getSettings')->willReturn(new SiteSettings(
-            new Settings([
+            SiteDataSettings::settings([
                 'websiteId' => $websiteId,
                 'instanceId' => $instanceId,
                 'instanceSecret' => $instanceSecret,

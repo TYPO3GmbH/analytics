@@ -13,9 +13,9 @@ use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Uri;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 /**
  * Functional tests for TrackingCodeMiddleware.
@@ -123,7 +123,7 @@ final class TrackingCodeMiddlewareTest extends FunctionalTestCase
 
     private function buildRequestWithSite(array $siteSettings): ServerRequestInterface
     {
-        $settings = new SiteSettings(new Settings($siteSettings), [], []);
+        $settings = new SiteSettings(SiteDataSettings::settings($siteSettings), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getSettings')->willReturn($settings);

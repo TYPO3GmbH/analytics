@@ -18,6 +18,7 @@ use TYPO3\CMS\Core\Locking\LockingStrategyInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
@@ -41,7 +42,13 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
     public function get(Site $site, string $key): mixed
     {
         try {
-            return $site->getSettings()->get($key);
+            $settings = $site->getSettings();
+            $value = $settings->get(self::SETTINGS_PATH . '.' . $key);
+            // Fallback for version 1.1 and earlier until the upgrade wizard moved the value. Remove in the next major version.
+            if ($value === '' || $value === null) {
+                $value = $settings->get($key) ?? $value;
+            }
+            return $value;
         } catch (\Throwable $e) {
             $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'key' => $key, 'exception' => $e]);
             return null;
@@ -57,6 +64,13 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
     public function write(Site $site, array $values): void
     {
         if (!$this->configuration->usesSiteSettings()) {
+            // get() falls back to the old value when the file contains an empty value.
+            if ($this->hasLegacyValueForEmptyValue($site, $values)) {
+                throw new SiteConfigurationWriteException(
+                    $this->getSettingsLocation($site) . ' contains values of version 1.1. Run the upgrade wizard "analytics_siteDataNamespaceMigration".',
+                    1794408252
+                );
+            }
             $this->createDirectory(dirname($this->getFileName($site)));
         }
         $locker = $this->acquireLock($site);
@@ -64,14 +78,14 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             // Read in the lock: another request can have changed the data.
             if ($this->configuration->usesSiteSettings()) {
                 $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
-                $this->siteSettingsService->writeSettings($site, array_merge($existing, $values));
+                $this->siteSettingsService->writeSettings($site, $this->mergeValues($this->moveLegacyValues($existing), $values));
                 return;
             }
             $data = $this->loadFile($site);
             if ($data === null) {
                 throw new SiteConfigurationWriteException('Unable to read ' . $this->getLocation($site), 1794494912);
             }
-            $this->writeFile($site, array_merge($data, $values));
+            $this->writeFile($site, $this->mergeValues($data, $values));
         } finally {
             $locker->release();
         }
@@ -82,7 +96,18 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
     public function loadPersisted(Site $site): array
     {
         // With imports: this is the data that the next request reads from the site settings.
-        return $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        $settings = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        $values = [];
+        foreach (self::KEYS as $key) {
+            $identifier = self::SETTINGS_PATH . '.' . $key;
+            // The settings editor of the core writes a map with the identifier as key, the extension writes a tree.
+            if (array_key_exists($identifier, $settings)) {
+                $values[$key] = $settings[$identifier];
+            } elseif (ArrayUtility::isValidPath($settings, $identifier, '.')) {
+                $values[$key] = ArrayUtility::getValueByPath($settings, $identifier, '.');
+            }
+        }
+        return $values;
     }
 
     public function isWritable(Site $site): bool
@@ -155,6 +180,33 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         return false;
     }
 
+    /**
+     * @param array<string, mixed> $values
+     */
+    private function hasLegacyValueForEmptyValue(Site $site, array $values): bool
+    {
+        $emptyKeys = array_keys(array_filter($values, static fn (mixed $value): bool => $value === '' || $value === null));
+        if ($emptyKeys === []) {
+            return false;
+        }
+        $fileName = $this->getSettingsFileName($site);
+        try {
+            $settings = is_file($fileName) ? Yaml::parseFile($fileName) : null;
+        } catch (ParseException) {
+            return false;
+        }
+        if (!is_array($settings)) {
+            return false;
+        }
+        foreach ($emptyKeys as $key) {
+            $legacyValue = $settings[$key] ?? null;
+            if (in_array($key, self::KEYS, true) && is_scalar($legacyValue) && (string)$legacyValue !== '') {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function acquireLock(Site $site): LockingStrategyInterface
     {
         try {
@@ -168,6 +220,43 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             $previous = $e;
         }
         throw new SiteConfigurationWriteException('Unable to lock ' . $this->getLocation($site), 1794494911, $previous);
+    }
+
+    /**
+     * Without this step, get() can read an old value after the extension wrote an empty value into the tree.
+     *
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    private function moveLegacyValues(array $settings): array
+    {
+        foreach (self::KEYS as $key) {
+            if (!array_key_exists($key, $settings)) {
+                continue;
+            }
+            $identifier = self::SETTINGS_PATH . '.' . $key;
+            if (!array_key_exists($identifier, $settings) && !ArrayUtility::isValidPath($settings, $identifier, '.')) {
+                $settings = ArrayUtility::setValueByPath($settings, $identifier, $settings[$key], '.');
+            }
+            unset($settings[$key]);
+        }
+        return $settings;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @param array<string, mixed> $values
+     * @return array<string, mixed>
+     */
+    private function mergeValues(array $settings, array $values): array
+    {
+        foreach ($values as $key => $value) {
+            $identifier = self::SETTINGS_PATH . '.' . $key;
+            // Remove a value that the settings editor of the core wrote as a map. Otherwise the site has two values.
+            unset($settings[$identifier]);
+            $settings = ArrayUtility::setValueByPath($settings, $identifier, $value, '.');
+        }
+        return $settings;
     }
 
     /**

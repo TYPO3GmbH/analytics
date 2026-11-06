@@ -46,6 +46,14 @@
                 <source>Access denied. You do not have the Analytics Manager permission.</source>
                 <target>Zugriff verweigert. Du verfügst nicht über die Berechtigung für den Analytics Manager.</target>
             </trans-unit>
+            <trans-unit id="flash.legacySiteData.title" resname="flash.legacySiteData.title">
+                <source>Run the upgrade wizard</source>
+                <target>Upgrade-Wizard ausführen</target>
+            </trans-unit>
+            <trans-unit id="flash.legacySiteData" resname="flash.legacySiteData">
+                <source>These sites store the analytics data in an old format: %s. An administrator must run the upgrade wizard "Analytics: Move the site data to plugin.tx_analytics.settings" in Admin Tools &gt; Upgrade.</source>
+                <target>Diese Sites speichern die Analytics-Daten in einem alten Format: %s. Ein Administrator muss den Upgrade-Wizard „Analytics: Move the site data to plugin.tx_analytics.settings“ unter Admin Tools &gt; Upgrade ausführen.</target>
+            </trans-unit>
             <trans-unit id="be_groups.custom_options.analytics" resname="be_groups.custom_options.analytics">
                 <source>TYPO3 Analytics</source>
                 <target>TYPO3 Analytics</target>
