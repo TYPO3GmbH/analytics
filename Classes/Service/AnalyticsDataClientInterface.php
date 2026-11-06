@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Service;
 
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Utility\AnalyticsQueryUtility;
 
 interface AnalyticsDataClientInterface
 {
@@ -57,7 +58,7 @@ interface AnalyticsDataClientInterface
     ): array;
 
     /**
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array<string, mixed>>
      * @throws AnalyticsApiException
      */
@@ -86,7 +87,7 @@ interface AnalyticsDataClientInterface
     /**
      * Fetches site-wide daily visit counts as a time-series (POST, no page filter).
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -101,7 +102,7 @@ interface AnalyticsDataClientInterface
     /**
      * Fetches site-wide daily session counts as a time-series (POST, no page filter).
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -116,7 +117,7 @@ interface AnalyticsDataClientInterface
     /**
      * Fetches site-wide daily unique visitor counts as a time-series (POST, no page filter).
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -131,7 +132,7 @@ interface AnalyticsDataClientInterface
     /**
      * Fetches traffic share by channel for a date range.
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{labels: list<string>, datasets: list<array{label: string, data: list<int>, total: int}>}
      * @throws AnalyticsApiException
      */
@@ -147,7 +148,7 @@ interface AnalyticsDataClientInterface
      * Fetches device session breakdown (desktop/mobile/tablet).
      * When previousFrom/previousTo are provided, the response includes previousSessionCount per item.
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array{deviceType: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -165,7 +166,7 @@ interface AnalyticsDataClientInterface
      * Fetches browser session breakdown (Chrome, Safari, Firefox, …).
      * When previousFrom/previousTo are provided, the response includes previousSessionCount per item.
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array{browserName: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -183,7 +184,7 @@ interface AnalyticsDataClientInterface
      * Fetches country session breakdown by ISO 3166-1 alpha-2 country code.
      * When previousFrom/previousTo are provided, the response includes previousSessionCount per item.
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return list<array{countryCode: string, sessionCount: int, sessionPercentOfTotal: float, previousSessionCount?: int}>
      * @throws AnalyticsApiException
      */
@@ -205,7 +206,7 @@ interface AnalyticsDataClientInterface
      * A failed request does not throw. Its values stay 0 (or the series empty) and its key
      * is added to "failures": current, previous, series, currentTimeOnPage, previousTimeOnPage.
      *
-     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsDataClient::buildPageUrlWhere()
+     * @param list<string> $pageUrlFilter Parts of page URLs, see AnalyticsQueryUtility::pageUrlWhere()
      * @return array{
      *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
      *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},

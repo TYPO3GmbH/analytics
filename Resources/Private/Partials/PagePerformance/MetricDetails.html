@@ -1,0 +1,21 @@
+{namespace analytics=T3G\Analytics\ViewHelpers}
+<f:comment>Details of one metric, in the tooltip and in the details panel. Description and chart are always rendered, so the rows line up across metrics.</f:comment>
+<f:variable name="metricLabel" value="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:{metric.labelKey}')}" />
+<div class="tx-analytics-performance-tooltip-title">{metricLabel}</div>
+<f:comment>The note stays inside the description: the details panel is a subgrid with one row per part.</f:comment>
+<p class="tx-analytics-performance-tooltip-description"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:{metric.descriptionKey}" /><f:if condition="{metric.trendNote}"><span class="tx-analytics-performance-tooltip-note"><span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-circle-info" aria-hidden="true"></span><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:trendNote.{metric.trendNote}" /></span></f:if></p>
+<dl class="tx-analytics-performance-tooltip-data">
+    <div><dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.today" /></dt><dd>{metric.details.0}</dd></div>
+    <div><dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.yesterday" /></dt><dd>{metric.details.1}</dd></div>
+    <div><dt><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.peak" /></dt><dd>{metric.details.2}</dd></div>
+</dl>
+<div class="tx-analytics-performance-tooltip-chart">
+    <f:if condition="{metric.chart}">
+        <f:variable name="chartLabel" value="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.tooltip.chart')}: {metricLabel}" />
+        <f:comment>The bottom axis is drawn at yMin, so it has to be zero to read as one.</f:comment>
+        <analytics:sparkline
+            values="{metric.chart}"
+            options="{label: chartLabel, class: 'tx-analytics-performance-sparkline', tone: metric.tone, labels: metric.chartLabels, smooth: 1, axes: 1, yMin: 0}"
+        />
+    </f:if>
+</div>
