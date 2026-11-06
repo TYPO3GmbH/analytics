@@ -10,7 +10,8 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 interface SiteSettingsWriteVerifierInterface
 {
     /**
-     * Asserts that the site configuration directory is writable.
+     * Asserts that the site data location is writable.
+     * With siteDataPath, also asserts that the settings.yaml imports the separate file.
      *
      * @throws AnalyticsApiException
      */

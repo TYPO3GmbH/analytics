@@ -55,6 +55,27 @@ They can also be set programmatically in :file:`config/system/additional.php`:
         Use this to explore the widgets and module without a live analytics
         account.
 
+    ..  confval:: siteDataPath
+        :type: string
+        :default: (empty)
+
+        Directory for the data that the extension writes for each site:
+        credentials, tracking code and API key. The extension writes one file
+        per site, :file:`<siteDataPath>/<identifier>.yaml`. A relative path
+        starts at the project root. The directory must be in the project root.
+        TYPO3 does not import files from outside the project root.
+
+        We recommend :file:`config/analytics`.
+
+        The extension always reads the data from the site settings. Thus the
+        :file:`settings.yaml` of each site must import the file. Without the
+        import, the registration fails. See :ref:`installation` for the setup.
+
+        Leave the value empty to write the data into
+        :file:`config/sites/<identifier>/settings.yaml`.
+
+        The environment variable :envvar:`TYPO3_ANALYTICS_SITE_DATA_PATH` has
+        priority over this setting.
 
 Dashboard settings
 ==================
@@ -75,6 +96,16 @@ Cache settings
 ..  code-block:: php
 
     $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
+
+
+Site data settings
+==================
+
+**Example — keep the site data outside of settings.yaml:**
+
+..  code-block:: php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = 'config/analytics';
 
 
 Development settings
