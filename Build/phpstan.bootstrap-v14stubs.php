@@ -53,6 +53,10 @@ if (!interface_exists(UpgradeWizardInterface::class)) {
     }
 }
 
+if (!interface_exists(RepeatableInterface::class)) {
+    interface RepeatableInterface {}
+}
+
 namespace TYPO3\CMS\Install\Attribute;
 
 if (!class_exists(UpgradeWizard::class)) {

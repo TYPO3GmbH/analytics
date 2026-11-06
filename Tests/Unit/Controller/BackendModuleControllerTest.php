@@ -24,10 +24,12 @@ use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteDataNamespaceMigration;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -35,6 +37,7 @@ use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Configuration\SiteWriter;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -49,7 +52,6 @@ use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -197,6 +199,8 @@ final class BackendModuleControllerTest extends UnitTestCase
             $siteDataProvider,
         );
 
+        $siteDataConfiguration = new SiteDataConfiguration($this->createStub(ExtensionConfiguration::class));
+
         $moduleTemplateFactory = (new \ReflectionClass(ModuleTemplateFactory::class))
             ->newInstanceWithoutConstructor();
 
@@ -212,6 +216,11 @@ final class BackendModuleControllerTest extends UnitTestCase
             $siteDataProvider,
             $this->logger,
             $this->buildPageAccessChecker(),
+            new SiteDataNamespaceMigration(
+                new SiteDataStorage($siteDataConfiguration, $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
+                $siteDataConfiguration,
+                $this->createMock(SiteWriter::class),
+            ),
         );
     }
 
@@ -593,7 +602,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $site->method('getBase')->willReturn(new Uri($baseUrl));
         $site->method('getConfiguration')->willReturn(['websiteTitle' => ucfirst($identifier)]);
         $site->method('getRootPageId')->willReturn(1);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings($siteSettings), [], []));
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings($siteSettings), [], []));
         return $site;
     }
 
