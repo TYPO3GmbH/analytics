@@ -6,32 +6,22 @@ namespace T3G\Analytics\Tests\Unit\Configuration;
 
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Configuration\SiteDataConfiguration;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class SiteDataConfigurationTest extends UnitTestCase
 {
-    private string|false $environmentVariable = false;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // The CI environment must not change the result.
-        $this->environmentVariable = getenv('TYPO3_ANALYTICS_SITE_DATA_PATH');
-        putenv('TYPO3_ANALYTICS_SITE_DATA_PATH');
-    }
-
     protected function tearDown(): void
     {
-        putenv($this->environmentVariable === false ? 'TYPO3_ANALYTICS_SITE_DATA_PATH' : 'TYPO3_ANALYTICS_SITE_DATA_PATH=' . $this->environmentVariable);
-        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath']);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = '';
         parent::tearDown();
     }
 
     #[Test]
     public function withoutConfigurationTheSiteSettingsAreUsed(): void
     {
-        $subject = new SiteDataConfiguration();
+        $subject = new SiteDataConfiguration(new ExtensionConfiguration());
 
         self::assertTrue($subject->usesSiteSettings());
         self::assertSame('', $subject->getDirectory());
@@ -41,7 +31,7 @@ final class SiteDataConfigurationTest extends UnitTestCase
     public function aRelativePathStartsAtTheProjectRoot(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = ' config/analytics/ ';
-        $subject = new SiteDataConfiguration();
+        $subject = new SiteDataConfiguration(new ExtensionConfiguration());
 
         self::assertFalse($subject->usesSiteSettings());
         self::assertSame(Environment::getProjectPath() . '/config/analytics', $subject->getDirectory());
@@ -52,15 +42,16 @@ final class SiteDataConfigurationTest extends UnitTestCase
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = '/var/shared/analytics';
 
-        self::assertSame('/var/shared/analytics', (new SiteDataConfiguration())->getDirectory());
+        self::assertSame('/var/shared/analytics', (new SiteDataConfiguration(new ExtensionConfiguration()))->getDirectory());
     }
 
     #[Test]
-    public function theEnvironmentVariableHasPriorityOverTheExtensionConfiguration(): void
+    public function theConfigurationReadsThePathOnlyOnce(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = 'config/analytics';
-        putenv('TYPO3_ANALYTICS_SITE_DATA_PATH=/var/shared/analytics');
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = '/var/shared/analytics';
+        $subject = new SiteDataConfiguration(new ExtensionConfiguration());
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = '';
 
-        self::assertSame('/var/shared/analytics', (new SiteDataConfiguration())->getDirectory());
+        self::assertSame('/var/shared/analytics', $subject->getDirectory());
     }
 }

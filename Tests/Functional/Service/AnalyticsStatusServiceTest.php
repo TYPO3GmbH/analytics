@@ -22,14 +22,16 @@ use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
-use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 
 /**
  * Tests caching behaviour of AnalyticsStatusService using the real
@@ -76,7 +78,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             $apiClient,
             $this->cipherService,
             new NullLogger(),
-            new SiteDataStorage(new SiteDataConfiguration(), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
     }

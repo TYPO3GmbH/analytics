@@ -21,15 +21,17 @@ use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
-use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 
 /**
  * Functional tests for InstanceRegistrationService.
@@ -78,7 +80,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $this->subject = new InstanceRegistrationService(
             $apiClient,
             $this->cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(), $this->siteSettingsService, $this->siteSettingsFactory, new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );

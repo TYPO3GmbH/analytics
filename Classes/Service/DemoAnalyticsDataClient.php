@@ -82,7 +82,7 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
     private function siteBaseForWebsiteId(string $websiteId): string
     {
         foreach ($this->siteFinder->getAllSites() as $site) {
-            if ($this->siteDataStorage->get($site, 'externalWebsiteId') === $websiteId) {
+            if ($this->siteDataStorage->getString($site, 'externalWebsiteId') === $websiteId) {
                 return rtrim((string)$site->getBase(), '/');
             }
         }

@@ -12,6 +12,9 @@ use T3G\Analytics\Configuration\SiteDataConfiguration;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Locking\Exception as LockingException;
+use TYPO3\CMS\Core\Locking\LockFactory;
+use TYPO3\CMS\Core\Locking\LockingStrategyInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
@@ -28,52 +31,49 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         private SiteDataConfiguration $configuration,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
+        private LockFactory $lockFactory,
         private LoggerInterface $logger,
         #[Autowire(service: 'cache.core')]
         private FrontendInterface $coreCache,
     ) {
     }
 
-    public function get(Site $site, string $key): string
+    public function get(Site $site, string $key): mixed
     {
         try {
-            $value = $site->getSettings()->get($key, '');
+            return $site->getSettings()->get($key);
         } catch (\Throwable $e) {
             $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'key' => $key, 'exception' => $e]);
-            return '';
+            return null;
         }
+    }
+
+    public function getString(Site $site, string $key): string
+    {
+        $value = $this->get($site, $key);
         return is_scalar($value) ? (string)$value : '';
     }
 
     public function write(Site $site, array $values): void
     {
-        if ($this->configuration->usesSiteSettings()) {
-            $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
-            $this->siteSettingsService->writeSettings($site, array_merge($existing, $values));
-            return;
+        if (!$this->configuration->usesSiteSettings()) {
+            $this->createDirectory(dirname($this->getFileName($site)));
         }
-
-        $fileName = $this->getFileName($site);
-        $this->createDirectory(dirname($fileName));
-        // Open the lock file read-only: CLI and web server may run as different users.
-        $lockFileName = $fileName . '.lock';
-        if (!is_file($lockFileName) && @touch($lockFileName)) {
-            GeneralUtility::fixPermissions($lockFileName);
-        }
-        $lock = @fopen($lockFileName, 'r');
-        if ($lock === false || !flock($lock, LOCK_EX)) {
-            throw new SiteConfigurationWriteException('Unable to lock ' . $this->getLocation($site), 1761724802);
-        }
+        $locker = $this->acquireLock($site);
         try {
-            // Read in the lock: another request can have changed the file.
+            // Read in the lock: another request can have changed the data.
+            if ($this->configuration->usesSiteSettings()) {
+                $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+                $this->siteSettingsService->writeSettings($site, array_merge($existing, $values));
+                return;
+            }
             $data = $this->loadFile($site);
             if ($data === null) {
                 throw new SiteConfigurationWriteException('Unable to read ' . $this->getLocation($site), 1761724803);
             }
             $this->writeFile($site, array_merge($data, $values));
         } finally {
-            flock($lock, LOCK_UN);
-            fclose($lock);
+            $locker->release();
         }
         // The site settings are cached in the core cache. SiteSettingsService::writeSettings() flushes it the same way.
         $this->coreCache->flush();
@@ -153,6 +153,21 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             }
         }
         return false;
+    }
+
+    private function acquireLock(Site $site): LockingStrategyInterface
+    {
+        try {
+            $locker = $this->lockFactory->createLocker('analytics-site-data-' . $site->getIdentifier());
+            // In blocking mode, some strategies return false instead of an exception.
+            if ($locker->acquire()) {
+                return $locker;
+            }
+            $previous = null;
+        } catch (LockingException $e) {
+            $previous = $e;
+        }
+        throw new SiteConfigurationWriteException('Unable to lock ' . $this->getLocation($site), 1761724802, $previous);
     }
 
     /**

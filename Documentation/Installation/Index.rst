@@ -35,14 +35,9 @@ Deployment note
 The extension writes data for each site: credentials, tracking code and API
 key. These values are sensitive. Do not commit them to the repository.
 
-By default, the extension writes the data into
-:file:`config/sites/<identifier>/settings.yaml`. In a deployment setup, keep
-this file in a shared folder outside the release directory.
-
-If other extensions also use :file:`settings.yaml`, the file must stay in the
-repository. In this case, set :confval:`siteDataPath`. We recommend
-:file:`config/analytics`. The extension then writes the data into
-:file:`config/analytics/<identifier>.yaml`.
+Set :confval:`siteDataPath` to write the data into a separate file for each
+site. We recommend :file:`config/analytics`. The extension then writes the
+data into :file:`config/analytics/<identifier>.yaml`.
 
 The extension always reads the data from the site settings. Thus you must
 import the file in the :file:`settings.yaml` of each site:
@@ -69,9 +64,6 @@ import. TYPO3 also does not load the site when the file contains invalid YAML.
 *   The directory must be in the project root. TYPO3 does not import files
     from outside the project root. A symbolic link to a shared folder is
     possible.
-*   Set :confval:`siteDataPath` in the extension configuration. Then the
-    backend and the CLI use the same location. If you use the environment
-    variable instead, set it for the web server and for the CLI.
 *   In classic mode (no Composer), the project root is the web root. Deny web
     access to the directory. The same applies to :file:`typo3conf/sites/`.
 

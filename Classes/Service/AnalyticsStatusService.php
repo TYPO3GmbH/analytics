@@ -69,9 +69,9 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         $trackingCode = (string)($data['maxPrivacyModeTrackingCode'] ?? '');
         $newStatus = (string)($data['status'] ?? '');
         $newExternalWebsiteId = (string)($data['externalWebsiteId'] ?? '');
-        $existingTrackingCode = $this->siteDataStorage->get($site, 'trackingCode');
-        $existingStatus = $this->siteDataStorage->get($site, 'status');
-        $existingExternalWebsiteId = $this->siteDataStorage->get($site, 'externalWebsiteId');
+        $existingTrackingCode = $this->siteDataStorage->getString($site, 'trackingCode');
+        $existingStatus = $this->siteDataStorage->getString($site, 'status');
+        $existingExternalWebsiteId = $this->siteDataStorage->getString($site, 'externalWebsiteId');
 
         $update = [];
         if ($trackingCode !== '' && $trackingCode !== $existingTrackingCode) {
@@ -181,9 +181,9 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
     private function resolveCredentials(Site $site): ?array
     {
         $siteIdentifier = $site->getIdentifier();
-        $websiteId = $this->siteDataStorage->get($site, 'websiteId');
-        $instanceId = $this->siteDataStorage->get($site, 'instanceId');
-        $encryptedSecret = $this->siteDataStorage->get($site, 'instanceSecret');
+        $websiteId = $this->siteDataStorage->getString($site, 'websiteId');
+        $instanceId = $this->siteDataStorage->getString($site, 'instanceId');
+        $encryptedSecret = $this->siteDataStorage->getString($site, 'instanceSecret');
 
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '') {
             return null;

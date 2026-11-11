@@ -37,7 +37,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 continue;
             }
 
-            $websiteId = $this->siteDataStorage->get($site, 'websiteId') ?: null;
+            $websiteId = $this->siteDataStorage->getString($site, 'websiteId') ?: null;
             $registered = $websiteId !== null;
 
             $status = $registered ? $this->analyticsStatusService->getStatus($site) : null;
@@ -78,7 +78,7 @@ readonly class SiteDataProvider implements SiteDataProviderInterface
                 continue;
             }
 
-            $websiteId = $this->siteDataStorage->get($site, 'websiteId') ?: null;
+            $websiteId = $this->siteDataStorage->getString($site, 'websiteId') ?: null;
             if ($websiteId === null) {
                 continue;
             }

@@ -385,8 +385,8 @@ final readonly class PagePerformanceBarBuilder
             return null;
         }
 
-        $websiteId = $this->siteDataStorage->get($site, 'externalWebsiteId');
-        $encryptedApiKey = $this->siteDataStorage->get($site, 'apiKey');
+        $websiteId = $this->siteDataStorage->getString($site, 'externalWebsiteId');
+        $encryptedApiKey = $this->siteDataStorage->getString($site, 'apiKey');
 
         if ($websiteId === '' || $encryptedApiKey === '') {
             return null;

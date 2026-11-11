@@ -75,11 +75,9 @@ Alternatively, you can set them in the configuration overrides file
         :file:`settings.yaml` of each site must import the file. Without the
         import, the registration fails. See :ref:`installation` for the setup.
 
-        Leave the value empty to write the data into
-        :file:`config/sites/<identifier>/settings.yaml`.
-
-        The environment variable :envvar:`TYPO3_ANALYTICS_SITE_DATA_PATH` has
-        priority over this setting.
+        Without a value, the extension writes the data into
+        :file:`config/sites/<identifier>/settings.yaml`. This keeps existing
+        installations working. For new installations, set a value.
 
 Dashboard settings
 ==================
@@ -110,6 +108,13 @@ Site data settings
 ..  code-block:: php
 
     $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = 'config/analytics';
+
+**Example — use an environment variable:**
+
+..  code-block:: php
+    :caption: config/system/additional.php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = getenv('ANALYTICS_SITE_DATA_PATH') ?: 'config/analytics';
 
 
 Development settings

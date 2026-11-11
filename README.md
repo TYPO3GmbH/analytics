@@ -36,9 +36,9 @@ Make sure the **Dashboard** system extension is active before installing.
 
 ### Deployment note
 
-The extension writes sensitive data (credentials, tracking code and API keys) into `config/sites/<identifier>/settings.yaml` of each site. Do not commit this file to the repository.
+By default, the extension writes sensitive data (credentials, tracking code and API keys) into `config/sites/<identifier>/settings.yaml` of each site. Do not commit this file to the repository.
 
-If other extensions also use `settings.yaml`, set `siteDataPath` (see [Site data settings](#site-data-settings)). The extension then writes the data into a separate file. The `settings.yaml` of each site must import this file. For more information, see [Installation](https://docs.typo3.org/permalink/t3g-analytics:installation).
+We recommend a separate file for each site. Set `siteDataPath` (see [Site data settings](#site-data-settings)) to `config/analytics`. The extension then writes the data into `config/analytics/<identifier>.yaml`. The `settings.yaml` of each site must import this file. For more information, see [Installation](https://docs.typo3.org/permalink/t3g-analytics:installation).
 
 ## Configuration
 
@@ -78,7 +78,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `siteDataPath` | string | _(empty)_ | Directory for the site data files (`<siteDataPath>/<identifier>.yaml`). A relative path starts at the project root. The directory must be in the project root. Recommended: `config/analytics`. The `settings.yaml` of each site must import the file. Leave empty to write the data into `settings.yaml`. The environment variable `TYPO3_ANALYTICS_SITE_DATA_PATH` has priority. |
+| `siteDataPath` | string | _(empty)_ | Directory for the site data files (`<siteDataPath>/<identifier>.yaml`). A relative path starts at the project root. The directory must be in the project root. Recommended: `config/analytics`. The `settings.yaml` of each site must import the file. Without a value, the extension writes the data into `settings.yaml`. This keeps existing installations working. For new installations, set a value. |
 
 ## Local development with DDEV
 
