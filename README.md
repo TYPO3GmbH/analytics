@@ -13,11 +13,6 @@ For the full documentation, see [docs.typo3.org](https://docs.typo3.org/permalin
   - [Cache settings](#cache-settings)
 - [Local development with DDEV](#local-development-with-ddev)
 - [Compatibility notes](#compatibility-notes)
-## Compatibility notes
-
-### Encryption
-
-Credentials are encrypted using XChaCha20-Poly1305 via libsodium. On TYPO3 v14+ the built-in `TYPO3\CMS\Core\Crypto\Cipher\CipherService` is used automatically; on v13 an equivalent custom implementation is used, ensuring values remain decryptable after upgrading.
 
 ## Installation
 
@@ -35,8 +30,12 @@ vendor/bin/typo3 extension:setup analytics
 
 ### TER / Classic mode
 
-In a non-Composer TYPO3 installation, search for **analytics** in **Admin Tools > Extensions** (TYPO3 v13) or **System > Extensions** (TYPO3 v14) and install it from there.
+In a non-Composer TYPO3 installation, search for **analytics** in **Admin Tools → Extensions** (TYPO3 v13) or **System → Extensions** (TYPO3 v14) and install it from there.
 Make sure the **Dashboard** system extension is active before installing.
+
+### Deployment note
+
+The extension writes sensitive data (credentials, tracking code and API keys) into `config/sites/<identifier>/settings.yaml` of each site. Do not commit this file to the repository. For more information, see [Installation](https://docs.typo3.org/permalink/t3g-analytics:installation).
 
 ## Configuration
 
@@ -71,7 +70,6 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod']
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
 ```
-
 
 ## Local development with DDEV
 
@@ -208,6 +206,10 @@ composer t3g:test:functional
 Unit tests use the TYPO3 testing framework with an in-process bootstrap. Functional tests use SQLite via `pdo_sqlite` — no external database server is required.
 
 ## Compatibility notes
+
+### Encryption
+
+Credentials are encrypted using XChaCha20-Poly1305 via libsodium. On TYPO3 v14+ the built-in `TYPO3\CMS\Core\Crypto\Cipher\CipherService` is used automatically; on v13 an equivalent custom implementation is used, ensuring values remain decryptable after upgrading.
 
 ### TYPO3 v13
 
