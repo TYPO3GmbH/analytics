@@ -32,8 +32,8 @@ final readonly class TrackingCodeMiddleware implements MiddlewareInterface
             return $response;
         }
 
-        $trackingCode = $this->siteDataStorage->get($site, 'trackingCode');
-        if ($trackingCode === '' || $this->siteDataStorage->get($site, 'status') !== 'active') {
+        $trackingCode = $this->siteDataStorage->getString($site, 'trackingCode');
+        if ($trackingCode === '' || $this->siteDataStorage->getString($site, 'status') !== 'active') {
             return $response;
         }
 

@@ -37,7 +37,7 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
     public function updateNecessary(): bool
     {
         foreach ($this->siteFinder->getAllSites() as $site) {
-            $secret = $this->siteDataStorage->get($site, 'instanceSecret');
+            $secret = $this->siteDataStorage->getString($site, 'instanceSecret');
             if ($secret !== '' && $this->cipherService->isLegacyFormat($secret)) {
                 return true;
             }
@@ -50,7 +50,7 @@ final class InstanceSecretEncryptionMigrationWizard implements UpgradeWizardInte
         $success = true;
         foreach ($this->siteFinder->getAllSites() as $site) {
             $identifier = $site->getIdentifier();
-            $encrypted = $this->siteDataStorage->get($site, 'instanceSecret');
+            $encrypted = $this->siteDataStorage->getString($site, 'instanceSecret');
             if ($encrypted === '' || !$this->cipherService->isLegacyFormat($encrypted)) {
                 continue;
             }

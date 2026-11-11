@@ -35,10 +35,10 @@ readonly class ApiKeyService implements ApiKeyServiceInterface
             return;
         }
 
-        $websiteId = $this->siteDataStorage->get($site, 'websiteId');
-        $instanceId = $this->siteDataStorage->get($site, 'instanceId');
-        $encryptedSecret = $this->siteDataStorage->get($site, 'instanceSecret');
-        $apiKeyId = $this->siteDataStorage->get($site, 'apiKeyId');
+        $websiteId = $this->siteDataStorage->getString($site, 'websiteId');
+        $instanceId = $this->siteDataStorage->getString($site, 'instanceId');
+        $encryptedSecret = $this->siteDataStorage->getString($site, 'instanceSecret');
+        $apiKeyId = $this->siteDataStorage->getString($site, 'apiKeyId');
 
         if ($websiteId === '' || $instanceId === '' || $encryptedSecret === '' || $apiKeyId !== '') {
             return;

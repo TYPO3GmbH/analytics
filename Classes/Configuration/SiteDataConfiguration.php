@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Configuration;
 
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
@@ -12,27 +13,27 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  */
 final readonly class SiteDataConfiguration
 {
+    private string $directory;
+
+    public function __construct(ExtensionConfiguration $extensionConfiguration)
+    {
+        $siteDataPath = rtrim(trim((string)($extensionConfiguration->get('analytics')['siteDataPath'] ?? '')), '/');
+        if ($siteDataPath !== '' && !PathUtility::isAbsolutePath($siteDataPath)) {
+            $siteDataPath = Environment::getProjectPath() . '/' . $siteDataPath;
+        }
+        $this->directory = $siteDataPath;
+    }
+
     /**
      * Absolute directory, or empty for settings.yaml.
      */
     public function getDirectory(): string
     {
-        $configured = getenv('TYPO3_ANALYTICS_SITE_DATA_PATH');
-        if ($configured === false || $configured === '') {
-            $configured = (string)($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] ?? '');
-        }
-        $configured = rtrim(trim($configured), '/');
-        if ($configured === '') {
-            return '';
-        }
-        if (!PathUtility::isAbsolutePath($configured)) {
-            $configured = Environment::getProjectPath() . '/' . $configured;
-        }
-        return $configured;
+        return $this->directory;
     }
 
     public function usesSiteSettings(): bool
     {
-        return $this->getDirectory() === '';
+        return $this->directory === '';
     }
 }

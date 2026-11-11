@@ -13,8 +13,13 @@ use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Configuration\SiteWriter;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Locking\Exception\LockCreateException;
+use TYPO3\CMS\Core\Locking\FileLockStrategy;
+use TYPO3\CMS\Core\Locking\LockFactory;
+use TYPO3\CMS\Core\Locking\LockingStrategyInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
@@ -62,6 +67,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
             chmod($path, is_dir($path) ? 0775 : 0664);
         }
         unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['locking']['strategies'][FileLockStrategy::class]['lockFileDir']);
         $dataPath = $this->dataDirectory();
         is_link($dataPath) ? unlink($dataPath) : GeneralUtility::rmdir($dataPath, true);
         parent::tearDown();
@@ -75,6 +81,15 @@ final class SiteDataStorageTest extends FunctionalTestCase
         self::assertSame('active', $subject->get($this->site(), 'status'));
         self::assertSame('<script>track()</script>', $subject->get($this->site(), 'trackingCode'));
         self::assertSame('', $subject->get($this->site(), 'apiKey'));
+    }
+
+    #[Test]
+    public function theStorageReturnsNullOrAnEmptyStringForAMissingValue(): void
+    {
+        $subject = $this->buildSubject('');
+
+        self::assertNull($subject->get($this->site(), 'unknown'));
+        self::assertSame('', $subject->getString($this->site(), 'unknown'));
     }
 
     #[Test]
@@ -234,6 +249,42 @@ final class SiteDataStorageTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function withSeparateFileTheStorageDoesNotWriteWhenItCannotAcquireTheLock(): void
+    {
+        $locker = $this->createConfiguredStub(LockingStrategyInterface::class, ['acquire' => false]);
+        $subject = $this->buildSubject(self::DATA_PATH, $this->createConfiguredStub(LockFactory::class, ['createLocker' => $locker]));
+
+        try {
+            $subject->write($this->site(), ['status' => 'active']);
+            self::fail('The write must fail');
+        } catch (SiteConfigurationWriteException $e) {
+            self::assertSame(1761724802, $e->getCode());
+        }
+        self::assertFileDoesNotExist($this->dataDirectory() . '/main.yaml');
+    }
+
+    #[Test]
+    public function theStorageDoesNotWriteWhenTheLockDirectoryIsReadOnly(): void
+    {
+        $this->skipAsRoot();
+        $lockDirectory = $this->dataDirectory() . '/locks';
+        GeneralUtility::mkdir_deep($lockDirectory);
+        chmod($lockDirectory, 0555);
+        $this->readOnlyPaths[] = $lockDirectory;
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['locking']['strategies'][FileLockStrategy::class]['lockFileDir'] = self::DATA_PATH . '/locks';
+        $subject = $this->buildSubject('');
+
+        try {
+            $subject->write($this->site(), ['status' => 'inactive']);
+            self::fail('The write must fail');
+        } catch (SiteConfigurationWriteException $e) {
+            self::assertSame(1761724802, $e->getCode());
+            self::assertInstanceOf(LockCreateException::class, $e->getPrevious());
+        }
+        self::assertSame('active', Yaml::parseFile($this->settingsFileName)['status']);
+    }
+
+    #[Test]
     public function withSeparateFileAnInvalidFileIsNotReplaced(): void
     {
         $fileName = $this->writeDataFile("status: [not closed\n");
@@ -353,13 +404,14 @@ final class SiteDataStorageTest extends FunctionalTestCase
         }
     }
 
-    private function buildSubject(string $siteDataPath): SiteDataStorage
+    private function buildSubject(string $siteDataPath, ?LockFactory $lockFactory = null): SiteDataStorage
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = $siteDataPath;
         return new SiteDataStorage(
-            new SiteDataConfiguration(),
+            new SiteDataConfiguration(new ExtensionConfiguration()),
             $this->get(SiteSettingsService::class),
             $this->get(SiteSettingsFactory::class),
+            $lockFactory ?? $this->get(LockFactory::class),
             new NullLogger(),
             $this->get(CacheManager::class)->getCache('core'),
         );

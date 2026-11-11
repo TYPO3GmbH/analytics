@@ -9,26 +9,20 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 
 interface SiteDataStorageInterface
 {
-    public const KEYS = [
-        'websiteId',
-        'instanceId',
-        'instanceSecret',
-        'trackingCode',
-        'status',
-        'apiKeyId',
-        'apiKey',
-        'externalWebsiteId',
-    ];
+    /**
+     * Reads the value from the site settings. Null when not set.
+     */
+    public function get(Site $site, string $key): mixed;
 
     /**
-     * Reads the value from the site settings. Empty string when not set.
+     * Reads the value from the site settings. Empty string when not set or not a scalar value.
      */
-    public function get(Site $site, string $key): string;
+    public function getString(Site $site, string $key): string;
 
     /**
      * Merges the values into the stored data: settings.yaml, or the separate file with siteDataPath.
      *
-     * @param array<string, string> $values
+     * @param array<string, mixed> $values
      * @throws SiteConfigurationWriteException
      */
     public function write(Site $site, array $values): void;

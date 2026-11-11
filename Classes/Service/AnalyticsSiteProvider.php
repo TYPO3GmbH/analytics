@@ -86,8 +86,8 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
     private function extractSiteCredentials(Site $site): ?array
     {
         try {
-            $websiteId = $this->siteDataStorage->get($site, 'externalWebsiteId');
-            $encryptedApiKey = $this->siteDataStorage->get($site, 'apiKey');
+            $websiteId = $this->siteDataStorage->getString($site, 'externalWebsiteId');
+            $encryptedApiKey = $this->siteDataStorage->getString($site, 'apiKey');
             if ($websiteId === '' || $encryptedApiKey === '') {
                 return null;
             }
