@@ -258,7 +258,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
             $subject->write($this->site(), ['status' => 'active']);
             self::fail('The write must fail');
         } catch (SiteConfigurationWriteException $e) {
-            self::assertSame(1761724802, $e->getCode());
+            self::assertSame(1794494911, $e->getCode());
         }
         self::assertFileDoesNotExist($this->dataDirectory() . '/main.yaml');
     }
@@ -278,7 +278,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
             $subject->write($this->site(), ['status' => 'inactive']);
             self::fail('The write must fail');
         } catch (SiteConfigurationWriteException $e) {
-            self::assertSame(1761724802, $e->getCode());
+            self::assertSame(1794494911, $e->getCode());
             self::assertInstanceOf(LockCreateException::class, $e->getPrevious());
         }
         self::assertSame('active', Yaml::parseFile($this->settingsFileName)['status']);
