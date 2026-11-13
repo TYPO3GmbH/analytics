@@ -38,8 +38,6 @@ declare(strict_types=1);
 
     $configurationManager = new \TYPO3\CMS\Core\Configuration\ConfigurationManager();
     $GLOBALS['TYPO3_CONF_VARS'] = $configurationManager->getDefaultConfiguration();
-    // Without this entry, ExtensionConfiguration::get() needs the package manager to read ext_conf_template.txt.
-    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics'] = ['siteDataPath' => ''];
 
     $cache = new \TYPO3\CMS\Core\Cache\Frontend\PhpFrontend(
         'core',

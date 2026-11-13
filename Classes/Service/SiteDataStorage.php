@@ -69,7 +69,7 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             }
             $data = $this->loadFile($site);
             if ($data === null) {
-                throw new SiteConfigurationWriteException('Unable to read ' . $this->getLocation($site), 1761724803);
+                throw new SiteConfigurationWriteException('Unable to read ' . $this->getLocation($site), 1794494912);
             }
             $this->writeFile($site, array_merge($data, $values));
         } finally {
@@ -167,7 +167,7 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         } catch (LockingException $e) {
             $previous = $e;
         }
-        throw new SiteConfigurationWriteException('Unable to lock ' . $this->getLocation($site), 1761724802, $previous);
+        throw new SiteConfigurationWriteException('Unable to lock ' . $this->getLocation($site), 1794494911, $previous);
     }
 
     /**
@@ -208,12 +208,12 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         $temporaryFileName = $fileName . '.' . bin2hex(random_bytes(4)) . '.tmp';
         if (@file_put_contents($temporaryFileName, $content) === false) {
             @unlink($temporaryFileName);
-            throw new SiteConfigurationWriteException('Unable to write the site data to ' . $this->getLocation($site), 1761724801);
+            throw new SiteConfigurationWriteException('Unable to write the site data to ' . $this->getLocation($site), 1794494910);
         }
         GeneralUtility::fixPermissions($temporaryFileName);
         if (!@rename($temporaryFileName, $fileName)) {
             @unlink($temporaryFileName);
-            throw new SiteConfigurationWriteException('Unable to write the site data to ' . $this->getLocation($site), 1761724801);
+            throw new SiteConfigurationWriteException('Unable to write the site data to ' . $this->getLocation($site), 1794494913);
         }
     }
 
@@ -228,7 +228,7 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         try {
             GeneralUtility::mkdir_deep($directory);
         } catch (\RuntimeException $e) {
-            throw new SiteConfigurationWriteException('Unable to create the directory ' . $directory, 1761724800, $e);
+            throw new SiteConfigurationWriteException('Unable to create the directory ' . $directory, 1794494909, $e);
         }
     }
 
