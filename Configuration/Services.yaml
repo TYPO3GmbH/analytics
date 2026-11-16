@@ -69,6 +69,9 @@ services:
   T3G\Analytics\Service\BackendWidgetAccessCheckerInterface:
     alias: T3G\Analytics\Service\BackendWidgetAccessChecker
 
+  T3G\Analytics\Service\DashboardLinkBuilderInterface:
+    alias: T3G\Analytics\Service\DashboardLinkBuilder
+
   T3G\Analytics\Service\HmacSignerInterface:
     alias: T3G\Analytics\Service\HmacSigner
 

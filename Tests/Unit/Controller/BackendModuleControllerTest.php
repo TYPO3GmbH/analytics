@@ -161,6 +161,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
+            $this->createMock(SiteFinder::class),
         );
 
         $expressionBuilder = $this->createMock(ExpressionBuilder::class);

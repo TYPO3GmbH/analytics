@@ -55,7 +55,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     public function loadTrafficSourcesReturnsCachedDataOnCacheHit(): void
     {
         $cached = ['direct' => ['current' => 10, 'previous' => 5], 'search' => ['current' => 20, 'previous' => 15]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchTrafficShareInDepth');
 
@@ -67,7 +67,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadTrafficSourcesFetchesAndCachesDataOnCacheMiss(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchTrafficShareInDepth')->willReturnOnConsecutiveCalls(
             [
@@ -102,7 +102,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadTrafficSourcesReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchTrafficShareInDepth')->willThrowException(
             new AnalyticsApiException('API error', 500),
@@ -117,11 +117,11 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadTrafficSourcesNormalizesDaysToAtLeastOne(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchTrafficShareInDepth')->willReturn(['labels' => [], 'datasets' => []]);
         $this->cache->expects(self::once())->method('set')->with(
-            'traffic_sources_' . md5('w1_1'),
+            'traffic_sources_' . md5('w1_://example.com_1'),
             self::anything(),
         );
 
@@ -131,7 +131,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadTrafficSourcesSkipsDatasetsWithEmptyLabel(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchTrafficShareInDepth')->willReturn([
             'labels' => [],
@@ -161,7 +161,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     public function loadDeviceDataReturnsCachedDataOnCacheHit(): void
     {
         $cached = [['deviceType' => 'desktop', 'sessionCount' => 5, 'sessionPercentOfTotal' => 100.0]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchDeviceSessions');
 
@@ -177,7 +177,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
             ['deviceType' => 'desktop', 'sessionCount' => 10, 'sessionPercentOfTotal' => 66.7],
             ['deviceType' => 'mobile', 'sessionCount' => 5, 'sessionPercentOfTotal' => 33.3],
         ];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchDeviceSessions')->willReturn($apiData);
         $this->cache->expects(self::once())->method('set')->with(
@@ -193,7 +193,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadDeviceDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchDeviceSessions')->willThrowException(
             new AnalyticsApiException('API error', 500),
@@ -219,7 +219,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     public function loadBrowserDataReturnsCachedDataOnCacheHit(): void
     {
         $cached = [['browserName' => 'Chrome', 'sessionCount' => 3, 'sessionPercentOfTotal' => 100.0]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn($cached);
         $this->analyticsClient->expects(self::never())->method('fetchBrowserSessions');
 
@@ -232,7 +232,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     public function loadBrowserDataFetchesAndCachesDataOnCacheMiss(): void
     {
         $apiData = [['browserName' => 'Chrome', 'sessionCount' => 3, 'sessionPercentOfTotal' => 100.0]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchBrowserSessions')->willReturn($apiData);
         $this->cache->expects(self::once())->method('set')->with(
@@ -248,7 +248,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadBrowserDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchBrowserSessions')->willThrowException(
             new AnalyticsApiException('API error', 500),
@@ -274,7 +274,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     public function loadCountryDataFetchesAndCachesDataOnCacheMiss(): void
     {
         $apiData = [['countryCode' => 'DE', 'sessionCount' => 3, 'sessionPercentOfTotal' => 100.0]];
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchCountrySessions')->willReturn($apiData);
         $this->cache->expects(self::once())->method('set')->with(
@@ -290,7 +290,7 @@ final class TrafficSourcesServiceTest extends UnitTestCase
     #[Test]
     public function loadCountryDataReturnsNullAndLogsWarningOnApiException(): void
     {
-        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1']);
+        $this->siteProvider->method('resolveAnalyticsSite')->willReturn(['websiteId' => 'w1', 'apiKey' => 'k1', 'pageUrlFilter' => ['://example.com']]);
         $this->cache->method('get')->willReturn(false);
         $this->analyticsClient->method('fetchCountrySessions')->willThrowException(
             new AnalyticsApiException('API error', 500),

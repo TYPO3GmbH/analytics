@@ -10,8 +10,6 @@ use Psr\Log\LoggerInterface;
 use T3G\Analytics\Dashboard\DashboardPeriods;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\View\SparklineRenderer;
-use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
@@ -26,7 +24,7 @@ final readonly class PagePerformanceBarBuilder
     public function __construct(
         private SparklineRenderer $sparklineRenderer,
         private SiteFinder $siteFinder,
-        private UriBuilder $uriBuilder,
+        private DashboardLinkBuilderInterface $dashboardLinkBuilder,
         private AnalyticsDataClientInterface $analyticsClient,
         private CipherServiceInterface $cipherService,
         private LoggerInterface $logger,
@@ -166,20 +164,16 @@ final readonly class PagePerformanceBarBuilder
         return DashboardPeriods::sanitizePeriod($days);
     }
 
+    /**
+     * For a site attached to an active site, the link opens the dashboard of the active site with
+     * the page filter. Without access to the root page of that site, the bar shows no link.
+     */
     public function buildDetailsUri(?Site $site, int $days, string $pageUrl = ''): string
     {
         if ($site === null) {
             return '';
         }
-        try {
-            $params = ['siteIdentifier' => $site->getIdentifier(), 'days' => $days];
-            if ($pageUrl !== '') {
-                $params['pageUrl'] = $pageUrl;
-            }
-            return (string)$this->uriBuilder->buildUriFromRoute('site_analytics.dashboard', $params);
-        } catch (RouteNotFoundException) {
-            return '';
-        }
+        return $this->dashboardLinkBuilder->buildForPage($site->getIdentifier(), $pageUrl, ['days' => $days]);
     }
 
     public function resolvePageUrl(Site $site, int $pageId, ?SiteLanguage $language = null): string
