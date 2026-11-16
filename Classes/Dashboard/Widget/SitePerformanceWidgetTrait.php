@@ -21,15 +21,18 @@ trait SitePerformanceWidgetTrait
             'EXT:analytics/Resources/Public/Css/AnalyticsColors.css',
             'EXT:analytics/Resources/Public/Css/DashboardWidget.css',
             'EXT:analytics/Resources/Public/Css/SitePerformance.css',
+            'EXT:analytics/Resources/Public/Css/Components/Sparkline.css',
+            'EXT:analytics/Resources/Public/Css/Components/Tooltip.css',
         ];
     }
 
     /**
      * @param array{
-     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}
+     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
+     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int}|null,
+     *     series?: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgTimeOnPage: list<int>}
      * } $data
-     * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string}>
+     * @return list<array{label: string, value: string, tone: string, icon: string, trend: string, trendDirection: string, trendLabel: string, trendNote: string, details: list<string>|null, chart: array{values: list<int|float>, labels: list<string>, label: string}|null}>
      */
     private function buildMetrics(array $data): array
     {
@@ -38,8 +41,10 @@ trait SitePerformanceWidgetTrait
             $this->translate('dashboardWidget.sitePerformance.visits'),
             $this->translate('dashboardWidget.sitePerformance.visitors'),
             $this->translate('dashboardWidget.sitePerformance.bounceRate'),
-            $this->translate('dashboardWidget.sitePerformance.averageVisitDuration'),
+            $this->translate('dashboardWidget.sitePerformance.averageTimeOnPage'),
             $this->translate('dashboardWidget.sitePerformance.comparedToPreviousPeriod'),
+            $this->translate('pagePerformance.tooltip.chart'),
+            $this->translate('dashboardWidget.sitePerformance.comparedToPreviousPeriodInPercentagePoints'),
         );
     }
 

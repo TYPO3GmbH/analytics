@@ -1,0 +1,27 @@
+<f:if condition="{site.registered}">
+    <f:then>
+        <f:if condition="{site.status.status}">
+            <f:then>
+                <f:if condition="{site.status.status} == 'active'">
+                    <f:then><span class="badge badge-success">{site.status.status}</span></f:then>
+                    <f:else>
+                        <f:if condition="{site.status.status} == 'pending'">
+                            <f:then><span class="badge badge-warning">{site.status.status}</span></f:then>
+                            <f:else><span class="badge badge-danger">{site.status.status}</span></f:else>
+                        </f:if>
+                    </f:else>
+                </f:if>
+            </f:then>
+            <f:else>
+                <span class="badge badge-success">
+                    <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.registered" />
+                </span>
+            </f:else>
+        </f:if>
+    </f:then>
+    <f:else>
+        <span class="badge badge-warning">
+            <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:badge.notRegistered" />
+        </span>
+    </f:else>
+</f:if>

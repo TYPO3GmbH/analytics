@@ -220,9 +220,17 @@ final readonly class DemoAnalyticsDataClient implements AnalyticsDataClientInter
         \DateTimeImmutable $previousFrom,
         \DateTimeImmutable $previousTo,
     ): array {
+        $visits = $this->series($from, $to, 420, 60);
         return [
-            'current' => ['visitCount' => 4860, 'visitorCount' => 3120, 'bounceRate' => 37.4, 'avgDuration' => 68],
-            'previous' => ['visitCount' => 3920, 'visitorCount' => 3360, 'bounceRate' => 44.8, 'avgDuration' => 92],
+            'current' => ['visitCount' => 4860, 'visitorCount' => 3120, 'bounceRate' => 37.4, 'avgTimeOnPage' => 68],
+            'previous' => ['visitCount' => 3920, 'visitorCount' => 3360, 'bounceRate' => 44.8, 'avgTimeOnPage' => 92],
+            'series' => [
+                'dates' => $this->labels($from, $to),
+                'visits' => $visits,
+                'visitors' => array_map(static fn (int $v): int => (int)round($v * 0.64), $visits),
+                'bounceRate' => array_map(static fn (int $v): float => (float)$v, $this->series($from, $to, 38, -2, 24, 58)),
+                'avgTimeOnPage' => $this->series($from, $to, 68, 9, 35, 150),
+            ],
             'failures' => [],
         ];
     }

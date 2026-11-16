@@ -7,9 +7,12 @@ namespace T3G\Analytics\Tests\Unit\Service;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use T3G\Analytics\View\SparklineRenderer;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class TrafficChartDataBuilderTest extends UnitTestCase
@@ -19,7 +22,17 @@ final class TrafficChartDataBuilderTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->subject = new TrafficChartDataBuilder(new SparklineRenderer());
+        // The labels follow the locale of the backend user; the expectations below are German.
+        $languageService = $this->createMock(LanguageService::class);
+        $languageService->method('getLocale')->willReturn(new Locale('de'));
+        $GLOBALS['LANG'] = $languageService;
+        $this->subject = new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter());
+    }
+
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['LANG']);
+        parent::tearDown();
     }
 
     /** calcScaleMax */
