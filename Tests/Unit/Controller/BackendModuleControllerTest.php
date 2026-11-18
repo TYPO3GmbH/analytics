@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Unit\Controller;
 
-use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -13,34 +12,41 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use T3G\Analytics\Configuration\ApiConfiguration;
-use T3G\Analytics\Controller\BackendModuleController;
 use T3G\Analytics\Backend\ModuleConfigurator;
+use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
+use T3G\Analytics\Controller\BackendModuleController;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\ApiKeyService;
+use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
-use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
-use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
+use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Settings\Settings;
@@ -49,7 +55,6 @@ use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -87,6 +92,7 @@ final class BackendModuleControllerTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = '';
 
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = str_repeat('a', 96);
 
@@ -139,8 +145,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            $this->siteSettingsService,
-            $this->siteSettingsFactory,
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
         $this->analyticsStatusService = $analyticsStatusService;
@@ -148,8 +153,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $registrationService = new InstanceRegistrationService(
             $apiClient,
             $cipherService,
-            $this->siteSettingsService,
-            $this->siteSettingsFactory,
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
@@ -157,8 +161,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $apiKeyService = new ApiKeyService(
             $apiClient,
             $cipherService,
-            $this->siteSettingsService,
-            $this->siteSettingsFactory,
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
@@ -186,7 +189,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->createMock(BackendPageAccessCheckerInterface::class),
             $connectionPool,
             $this->uriBuilder,
-            new NullLogger(),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')),
         );
 
         $moduleHelper = new ModuleConfigurator(
@@ -214,6 +217,7 @@ final class BackendModuleControllerTest extends UnitTestCase
 
     protected function tearDown(): void
     {
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']);
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
         unset($GLOBALS['LANG']);

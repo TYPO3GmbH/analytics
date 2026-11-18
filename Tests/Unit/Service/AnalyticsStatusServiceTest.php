@@ -12,20 +12,25 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
+use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
-use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -51,6 +56,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = '';
 
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = str_repeat('a', 96);
 
@@ -87,14 +93,14 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            $this->siteSettingsService,
-            $this->siteSettingsFactory,
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
             $this->writeGuard,
         );
     }
 
     protected function tearDown(): void
     {
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']);
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
         parent::tearDown();

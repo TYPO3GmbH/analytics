@@ -15,6 +15,12 @@ services:
   T3G\Analytics\Service\SiteSettingsWriteVerifierInterface:
     alias: T3G\Analytics\Service\SiteSettingsWriteVerifier
 
+  T3G\Analytics\Service\SiteDataStorageInterface:
+    alias: T3G\Analytics\Service\SiteDataStorage
+
+  T3G\Analytics\Middleware\TrackingCodeMiddleware:
+    public: true
+
   T3G\Analytics\Service\TopPagesServiceInterface:
     alias: T3G\Analytics\Service\TopPagesService
 

@@ -9,11 +9,19 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\NullLogger;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Middleware\TrackingCodeMiddleware;
+use T3G\Analytics\Service\SiteDataStorage;
+use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
+use TYPO3\CMS\Core\Site\SiteSettingsFactory;
+use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class TrackingCodeMiddlewareTest extends UnitTestCase
@@ -23,7 +31,7 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->subject = new TrackingCodeMiddleware();
+        $this->subject = new TrackingCodeMiddleware(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')));
     }
 
     #[Test]
