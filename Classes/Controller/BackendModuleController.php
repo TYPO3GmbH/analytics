@@ -12,11 +12,13 @@ use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Backend\ModuleConfigurator;
 use T3G\Analytics\Service\ApiKeyServiceInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
+use T3G\Analytics\Service\SiteDataNamespaceMigration;
 use T3G\Analytics\Service\SiteDataProviderInterface;
 use T3G\Analytics\Service\AnalyticsStatusServiceInterface;
 use T3G\Analytics\Service\InstanceRegistrationServiceInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -49,6 +51,7 @@ final readonly class BackendModuleController
         private SiteDataProviderInterface $siteDataProvider,
         private LoggerInterface $logger,
         private BackendPageAccessCheckerInterface $pageAccessChecker,
+        private SiteDataNamespaceMigration $siteDataNamespaceMigration,
     ) {
     }
 
@@ -66,6 +69,7 @@ final readonly class BackendModuleController
         );
 
         $sites = $this->siteDataProvider->fetchSites();
+        $this->addLegacySiteDataMessage($moduleTemplate);
 
         $moduleTemplate->assignMultiple([
             'sites' => $sites,
@@ -462,6 +466,26 @@ final readonly class BackendModuleController
                 'sites' => $inactiveSites,
             ],
         ];
+    }
+
+    private function addLegacySiteDataMessage(ModuleTemplate $moduleTemplate): void
+    {
+        $identifiers = [];
+        foreach ($this->siteFinder->getAllSites() as $site) {
+            if ($this->pageAccessChecker->userCanAccessPage($site->getRootPageId())
+                && $this->siteDataNamespaceMigration->isNecessary($site)
+            ) {
+                $identifiers[] = $site->getIdentifier();
+            }
+        }
+        if ($identifiers !== []) {
+            $moduleTemplate->addFlashMessage(
+                $this->translate('flash.legacySiteData', [implode(', ', $identifiers)]),
+                $this->translate('flash.legacySiteData.title'),
+                ContextualFeedbackSeverity::WARNING,
+                storeInSession: false,
+            );
+        }
     }
 
     /** @param list<mixed> $arguments */

@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 
 final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
 {
@@ -43,10 +44,10 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     {
         $this->expectNotToPerformAssertions();
 
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(SiteDataSettings::tree([
             'websiteId' => 'w-123',
             'instanceId' => 'i-456',
-        ]);
+        ]));
         $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
 
         $verifier->assertSettingsPersisted($this->buildSite(), ['websiteId' => 'w-123', 'instanceId' => 'i-456']);
@@ -67,7 +68,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     #[Test]
     public function assertSettingsPersistedThrowsWhenValueDoesNotMatch(): void
     {
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'other-id']);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(SiteDataSettings::tree(['websiteId' => 'other-id']));
         $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
 
         $this->expectException(AnalyticsApiException::class);
@@ -78,7 +79,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     #[Test]
     public function assertSettingsPersistedThrowsOnFirstFailingKey(): void
     {
-        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(SiteDataSettings::tree(['websiteId' => 'w-123']));
         $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
 
         $this->expectException(AnalyticsApiException::class);
@@ -92,7 +93,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
         $this->siteSettingsFactory
             ->expects(self::once())
             ->method('loadLocalSettings')
-            ->willReturn(['websiteId' => 'w-123', 'instanceId' => 'i-456']);
+            ->willReturn(SiteDataSettings::tree(['websiteId' => 'w-123', 'instanceId' => 'i-456']));
 
         $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
         $verifier->assertSettingsPersisted($this->buildSite(), ['websiteId' => 'w-123', 'instanceId' => 'i-456']);

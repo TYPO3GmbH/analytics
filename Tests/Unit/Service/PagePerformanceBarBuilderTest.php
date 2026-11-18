@@ -18,6 +18,7 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\PagePerformanceBarBuilder;
 use T3G\Analytics\Service\SiteDataStorage;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use T3G\Analytics\View\SparklineRenderer;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
@@ -29,7 +30,6 @@ use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Routing\RouterInterface;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -98,7 +98,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
         $router->method('generateUri')->willReturn(new Uri('https://example.com/page'));
 
         $site = $this->createMock(Site::class);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings([
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings([
             'externalWebsiteId' => 'test-website-id',
             'apiKey' => $this->encryptedApiKey,
         ]), [], []));
