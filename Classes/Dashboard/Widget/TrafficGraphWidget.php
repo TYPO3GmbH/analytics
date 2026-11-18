@@ -27,7 +27,6 @@ final readonly class TrafficGraphWidget implements WidgetInterface, AdditionalCs
      * @param array{site?: string, days?: int} $options
      */
     public function __construct(
-        /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private TrafficGraphServiceInterface $trafficGraphService,
         private AnalyticsSiteProviderInterface $siteProvider,

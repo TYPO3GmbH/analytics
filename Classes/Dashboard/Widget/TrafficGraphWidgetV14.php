@@ -33,7 +33,6 @@ final readonly class TrafficGraphWidgetV14 implements WidgetRendererInterface, A
     use TrafficGraphWidgetTrait;
 
     public function __construct(
-        /** @phpstan-ignore property.onlyWritten (required by TYPO3 dashboard.widget DI compiler pass) */
         private WidgetConfigurationInterface $configuration,
         private TrafficGraphServiceInterface $trafficGraphService,
         private AnalyticsSiteProviderInterface $siteProvider,
