@@ -8,6 +8,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
@@ -19,6 +20,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -32,6 +34,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class InstanceRegistrationServiceTest extends UnitTestCase
 {
+    private const UUID_V1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -100,7 +104,27 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     #[Test]
     public function registerThrowsWhenApiResponseMissesWebsiteId(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","instanceSecret":"s3cr3t"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
+
+        $this->expectException(AnalyticsApiException::class);
+
+        $this->subject->register($this->buildSite(), 'user@example.com');
+    }
+
+    public static function invalidIdsDataProvider(): \Generator
+    {
+        yield 'websiteId is no UUID' => ['not-a-uuid', AnalyticsIds::INSTANCE_ID];
+        yield 'websiteId is a UUIDv1' => [self::UUID_V1, AnalyticsIds::INSTANCE_ID];
+        yield 'instanceId is no UUID' => [AnalyticsIds::WEBSITE_ID, 'not-a-uuid'];
+        yield 'instanceId is a UUIDv1' => [AnalyticsIds::WEBSITE_ID, self::UUID_V1];
+    }
+
+    #[Test]
+    #[DataProvider('invalidIdsDataProvider')]
+    public function registerThrowsWithoutWritingWhenIdIsNoUuidV4(string $websiteId, string $instanceId): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => $websiteId, 'instanceId' => $instanceId, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
         $this->expectException(AnalyticsApiException::class);
 
@@ -110,7 +134,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     #[Test]
     public function registerThrowsWhenApiResponseMissesInstanceId(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceSecret":"s3cr3t"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
 
         $this->expectException(AnalyticsApiException::class);
 
@@ -121,7 +145,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     public function registerWritesEncryptedSecretAndMergesExistingSettings(): void
     {
         $site = $this->buildSite();
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['existingKey' => 'val']);
 
         $cipherService = $this->cipherService;
@@ -131,8 +155,8 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
             ->with(
                 $site,
                 self::callback(static function (array $settings) use ($cipherService): bool {
-                    return $settings['websiteId'] === 'w-123'
-                        && $settings['instanceId'] === 'i-456'
+                    return $settings['websiteId'] === AnalyticsIds::WEBSITE_ID
+                        && $settings['instanceId'] === AnalyticsIds::INSTANCE_ID
                         && $settings['instanceSecret'] !== ''
                         && $cipherService->decrypt($settings['instanceSecret']) === 's3cr3t'
                         && $settings['existingKey'] === 'val'
@@ -146,7 +170,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     #[Test]
     public function registerSendsCorrectDomainAndEmail(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
         $this->subject->register($this->buildSite(), 'user@example.com');
@@ -162,7 +186,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     #[Test]
     public function registerStoresEmptySecretWhenApiResponseOmitsIt(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
         $this->siteSettingsService
@@ -191,7 +215,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     #[Test]
     public function registerThrowsAnalyticsApiExceptionWhenWriteSettingsThrows(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService
             ->method('writeSettings')
@@ -205,7 +229,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
     #[Test]
     public function registerThrowsWhenSettingsCouldNotBePersisted(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"s3cr3t"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->writeGuard
             ->method('assertSettingsPersisted')

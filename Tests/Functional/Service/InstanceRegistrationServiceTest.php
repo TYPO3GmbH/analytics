@@ -17,6 +17,7 @@ use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -90,7 +91,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerWritesEncryptedCredentialsToSiteSettings(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"plain-secret"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 'plain-secret'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
         $writtenSettings = [];
@@ -103,8 +104,8 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
 
         $this->subject->register($this->buildSite(), 'user@example.com');
 
-        self::assertSame('w-123', $writtenSettings['websiteId']);
-        self::assertSame('i-456', $writtenSettings['instanceId']);
+        self::assertSame(AnalyticsIds::WEBSITE_ID, $writtenSettings['websiteId']);
+        self::assertSame(AnalyticsIds::INSTANCE_ID, $writtenSettings['instanceId']);
         // Secret must be stored encrypted, not as plain text
         self::assertNotSame('plain-secret', $writtenSettings['instanceSecret']);
         // But must be decryptable back to the original value
@@ -114,7 +115,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerMergesWithExistingSettings(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"secret"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 'secret'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory
             ->method('loadLocalSettings')
             ->willReturn(['existingKey' => 'existingValue']);
@@ -129,7 +130,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $this->subject->register($this->buildSite(), 'user@example.com');
 
         self::assertSame('existingValue', $writtenSettings['existingKey']);
-        self::assertSame('w-123', $writtenSettings['websiteId']);
+        self::assertSame(AnalyticsIds::WEBSITE_ID, $writtenSettings['websiteId']);
     }
 
     #[Test]
@@ -146,7 +147,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerThrowsWhenApiResponseIsMissingWebsiteId(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","instanceSecret":"secret"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 'secret'], JSON_THROW_ON_ERROR)));
 
         $this->siteSettingsService->expects(self::never())->method('writeSettings');
 
@@ -157,7 +158,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
     #[Test]
     public function registerCallsApiWithCorrectPayload(): void
     {
-        $this->mockHandler->append(new Response(200, [], '{"websiteId":"w-123","instanceId":"i-456","instanceSecret":"secret"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceId' => AnalyticsIds::INSTANCE_ID, 'instanceSecret' => 'secret'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
         $this->siteSettingsService->method('writeSettings');
 

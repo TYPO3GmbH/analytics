@@ -21,6 +21,7 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\SiteDataProvider;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -180,8 +181,8 @@ final class SiteDataProviderTest extends UnitTestCase
     {
         $this->siteFinder->method('getAllSites')->willReturn([
             $this->buildSiteMock('main', 'https://example.com', [
-                'websiteId' => 'w-123',
-                'instanceId' => 'i-456',
+                'websiteId' => AnalyticsIds::WEBSITE_ID,
+                'instanceId' => AnalyticsIds::INSTANCE_ID,
                 'instanceSecret' => $this->encryptedTestSecret,
             ]),
         ]);
@@ -193,7 +194,7 @@ final class SiteDataProviderTest extends UnitTestCase
 
         self::assertCount(1, $result);
         self::assertTrue($result[0]['registered']);
-        self::assertSame('w-123', $result[0]['websiteId']);
+        self::assertSame(AnalyticsIds::WEBSITE_ID, $result[0]['websiteId']);
         self::assertIsArray($result[0]['status']);
         self::assertNotEmpty($result[0]['dashboardUri']);
         self::assertNotEmpty($result[0]['managePlanUri']);
@@ -253,7 +254,7 @@ final class SiteDataProviderTest extends UnitTestCase
     public function registeredSiteOptionsFiltersOutUnregisteredSites(): void
     {
         $this->siteFinder->method('getAllSites')->willReturn([
-            $this->buildSiteMock('registered', 'https://example.com', ['websiteId' => 'w-123']),
+            $this->buildSiteMock('registered', 'https://example.com', ['websiteId' => AnalyticsIds::WEBSITE_ID]),
             $this->buildSiteMock('unregistered', 'https://other.com', []),
         ]);
         $this->queryResult->method('fetchAssociative')->willReturn(false);
@@ -268,7 +269,7 @@ final class SiteDataProviderTest extends UnitTestCase
     public function registeredSiteOptionsBuildsLabelFromPageTitle(): void
     {
         $this->siteFinder->method('getAllSites')->willReturn([
-            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-123']),
+            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => AnalyticsIds::WEBSITE_ID]),
         ]);
         $this->queryResult->method('fetchAssociative')->willReturn(['title' => 'Home']);
 
@@ -282,7 +283,7 @@ final class SiteDataProviderTest extends UnitTestCase
     public function registeredSiteOptionsUsesIdentifierAsLabelWhenPageTitleIsEmpty(): void
     {
         $this->siteFinder->method('getAllSites')->willReturn([
-            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-123']),
+            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => AnalyticsIds::WEBSITE_ID]),
         ]);
         $this->queryResult->method('fetchAssociative')->willReturn(false);
 
@@ -297,7 +298,7 @@ final class SiteDataProviderTest extends UnitTestCase
         $this->userCanAccessPage = false;
 
         $this->siteFinder->method('getAllSites')->willReturn([
-            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => 'w-123']),
+            $this->buildSiteMock('main', 'https://example.com', ['websiteId' => AnalyticsIds::WEBSITE_ID]),
         ]);
 
         self::assertSame([], $this->subject->registeredSiteOptions());

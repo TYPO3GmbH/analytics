@@ -281,7 +281,7 @@ final class BackendModuleControllerTest extends UnitTestCase
     {
         $site = $this->buildSiteMock('main', 'https://example.com');
         $this->siteFinder->method('getSiteByIdentifier')->willReturn($site);
-        $this->mockHandler->append(new Response(200, [], '{"instanceId":"i-456","websiteId":"w-123","instanceSecret":"s3cr3t"}'));
+        $this->mockHandler->append(new Response(200, [], json_encode(['instanceId' => AnalyticsIds::INSTANCE_ID, 'websiteId' => AnalyticsIds::WEBSITE_ID, 'instanceSecret' => 's3cr3t'], JSON_THROW_ON_ERROR)));
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
 
         $response = $this->subject->registerAction(

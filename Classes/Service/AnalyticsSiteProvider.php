@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Uid\Uuid;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 
@@ -89,6 +90,10 @@ readonly class AnalyticsSiteProvider implements AnalyticsSiteProviderInterface
             $websiteId = (string)($settings->get('externalWebsiteId', '') ?: '');
             $encryptedApiKey = (string)($settings->get('apiKey', '') ?: '');
             if ($websiteId === '' || $encryptedApiKey === '') {
+                return null;
+            }
+            // The externalWebsiteId goes into the data API URL. The data API creates it, so accept each UUID version.
+            if (!Uuid::isValid($websiteId)) {
                 return null;
             }
             $apiKey = $this->cipherService->decrypt($encryptedApiKey);
