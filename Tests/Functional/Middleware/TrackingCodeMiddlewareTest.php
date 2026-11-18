@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use T3G\Analytics\Middleware\TrackingCodeMiddleware;
+use T3G\Analytics\Service\TrackingCodeResolver;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\ServerRequest;
@@ -31,7 +32,7 @@ final class TrackingCodeMiddlewareTest extends FunctionalTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->subject = new TrackingCodeMiddleware();
+        $this->subject = new TrackingCodeMiddleware(new TrackingCodeResolver());
     }
 
     #[Test]

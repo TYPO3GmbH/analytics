@@ -10,11 +10,16 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use T3G\Analytics\Service\TrackingCodeResolver;
 use TYPO3\CMS\Core\Http\Stream;
-use TYPO3\CMS\Core\Site\Entity\Site;
 
-final class TrackingCodeMiddleware implements MiddlewareInterface
+final readonly class TrackingCodeMiddleware implements MiddlewareInterface
 {
+    public function __construct(
+        private TrackingCodeResolver $trackingCodeResolver,
+    ) {
+    }
+
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
@@ -27,13 +32,8 @@ final class TrackingCodeMiddleware implements MiddlewareInterface
             return $response;
         }
 
-        $site = $request->getAttribute('site');
-        if (!$site instanceof Site) {
-            return $response;
-        }
-
-        $trackingCode = $site->getSettings()->get('trackingCode', '');
-        if (empty($trackingCode) || $site->getSettings()->get('status', '') !== 'active') {
+        $trackingCode = $this->trackingCodeResolver->resolve($request);
+        if ($trackingCode === null) {
             return $response;
         }
 
@@ -43,14 +43,13 @@ final class TrackingCodeMiddleware implements MiddlewareInterface
         }
 
         $body = (string)$response->getBody();
-        if (!str_contains($body, '</body>')) {
+        $closingBodyPosition = stripos($body, '</body>');
+        if ($closingBodyPosition === false) {
             return $response;
         }
 
-        $newBodyContent = preg_replace('/<\/body>/i', "\n" . $trackingCode . "\n</body>", $body, 1);
-        if ($newBodyContent === null || $newBodyContent === $body) {
-            return $response;
-        }
+        // Insert the tracking code literally. The CSP hash covers these exact bytes.
+        $newBodyContent = substr_replace($body, "\n" . $trackingCode . "\n", $closingBodyPosition, 0);
 
         $newBody = new Stream('php://temp', 'r+');
         $newBody->write($newBodyContent);
