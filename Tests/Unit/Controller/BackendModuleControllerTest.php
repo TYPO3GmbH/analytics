@@ -9,6 +9,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
@@ -244,6 +245,29 @@ final class BackendModuleControllerTest extends UnitTestCase
         self::assertInstanceOf(JsonResponse::class, $response);
         self::assertSame(400, $response->getStatusCode());
         self::assertFalse($this->decodeJson($response)['success']);
+    }
+
+    public static function invalidEmailDataProvider(): \Generator
+    {
+        yield 'no at sign' => ['not-an-email'];
+        yield 'no domain' => ['user@'];
+        yield 'no local part' => ['@example.com'];
+        yield 'space' => ['user @example.com'];
+        yield 'markup' => ['user@example.com<script>'];
+    }
+
+    #[Test]
+    #[DataProvider('invalidEmailDataProvider')]
+    public function registerActionReturnsErrorJsonWhenEmailIsInvalid(string $email): void
+    {
+        $this->siteFinder->expects(self::never())->method('getSiteByIdentifier');
+
+        $response = $this->subject->registerAction($this->buildRequest(['siteIdentifier' => 'main', 'email' => $email]));
+
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertFalse($this->decodeJson($response)['success']);
+        self::assertCount(0, $this->httpHistory);
     }
 
     #[Test]

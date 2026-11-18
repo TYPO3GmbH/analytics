@@ -98,8 +98,8 @@ final readonly class BackendModuleController
         $siteIdentifier = (string)($body['siteIdentifier'] ?? '');
         $email = (string)($body['email'] ?? '');
 
-        if ($siteIdentifier === '' || $email === '') {
-            $this->logger->warning('Register action called with missing siteIdentifier or email.');
+        if ($siteIdentifier === '' || !GeneralUtility::validEmail($email)) {
+            $this->logger->warning('Register action called with missing siteIdentifier or invalid email.');
             return new JsonResponse($this->errorPayload('flash.invalidInput'), 400);
         }
 
