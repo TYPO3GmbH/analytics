@@ -68,15 +68,15 @@ final class ApiConfigurationTest extends UnitTestCase
     }
 
     #[Test]
-    public function getRequestOptionsReturnsTrueByDefault(): void
+    public function getRequestOptionsVerifiesSslByDefault(): void
     {
-        self::assertSame(['verify' => true], $this->buildSubject()->getRequestOptions());
+        self::assertSame(['verify' => true, 'allow_redirects' => false, 'timeout' => 10], $this->buildSubject()->getRequestOptions());
     }
 
     #[Test]
-    public function getRequestOptionsReturnsFalseWhenVerifySslDisabled(): void
+    public function getRequestOptionsDisablesSslVerificationWhenConfigured(): void
     {
-        self::assertSame(['verify' => false], $this->buildSubject(verifySsl: '0')->getRequestOptions());
+        self::assertSame(['verify' => false, 'allow_redirects' => false, 'timeout' => 10], $this->buildSubject(verifySsl: '0')->getRequestOptions());
     }
 
     #[Test]

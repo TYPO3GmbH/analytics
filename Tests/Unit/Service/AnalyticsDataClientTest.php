@@ -13,6 +13,7 @@ use T3G\Analytics\Configuration\ApiConfiguration;
 use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\AnalyticsDataClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
@@ -81,6 +82,23 @@ final class AnalyticsDataClientTest extends UnitTestCase
         $this->subject->fetchTopPages('w-123', 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
 
         self::assertSame('twpl-test-key', $this->httpHistory[0]['request']->getHeaderLine('X-Api-Key'));
+    }
+
+    #[Test]
+    public function fetchTopPagesDoesNotFollowRedirectWithApiKey(): void
+    {
+        $this->mockHandler->append(
+            new Response(302, ['Location' => 'http://other.example/collect']),
+            new Response(200, [], '{"payload":[]}'),
+        );
+
+        try {
+            $this->subject->fetchTopPages(AnalyticsIds::WEBSITE_ID, 'twpl-test-key', $this->date('2026-06-01'), $this->date('2026-06-07'), $this->date('2026-05-25'), $this->date('2026-05-31'));
+        } catch (AnalyticsApiException) {
+        }
+
+        // The response for the redirect target stays in the queue: the client sends only one request.
+        self::assertCount(1, $this->mockHandler);
     }
 
     #[Test]
