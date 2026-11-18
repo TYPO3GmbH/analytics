@@ -8,6 +8,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -24,7 +25,9 @@ use T3G\Analytics\Service\InstanceRegistrationService;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Service\BackendPageAccessCheckerInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use T3G\Analytics\Tests\Functional\Fixtures\WidgetAccessUsers;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -176,6 +179,56 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $response = $controller->managePlanAction($request);
 
         self::assertSame(302, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function dashboardActionRendersIframeOriginWithLowercaseHostAndPort(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['dashboardUrl' => 'https://App.Example.com:8443/dashboard?token=jwt'], JSON_THROW_ON_ERROR)));
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
+
+        $response = $this->buildController($siteFinder)->dashboardAction(
+            $this->buildModuleRequest('GET', '/module/site/analytics/dashboard')->withQueryParams(['siteIdentifier' => 'main'])
+        );
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString(
+            'var iframeOrigin = ' . json_encode('https://app.example.com:8443') . ';',
+            (string)$response->getBody()
+        );
+    }
+
+    public static function urlThatIsNotHttpsDataProvider(): \Generator
+    {
+        foreach (['dashboardAction' => 'dashboardUrl', 'managePlanAction' => 'checkoutUrl'] as $action => $responseKey) {
+            yield $action . ' with http' => [$action, $responseKey, 'http://example.com/dashboard?token=jwt'];
+            yield $action . ' with javascript' => [$action, $responseKey, 'javascript:alert(1)'];
+            yield $action . ' with protocol-relative URL' => [$action, $responseKey, '//example.com/dashboard?token=jwt'];
+            yield $action . ' with relative URL' => [$action, $responseKey, '/dashboard?token=jwt'];
+        }
+    }
+
+    #[Test]
+    #[DataProvider('urlThatIsNotHttpsDataProvider')]
+    public function iframeActionRedirectsWithErrorWhenUrlIsNotHttps(string $action, string $responseKey, string $url): void
+    {
+        $this->importCSVDataSet(WidgetAccessUsers::CSV);
+        $this->setUpBackendUser(WidgetAccessUsers::ADMIN);
+        $this->mockHandler->append(new Response(200, [], json_encode([$responseKey => $url], JSON_THROW_ON_ERROR)));
+        $siteFinder = $this->createMock(SiteFinder::class);
+        $siteFinder->method('getSiteByIdentifier')->willReturn($this->buildRegisteredSiteMock('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID));
+        $flashMessageQueue = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier();
+        $flashMessageQueue->getAllMessagesAndFlush();
+
+        $response = $this->buildController($siteFinder)->$action(
+            $this->buildModuleRequest('GET', '/module/site/analytics')->withQueryParams(['siteIdentifier' => 'main'])
+        );
+
+        self::assertSame(302, $response->getStatusCode());
+        self::assertSame((string)$this->get(UriBuilder::class)->buildUriFromRoute('site_analytics'), $response->getHeaderLine('Location'));
+        self::assertCount(1, $flashMessageQueue->getAllMessagesAndFlush());
+        self::assertCount(1, $this->httpHistory);
     }
 
     /** invalidateStatusCacheAction */
