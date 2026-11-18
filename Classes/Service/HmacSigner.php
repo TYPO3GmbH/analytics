@@ -12,7 +12,7 @@ readonly class HmacSigner implements HmacSignerInterface
      * @return array<string, string>
      * @throws \Exception
      */
-    public function buildHeaders(string $method, string $path, string $instanceId, string $instanceSecret, string $body = ''): array
+    public function buildHeaders(string $method, string $path, string $instanceId, #[\SensitiveParameter] string $instanceSecret, string $body = ''): array
     {
         $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM);
         $contentHash = hash('sha256', $body);

@@ -14,7 +14,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchPageAnalytics(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -26,7 +26,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchVisitsTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -38,7 +38,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchBounceRateTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -50,7 +50,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchAvgDurationTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -62,7 +62,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchTopPages(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         \DateTimeImmutable $previousFrom,
@@ -75,7 +75,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchAllTimeSeries(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $pageUrl,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
@@ -89,7 +89,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchSiteVisitsGraph(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array;
@@ -102,7 +102,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchSiteSessionsGraph(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array;
@@ -115,7 +115,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchSiteVisitorsGraph(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array;
@@ -128,7 +128,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchTrafficShareInDepth(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array;
@@ -142,7 +142,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchDeviceSessions(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
@@ -158,7 +158,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchBrowserSessions(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
@@ -174,7 +174,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchCountrySessions(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         ?\DateTimeImmutable $previousFrom = null,
@@ -192,7 +192,7 @@ interface AnalyticsDataClientInterface
      */
     public function fetchSitePerformance(
         string $websiteId,
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
         \DateTimeImmutable $previousFrom,

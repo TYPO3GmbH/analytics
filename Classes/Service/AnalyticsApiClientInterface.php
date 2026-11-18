@@ -19,23 +19,23 @@ interface AnalyticsApiClientInterface
      * @return array<string, mixed>
      * @throws AnalyticsApiException
      */
-    public function fetchStatus(string $websiteId, string $instanceId, string $instanceSecret): array;
+    public function fetchStatus(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret): array;
 
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string;
+    public function fetchDashboardUrl(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret, bool $watcher = false): ?string;
 
     /**
      * @return array{apiKeyId: string, apiKey: string}
      * @throws AnalyticsApiException
      */
-    public function createApiKey(string $websiteId, string $instanceId, string $instanceSecret): array;
+    public function createApiKey(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret): array;
 
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchCheckoutUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string;
+    public function fetchCheckoutUrl(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret): ?string;
 
     /**
      * @return list<array<string, mixed>>

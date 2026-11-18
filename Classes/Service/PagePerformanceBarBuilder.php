@@ -393,7 +393,7 @@ final readonly class PagePerformanceBarBuilder
      * @return array{page: array<string, mixed>, previousPage: array<string, mixed>|null, visitsSeries: list<int|float>, bounceRateSeries: list<int|float>, avgDurationSeries: list<int|float>, seriesDates: list<string>}|null
      * @throws AnalyticsApiException
      */
-    private function fetchFromApi(string $websiteId, string $apiKey, string $pageUrl, int $days): ?array
+    private function fetchFromApi(string $websiteId, #[\SensitiveParameter] string $apiKey, string $pageUrl, int $days): ?array
     {
         $to = new \DateTimeImmutable('today 23:59:59');
         $from = $to->modify('-' . ($days - 1) . ' days');

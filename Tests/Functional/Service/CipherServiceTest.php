@@ -66,6 +66,37 @@ final class CipherServiceTest extends TestCase
     }
 
     #[Test]
+    public function decryptHidesEncryptedValueInStackTrace(): void
+    {
+        // Valid format, but the authentication fails.
+        $encrypted = sodium_bin2base64(json_encode([
+            'nonce' => sodium_bin2base64(random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES), SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+            'cipher' => sodium_bin2base64(random_bytes(32), SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING),
+        ], JSON_THROW_ON_ERROR), SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
+
+        // Production settings hide all arguments in stack traces. The attribute matters when they are shown.
+        $ignoreArgs = ini_set('zend.exception_ignore_args', '0');
+        $exception = null;
+        try {
+            $this->subject->decrypt($encrypted);
+        } catch (\Throwable $e) {
+            $exception = $e;
+        } finally {
+            ini_set('zend.exception_ignore_args', (string)$ignoreArgs);
+        }
+
+        self::assertNotNull($exception);
+        $frames = array_filter(
+            $exception->getTrace(),
+            static fn (array $frame): bool => ($frame['class'] ?? '') === CipherService::class
+        );
+        self::assertNotEmpty($frames);
+        foreach ($frames as $frame) {
+            self::assertInstanceOf(\SensitiveParameterValue::class, $frame['args'][0] ?? null, $frame['function'] . '()');
+        }
+    }
+
+    #[Test]
     public function emptyStringRoundtrip(): void
     {
         $encrypted = $this->subject->encrypt('');

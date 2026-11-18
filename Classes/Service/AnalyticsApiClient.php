@@ -51,7 +51,7 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
      * @return array<string, mixed>
      * @throws AnalyticsApiException
      */
-    public function fetchStatus(string $websiteId, string $instanceId, string $instanceSecret): array
+    public function fetchStatus(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret): array
     {
         $path = '/api/status/' . $websiteId;
         try {
@@ -75,7 +75,7 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchDashboardUrl(string $websiteId, string $instanceId, string $instanceSecret, bool $watcher = false): ?string
+    public function fetchDashboardUrl(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret, bool $watcher = false): ?string
     {
         $path = '/api/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
         $url = $this->apiConfiguration->getBaseUrl() . '/dashboard-url/' . $websiteId . ($watcher ? '?role=watcher' : '');
@@ -104,7 +104,7 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
      * @return array{apiKeyId: string, apiKey: string}
      * @throws AnalyticsApiException
      */
-    public function createApiKey(string $websiteId, string $instanceId, string $instanceSecret): array
+    public function createApiKey(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret): array
     {
         $path = '/api/api-keys/' . $websiteId;
         try {
@@ -154,7 +154,7 @@ readonly class AnalyticsApiClient implements AnalyticsApiClientInterface
     /**
      * @throws AnalyticsApiException
      */
-    public function fetchCheckoutUrl(string $websiteId, string $instanceId, string $instanceSecret): ?string
+    public function fetchCheckoutUrl(string $websiteId, string $instanceId, #[\SensitiveParameter] string $instanceSecret): ?string
     {
         $path = '/api/checkout-url/' . $websiteId;
         try {
