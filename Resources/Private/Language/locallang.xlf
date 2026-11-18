@@ -14,6 +14,12 @@
             <trans-unit id="flash.registrationFailed" resname="flash.registrationFailed">
                 <source>Registration failed: %s</source>
             </trans-unit>
+            <trans-unit id="flash.alreadyRegistered" resname="flash.alreadyRegistered">
+                <source>The site is already registered. Please reload the page.</source>
+            </trans-unit>
+            <trans-unit id="flash.registrationInProgress" resname="flash.registrationInProgress">
+                <source>The site is being registered in another request. Please wait a moment and reload the page.</source>
+            </trans-unit>
             <trans-unit id="flash.apiResponseIncomplete" resname="flash.apiResponseIncomplete">
                 <source>API response incomplete.</source>
             </trans-unit>

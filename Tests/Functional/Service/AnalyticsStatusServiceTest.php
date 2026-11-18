@@ -15,12 +15,14 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsLock;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -75,6 +77,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             $this->createMock(SiteSettingsService::class),
             $this->createMock(SiteSettingsFactory::class),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
+            new SiteSettingsLock(new LockFactory()),
         );
     }
 

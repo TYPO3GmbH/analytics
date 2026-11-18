@@ -18,10 +18,14 @@ use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\ApiKeyService;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsLock;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
+use T3G\Analytics\Tests\Fixtures\SiteSettingsLockTrait;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -31,6 +35,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class ApiKeyServiceTest extends UnitTestCase
 {
+    use SiteSettingsLockTrait;
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -78,6 +84,7 @@ final class ApiKeyServiceTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->writeGuard,
             new NullLogger(),
+            new SiteSettingsLock(new LockFactory()),
         );
     }
 
@@ -85,6 +92,7 @@ final class ApiKeyServiceTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        $this->releaseSiteSettingsLockOfOtherRequest();
         parent::tearDown();
     }
 
@@ -232,6 +240,61 @@ final class ApiKeyServiceTest extends UnitTestCase
 
         // No exception thrown — the service returns silently and logs an error.
         $this->expectNotToPerformAssertions();
+    }
+
+    #[Test]
+    public function provisionIfNeededDoesNothingWhenApiKeyIsAlreadyInSettingsFile(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['apiKeyId' => AnalyticsIds::API_KEY_ID, 'apiKey' => 'v'], JSON_THROW_ON_ERROR)));
+        $lockedDuringLoad = null;
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function () use (&$lockedDuringLoad): array {
+            $lockedDuringLoad = $this->isSiteSettingsLocked();
+            return ['apiKeyId' => 'key-from-other-request'];
+        });
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        self::assertCount(0, $this->httpHistory);
+        self::assertTrue($lockedDuringLoad);
+        self::assertFalse($this->isSiteSettingsLocked());
+    }
+
+    #[Test]
+    public function provisionIfNeededCreatesAndWritesApiKeyWhileHoldingLock(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode(['apiKeyId' => AnalyticsIds::API_KEY_ID, 'apiKey' => 'v'], JSON_THROW_ON_ERROR)));
+        $events = [];
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function () use (&$events): array {
+            $events[] = ['load', 'locked' => $this->isSiteSettingsLocked(), 'requests' => count($this->httpHistory)];
+            return [];
+        });
+        $this->siteSettingsService->method('writeSettings')->willReturnCallback(function () use (&$events): void {
+            $events[] = ['write', 'locked' => $this->isSiteSettingsLocked(), 'requests' => count($this->httpHistory)];
+        });
+
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        self::assertSame(
+            [['load', 'locked' => true, 'requests' => 0], ['write', 'locked' => true, 'requests' => 1]],
+            $events
+        );
+        self::assertFalse($this->isSiteSettingsLocked());
+    }
+
+    #[Test]
+    public function provisionIfNeededDoesNothingWhenSettingsAreLocked(): void
+    {
+        $this->lockSiteSettingsInOtherRequest();
+        $this->mockHandler->append(new Response(200, [], json_encode(['apiKeyId' => AnalyticsIds::API_KEY_ID, 'apiKey' => 'v'], JSON_THROW_ON_ERROR)));
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $site = $this->buildSite(AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID, $this->encryptedSecret);
+        $this->subject->provisionIfNeeded($site, ['status' => 'active']);
+
+        self::assertCount(0, $this->httpHistory);
     }
 
     /** Helpers */
