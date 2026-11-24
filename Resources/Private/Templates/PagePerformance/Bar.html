@@ -1,0 +1,84 @@
+<f:spaceless>
+<section
+    class="tx-analytics-performance-bar{f:if(condition: expanded, then: ' tx-analytics-performance-bar--expanded')}"
+    aria-label="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.ariaLabel')}"
+    data-page-id="{pageId}"
+    data-language-id="{languageId}"
+>
+    <f:for each="{metrics}" as="metric">
+        <div class="tx-analytics-performance-metric tx-analytics-performance-metric-{metric.tone}" tabindex="0">
+            <div class="tx-analytics-performance-metric-body">
+                <span class="tx-analytics-performance-icon tx-analytics-performance-icon-{metric.icon}" aria-hidden="true"></span>
+                <span class="tx-analytics-performance-value-row">
+                    <span class="tx-analytics-performance-value">{metric.value}</span>
+                    <f:if condition="{metric.trend}">
+                        <f:then>
+                            <span class="tx-analytics-performance-trend tx-analytics-performance-trend-{metric.trendDirection}">
+                                <span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-arrow-trend-{metric.trendDirection}" aria-hidden="true"></span>{metric.trend}<span class="visually-hidden"> <f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:{metric.trendContextKey}" /></span>
+                            </span>
+                        </f:then>
+                        <f:else if="{metric.trendNote}">
+                            <f:comment>The metric already opens the details tooltip, which holds the note as text, so the icon has no tooltip of its own.</f:comment>
+                            <span class="tx-analytics-performance-trend tx-analytics-performance-trend-neutral">
+                                <span class="tx-analytics-performance-trend-icon tx-analytics-performance-icon-circle-info" aria-hidden="true"></span>
+                                <span class="visually-hidden"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:trendNote.{metric.trendNote}" /></span>
+                            </span>
+                        </f:else>
+                    </f:if>
+                </span>
+                <span class="tx-analytics-performance-label"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:{metric.labelKey}" /></span>
+                <div class="tx-analytics-performance-tooltip" role="tooltip">
+                    <f:render partial="PagePerformance/MetricDetails" arguments="{metric: metric}" />
+                </div>
+            </div>
+        </div>
+    </f:for>
+
+    <div class="tx-analytics-performance-loading-overlay" aria-live="polite" aria-hidden="true">
+        <span class="tx-analytics-performance-loading-spinner" aria-hidden="true"></span>
+        <span><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.loading" /></span>
+    </div>
+
+    <div class="tx-analytics-performance-meta">
+        <div class="tx-analytics-performance-meta-item tx-analytics-performance-period">
+            <span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-calendar-days" aria-hidden="true"></span>
+            <form class="tx-analytics-performance-period-form" method="get">
+                <f:for each="{hiddenFields}" as="value" key="name">
+                    <input type="hidden" name="{name}" value="{value}">
+                </f:for>
+                <label class="visually-hidden" for="tx-analytics-period-select"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.period" /></label>
+                <select id="tx-analytics-period-select" class="form-select form-select-sm" name="tx_analytics_period">
+                    <f:for each="{periods}" as="period">
+                        <option value="{period.value}" {f:if(condition: period.selected, then: 'selected')}><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.days" arguments="{0: period.value}" /></option>
+                    </f:for>
+                </select>
+            </form>
+        </div>
+        <button
+            type="button"
+            class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link tx-analytics-performance-details-toggle"
+            aria-expanded="{f:if(condition: expanded, then: 'true', else: 'false')}"
+            aria-controls="{detailsId}"
+            data-label-show="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.showAllDetails')}"
+            data-label-hide="{f:translate(key: 'LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.hideAllDetails')}"
+        >
+            <span class="tx-analytics-performance-details-toggle-icon" aria-hidden="true"></span>
+            <span class="tx-analytics-performance-details-toggle-label"><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:{f:if(condition: expanded, then: 'pagePerformance.hideAllDetails', else: 'pagePerformance.showAllDetails')}" /></span>
+        </button>
+        <f:if condition="{detailsUri}">
+            <a class="tx-analytics-performance-meta-item tx-analytics-performance-meta-link" href="{detailsUri}">
+                <span class="tx-analytics-performance-meta-icon tx-analytics-performance-icon-circle-plus" aria-hidden="true"></span>
+                <span><f:translate key="LLL:EXT:analytics/Resources/Private/Language/locallang.xlf:pagePerformance.showInAnalytics" /></span>
+            </a>
+        </f:if>
+    </div>
+
+    <div id="{detailsId}" class="tx-analytics-performance-details" {f:if(condition: expanded, else: 'hidden')}>
+        <f:for each="{metrics}" as="metric">
+            <div class="tx-analytics-performance-detail">
+                <f:render partial="PagePerformance/MetricDetails" arguments="{metric: metric}" />
+            </div>
+        </f:for>
+    </div>
+</section>
+</f:spaceless>
