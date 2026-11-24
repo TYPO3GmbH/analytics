@@ -128,9 +128,7 @@ function renderPlans(root, plans, creditsFormat, badgeTrialText, contactEmail, s
 
     const vatNotice = cloneTpl('tpl-plans-vat-notice').firstElementChild;
 
-    root.appendChild(header);
-    root.appendChild(grid);
-    root.appendChild(vatNotice);
+    root.replaceChildren(header, grid, vatNotice)
 
     header.querySelector('.tx-analytics-plans-toggle').addEventListener('click', e => {
         const btn = e.target.closest('[data-period]');
