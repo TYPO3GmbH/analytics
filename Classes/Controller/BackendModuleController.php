@@ -20,6 +20,8 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
+use TYPO3\CMS\Core\Utility\Exception\MissingArrayPathException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
@@ -518,8 +520,13 @@ final readonly class BackendModuleController
             return $default;
         }
         $state = $backendUser->uc['tx_analytics']['collapsed'] ?? [];
-        foreach (explode('.', $key) as $segment) {
-            $state = is_array($state) ? ($state[$segment] ?? null) : null;
+        if (!is_array($state) || $state === []) {
+            return $default;
+        }
+        try {
+            $state = ArrayUtility::getValueByPath($state, $key, '.');
+        } catch (MissingArrayPathException) {
+            $state = null;
         }
         return $state === null ? $default : $state === '1';
     }
