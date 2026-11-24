@@ -25,6 +25,7 @@ use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -78,6 +79,7 @@ final class ApiKeyServiceTest extends UnitTestCase
             $this->siteSettingsFactory,
             $this->writeGuard,
             new NullLogger(),
+            $this->createMock(SiteFinder::class),
         );
     }
 

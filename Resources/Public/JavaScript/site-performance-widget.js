@@ -67,7 +67,9 @@ async function loadMetrics(widget) {
       metricsContainer.innerHTML = data.html;
       const link = widget.closest('.widget-content')?.querySelector('.widget-content-footer a');
       if (link instanceof HTMLAnchorElement && typeof data.showAllUrl === 'string') {
+        // A site attached to an active site has no dashboard link.
         link.href = data.showAllUrl || '#';
+        link.hidden = data.showAllUrl === '';
       }
     }
   } catch {

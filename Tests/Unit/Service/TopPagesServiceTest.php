@@ -538,6 +538,7 @@ final class TopPagesServiceTest extends UnitTestCase
             'site' => $site,
             'websiteId' => 'ws1',
             'apiKey' => 'key',
+            'pageUrlFilter' => ['://example.com'],
         ]);
 
         $uriBuilder = $this->createMock(UriBuilder::class);
