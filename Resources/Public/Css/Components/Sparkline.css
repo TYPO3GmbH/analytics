@@ -35,8 +35,15 @@
 
 .tx-analytics-sparkline-line,
 .tx-analytics-sparkline-fill,
-.tx-analytics-sparkline-point {
+.tx-analytics-sparkline-point,
+.tx-analytics-sparkline-axis {
     vector-effect: non-scaling-stroke;
+}
+
+.tx-analytics-sparkline-axis {
+    stroke: var(--typo3-component-border-color);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
 }
 
 .tx-analytics-sparkline-line {

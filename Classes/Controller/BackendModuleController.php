@@ -20,6 +20,8 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
+use TYPO3\CMS\Core\Utility\Exception\MissingArrayPathException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
@@ -28,6 +30,7 @@ use TYPO3\CMS\Core\Resource\Security\SvgSanitizer;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
 final readonly class BackendModuleController
 {
@@ -75,6 +78,7 @@ final readonly class BackendModuleController
             'isManager' => $this->isAnalyticsManager(),
             'logoSvg' => $this->readLogoSvg(),
             'plansUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_analytics_plans_content'),
+            'plansCollapsed' => $this->isCollapsed('plans', false),
         ]);
 
         return $moduleTemplate->renderResponse('Backend/Index');
@@ -435,7 +439,7 @@ final readonly class BackendModuleController
 
     /**
      * @param list<array<string, mixed>> $sites
-     * @return list<array{title: string, sites: list<array<string, mixed>>}>
+     * @return list<array{id: string, title: string, collapsed: bool, sites: list<array<string, mixed>>}>
      */
     private function groupSitesByAnalyticsStatus(array $sites): array
     {
@@ -454,11 +458,15 @@ final readonly class BackendModuleController
 
         return [
             [
+                'id' => 'active',
                 'title' => $this->translate('label.activeSites'),
+                'collapsed' => $this->isCollapsed('siteGroup.active', false),
                 'sites' => $activeSites,
             ],
             [
+                'id' => 'inactive',
                 'title' => $this->translate('label.inactiveSites'),
+                'collapsed' => $this->isCollapsed('siteGroup.inactive', true),
                 'sites' => $inactiveSites,
             ],
         ];
@@ -500,6 +508,27 @@ final readonly class BackendModuleController
             $svg = (new SvgSanitizer())->sanitizeContent($svg);
         }
         return $svg;
+    }
+
+    /**
+     * Collapsed state the module JavaScript stores per backend user under tx_analytics.collapsed.
+     */
+    private function isCollapsed(string $key, bool $default): bool
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$backendUser instanceof BackendUserAuthentication) {
+            return $default;
+        }
+        $state = $backendUser->uc['tx_analytics']['collapsed'] ?? [];
+        if (!is_array($state) || $state === []) {
+            return $default;
+        }
+        try {
+            $state = ArrayUtility::getValueByPath($state, $key, '.');
+        } catch (MissingArrayPathException) {
+            $state = null;
+        }
+        return $state === null ? $default : $state === '1';
     }
 
     private function isAnalyticsManager(): bool

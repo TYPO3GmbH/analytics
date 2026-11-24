@@ -7,6 +7,7 @@ namespace T3G\Analytics\Tests\Functional\Controller;
 use PHPUnit\Framework\Attributes\Test;
 use T3G\Analytics\Controller\TrafficGraphAjaxController;
 use T3G\Analytics\Service\BackendWidgetAccessCheckerInterface;
+use T3G\Analytics\Service\MetricFormatter;
 use T3G\Analytics\Service\TrafficChartDataBuilder;
 use T3G\Analytics\Service\TrafficGraphServiceInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
@@ -59,7 +60,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TrafficGraphAjaxController(
             $service,
-            new TrafficChartDataBuilder(new SparklineRenderer()),
+            new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
             $this->get(UriBuilder::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
@@ -88,7 +89,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TrafficGraphAjaxController(
             $service,
-            new TrafficChartDataBuilder(new SparklineRenderer()),
+            new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
             $this->get(UriBuilder::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
@@ -107,7 +108,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TrafficGraphAjaxController(
             $service,
-            new TrafficChartDataBuilder(new SparklineRenderer()),
+            new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
             $this->get(UriBuilder::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),
@@ -137,7 +138,7 @@ final class TrafficGraphAjaxControllerTest extends FunctionalTestCase
 
         $controller = new TrafficGraphAjaxController(
             $service,
-            new TrafficChartDataBuilder(new SparklineRenderer()),
+            new TrafficChartDataBuilder(new SparklineRenderer(), new MetricFormatter()),
             $this->get(UriBuilder::class),
             $this->get(ViewFactoryInterface::class),
             $this->get(BackendWidgetAccessCheckerInterface::class),

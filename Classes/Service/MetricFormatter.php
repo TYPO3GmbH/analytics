@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Service;
 
+use TYPO3\CMS\Core\Localization\LanguageService;
+
 readonly class MetricFormatter implements MetricFormatterInterface
 {
     public function formatNumber(int $value): string
@@ -37,24 +39,18 @@ readonly class MetricFormatter implements MetricFormatterInterface
 
     public function formatAbsoluteCountTrend(int $current, int $previous): string
     {
-        if ($previous === 0) {
-            return '';
-        }
         $diff = $current - $previous;
         if ($diff === 0) {
-            return '';
+            return '±0';
         }
         return ($diff > 0 ? '+' : '') . number_format($diff, 0, '.', '.');
     }
 
     public function formatAbsolutePercentPointTrend(float $current, float $previous): string
     {
-        if ($previous === 0.0) {
-            return '';
-        }
         $diff = $current - $previous;
         if (round($diff, 2) === 0.0) {
-            return '';
+            return '±0.00%';
         }
         return ($diff > 0 ? '+' : '') . number_format($diff, 2) . '%';
     }
@@ -63,7 +59,7 @@ readonly class MetricFormatter implements MetricFormatterInterface
     {
         $diff = $current - $previous;
         if ($diff === 0) {
-            return '';
+            return '±0s';
         }
         $abs = abs($diff);
         $sign = $diff > 0 ? '+' : '-';
@@ -104,5 +100,52 @@ readonly class MetricFormatter implements MetricFormatterInterface
             return null;
         }
         return ($diff > 0 ? '+' : '') . $diff;
+    }
+
+    public function formatDate(\DateTimeInterface $date): string
+    {
+        return $this->formatWithIntl($date, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::NONE);
+    }
+
+    public function formatDateTime(\DateTimeInterface $date): string
+    {
+        return $this->formatWithIntl($date, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT);
+    }
+
+    public function formatDayMonth(\DateTimeInterface $date): string
+    {
+        $locale = $this->locale();
+        $pattern = (new \IntlDatePatternGenerator($locale))->getBestPattern('ddMM');
+        return $this->formatWithIntl($date, \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $pattern === false ? 'dd.MM.' : $pattern);
+    }
+
+    /**
+     * Formats in the timezone of the date itself, so the day stays the one the date was created for.
+     */
+    private function formatWithIntl(\DateTimeInterface $date, int $dateType, int $timeType, ?string $pattern = null): string
+    {
+        $formatter = new \IntlDateFormatter($this->locale(), $dateType, $timeType, $this->intlTimeZone($date), null, $pattern);
+        $formatted = $formatter->format($date);
+        return $formatted === false ? $date->format('Y-m-d') : $formatted;
+    }
+
+    /**
+     * ICU does not accept offset zones like "Z" or "+02:00" from ext/date, so they become "GMT+02:00".
+     */
+    private function intlTimeZone(\DateTimeInterface $date): string
+    {
+        $name = $date->getTimezone()->getName();
+        if ($name === 'Z' || preg_match('/^[+-]\d{2}:\d{2}$/', $name) === 1) {
+            $offset = $date->getOffset();
+            return sprintf('GMT%s%02d:%02d', $offset < 0 ? '-' : '+', intdiv(abs($offset), 3600), intdiv(abs($offset) % 3600, 60));
+        }
+        return $name;
+    }
+
+    private function locale(): string
+    {
+        $languageService = $GLOBALS['LANG'] ?? null;
+        $locale = $languageService instanceof LanguageService ? $languageService->getLocale() : null;
+        return $locale !== null ? (string)$locale : 'en';
     }
 }

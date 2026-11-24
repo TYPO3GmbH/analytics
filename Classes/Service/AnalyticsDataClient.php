@@ -18,6 +18,12 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         'averageVisitDuration',
     ];
 
+    private const SITE_SESSION_METRICS = [
+        'visitCount',
+        'visitorCount',
+        'bounceRate',
+    ];
+
 
     public function __construct(
         private RequestFactory $requestFactory,
@@ -48,10 +54,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
             'where' => ['and' => [
                 ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
             ]],
-            'dateRange' => [
-                'start' => $from->format('Y-m-d\T00:00:00.000P'),
-                'end' => $to->format('Y-m-d\T23:59:59.999P'),
-            ],
+            'dateRange' => $this->buildUtcDayRange($from, $to),
         ];
 
         try {
@@ -204,12 +207,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $to,
     ): array {
         $websiteBase = $this->apiConfiguration->getAnalyticsApiBaseUrl() . '/v2/websites/' . rawurlencode($websiteId) . '/';
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
+        $query = $this->buildUtcDayGraphQuery($from, $to);
         $body = ['where' => ['and' => [
             ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
         ]]];
@@ -282,12 +280,7 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): array {
-        $query = '?' . http_build_query([
-            'from' => $from->format('Y-m-d\T00:00:00.000P'),
-            'until' => $to->format('Y-m-d\T23:59:59.999P'),
-            'type' => 'time-series',
-            'unit' => 'day',
-        ]);
+        $query = $this->buildUtcDayGraphQuery($from, $to);
         $body = ['where' => ['and' => [
             ['member' => 'pageUrl', 'operator' => 'eq', 'values' => [$pageUrl]],
         ]]];
@@ -593,9 +586,19 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
     }
 
     /**
+     * Site-wide metrics for the current and the previous period plus the daily series of the
+     * current period, with 5 parallel requests. Visits, visitors and bounce rate come from the
+     * sessions endpoint. The time on page comes from the page view duration graph, the same
+     * metric as in the page module. All requests use the same UTC day range, so the totals
+     * match the daily series.
+     *
+     * A failed request leaves its values at 0 (or the series empty) and adds its key to
+     * "failures": current, previous, series, currentTimeOnPage, previousTimeOnPage.
+     *
      * @return array{
-     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
-     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int},
+     *     current: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
+     *     previous: array{visitCount: int, visitorCount: int, bounceRate: float, avgTimeOnPage: int},
+     *     series: array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgTimeOnPage: list<int>},
      *     failures: array<string, string>
      * }
      */
@@ -607,92 +610,190 @@ readonly class AnalyticsDataClient implements AnalyticsDataClientInterface
         \DateTimeImmutable $previousFrom,
         \DateTimeImmutable $previousTo,
     ): array {
-        $url = $this->apiConfiguration->getAnalyticsApiBaseUrl()
-            . '/v2/websites/' . rawurlencode($websiteId)
-            . '/analytics/pages?trace=sitePerformanceDashboard';
-
-        $buildOptions = function (\DateTimeImmutable $f, \DateTimeImmutable $t) use ($apiKey): array {
-            return array_merge(
-                [
-                    'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
-                    'json' => [
-                        'metrics' => ['visitCount', 'visitorCount', 'bounceRate', 'averageVisitDuration'],
-                        'dimensions' => ['pageUrl'],
-                        'order' => [['member' => 'visitCount', 'direction' => 'desc']],
-                        'pagination' => ['page' => 1, 'pageSize' => 200],
-                        'where' => ['and' => []],
-                        'dateRange' => [
-                            'start' => $f->format('Y-m-d\T00:00:00.000P'),
-                            'end' => $t->format('Y-m-d\T23:59:59.999P'),
-                        ],
-                    ],
-                ],
-                $this->apiConfiguration->getRequestOptions()
-            );
-        };
+        $buildSessionsOptions = fn (\DateTimeImmutable $f, \DateTimeImmutable $t, array $dimensions = []): array => $this->buildRequestOptions($apiKey, [
+            'where' => ['and' => []],
+            'metrics' => self::SITE_SESSION_METRICS,
+            ...$dimensions,
+            'dateRange' => $this->buildUtcDayRange($f, $t),
+        ]);
+        $timeOnPageOptions = $this->buildRequestOptions($apiKey, ['where' => ['and' => []]]);
 
         $client = $this->guzzleClientFactory->getClient();
         $promises = [
-            'current' => $client->requestAsync('POST', $url, $buildOptions($from, $to)),
-            'previous' => $client->requestAsync('POST', $url, $buildOptions($previousFrom, $previousTo)),
+            'current' => $client->requestAsync('POST', $this->buildSessionsUrl($websiteId, 'sitePerformanceDashboard'), $buildSessionsOptions($from, $to)),
+            'previous' => $client->requestAsync('POST', $this->buildSessionsUrl($websiteId, 'sitePerformanceDashboard'), $buildSessionsOptions($previousFrom, $previousTo)),
+            'series' => $client->requestAsync('POST', $this->buildSessionsUrl($websiteId, 'sitePerformanceDaily'), $buildSessionsOptions($from, $to, ['dimensions' => ['date'], 'granularity' => 'day'])),
+            'currentTimeOnPage' => $client->requestAsync('POST', $this->buildTimeOnPageUrl($websiteId, $from, $to), $timeOnPageOptions),
+            'previousTimeOnPage' => $client->requestAsync('POST', $this->buildTimeOnPageUrl($websiteId, $previousFrom, $previousTo), $timeOnPageOptions),
         ];
 
         /** @var array<string, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}> $settled */
         $settled = Utils::settle($promises)->wait();
 
-        $empty = ['visitCount' => 0, 'visitorCount' => 0, 'bounceRate' => 0.0, 'avgDuration' => 0];
-        $results = ['current' => $empty, 'previous' => $empty];
+        $bodies = [];
         $failures = [];
-
         foreach ($settled as $key => $result) {
-            if ($result['state'] !== 'fulfilled' || !isset($result['value'])) {
-                $failures[$key] = $this->exceptionExtractor->extractReason($result['reason'] ?? new \RuntimeException('Unknown error'));
-                continue;
-            }
             try {
-                $results[$key] = $this->parsePageAnalyticsAggregate((string)$result['value']->getBody());
+                $bodies[$key] = $this->decodeSettledResponse($result);
             } catch (\Throwable $e) {
                 $failures[$key] = $this->exceptionExtractor->extractReason($e);
             }
         }
 
+        $empty = ['visitCount' => 0, 'visitorCount' => 0, 'bounceRate' => 0.0];
+        $currentTimeOnPage = isset($bodies['currentTimeOnPage']) ? $this->parseTimeOnPageGraph($bodies['currentTimeOnPage']) : null;
+        $previousTimeOnPage = isset($bodies['previousTimeOnPage']) ? $this->parseTimeOnPageGraph($bodies['previousTimeOnPage']) : null;
+
         return [
-            'current' => $results['current'],
-            'previous' => $results['previous'],
+            'current' => (isset($bodies['current']) ? $this->parseSessionTotals($bodies['current']) : $empty) + ['avgTimeOnPage' => $currentTimeOnPage['average'] ?? 0],
+            'previous' => (isset($bodies['previous']) ? $this->parseSessionTotals($bodies['previous']) : $empty) + ['avgTimeOnPage' => $previousTimeOnPage['average'] ?? 0],
+            'series' => $this->buildDailySeries($bodies['series'] ?? [], $currentTimeOnPage),
             'failures' => $failures,
         ];
     }
 
-    /**
-     * @return array{visitCount: int, visitorCount: int, bounceRate: float, avgDuration: int}
-     */
-    private function parsePageAnalyticsAggregate(string $rawBody): array
+    private function buildSessionsUrl(string $websiteId, string $trace): string
     {
-        /** @var array<string, mixed> $body */
-        $body = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
-        $rows = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+        return $this->apiConfiguration->getAnalyticsApiBaseUrl()
+            . '/v2/websites/' . rawurlencode($websiteId)
+            . '/analytics/sessions?trace=' . rawurlencode($trace);
+    }
 
-        $totalVisits = 0;
-        $totalVisitors = 0;
-        $weightedBounce = 0.0;
-        $weightedDuration = 0.0;
+    /**
+     * Site-wide page view duration graph: the same metric as "Avg. time on page" in the
+     * page module, without the pageUrl filter.
+     */
+    private function buildTimeOnPageUrl(string $websiteId, \DateTimeImmutable $from, \DateTimeImmutable $to): string
+    {
+        return $this->apiConfiguration->getAnalyticsApiBaseUrl()
+            . '/v2/websites/' . rawurlencode($websiteId)
+            . '/stats/average-page-view-duration/graph' . $this->buildUtcDayGraphQuery($from, $to);
+    }
 
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
+    /**
+     * The analytics and graph endpoints bucket by UTC day. A range with a local offset
+     * adds a partial first bucket, so the range uses full UTC days. Totals use the same
+     * range, so they match the daily series.
+     *
+     * @return array{start: string, end: string}
+     */
+    private function buildUtcDayRange(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        return [
+            'start' => $from->format('Y-m-d\T00:00:00.000\Z'),
+            'end' => $to->format('Y-m-d\T23:59:59.999\Z'),
+        ];
+    }
+
+    /**
+     * Query of a daily graph endpoint over full UTC days, see buildUtcDayRange().
+     */
+    private function buildUtcDayGraphQuery(\DateTimeImmutable $from, \DateTimeImmutable $to): string
+    {
+        $range = $this->buildUtcDayRange($from, $to);
+        return '?' . http_build_query([
+            'from' => $range['start'],
+            'until' => $range['end'],
+            'type' => 'time-series',
+            'unit' => 'day',
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $json
+     * @return array<string, mixed>
+     */
+    private function buildRequestOptions(string $apiKey, array $json): array
+    {
+        return array_merge(
+            [
+                'headers' => ['X-Api-Key' => $apiKey, 'Accept' => 'application/json'],
+                'json' => $json,
+            ],
+            $this->apiConfiguration->getRequestOptions()
+        );
+    }
+
+    /**
+     * @param array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable} $result
+     * @return array<string, mixed>
+     * @throws \Throwable
+     */
+    private function decodeSettledResponse(array $result): array
+    {
+        if ($result['state'] !== 'fulfilled' || !isset($result['value'])) {
+            throw $result['reason'] ?? new \RuntimeException('Unknown error');
+        }
+        $body = json_decode((string)$result['value']->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        return is_array($body) ? $body : [];
+    }
+
+    /**
+     * Without dimensions the payload holds one row with the totals of the range.
+     *
+     * @param array<string, mixed> $body
+     * @return array{visitCount: int, visitorCount: int, bounceRate: float}
+     */
+    private function parseSessionTotals(array $body): array
+    {
+        $row = is_array($body['payload'] ?? null) ? ($body['payload'][0] ?? []) : [];
+        return $this->parseSessionMetrics(is_array($row) ? $row : []);
+    }
+
+    /**
+     * @param array<string, mixed> $sessionsBody
+     * @param array{dates: list<string>, values: list<int>, average: int}|null $timeOnPage
+     * @return array{dates: list<string>, visits: list<int>, visitors: list<int>, bounceRate: list<float>, avgTimeOnPage: list<int>}
+     */
+    private function buildDailySeries(array $sessionsBody, ?array $timeOnPage): array
+    {
+        $series = ['dates' => [], 'visits' => [], 'visitors' => [], 'bounceRate' => [], 'avgTimeOnPage' => []];
+        // Both endpoints bucket by UTC day, so the date is the common key of the two series.
+        $timeOnPageByDate = $timeOnPage !== null ? array_combine($timeOnPage['dates'], $timeOnPage['values']) : [];
+
+        foreach (is_array($sessionsBody['payload'] ?? null) ? $sessionsBody['payload'] : [] as $row) {
+            if (!is_array($row) || !is_string($row['date'] ?? null)) {
                 continue;
             }
-            $visits = (int)($row['visitCount'] ?? 0);
-            $totalVisits += $visits;
-            $totalVisitors += (int)($row['visitorCount'] ?? 0);
-            $weightedBounce += $visits * (float)($row['bounceRate'] ?? 0);
-            $weightedDuration += $visits * (float)($row['averageVisitDuration'] ?? 0);
+            $date = substr($row['date'], 0, 10);
+            $metrics = $this->parseSessionMetrics($row);
+            $series['dates'][] = $date;
+            $series['visits'][] = $metrics['visitCount'];
+            $series['visitors'][] = $metrics['visitorCount'];
+            $series['bounceRate'][] = $metrics['bounceRate'];
+            $series['avgTimeOnPage'][] = $timeOnPageByDate[$date] ?? 0;
         }
+        return $series;
+    }
 
+    /**
+     * @param array<mixed> $row
+     * @return array{visitCount: int, visitorCount: int, bounceRate: float}
+     */
+    private function parseSessionMetrics(array $row): array
+    {
         return [
-            'visitCount' => $totalVisits,
-            'visitorCount' => $totalVisitors,
-            'bounceRate' => $totalVisits > 0 ? $weightedBounce / $totalVisits : 0.0,
-            'avgDuration' => $totalVisits > 0 ? (int)round($weightedDuration / $totalVisits) : 0,
+            'visitCount' => (int)($row['visitCount'] ?? 0),
+            'visitorCount' => (int)($row['visitorCount'] ?? 0),
+            'bounceRate' => (float)($row['bounceRate'] ?? 0),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     * @return array{dates: list<string>, values: list<int>, average: int}
+     */
+    private function parseTimeOnPageGraph(array $body): array
+    {
+        $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
+        $dataset = is_array($payload['datasets'][0] ?? null) ? $payload['datasets'][0] : [];
+        $labels = is_array($payload['labels'] ?? null) ? array_values($payload['labels']) : [];
+        $data = is_array($dataset['data'] ?? null) ? array_values($dataset['data']) : [];
+        $count = min(count($labels), count($data));
+        return [
+            'dates' => array_map(static fn (mixed $label): string => substr((string)$label, 0, 10), array_slice($labels, 0, $count)),
+            'values' => array_map(static fn (mixed $value): int => (int)round(is_numeric($value) ? (float)$value : 0.0), array_slice($data, 0, $count)),
+            'average' => (int)round(is_numeric($dataset['totalAverage'] ?? null) ? (float)$dataset['totalAverage'] : 0.0),
         ];
     }
 
