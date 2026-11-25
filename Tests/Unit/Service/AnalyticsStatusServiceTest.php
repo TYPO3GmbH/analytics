@@ -18,7 +18,10 @@ use T3G\Analytics\Service\AnalyticsStatusService;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
+use T3G\Analytics\Service\SiteSettingsLock;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\AnalyticsIds;
+use T3G\Analytics\Tests\Fixtures\SiteSettingsLockTrait;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
@@ -26,6 +29,7 @@ use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -35,6 +39,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 final class AnalyticsStatusServiceTest extends UnitTestCase
 {
+    use SiteSettingsLockTrait;
+
     protected bool $resetSingletonInstances = true;
 
     private MockHandler $mockHandler;
@@ -90,6 +96,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
             $this->siteSettingsService,
             $this->siteSettingsFactory,
             $this->writeGuard,
+            new SiteSettingsLock(new LockFactory()),
         );
     }
 
@@ -97,6 +104,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
         unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']);
+        $this->releaseSiteSettingsLockOfOtherRequest();
         parent::tearDown();
     }
 
@@ -268,6 +276,35 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
 
         // No exception propagated — the service warns and returns.
         $this->expectNotToPerformAssertions();
+    }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusLoadsAndWritesWhileHoldingLock(): void
+    {
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
+        $events = [];
+        $this->siteSettingsFactory->method('loadLocalSettings')->willReturnCallback(function () use (&$events): array {
+            $events[] = ['load', 'locked' => $this->isSiteSettingsLocked()];
+            return [];
+        });
+        $this->siteSettingsService->method('writeSettings')->willReturnCallback(function () use (&$events): void {
+            $events[] = ['write', 'locked' => $this->isSiteSettingsLocked()];
+        });
+
+        $this->subject->syncSiteSettingsFromStatus($site, ['status' => 'active']);
+
+        self::assertSame([['load', 'locked' => true], ['write', 'locked' => true]], $events);
+        self::assertFalse($this->isSiteSettingsLocked());
+    }
+
+    #[Test]
+    public function syncSiteSettingsFromStatusSkipsWriteWhenSettingsAreLocked(): void
+    {
+        $this->lockSiteSettingsInOtherRequest();
+        $site = $this->buildSite('main', AnalyticsIds::WEBSITE_ID, AnalyticsIds::INSTANCE_ID);
+        $this->siteSettingsService->expects(self::never())->method('writeSettings');
+
+        $this->subject->syncSiteSettingsFromStatus($site, ['status' => 'active']);
     }
 
     /** Helpers */

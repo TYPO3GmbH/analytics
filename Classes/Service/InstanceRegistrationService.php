@@ -6,6 +6,8 @@ namespace T3G\Analytics\Service;
 
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Exception\SiteAlreadyRegisteredException;
+use T3G\Analytics\Exception\SiteSettingsLockedException;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
@@ -20,6 +22,7 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
         private SiteSettingsFactory $siteSettingsFactory,
         private SiteSettingsWriteVerifierInterface $writeGuard,
         private LoggerInterface $logger,
+        private SiteSettingsLock $siteSettingsLock,
     ) {
     }
 
@@ -28,12 +31,37 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
      * returned credentials to site settings.
      *
      * @throws AnalyticsApiException when the API call fails or the response is incomplete
+     * @throws SiteSettingsLockedException when another request changes the settings of the site
+     * @throws SiteAlreadyRegisteredException when the settings already contain a websiteId
      */
     public function register(Site $site, string $email): void
     {
         $siteIdentifier = $site->getIdentifier();
 
         $this->writeGuard->assertDirectoryWritable($site);
+
+        // Hold the lock before the API call: when the settings cannot be written,
+        // the middleware must not register a new instance.
+        try {
+            $websiteId = $this->siteSettingsLock->run($siteIdentifier, fn (): string => $this->registerWhileLocked($site, $email));
+        } catch (SiteSettingsLockedException $e) {
+            $this->logger->warning('Registration: settings are locked by another request.', ['siteIdentifier' => $siteIdentifier]);
+            throw $e;
+        }
+
+        $this->logger->info('Site successfully registered.', ['siteIdentifier' => $siteIdentifier, 'websiteId' => $websiteId]);
+    }
+
+    private function registerWhileLocked(Site $site, string $email): string
+    {
+        $siteIdentifier = $site->getIdentifier();
+
+        // Read the file, not the Site object: another request may have registered the site a moment before.
+        $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
+        if ((string)($existing['websiteId'] ?? '') !== '') {
+            $this->logger->warning('Registration: site is already registered.', ['siteIdentifier' => $siteIdentifier]);
+            throw new SiteAlreadyRegisteredException('The site is already registered.', 1760521202);
+        }
 
         try {
             $data = $this->apiClient->registerInstance($site, $email);
@@ -54,7 +82,6 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
 
         $encryptedSecret = $instanceSecret !== '' ? $this->cipherService->encrypt($instanceSecret) : '';
 
-        $existing = $this->siteSettingsFactory->loadLocalSettings($siteIdentifier) ?? [];
         try {
             $this->siteSettingsService->writeSettings($site, array_merge($existing, [
                 'websiteId' => $websiteId,
@@ -73,6 +100,6 @@ readonly class InstanceRegistrationService implements InstanceRegistrationServic
             throw $e;
         }
 
-        $this->logger->info('Site successfully registered.', ['siteIdentifier' => $siteIdentifier, 'websiteId' => $websiteId]);
+        return $websiteId;
     }
 }

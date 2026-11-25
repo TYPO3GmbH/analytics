@@ -8,6 +8,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use T3G\Analytics\Exception\AnalyticsApiException;
+use T3G\Analytics\Exception\SiteSettingsLockedException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\Exception\SiteConfigurationWriteException;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -27,6 +28,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
         private SiteSettingsWriteVerifierInterface $writeGuard,
+        private SiteSettingsLock $siteSettingsLock,
     ) {
     }
 
@@ -111,6 +113,29 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
             return;
         }
 
+        try {
+            $persisted = $this->siteSettingsLock->run($siteIdentifier, fn (): bool => $this->writeUpdate($site, $update));
+        } catch (SiteSettingsLockedException) {
+            $this->logger->info('syncSiteSettingsFromStatus: skipped, another request changes the settings.', ['siteIdentifier' => $siteIdentifier]);
+            return;
+        }
+        if (!$persisted) {
+            return;
+        }
+
+        $this->logger->info(
+            'Site settings updated from status response.',
+            ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]
+        );
+    }
+
+    /**
+     * Merges the update into the current settings file. Call it only while holding the lock.
+     *
+     * @param array<string, mixed> $update
+     */
+    private function writeUpdate(Site $site, array $update): bool
+    {
         $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
         try {
             $this->siteSettingsService->writeSettings($site, array_merge($existing, $update));
@@ -119,7 +144,7 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
                 'syncSiteSettingsFromStatus: writeSettings threw. Check file system permissions.',
                 ['siteIdentifier' => $site->getIdentifier(), 'exception' => $e->getMessage()]
             );
-            return;
+            return false;
         }
 
         try {
@@ -129,13 +154,9 @@ readonly class AnalyticsStatusService implements AnalyticsStatusServiceInterface
                 'syncSiteSettingsFromStatus: settings could not be persisted. Check file system permissions.',
                 ['siteIdentifier' => $site->getIdentifier()]
             );
-            return;
+            return false;
         }
-
-        $this->logger->info(
-            'Site settings updated from status response.',
-            ['siteIdentifier' => $site->getIdentifier(), 'update' => $update]
-        );
+        return true;
     }
 
     /**
