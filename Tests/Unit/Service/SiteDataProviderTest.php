@@ -107,7 +107,7 @@ final class SiteDataProviderTest extends UnitTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration($this->createConfiguredStub(ExtensionConfiguration::class, ['get' => ''])), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
 
@@ -121,7 +121,7 @@ final class SiteDataProviderTest extends UnitTestCase
             $this->pageAccessChecker,
             $connectionPool,
             $this->uriBuilder,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration($this->createConfiguredStub(ExtensionConfiguration::class, ['get' => ''])), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
         );
     }
 

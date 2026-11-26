@@ -66,14 +66,13 @@ Alternatively, you can set them in the configuration overrides file
         Directory for the data that the extension writes for each site:
         credentials, tracking code and API key. The extension writes one file
         per site, :file:`<siteDataPath>/<identifier>.yaml`. A relative path
-        starts at the project root. The directory must be in the project root.
-        TYPO3 does not import files from outside the project root.
+        starts at the project root.
 
         We recommend :file:`config/analytics`.
 
-        The extension always reads the data from the site settings. Thus the
-        :file:`settings.yaml` of each site must import the file. Without the
-        import, the registration fails. See :ref:`installation` for the setup.
+        The extension reads the data only from this file. The
+        :file:`settings.yaml` does not need an import. See :ref:`installation`
+        for the setup.
 
         Without a value, the extension writes the data into
         :file:`config/sites/<identifier>/settings.yaml`. This keeps existing

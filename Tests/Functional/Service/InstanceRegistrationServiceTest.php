@@ -80,7 +80,7 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $this->subject = new InstanceRegistrationService(
             $apiClient,
             $this->cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );

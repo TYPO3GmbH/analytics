@@ -93,7 +93,7 @@ final class AnalyticsStatusServiceTest extends UnitTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->writeGuard,
         );
     }

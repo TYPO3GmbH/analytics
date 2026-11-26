@@ -39,36 +39,31 @@ Set :confval:`siteDataPath` to write the data into a separate file for each
 site. We recommend :file:`config/analytics`. The extension then writes the
 data into :file:`config/analytics/<identifier>.yaml`.
 
-The extension always reads the data from the site settings. Thus you must
-import the file in the :file:`settings.yaml` of each site:
+With :confval:`siteDataPath`, the extension reads the data only from this
+file. The :file:`settings.yaml` does not need an import. The site settings do
+not contain the data. Thus :guilabel:`Site Management > Settings` shows empty
+values for the extension.
 
-..  code-block:: yaml
-    :caption: config/sites/<identifier>/settings.yaml
-
-    imports:
-      - { resource: '../../analytics/<identifier>.yaml', glob: true }
-
-    # Other site settings
-
-Commit :file:`settings.yaml` with the import. Keep only the directory
-:file:`config/analytics` in a shared folder.
-
-You must set ``glob: true``. The file does not exist before the first
-registration. With ``glob: true``, TYPO3 ignores a missing file. See
-:ref:`t3coreapi:yamlfileloader` for the glob option of the imports. Without
-``glob: true``, TYPO3 14.3.11 and later do not load a site with a missing
-import. TYPO3 also does not load the site when the file contains invalid YAML.
+Keep the directory :file:`config/analytics` in a shared folder. Do not commit
+the directory.
 
 *   Share the directory, not the single files. The extension replaces a file
     on each write. This removes a symbolic link to a single file.
-*   The directory must be in the project root. TYPO3 does not import files
-    from outside the project root. A symbolic link to a shared folder is
-    possible.
 *   In classic mode (no Composer), the project root is the web root. Deny web
     access to the directory. The same applies to :file:`typo3conf/sites/`.
 
-The values in :file:`settings.yaml` have priority over the imported file.
-Thus :file:`settings.yaml` must not contain the values of the extension:
+Move an existing installation to a separate file
+------------------------------------------------
+
+Set :confval:`siteDataPath` to :file:`config/analytics`. You do not have to
+move the data.
+
+Until the file of a site exists, the extension reads the data from
+:file:`settings.yaml`. The extension creates the file when the data changes,
+for example when the status or the tracking code changes. This write copies
+the values of the extension from :file:`settings.yaml` into the file. After
+this write, the extension ignores these values in :file:`settings.yaml`.
+Remove them from :file:`settings.yaml`:
 
 *   ``websiteId``
 *   ``instanceId``
@@ -78,29 +73,3 @@ Thus :file:`settings.yaml` must not contain the values of the extension:
 *   ``apiKeyId``
 *   ``apiKey``
 *   ``externalWebsiteId``
-
-The extension checks the import and ``glob: true`` before the registration.
-After each write, the extension makes sure that the site settings contain the
-new values.
-
-..  warning::
-    Do not save the site settings in the backend module :guilabel:`Site
-    Management > Settings`. The settings editor of TYPO3 writes all values,
-    also the imported values, into :file:`settings.yaml` and removes the
-    import. If this occurred, remove the values of the extension from
-    :file:`settings.yaml` and add the import again.
-
-Move an existing installation to a separate file
-------------------------------------------------
-
-#.  Copy the values of the extension from :file:`settings.yaml` into
-    :file:`config/analytics/<identifier>.yaml`.
-#.  Remove the values of the extension from :file:`settings.yaml`.
-#.  Add the import to :file:`settings.yaml`.
-#.  Set :confval:`siteDataPath` to :file:`config/analytics`.
-#.  Flush the TYPO3 caches.
-
-If you remove :confval:`siteDataPath` again, the extension writes into
-:file:`settings.yaml` again. The first write copies the imported values into
-:file:`settings.yaml` and removes the import. Then do not commit
-:file:`settings.yaml` any more.

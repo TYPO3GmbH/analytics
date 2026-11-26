@@ -30,16 +30,6 @@ final readonly class SiteSettingsWriteVerifier implements SiteSettingsWriteVerif
                 0
             );
         }
-        if (!$this->siteDataStorage->isImportedBySiteSettings($site)) {
-            $this->logger->error(
-                'The settings.yaml does not import the site data file with "glob: true". Add the import with "glob: true". Without the import, TYPO3 does not read the site data. Without "glob: true", TYPO3 does not load the site when the file is missing.',
-                $this->getContext($site)
-            );
-            throw new AnalyticsApiException(
-                'The site settings of site "' . $site->getIdentifier() . '" do not import the site data file correctly.' . self::SEE_LOG,
-                0
-            );
-        }
     }
 
     public function assertSettingsPersisted(Site $site, array $expected): void
@@ -50,17 +40,7 @@ final readonly class SiteSettingsWriteVerifier implements SiteSettingsWriteVerif
             if (($persisted[$key] ?? '') === $value) {
                 continue;
             }
-            if ($this->siteDataStorage->usesSeparateFile()) {
-                $this->logger->error(
-                    'The site settings do not contain the values of the site data file. Import the site data file in the settings.yaml and remove the values of the extension from the settings.yaml.',
-                    $this->getContext($site) + ['key' => $key]
-                );
-                throw new AnalyticsApiException(
-                    'The site settings of site "' . $site->getIdentifier() . '" do not contain the written values.' . self::SEE_LOG,
-                    0
-                );
-            }
-            $this->logger->error('The site settings do not contain the written values. Check file system permissions.', $this->getContext($site) + ['key' => $key]);
+            $this->logger->error('The site data does not contain the written values. Check file system permissions.', $this->getContext($site) + ['key' => $key]);
             throw new AnalyticsApiException(
                 'Settings for site "' . $site->getIdentifier() . '" could not be persisted. Check file system permissions.' . self::SEE_LOG,
                 0
@@ -73,10 +53,6 @@ final readonly class SiteSettingsWriteVerifier implements SiteSettingsWriteVerif
      */
     private function getContext(Site $site): array
     {
-        $context = ['siteIdentifier' => $site->getIdentifier(), 'location' => $this->siteDataStorage->getLocation($site)];
-        if ($this->siteDataStorage->usesSeparateFile()) {
-            $context['settingsLocation'] = $this->siteDataStorage->getSettingsLocation($site);
-        }
-        return $context;
+        return ['siteIdentifier' => $site->getIdentifier(), 'location' => $this->siteDataStorage->getLocation($site)];
     }
 }

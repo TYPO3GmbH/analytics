@@ -78,7 +78,7 @@ final class AnalyticsStatusServiceTest extends FunctionalTestCase
             $apiClient,
             $this->cipherService,
             new NullLogger(),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
     }

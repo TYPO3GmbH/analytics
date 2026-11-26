@@ -19,27 +19,44 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
- * The extension always reads the values from the site settings.
- * With siteDataPath, the extension writes the values into a separate file. The settings.yaml must import this file.
+ * Without siteDataPath, the extension reads and writes the values in the site settings.
+ * With siteDataPath, the extension reads and writes the values in a separate file. The site settings do not contain the values.
  */
 final readonly class SiteDataStorage implements SiteDataStorageInterface
 {
+    private const KEYS = [
+        'websiteId',
+        'instanceId',
+        'instanceSecret',
+        'trackingCode',
+        'status',
+        'apiKeyId',
+        'apiKey',
+        'externalWebsiteId',
+    ];
+
     public function __construct(
         private SiteDataConfiguration $configuration,
         private SiteSettingsService $siteSettingsService,
         private SiteSettingsFactory $siteSettingsFactory,
         private LockFactory $lockFactory,
         private LoggerInterface $logger,
-        #[Autowire(service: 'cache.core')]
-        private FrontendInterface $coreCache,
+        #[Autowire(service: 'cache.runtime')]
+        private FrontendInterface $runtimeCache,
     ) {
     }
 
     public function get(Site $site, string $key): mixed
     {
+        if (!$this->configuration->usesSiteSettings()) {
+            $data = $this->loadFileCached($site);
+            if ($data !== null) {
+                return $data[$key] ?? null;
+            }
+            // Fallback until the first write creates the file, e.g. after an installation sets siteDataPath.
+        }
         try {
             return $site->getSettings()->get($key);
         } catch (\Throwable $e) {
@@ -71,18 +88,22 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             if ($data === null) {
                 throw new SiteConfigurationWriteException('Unable to read ' . $this->getLocation($site), 1794494912);
             }
+            if (!$this->containsValues($data)) {
+                $data = array_merge($data, $this->loadValuesFromSiteSettings($site));
+            }
             $this->writeFile($site, array_merge($data, $values));
         } finally {
+            $this->runtimeCache->remove($this->getCacheIdentifier($site));
             $locker->release();
         }
-        // The site settings are cached in the core cache. SiteSettingsService::writeSettings() flushes it the same way.
-        $this->coreCache->flush();
     }
 
     public function loadPersisted(Site $site): array
     {
-        // With imports: this is the data that the next request reads from the site settings.
-        return $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        if ($this->configuration->usesSiteSettings()) {
+            return $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        }
+        return $this->loadFile($site) ?? [];
     }
 
     public function isWritable(Site $site): bool
@@ -109,52 +130,6 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         );
     }
 
-    public function getSettingsLocation(Site $site): string
-    {
-        return $this->getRelativePath($this->getSettingsFileName($site));
-    }
-
-    public function usesSeparateFile(): bool
-    {
-        return !$this->configuration->usesSiteSettings();
-    }
-
-    public function isImportedBySiteSettings(Site $site): bool
-    {
-        if ($this->configuration->usesSiteSettings()) {
-            return true;
-        }
-        $settingsFileName = $this->getSettingsFileName($site);
-        try {
-            $settings = is_file($settingsFileName) ? Yaml::parseFile($settingsFileName) : null;
-        } catch (ParseException) {
-            return false;
-        }
-        if (!is_array($settings) || !is_array($settings['imports'] ?? null)) {
-            return false;
-        }
-        $fileName = PathUtility::getCanonicalPath($this->getFileName($site));
-        foreach ($settings['imports'] as $import) {
-            $resource = is_array($import) && is_string($import['resource'] ?? null) ? $import['resource'] : '';
-            if ($resource === '') {
-                continue;
-            }
-            // Resolve the path like the YamlFileLoader of the core.
-            $importedFileName = PathUtility::isExtensionPath($resource) || PathUtility::isAbsolutePath($resource)
-                ? GeneralUtility::getFileAbsFileName($resource)
-                : PathUtility::getAbsolutePathOfRelativeReferencedFileOrPath($settingsFileName, $resource);
-            if ($importedFileName === '') {
-                continue;
-            }
-            $importedFileName = PathUtility::getCanonicalPath($importedFileName);
-            // Without glob, TYPO3 14.3.11 and later do not load the site when the file is missing.
-            if (($import['glob'] ?? false) === true && fnmatch($importedFileName, $fileName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private function acquireLock(Site $site): LockingStrategyInterface
     {
         try {
@@ -168,6 +143,56 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             $previous = $e;
         }
         throw new SiteConfigurationWriteException('Unable to lock ' . $this->getLocation($site), 1794494911, $previous);
+    }
+
+    /**
+     * The middleware reads several values in each frontend request: parse the file only once.
+     *
+     * @return array<string, mixed>|null null when the file does not exist or contains no values of the extension
+     */
+    private function loadFileCached(Site $site): ?array
+    {
+        $cacheIdentifier = $this->getCacheIdentifier($site);
+        $data = $this->runtimeCache->get($cacheIdentifier);
+        if (is_array($data)) {
+            return $data;
+        }
+        if (!is_file($this->getFileName($site))) {
+            return null;
+        }
+        $data = $this->loadFile($site);
+        // For example, a deployment tool created an empty shared file.
+        if ($data !== null && !$this->containsValues($data)) {
+            return null;
+        }
+        // An invalid file must not activate the fallback to old values. loadFile() logs the error.
+        $data ??= [];
+        $this->runtimeCache->set($cacheIdentifier, $data);
+        return $data;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function containsValues(array $data): bool
+    {
+        return array_intersect_key($data, array_flip(self::KEYS)) !== [];
+    }
+
+    /**
+     * Values of an installation that used the site settings before siteDataPath was set.
+     *
+     * @return array<string, mixed>
+     * @throws SiteConfigurationWriteException
+     */
+    private function loadValuesFromSiteSettings(Site $site): array
+    {
+        try {
+            $settings = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
+        } catch (\RuntimeException $e) {
+            throw new SiteConfigurationWriteException('Unable to read the site settings of site ' . $site->getIdentifier(), 1795704081, $e);
+        }
+        return array_intersect_key($settings, array_flip(self::KEYS));
     }
 
     /**
@@ -202,7 +227,6 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
     {
         $fileName = $this->getFileName($site);
         $content = '# Written by the TYPO3 Analytics extension. Do not edit and do not commit this file.' . "\n"
-            . '# Import this file in ' . $this->getSettingsLocation($site) . '.' . "\n"
             . Yaml::dump($data, 99, 2);
         // Atomic write: a request never reads a half-written file.
         $temporaryFileName = $fileName . '.' . bin2hex(random_bytes(4)) . '.tmp';
@@ -240,6 +264,11 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
     private function getSettingsFileName(Site $site): string
     {
         return Environment::getConfigPath() . '/sites/' . $site->getIdentifier() . '/settings.yaml';
+    }
+
+    private function getCacheIdentifier(Site $site): string
+    {
+        return 'analytics_site_data_' . md5($site->getIdentifier());
     }
 
     private function getRelativePath(string $fileName): string

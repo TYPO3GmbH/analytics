@@ -17,27 +17,26 @@ final class TrackingCodeFrontendWithSiteDataFileTest extends AbstractTrackingCod
     ];
 
     #[Test]
-    public function thePageContainsTheTrackingCodeFromTheImportedFile(): void
+    public function thePageContainsTheTrackingCodeFromTheFile(): void
     {
-        $this->writeSettingsYamlWithImport();
         $this->writeSiteDataFile(['trackingCode' => self::TRACKING_CODE, 'status' => 'active']);
 
         self::assertStringContainsString(self::TRACKING_CODE . "\n</body>", $this->fetchPage());
     }
 
     #[Test]
-    public function thePageDoesNotContainTheTrackingCodeWhenTheSettingsYamlDoesNotImportTheFile(): void
+    public function thePageContainsTheTrackingCodeFromTheSettingsYamlUntilTheFileExists(): void
     {
-        $this->writeSiteDataFile(['trackingCode' => self::TRACKING_CODE, 'status' => 'active']);
+        $this->writeSettingsYaml(['trackingCode' => self::TRACKING_CODE, 'status' => 'active']);
 
-        self::assertStringNotContainsString(self::TRACKING_CODE, $this->fetchPage());
+        self::assertStringContainsString(self::TRACKING_CODE . "\n</body>", $this->fetchPage());
     }
 
     #[Test]
-    public function theValuesInTheSettingsYamlHavePriorityOverTheImportedFile(): void
+    public function theValuesInTheSettingsYamlDoNotOverrideTheFile(): void
     {
-        $this->writeSettingsYamlWithImport(['status' => 'cancelled']);
-        $this->writeSiteDataFile(['trackingCode' => self::TRACKING_CODE, 'status' => 'active']);
+        $this->writeSettingsYaml(['trackingCode' => self::TRACKING_CODE, 'status' => 'active']);
+        $this->writeSiteDataFile(['trackingCode' => self::TRACKING_CODE, 'status' => 'cancelled']);
 
         self::assertStringNotContainsString(self::TRACKING_CODE, $this->fetchPage());
     }

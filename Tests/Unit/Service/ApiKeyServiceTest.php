@@ -80,7 +80,7 @@ final class ApiKeyServiceTest extends UnitTestCase
         $this->subject = new ApiKeyService(
             $apiClient,
             $this->cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->writeGuard,
             new NullLogger(),
         );

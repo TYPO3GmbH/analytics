@@ -419,7 +419,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
 
@@ -432,7 +432,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
             $pageAccessChecker,
             $this->get(ConnectionPool::class),
             $this->get(UriBuilder::class),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
         );
 
         $moduleHelper = new ModuleConfigurator(
@@ -443,7 +443,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $registrationService = new InstanceRegistrationService(
             $apiClient,
             $cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
@@ -451,7 +451,7 @@ final class BackendModuleControllerTest extends FunctionalTestCase
         $apiKeyService = new ApiKeyService(
             $apiClient,
             $cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );

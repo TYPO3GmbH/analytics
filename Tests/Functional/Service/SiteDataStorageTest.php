@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace T3G\Analytics\Tests\Functional\Service;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\NullLogger;
 use Symfony\Component\Yaml\Yaml;
@@ -38,6 +37,17 @@ final class SiteDataStorageTest extends FunctionalTestCase
         'trackingCode' => '<script>track()</script>',
         'status' => 'active',
         'otherExtension' => ['setting' => 'keep-me'],
+    ];
+
+    /**
+     * The values of the extension in EXISTING_SETTINGS. The first write copies them into the separate file.
+     */
+    private const EXISTING_DATA = [
+        'websiteId' => 'f2dddfbb-a7c5-4503-b461-5a6022d91522',
+        'instanceId' => 'ae518ea5-9ca5-4270-84d3-23fc87c241d3',
+        'instanceSecret' => 'encrypted-instance-secret',
+        'trackingCode' => '<script>track()</script>',
+        'status' => 'active',
     ];
 
     private string $settingsFileName;
@@ -110,7 +120,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function withSeparateFileTheStorageWritesOnlyTheNewValuesIntoTheFileAndDoesNotChangeTheSettingsYaml(): void
+    public function withSeparateFileTheFirstWriteCopiesTheValuesOfTheExtensionFromTheSettingsYamlIntoTheFile(): void
     {
         $settingsYaml = (string)file_get_contents($this->settingsFileName);
         $subject = $this->buildSubject(self::DATA_PATH);
@@ -118,94 +128,78 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $subject->write($this->site(), ['apiKeyId' => 'key-1', 'apiKey' => 'encrypted-api-key']);
 
         self::assertSame($settingsYaml, file_get_contents($this->settingsFileName));
-        self::assertSame(['apiKeyId' => 'key-1', 'apiKey' => 'encrypted-api-key'], $this->readDataFile());
+        self::assertSame(self::EXISTING_DATA + ['apiKeyId' => 'key-1', 'apiKey' => 'encrypted-api-key'], $this->readDataFile());
         self::assertSame($this->dataLocation('main.yaml'), $subject->getLocation($this->site()));
-        self::assertSame('typo3conf/sites/main/settings.yaml', $subject->getSettingsLocation($this->site()));
-        self::assertTrue($subject->usesSeparateFile());
-        self::assertFalse($this->buildSubject('')->usesSeparateFile());
     }
 
     #[Test]
-    public function withSeparateFileTheStorageReadsTheSiteSettingsAndNotTheFile(): void
+    public function withSeparateFileTheStorageReadsTheSiteSettingsUntilTheFileExists(): void
     {
         $subject = $this->buildSubject(self::DATA_PATH);
-
-        $subject->write($this->site(), ['status' => 'cancelled']);
 
         self::assertSame('active', $subject->get($this->site(), 'status'));
-        self::assertSame('active', $subject->loadPersisted($this->site())['status']);
+        self::assertSame([], $subject->loadPersisted($this->site()));
     }
 
     #[Test]
-    public function withSeparateFileTheSiteSettingsContainTheValuesOfTheFileWhenTheSettingsYamlImportsTheFile(): void
+    public function withSeparateFileTheStorageReadsTheFileAndNotTheSiteSettings(): void
     {
-        $settings = self::EXISTING_SETTINGS;
-        unset($settings['status'], $settings['trackingCode']);
-        $this->writeSettingsYamlWithImport($settings);
+        $this->writeDataFile("status: cancelled\n");
         $subject = $this->buildSubject(self::DATA_PATH);
 
-        $subject->write($this->site(), ['status' => 'cancelled', 'trackingCode' => '']);
-
-        $persisted = $subject->loadPersisted($this->site());
-        self::assertSame('cancelled', $persisted['status']);
-        self::assertSame('', $persisted['trackingCode']);
-        self::assertSame(self::EXISTING_SETTINGS['websiteId'], $persisted['websiteId']);
-        self::assertSame(['setting' => 'keep-me'], $persisted['otherExtension']);
-        self::assertArrayNotHasKey('imports', $persisted);
+        self::assertSame('cancelled', $subject->get($this->site(), 'status'));
+        self::assertNull($subject->get($this->site(), 'websiteId'));
+        self::assertSame(['status' => 'cancelled'], $subject->loadPersisted($this->site()));
     }
 
     #[Test]
-    public function withSeparateFileTheValuesOfTheSettingsYamlHavePriorityOverTheImportedFile(): void
+    public function withSeparateFileTheStorageReadsTheWrittenValueInTheSameRequest(): void
     {
-        $this->writeSettingsYamlWithImport(self::EXISTING_SETTINGS);
         $subject = $this->buildSubject(self::DATA_PATH);
+        $subject->write($this->site(), ['status' => 'inactive']);
+        self::assertSame('inactive', $subject->get($this->site(), 'status'));
 
         $subject->write($this->site(), ['status' => 'cancelled']);
 
-        self::assertSame('active', $subject->loadPersisted($this->site())['status']);
-    }
-
-    /**
-     * @return array<string, array{string, bool}>
-     */
-    public static function importDataProvider(): array
-    {
-        return [
-            'no import' => ["websiteId: abc\n", false],
-            'relative path' => ["imports:\n  - { resource: '../../../" . self::DATA_PATH . "/main.yaml', glob: true }\n", true],
-            'relative path without glob option' => ["imports:\n  - { resource: '../../../" . self::DATA_PATH . "/main.yaml' }\n", false],
-            'relative path with dot segments' => ["imports:\n  - { resource: './../../../" . self::DATA_PATH . '/../' . self::DATA_PATH . "/main.yaml', glob: true }\n", true],
-            'file of another site' => ["imports:\n  - { resource: '../../../" . self::DATA_PATH . "/other.yaml', glob: true }\n", false],
-            'glob' => ["imports:\n  - { resource: '../../../" . self::DATA_PATH . "/*.yaml', glob: true }\n", true],
-            'glob pattern without glob option' => ["imports:\n  - { resource: '../../../" . self::DATA_PATH . "/*.yaml' }\n", false],
-            'invalid yaml' => ["imports: [not closed\n", false],
-        ];
+        self::assertSame('cancelled', $subject->get($this->site(), 'status'));
+        self::assertSame('cancelled', $subject->loadPersisted($this->site())['status']);
     }
 
     #[Test]
-    #[DataProvider('importDataProvider')]
-    public function withSeparateFileTheStorageDetectsTheImportInTheSettingsYaml(string $settingsYaml, bool $expected): void
+    public function withSeparateFileAnInvalidFileDoesNotActivateTheFallbackToTheSiteSettings(): void
     {
-        // Load the site first: TYPO3 14.3.11 and later do not load a site with a missing import.
-        $site = $this->site();
-        file_put_contents($this->settingsFileName, $settingsYaml);
+        $this->writeDataFile("status: [not closed\n");
 
-        self::assertSame($expected, $this->buildSubject(self::DATA_PATH)->isImportedBySiteSettings($site));
+        self::assertNull($this->buildSubject(self::DATA_PATH)->get($this->site(), 'status'));
     }
 
     #[Test]
-    public function withSeparateFileTheStorageDetectsAnImportWithAnAbsolutePath(): void
+    public function withSeparateFileAFileWithoutValuesOfTheExtensionDoesNotStopTheFallbackAndTheCopy(): void
+    {
+        $this->writeDataFile("# Created by a deployment tool\naddedByANewerVersion: keep-me\n");
+        $subject = $this->buildSubject(self::DATA_PATH);
+
+        self::assertSame('active', $subject->get($this->site(), 'status'));
+        $subject->write($this->site(), ['apiKeyId' => 'key-1']);
+
+        self::assertSame(['addedByANewerVersion' => 'keep-me'] + self::EXISTING_DATA + ['apiKeyId' => 'key-1'], $this->readDataFile());
+    }
+
+    #[Test]
+    public function withSeparateFileTheStorageIsNotWritableWhenItCannotReadTheSiteSettingsForTheCopy(): void
     {
         $site = $this->site();
-        file_put_contents($this->settingsFileName, "imports:\n  - { resource: '" . $this->dataDirectory() . "/main.yaml', glob: true }\n");
+        file_put_contents($this->settingsFileName, "status: [not closed\n");
+        $subject = $this->buildSubject(self::DATA_PATH);
 
-        self::assertTrue($this->buildSubject(self::DATA_PATH)->isImportedBySiteSettings($site));
-    }
-
-    #[Test]
-    public function withoutConfigurationTheStorageNeedsNoImport(): void
-    {
-        self::assertTrue($this->buildSubject('')->isImportedBySiteSettings($this->site()));
+        self::assertFalse($subject->isWritable($site));
+        try {
+            $subject->write($site, ['status' => 'active']);
+            self::fail('The write must fail');
+        } catch (SiteConfigurationWriteException $e) {
+            self::assertSame(1795704081, $e->getCode());
+        }
+        self::assertFileDoesNotExist($this->dataDirectory() . '/main.yaml');
     }
 
     #[Test]
@@ -323,7 +317,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $requestB->write($this->site(), ['apiKeyId' => 'key-1']);
         $requestA->write($this->site(), ['status' => 'inactive']);
 
-        self::assertSame(['status' => 'inactive', 'apiKeyId' => 'key-1'], $this->readDataFile());
+        self::assertSame(array_merge(self::EXISTING_DATA, ['status' => 'inactive', 'apiKeyId' => 'key-1']), $this->readDataFile());
     }
 
     #[Test]
@@ -341,12 +335,12 @@ final class SiteDataStorageTest extends FunctionalTestCase
     {
         $subject = $this->buildSubject(self::DATA_PATH);
         self::assertTrue($subject->isWritable($this->site()));
-        self::assertSame([], $this->readDataFile());
+        self::assertSame(self::EXISTING_DATA, $this->readDataFile());
 
-        $subject->write($this->site(), ['status' => 'active']);
+        $subject->write($this->site(), ['status' => 'inactive']);
         self::assertTrue($subject->isWritable($this->site()));
 
-        self::assertSame(['status' => 'active'], $this->readDataFile());
+        self::assertSame(array_merge(self::EXISTING_DATA, ['status' => 'inactive']), $this->readDataFile());
     }
 
     #[Test]
@@ -366,17 +360,6 @@ final class SiteDataStorageTest extends FunctionalTestCase
         $subject->write($this->site(), ['status' => 'active']);
 
         self::assertFileExists($directory . '/main.yaml');
-    }
-
-    /**
-     * @param array<string, mixed> $settings
-     */
-    private function writeSettingsYamlWithImport(array $settings): void
-    {
-        file_put_contents(
-            $this->settingsFileName,
-            "imports:\n  - { resource: '../../../" . self::DATA_PATH . "/main.yaml', glob: true }\n" . Yaml::dump($settings, 99, 2)
-        );
     }
 
     /**
@@ -413,7 +396,7 @@ final class SiteDataStorageTest extends FunctionalTestCase
             $this->get(SiteSettingsFactory::class),
             $lockFactory ?? $this->get(LockFactory::class),
             new NullLogger(),
-            $this->get(CacheManager::class)->getCache('core'),
+            $this->get(CacheManager::class)->getCache('runtime'),
         );
     }
 

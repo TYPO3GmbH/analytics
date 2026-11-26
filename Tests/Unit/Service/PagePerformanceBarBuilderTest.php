@@ -92,7 +92,7 @@ final class PagePerformanceBarBuilderTest extends UnitTestCase
             $this->createMock(LoggerInterface::class),
             $this->cache,
             new MetricFormatter(),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration($this->createConfiguredStub(ExtensionConfiguration::class, ['get' => ''])), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
         );
     }
 

@@ -78,7 +78,7 @@ final class InstanceRegistrationServiceTest extends UnitTestCase
         $this->subject = new InstanceRegistrationService(
             $apiClient,
             $this->cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->writeGuard,
             new NullLogger(),
         );

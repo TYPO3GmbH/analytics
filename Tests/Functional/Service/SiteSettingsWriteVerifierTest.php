@@ -26,7 +26,6 @@ use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
 {
@@ -47,7 +46,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
             'websiteId' => 'w-123',
             'instanceId' => 'i-456',
         ]);
-        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')), new NullLogger());
 
         $verifier->assertSettingsPersisted($this->buildSite(), ['websiteId' => 'w-123', 'instanceId' => 'i-456']);
     }
@@ -56,7 +55,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     public function assertSettingsPersistedThrowsWhenKeyIsAbsent(): void
     {
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn([]);
-        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')), new NullLogger());
 
         $this->expectException(AnalyticsApiException::class);
         $this->expectExceptionMessageMatches('/"main"/');
@@ -68,7 +67,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     public function assertSettingsPersistedThrowsWhenValueDoesNotMatch(): void
     {
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'other-id']);
-        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')), new NullLogger());
 
         $this->expectException(AnalyticsApiException::class);
 
@@ -79,7 +78,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
     public function assertSettingsPersistedThrowsOnFirstFailingKey(): void
     {
         $this->siteSettingsFactory->method('loadLocalSettings')->willReturn(['websiteId' => 'w-123']);
-        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')), new NullLogger());
 
         $this->expectException(AnalyticsApiException::class);
 
@@ -94,7 +93,7 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
             ->method('loadLocalSettings')
             ->willReturn(['websiteId' => 'w-123', 'instanceId' => 'i-456']);
 
-        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('core')), new NullLogger());
+        $verifier = new SiteSettingsWriteVerifier(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')), new NullLogger());
         $verifier->assertSettingsPersisted($this->buildSite(), ['websiteId' => 'w-123', 'instanceId' => 'i-456']);
     }
 
@@ -110,6 +109,8 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
             ],
         ]);
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = 'analytics-data';
+        // A file in place of the directory: the extension cannot create the directory, also as root.
+        file_put_contents(Environment::getProjectPath() . '/analytics-data', '');
         $logger = new class () extends AbstractLogger {
             /** @var list<array{message: string, context: array<mixed>}> */
             public array $records = [];
@@ -125,15 +126,14 @@ final class SiteSettingsWriteVerifierTest extends FunctionalTestCase
             $verifier->assertDirectoryWritable($this->get(SiteFinder::class)->getSiteByIdentifier('main'));
             self::fail('The check must fail');
         } catch (AnalyticsApiException $e) {
-            self::assertSame('The site settings of site "main" do not import the site data file correctly. See the TYPO3 log for details.', $e->getMessage());
+            self::assertSame('Cannot write the site data for site "main". Check file system permissions. See the TYPO3 log for details.', $e->getMessage());
         } finally {
             unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath']);
-            GeneralUtility::rmdir(Environment::getProjectPath() . '/analytics-data', true);
+            unlink(Environment::getProjectPath() . '/analytics-data');
         }
 
         self::assertCount(1, $logger->records);
         self::assertSame('analytics-data/main.yaml', $logger->records[0]['context']['location']);
-        self::assertSame('typo3conf/sites/main/settings.yaml', $logger->records[0]['context']['settingsLocation']);
     }
 
     private function buildSite(): Site

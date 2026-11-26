@@ -145,7 +145,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $apiClient,
             $cipherService,
             new NullLogger(),
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
         );
         $this->analyticsStatusService = $analyticsStatusService;
@@ -153,7 +153,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $registrationService = new InstanceRegistrationService(
             $apiClient,
             $cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
@@ -161,7 +161,7 @@ final class BackendModuleControllerTest extends UnitTestCase
         $apiKeyService = new ApiKeyService(
             $apiClient,
             $cipherService,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
             new NullLogger(),
         );
@@ -189,7 +189,7 @@ final class BackendModuleControllerTest extends UnitTestCase
             $this->createMock(BackendPageAccessCheckerInterface::class),
             $connectionPool,
             $this->uriBuilder,
-            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')),
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('runtime')),
         );
 
         $moduleHelper = new ModuleConfigurator(

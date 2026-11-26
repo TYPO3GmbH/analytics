@@ -10,17 +10,19 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 interface SiteDataStorageInterface
 {
     /**
-     * Reads the value from the site settings. Null when not set.
+     * Reads the value from the site settings, or from the separate file with siteDataPath. Null when not set.
+     * With siteDataPath, reads the site settings until the first write creates the file.
      */
     public function get(Site $site, string $key): mixed;
 
     /**
-     * Reads the value from the site settings. Empty string when not set or not a scalar value.
+     * Same as get(). Empty string when not set or not a scalar value.
      */
     public function getString(Site $site, string $key): string;
 
     /**
      * Merges the values into the stored data: settings.yaml, or the separate file with siteDataPath.
+     * The first write into the separate file copies the values of the extension from settings.yaml.
      *
      * @param array<string, mixed> $values
      * @throws SiteConfigurationWriteException
@@ -28,7 +30,7 @@ interface SiteDataStorageInterface
     public function write(Site $site, array $values): void;
 
     /**
-     * Reads the local site settings again from the disk, with imports.
+     * Reads the stored data again from the disk: settings.yaml, or the separate file with siteDataPath.
      *
      * @return array<string, mixed>
      */
@@ -43,19 +45,4 @@ interface SiteDataStorageInterface
      * File path, relative to the project root when possible.
      */
     public function getLocation(Site $site): string;
-
-    /**
-     * Path of the settings.yaml, relative to the project root when possible.
-     */
-    public function getSettingsLocation(Site $site): string;
-
-    /**
-     * True with siteDataPath: the settings.yaml must import the separate file.
-     */
-    public function usesSeparateFile(): bool;
-
-    /**
-     * True when the settings.yaml imports the separate file with "glob: true". Always true without siteDataPath.
-     */
-    public function isImportedBySiteSettings(Site $site): bool;
 }

@@ -97,13 +97,10 @@ final class InstanceRegistrationWithReadOnlyStorageTest extends FunctionalTestCa
     }
 
     #[Test]
-    public function withSeparateFileTheRegistrationWritesTheCredentialsIntoTheImportedFile(): void
+    public function withSeparateFileTheRegistrationWritesTheCredentialsIntoTheFile(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = self::DATA_PATH;
         $this->appendRegistrationResponse();
-        $settingsYaml = $this->settingsYamlFileName();
-        file_put_contents($settingsYaml, "imports:\n  - { resource: '../../../" . self::DATA_PATH . "/main.yaml', glob: true }\n");
-        $settingsYamlBefore = file_get_contents($settingsYaml);
 
         $this->get(InstanceRegistrationServiceInterface::class)->register($this->site(), 'admin@example.com');
 
@@ -120,45 +117,21 @@ final class InstanceRegistrationWithReadOnlyStorageTest extends FunctionalTestCa
         self::assertSame(self::INSTANCE_ID, $persisted['instanceId']);
         self::assertNotSame('instance-secret', $persisted['instanceSecret'], 'The secret must be stored encrypted');
         self::assertSame('instance-secret', $this->get(CipherServiceInterface::class)->decrypt($persisted['instanceSecret']));
-        self::assertSame($settingsYamlBefore, file_get_contents($settingsYaml), 'The registration must not change the settings.yaml');
+        self::assertFileExists($this->dataDirectory() . '/main.yaml');
+        self::assertFileDoesNotExist($this->settingsYamlFileName(), 'The registration must not write the settings.yaml');
     }
 
     #[Test]
-    public function withSeparateFileTheRegistrationSendsNoRequestWhenTheSettingsYamlDoesNotImportTheFile(): void
-    {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = self::DATA_PATH;
-
-        try {
-            $this->get(InstanceRegistrationServiceInterface::class)->register($this->site(), 'admin@example.com');
-            self::fail('The registration must fail');
-        } catch (AnalyticsApiException $e) {
-            self::assertSame(
-                'The site settings of site "main" do not import the site data file correctly. See the TYPO3 log for details.',
-                $e->getMessage()
-            );
-        }
-        self::assertCount(0, $this->httpHistory, 'The extension must not send a request to the API');
-    }
-
-    #[Test]
-    public function withSeparateFileTheRegistrationFailsWhenTheSettingsYamlOverridesTheImportedValues(): void
+    public function withSeparateFileTheValuesInTheSettingsYamlDoNotOverrideTheRegistration(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = self::DATA_PATH;
         $this->appendRegistrationResponse();
-        file_put_contents(
-            $this->settingsYamlFileName(),
-            "imports:\n  - { resource: '../../../" . self::DATA_PATH . "/main.yaml', glob: true }\nwebsiteId: old-website-id\n"
-        );
+        // For example, the values from the time before the installation set siteDataPath.
+        file_put_contents($this->settingsYamlFileName(), "websiteId: old-website-id\n");
 
-        try {
-            $this->get(InstanceRegistrationServiceInterface::class)->register($this->site(), 'admin@example.com');
-            self::fail('The registration must fail');
-        } catch (AnalyticsApiException $e) {
-            self::assertSame(
-                'The site settings of site "main" do not contain the written values. See the TYPO3 log for details.',
-                $e->getMessage()
-            );
-        }
+        $this->get(InstanceRegistrationServiceInterface::class)->register($this->site(), 'admin@example.com');
+
+        self::assertSame(self::WEBSITE_ID, $this->get(SiteDataStorageInterface::class)->getString($this->site(), 'websiteId'));
     }
 
     private function appendRegistrationResponse(): void

@@ -31,7 +31,7 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->subject = new TrackingCodeMiddleware(new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('core')));
+        $this->subject = new TrackingCodeMiddleware(new SiteDataStorage(new SiteDataConfiguration($this->createConfiguredStub(ExtensionConfiguration::class, ['get' => ''])), $this->createMock(SiteSettingsService::class), $this->createMock(SiteSettingsFactory::class), new LockFactory(), new NullLogger(), new NullFrontend('runtime')));
     }
 
     #[Test]

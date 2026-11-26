@@ -56,19 +56,6 @@ abstract class AbstractTrackingCodeFrontendTestCase extends FunctionalTestCase
     }
 
     /**
-     * @param array<string, string> $settings
-     */
-    protected function writeSettingsYamlWithImport(array $settings = []): void
-    {
-        $yaml = "imports:\n  - { resource: '../../../" . self::DATA_PATH . '/' . self::SITE . ".yaml', glob: true }\n";
-        foreach ($settings as $key => $value) {
-            $yaml .= $key . ': ' . json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . "\n";
-        }
-        file_put_contents(Environment::getConfigPath() . '/sites/' . self::SITE . '/settings.yaml', $yaml);
-        $this->flushSiteSettingsCache();
-    }
-
-    /**
      * SiteWriter does not flush the cached site settings.
      */
     private function flushSiteSettingsCache(): void
