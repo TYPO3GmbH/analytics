@@ -235,6 +235,12 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             throw new SiteConfigurationWriteException('Unable to write the site data to ' . $this->getLocation($site), 1794494910);
         }
         GeneralUtility::fixPermissions($temporaryFileName);
+        // Keep the permissions of the existing file: an administrator can restrict the access to the secrets.
+        clearstatcache(true, $fileName);
+        $permissions = is_file($fileName) ? fileperms($fileName) : false;
+        if ($permissions !== false) {
+            @chmod($temporaryFileName, $permissions & 0777);
+        }
         if (!@rename($temporaryFileName, $fileName)) {
             @unlink($temporaryFileName);
             throw new SiteConfigurationWriteException('Unable to write the site data to ' . $this->getLocation($site), 1794494913);

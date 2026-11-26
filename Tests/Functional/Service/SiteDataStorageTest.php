@@ -203,6 +203,21 @@ final class SiteDataStorageTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function withSeparateFileAWriteKeepsThePermissionsOfTheFile(): void
+    {
+        $subject = $this->buildSubject(self::DATA_PATH);
+        $subject->write($this->site(), ['status' => 'active']);
+        $fileName = $this->dataDirectory() . '/main.yaml';
+        chmod($fileName, 0600);
+
+        $subject->write($this->site(), ['status' => 'inactive']);
+
+        clearstatcache(true, $fileName);
+        self::assertSame(0600, fileperms($fileName) & 0777);
+        self::assertSame('inactive', $subject->loadPersisted($this->site())['status']);
+    }
+
+    #[Test]
     public function withSeparateFileTheStorageCreatesTheDirectory(): void
     {
         $subject = $this->buildSubject(self::DATA_PATH . '/nested');
