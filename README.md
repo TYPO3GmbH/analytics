@@ -11,6 +11,7 @@ For the full documentation, see [docs.typo3.org](https://docs.typo3.org/permalin
   - [Development settings](#development-settings)
   - [Dashboard settings](#dashboard-settings)
   - [Cache settings](#cache-settings)
+  - [Site data settings](#site-data-settings)
 - [Local development with DDEV](#local-development-with-ddev)
 - [Compatibility notes](#compatibility-notes)
 
@@ -35,7 +36,9 @@ Make sure the **Dashboard** system extension is active before installing.
 
 ### Deployment note
 
-The extension writes sensitive data (credentials, tracking code and API keys) into `config/sites/<identifier>/settings.yaml` of each site. Do not commit this file to the repository. For more information, see [Installation](https://docs.typo3.org/permalink/t3g-analytics:installation).
+By default, the extension writes sensitive data (credentials, tracking code and API keys) into `config/sites/<identifier>/settings.yaml` of each site. Do not commit this file to the repository.
+
+We recommend a separate file for each site. Set `siteDataPath` (see [Site data settings](#site-data-settings)) to `config/analytics`. The extension then reads and writes the data in `config/analytics/<identifier>.yaml`. In classic mode (no Composer), deny web access to the directory. For more information, see [Installation](https://docs.typo3.org/permalink/t3g-analytics:installation).
 
 ## Configuration
 
@@ -70,6 +73,12 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['dashboardDefaultPeriod']
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
 ```
+
+### Site data settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `siteDataPath` | string | _(empty)_ | Directory for the site data files (`<siteDataPath>/<identifier>.yaml`). A relative path starts at the project root. Recommended: `config/analytics`. In classic mode (no Composer), deny web access to the directory. The extension reads the data only from this file. Without a value, the extension writes the data into `settings.yaml`. This keeps existing installations working. For new installations, set a value. |
 
 ## Local development with DDEV
 

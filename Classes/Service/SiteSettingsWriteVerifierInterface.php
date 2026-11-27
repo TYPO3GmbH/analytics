@@ -10,7 +10,7 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 interface SiteSettingsWriteVerifierInterface
 {
     /**
-     * Asserts that the site configuration directory is writable.
+     * Asserts that the site data location is writable.
      *
      * @throws AnalyticsApiException
      */
@@ -18,7 +18,7 @@ interface SiteSettingsWriteVerifierInterface
 
     /**
      * Asserts that the given settings were actually persisted to disk.
-     * Call this after writeSettings() to detect silent write failures.
+     * Call this after SiteDataStorageInterface::write() to detect silent write failures.
      *
      * @param array<string, mixed> $expected key-value pairs that must appear in the persisted settings
      * @throws AnalyticsApiException

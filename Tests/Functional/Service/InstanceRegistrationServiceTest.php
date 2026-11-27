@@ -10,17 +10,23 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\ApiConfiguration;
+use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Service\AnalyticsApiClient;
 use T3G\Analytics\Service\ApiExceptionExtractor;
 use T3G\Analytics\Service\CipherService;
 use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\InstanceRegistrationService;
+use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
+use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Client\GuzzleClientFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Locking\LockFactory;
 use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -74,10 +80,9 @@ final class InstanceRegistrationServiceTest extends FunctionalTestCase
         $this->subject = new InstanceRegistrationService(
             $apiClient,
             $this->cipherService,
-            $this->siteSettingsService,
-            $this->siteSettingsFactory,
+            new SiteDataStorage(new SiteDataConfiguration(new ExtensionConfiguration()), $this->siteSettingsService, $this->siteSettingsFactory, $this->get(LockFactory::class), new NullLogger(), new NullFrontend('runtime')),
             $this->createMock(SiteSettingsWriteVerifierInterface::class),
-            new \Psr\Log\NullLogger(),
+            new NullLogger(),
         );
     }
 

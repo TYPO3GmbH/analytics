@@ -59,6 +59,24 @@ Alternatively, you can set them in the configuration overrides file
         :php:`Development`. Use it to explore the analytics widgets and
         module without needing an analytics account.
 
+    ..  confval:: siteDataPath
+        :type: string
+        :default: (empty)
+
+        Directory for the data that the extension writes for each site:
+        credentials, tracking code and API key. The extension writes one file
+        per site, :file:`<siteDataPath>/<identifier>.yaml`. A relative path
+        starts at the project root.
+
+        We recommend :file:`config/analytics`.
+
+        The extension reads the data only from this file. In classic mode (no
+        Composer), deny web access to the directory. See :ref:`installation`
+        for the setup.
+
+        Without a value, the extension writes the data into
+        :file:`config/sites/<identifier>/settings.yaml`. This keeps existing
+        installations working. For new installations, set a value.
 
 Dashboard settings
 ==================
@@ -79,6 +97,23 @@ Cache settings
 ..  code-block:: php
 
     $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['pageAnalyticsCacheTtl'] = 7200;
+
+
+Site data settings
+==================
+
+**Example — keep the site data outside of settings.yaml:**
+
+..  code-block:: php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = 'config/analytics';
+
+**Example — use an environment variable:**
+
+..  code-block:: php
+    :caption: config/system/additional.php
+
+    $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = getenv('ANALYTICS_SITE_DATA_PATH') ?: 'config/analytics';
 
 
 Development settings
