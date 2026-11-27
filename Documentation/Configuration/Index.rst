@@ -70,8 +70,8 @@ Alternatively, you can set them in the configuration overrides file
 
         We recommend :file:`config/analytics`.
 
-        The extension reads the data only from this file. The
-        :file:`settings.yaml` does not need an import. See :ref:`installation`
+        The extension reads the data only from this file. In classic mode (no
+        Composer), deny web access to the directory. See :ref:`installation`
         for the setup.
 
         Without a value, the extension writes the data into

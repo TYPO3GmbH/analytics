@@ -40,8 +40,7 @@ site. We recommend :file:`config/analytics`. The extension then writes the
 data into :file:`config/analytics/<identifier>.yaml`.
 
 With :confval:`siteDataPath`, the extension reads the data only from this
-file. The :file:`settings.yaml` does not need an import. The site settings do
-not contain the data. Thus :guilabel:`Site Management > Settings` shows empty
+file. The site settings do not contain the data. Thus :guilabel:`Site Management > Settings` shows empty
 values for the extension.
 
 Keep the directory :file:`config/analytics` in a shared folder. Do not commit
