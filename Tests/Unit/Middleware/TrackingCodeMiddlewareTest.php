@@ -13,11 +13,11 @@ use Psr\Log\NullLogger;
 use T3G\Analytics\Configuration\SiteDataConfiguration;
 use T3G\Analytics\Middleware\TrackingCodeMiddleware;
 use T3G\Analytics\Service\SiteDataStorage;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Locking\LockFactory;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
@@ -176,7 +176,7 @@ final class TrackingCodeMiddlewareTest extends UnitTestCase
 
     private function buildRequestWithSite(array $siteSettings): ServerRequestInterface
     {
-        $settings = new SiteSettings(new Settings($siteSettings), [], []);
+        $settings = new SiteSettings(SiteDataSettings::settings($siteSettings), [], []);
 
         $site = $this->createMock(Site::class);
         $site->method('getSettings')->willReturn($settings);

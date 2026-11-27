@@ -18,6 +18,7 @@ use TYPO3\CMS\Core\Locking\LockingStrategyInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteSettingsFactory;
 use TYPO3\CMS\Core\Site\SiteSettingsService;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -26,17 +27,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 final readonly class SiteDataStorage implements SiteDataStorageInterface
 {
-    private const KEYS = [
-        'websiteId',
-        'instanceId',
-        'instanceSecret',
-        'trackingCode',
-        'status',
-        'apiKeyId',
-        'apiKey',
-        'externalWebsiteId',
-    ];
-
     public function __construct(
         private SiteDataConfiguration $configuration,
         private SiteSettingsService $siteSettingsService,
@@ -58,7 +48,13 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             // Fallback until the first write creates the file, e.g. after an installation sets siteDataPath.
         }
         try {
-            return $site->getSettings()->get($key);
+            $settings = $site->getSettings();
+            $value = $settings->get(self::SETTINGS_PATH . '.' . $key);
+            // Fallback for version 1.1 and earlier until the upgrade wizard moved the value. Remove in the next major version.
+            if (self::isEmpty($value)) {
+                $value = $settings->get($key) ?? $value;
+            }
+            return $value;
         } catch (\Throwable $e) {
             $this->logger->warning('Failed to read site settings.', ['siteIdentifier' => $site->getIdentifier(), 'key' => $key, 'exception' => $e]);
             return null;
@@ -81,7 +77,7 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             // Read in the lock: another request can have changed the data.
             if ($this->configuration->usesSiteSettings()) {
                 $existing = $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
-                $this->siteSettingsService->writeSettings($site, array_merge($existing, $values));
+                $this->siteSettingsService->writeSettings($site, $this->mergeValues($this->moveLegacyValues($existing), $values));
                 return;
             }
             $data = $this->loadFile($site);
@@ -89,9 +85,9 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
                 throw new SiteConfigurationWriteException('Unable to read ' . $this->getLocation($site), 1794494912);
             }
             if (!$this->containsValues($data)) {
-                $data = array_merge($data, $this->loadValuesFromSiteSettings($site));
+                $data = $this->mergeValues($data, $this->loadValuesFromSiteSettings($site));
             }
-            $this->writeFile($site, array_merge($data, $values));
+            $this->writeFile($site, $this->mergeValues($data, $values));
         } finally {
             $this->runtimeCache->remove($this->getCacheIdentifier($site));
             $locker->release();
@@ -100,10 +96,10 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
 
     public function loadPersisted(Site $site): array
     {
-        if ($this->configuration->usesSiteSettings()) {
-            return $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier()) ?? [];
-        }
-        return $this->loadFile($site) ?? [];
+        $data = $this->configuration->usesSiteSettings()
+            ? $this->siteSettingsFactory->loadLocalSettings($site->getIdentifier())
+            : $this->loadFile($site);
+        return $this->getValuesBelowSettingsPath($data ?? []);
     }
 
     public function isWritable(Site $site): bool
@@ -148,7 +144,7 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
     /**
      * The middleware reads several values in each frontend request: parse the file only once.
      *
-     * @return array<string, mixed>|null null when the file does not exist or contains no values of the extension
+     * @return array<string, mixed>|null the values below SETTINGS_PATH, null when the file does not exist or contains no values of the extension
      */
     private function loadFileCached(Site $site): ?array
     {
@@ -166,17 +162,9 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
             return null;
         }
         // An invalid file must not activate the fallback to old values. loadFile() logs the error.
-        $data ??= [];
+        $data = $this->getValuesBelowSettingsPath($data ?? []);
         $this->runtimeCache->set($cacheIdentifier, $data);
         return $data;
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function containsValues(array $data): bool
-    {
-        return array_intersect_key($data, array_flip(self::KEYS)) !== [];
     }
 
     /**
@@ -192,7 +180,82 @@ final readonly class SiteDataStorage implements SiteDataStorageInterface
         } catch (\RuntimeException $e) {
             throw new SiteConfigurationWriteException('Unable to read the site settings of site ' . $site->getIdentifier(), 1795704081, $e);
         }
-        return array_intersect_key($settings, array_flip(self::KEYS));
+        $values = $this->getValuesBelowSettingsPath($settings);
+        foreach (self::KEYS as $key) {
+            // Same priority as get(): an empty value below SETTINGS_PATH does not hide a value of version 1.1 and earlier.
+            if (self::isEmpty($values[$key] ?? null) && array_key_exists($key, $settings)) {
+                $values[$key] = $settings[$key];
+            }
+        }
+        return $values;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    private function getValuesBelowSettingsPath(array $settings): array
+    {
+        $values = [];
+        foreach (self::KEYS as $key) {
+            $identifier = self::SETTINGS_PATH . '.' . $key;
+            // TYPO3 accepts a tree and a map with the identifier as key, for example written by hand. The extension writes a tree.
+            if (array_key_exists($identifier, $settings)) {
+                $values[$key] = $settings[$identifier];
+            } elseif (ArrayUtility::isValidPath($settings, $identifier, '.')) {
+                $values[$key] = ArrayUtility::getValueByPath($settings, $identifier, '.');
+            }
+        }
+        return $values;
+    }
+
+    /**
+     * Without this step, get() can read an old value after the extension wrote an empty value into the tree.
+     *
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    private function moveLegacyValues(array $settings): array
+    {
+        foreach (self::KEYS as $key) {
+            if (!array_key_exists($key, $settings)) {
+                continue;
+            }
+            if (self::isEmpty($this->getValuesBelowSettingsPath($settings)[$key] ?? null)) {
+                $settings = $this->mergeValues($settings, [$key => $settings[$key]]);
+            }
+            unset($settings[$key]);
+        }
+        return $settings;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @param array<string, mixed> $values
+     * @return array<string, mixed>
+     */
+    private function mergeValues(array $settings, array $values): array
+    {
+        foreach ($values as $key => $value) {
+            $identifier = self::SETTINGS_PATH . '.' . $key;
+            // Remove a value in the map format. Otherwise the site has two values.
+            unset($settings[$identifier]);
+            $settings = ArrayUtility::setValueByPath($settings, $identifier, $value, '.');
+        }
+        return $settings;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function containsValues(array $data): bool
+    {
+        return $this->getValuesBelowSettingsPath($data) !== [];
+    }
+
+    private static function isEmpty(mixed $value): bool
+    {
+        return $value === '' || $value === null;
     }
 
     /**

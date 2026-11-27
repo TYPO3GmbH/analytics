@@ -14,6 +14,8 @@ use T3G\Analytics\Exception\AnalyticsApiException;
 use T3G\Analytics\Service\CipherServiceInterface;
 use T3G\Analytics\Service\InstanceRegistrationServiceInterface;
 use T3G\Analytics\Service\SiteDataStorageInterface;
+use Symfony\Component\Yaml\Yaml;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use T3G\Analytics\Tests\Functional\Bootstrap\FunctionalTestCase;
 use TYPO3\CMS\Core\Configuration\SiteWriter;
 use TYPO3\CMS\Core\Core\Environment;
@@ -127,7 +129,7 @@ final class InstanceRegistrationWithReadOnlyStorageTest extends FunctionalTestCa
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['analytics']['siteDataPath'] = self::DATA_PATH;
         $this->appendRegistrationResponse();
         // For example, the values from the time before the installation set siteDataPath.
-        file_put_contents($this->settingsYamlFileName(), "websiteId: old-website-id\n");
+        file_put_contents($this->settingsYamlFileName(), Yaml::dump(SiteDataSettings::tree(['websiteId' => 'old-website-id']), 99, 2));
 
         $this->get(InstanceRegistrationServiceInterface::class)->register($this->site(), 'admin@example.com');
 

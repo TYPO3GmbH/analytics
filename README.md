@@ -40,6 +40,18 @@ By default, the extension writes sensitive data (credentials, tracking code and 
 
 We recommend a separate file for each site. Set `siteDataPath` (see [Site data settings](#site-data-settings)) to `config/analytics`. The extension then reads and writes the data in `config/analytics/<identifier>.yaml`. In classic mode (no Composer), deny web access to the directory. For more information, see [Installation](https://docs.typo3.org/permalink/t3g-analytics:installation).
 
+The extension writes the values into the separate file as a tree below `plugin.tx_analytics.settings`. Without `siteDataPath`, the extension uses the same tree in `settings.yaml`.
+
+### Update from version 1.1 or earlier
+
+Version 1.1 and earlier wrote the values on the top level of `settings.yaml`. Run the upgrade wizard **Analytics: Move the site data to plugin.tx_analytics.settings**:
+
+```bash
+vendor/bin/typo3 upgrade:run analytics_siteDataNamespaceMigration
+```
+
+With `siteDataPath`, the wizard moves the values from `settings.yaml` into the separate file. For more information, see [Update from version 1.1 or earlier](https://docs.typo3.org/permalink/t3g-analytics:installation-update-namespace).
+
 ## Configuration
 
 ### Development settings

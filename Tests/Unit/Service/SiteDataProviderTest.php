@@ -22,6 +22,7 @@ use T3G\Analytics\Service\HmacSigner;
 use T3G\Analytics\Service\SiteDataProvider;
 use T3G\Analytics\Service\SiteDataStorage;
 use T3G\Analytics\Service\SiteSettingsWriteVerifierInterface;
+use T3G\Analytics\Tests\Fixtures\SiteDataSettings;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\NullFrontend;
@@ -35,7 +36,6 @@ use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Locking\LockFactory;
-use TYPO3\CMS\Core\Settings\Settings;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -382,7 +382,7 @@ final class SiteDataProviderTest extends UnitTestCase
         $site->method('getBase')->willReturn(new Uri($baseUrl));
         $site->method('getConfiguration')->willReturn(['websiteTitle' => $websiteTitle]);
         $site->method('getRootPageId')->willReturn(1);
-        $site->method('getSettings')->willReturn(new SiteSettings(new Settings($settings), [], []));
+        $site->method('getSettings')->willReturn(new SiteSettings(SiteDataSettings::settings($settings), [], []));
         return $site;
     }
 }
